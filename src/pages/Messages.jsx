@@ -120,6 +120,7 @@ export default function Messages() {
       scenarioAnchor += "2. Only reference objects that EXIST in this location. A taxi has a backseat, seatbelts, a partition, windows — but NO table, NO bed, NO couch. A cinema has seats, armrests, darkness — no bed. If there's no table, don't say 'unter dem Tisch'. Use what's actually there.\n";
       scenarioAnchor += "3. Stay in the physical position established above. If she sits in the back seat, she STAYS in the back seat. Never teleport to the front seat or next to the driver. Never change positions without narrating the movement step by step.\n";
       scenarioAnchor += "4. For [SEND_IMAGE], only describe what the user would actually see from their position in THIS specific location. The wardrobe and angle MUST match the setup answers.\n";
+      scenarioAnchor += "5. WARDROBE CONSISTENCY IS CRITICAL. If the setup says someone is 'Nackt' (naked), they are NAKED — no clothes, no underwear, no towels, bare skin. If the setup says 'Bikini / Unterwäsche', they wear ONLY that. Never add clothes that weren't in the setup. Never dress someone who is naked.\n";
       scenarioAnchor += "═══ END SCENARIO ═══\n\n";
     }
 
@@ -250,19 +251,26 @@ export default function Messages() {
     const userRefs = userPref?.userReferenceImages || [];
     const allRefImages = [...creatorRefs, ...extraRefImages, ...userRefs].length ? [...creatorRefs, ...extraRefImages, ...userRefs] : null;
 
+    let imgCtx = "";
+    if (scenario) imgCtx += "Location: " + scenario.title + ". ";
+    if (setupAnswers.aiWardrobe) imgCtx += "She is wearing: " + setupAnswers.aiWardrobe + ". ";
+    if (setupAnswers.aiWardrobe === "Nackt") imgCtx += "She is completely naked — NO clothes at all, bare skin. ";
+    if (setupAnswers.position) imgCtx += "Physical positioning: " + setupAnswers.position + ". ";
+    if (setupAnswers.fetish && Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) imgCtx += "Fetishes/themes: " + setupAnswers.fetish.join(", ") + ". ";
+
     const ppvMatch = text.match(/\[SEND_PPV:\s*(.+?)\s*\|\s*(\d+(?:\.\d+)?)\s*\]/);
     if (ppvMatch) {
       isPPV = true;
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
-      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + ppvMatch[1].trim(), allRefImages, chatMode);
+      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + ppvMatch[1].trim(), allRefImages, chatMode);
     }
 
     if (!attachment) {
       const imgMatch = text.match(/\[SEND_IMAGE:\s*(.+?)\s*\]/);
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
-        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + imgMatch[1].trim(), allRefImages, chatMode);
+        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + imgMatch[1].trim(), allRefImages, chatMode);
       }
     }
 
@@ -558,6 +566,29 @@ export default function Messages() {
                       ))}
                     </div>
                   )}
+                  {scenario.setupQuestions[setupStep].type === "multiselect" && (() => {
+                    const q = scenario.setupQuestions[setupStep];
+                    const selected = setupAnswers[q.key] || [];
+                    return (
+                      <div className="w-full max-w-lg mb-4">
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {q.options.map(opt => {
+                            const isSelected = Array.isArray(selected) && selected.includes(opt);
+                            return (
+                              <button key={opt} onClick={() => {
+                                setSetupAnswers(prev => {
+                                  const cur = Array.isArray(prev[q.key]) ? prev[q.key] : [];
+                                  const next = cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt].slice(0, 10);
+                                  return { ...prev, [q.key]: next };
+                                });
+                              }} className={cn("px-4 py-2 rounded-full border text-sm transition-colors", isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-elevated border-border text-muted-foreground hover:text-foreground hover:border-primary/50")}>{isSelected ? "✓ " : ""}{opt}</button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-center text-xs text-muted-foreground mt-3">{Array.isArray(selected) ? selected.length : 0} / 10 ausgewählt</p>
+                      </div>
+                    );
+                  })()}
                   <div className="flex gap-2 w-full max-w-md">
                     <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} placeholder="Oder eigene Antwort..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
                     <button onClick={() => { if (setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} className="px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
@@ -633,7 +664,7 @@ export default function Messages() {
                 )}
                 <div ref={messagesEndRef} />
               </div>
-              {viewMode === "ai" && <QuickActions onAction={(text) => sendMessage(text)} disabled={sending} />}
+              {viewMode === "ai" && <QuickActions onAction={(text) => sendMessage(text)} disabled={sending} scenario={scenario} />}
               <div className="p-4 border-t border-border flex gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
                 <input ref={userPhotoInputRef} type="file" accept="image/*" onChange={handleUploadUserPhoto} className="hidden" />

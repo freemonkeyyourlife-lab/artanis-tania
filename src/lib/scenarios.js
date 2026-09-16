@@ -7,9 +7,9 @@ const COMMON_SETUP_QUESTIONS = [
   { key: "drunk", question: "Bist du angetrunken?", type: "select", options: ["Nüchtern", "Ein bisschen", "Richtig betrunken"] },
   { key: "aiBehavior", question: "Wie soll ich mich verhalten?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
   { key: "userBehavior", question: "Wie verhältst du dich?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
-  { key: "position", question: "Wo sitzen wir zueinander?", type: "select", options: ["Nebeneinander", "Gegenüber", "Du hinter mir", "Ich auf deinem Schoß", "Du liegst bei mir", "Ich stehe, du sitzt"] },
+  { key: "position", question: "Wie positionieren wir uns?", type: "select", options: ["Nebeneinander sitzend", "Gegenüber sitzend", "Stehend", "Tanzend", "Aneinander gedrückt", "Du hinter mir", "Ich auf deinem Schoß", "Liegen nebeneinander", "Ich stehe, du kniest", "An der Wand"] },
   { key: "talkedAbout", question: "Worüber haben wir bisher geredet?" },
-  { key: "fetish", question: "Gibt es einen Fetisch / Schwerpunkt?" },
+  { key: "fetish", question: "Was macht dich an? (Mehrfachauswahl möglich)", type: "multiselect", options: ["Voyeurismus", "Exhibitionismus", "Edging", "Rollenspiel", "Dominanz", "Unterwerfung", "Swinger", "Watersports", "Rough Sex", "Dirty Talk", "Masturbation", "Porn schauen", "Flashing", "Anonym bleiben"] },
   { key: "age", question: "Wie alt bist du?" },
 ];
 

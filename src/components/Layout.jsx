@@ -8,17 +8,19 @@ const NAV_LINKS = [
   { label: "Artanis", path: "/artanis" },
   { label: "Triania", path: "/triania" },
   { label: "Couple", path: "/couple" },
-  { label: "Explore", path: "/explore" },
-  { label: "Videos", path: "/videos" },
-  { label: "Photos", path: "/photos" },
-  { label: "Stories", path: "/stories" },
-  { label: "Topics", path: "/topics" },
-  { label: "Live", path: "/live" },
-  { label: "Interactive", path: "/interactive" },
-  { label: "Request", path: "/request" },
-  { label: "Groups", path: "/groups" },
   { label: "Messages", path: "/messages" },
   { label: "Profile", path: "/profile" },
+  { label: "Request", path: "/request" },
+  { label: "Admin", path: "/admin" },
+  { label: "Explore", path: "/explore", disabled: true },
+  { label: "Videos", path: "/videos", disabled: true },
+  { label: "Photos", path: "/photos", disabled: true },
+  { label: "Stories", path: "/stories", disabled: true },
+  { label: "Topics", path: "/topics", disabled: true },
+  { label: "Live", path: "/live", disabled: true },
+  { label: "Interactive", path: "/interactive", disabled: true },
+  { label: "Groups", path: "/groups", disabled: true },
+  { label: "Library", path: "/library", disabled: true },
 ];
 
 const MOBILE_NAV = [
@@ -44,20 +46,29 @@ export default function Layout() {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "px-2.5 py-2 rounded-full text-[13px] font-medium transition-colors",
-                  location.pathname === link.path
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) =>
+              link.disabled ? (
+                <span
+                  key={link.path}
+                  className="px-2.5 py-2 rounded-full text-[13px] font-medium text-muted-foreground/40 cursor-not-allowed"
+                >
+                  {link.label}
+                </span>
+              ) : (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={cn(
+                    "px-2.5 py-2 rounded-full text-[13px] font-medium transition-colors",
+                    location.pathname === link.path
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </nav>
 
           <div className="flex items-center gap-2 lg:gap-3">
@@ -87,27 +98,30 @@ export default function Layout() {
         {mobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 glass-strong border-b border-border p-4">
             <nav className="flex flex-col gap-1">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "px-4 py-3 rounded-xl text-sm font-medium",
-                    location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <Link to="/library" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
-                My Library
-              </Link>
+              {NAV_LINKS.map((link) =>
+                link.disabled ? (
+                  <span
+                    key={link.path}
+                    className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground/40 cursor-not-allowed"
+                  >
+                    {link.label}
+                  </span>
+                ) : (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "px-4 py-3 rounded-xl text-sm font-medium",
+                      location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
               <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
                 Account
-              </Link>
-              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
-                Admin
               </Link>
             </nav>
           </div>
