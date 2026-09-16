@@ -156,13 +156,21 @@ export default function Messages() {
       }
     }
 
-    return { cleanText, attachment, isPPV, ppvPrice };
+    let suggestions = [];
+    const suggestMatch = cleanText.match(/\[SUGGEST:\s*(.+?)\s*\]/);
+    if (suggestMatch) {
+      suggestions = suggestMatch[1].split("|").map(s => s.trim()).filter(Boolean);
+      cleanText = cleanText.replace(suggestMatch[0], "").trim();
+    }
+
+    return { cleanText, attachment, isPPV, ppvPrice, suggestions };
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || !activeChat) return;
+  const sendMessage = async (overrideText) => {
+    const msgText = overrideText || input;
+    if (!msgText.trim() || !activeChat) return;
     const chatKey = activeChat;
-    const userMsg = { senderType: "HUMAN", text: input, createdAt: new Date().toISOString() };
+    const userMsg = { senderType: "HUMAN", text: msgText, createdAt: new Date().toISOString() };
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
     setInput("");
     setSending(true);
@@ -179,8 +187,8 @@ export default function Messages() {
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
-      const { cleanText, attachment, isPPV, ppvPrice } = await parseAndGenerateMedia(aiText);
-      const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, createdAt: new Date().toISOString() };
+      const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText);
+      const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, suggestions, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
     } catch (e) {
       const aiMsg = { senderType: "AI", text: "I'm here and ready to chat! What would you like to talk about?", createdAt: new Date().toISOString() };
@@ -206,8 +214,8 @@ export default function Messages() {
         prompt: buildContext() + "\n\nThe user sent you a photo. React enthusiastically — tell them what you see or imagine, how it makes you feel, and ask them something about it. Match the user's language.",
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "Sieht geil aus!");
-      const { cleanText, attachment, isPPV, ppvPrice } = await parseAndGenerateMedia(aiText);
-      const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, createdAt: new Date().toISOString() };
+      const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText);
+      const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, suggestions, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
     } catch (e) {
       console.error(e);
@@ -274,7 +282,9 @@ export default function Messages() {
               ) : (
               <>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {(messages[activeChat] || [{ senderType: "SYSTEM", text: "This is an AI assistant. Messages from the real creator will be marked differently." }]).map((msg, i) => (
+                {(messages[activeChat] || [{ senderType: "SYSTEM", text: "This is an AI assistant. Messages from the real creator will be marked differently." }]).map((msg, i, arr) => {
+                  const isLastAi = msg.senderType === "AI" && !sending && arr.slice(i + 1).every(m => m.senderType !== "AI");
+                  return (
                   <div key={i} className={cn("flex gap-2", msg.senderType === "HUMAN" ? "justify-end" : "justify-start")}>
                     {msg.senderType !== "HUMAN" && <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><Bot className="w-4 h-4 text-violet-400" /></div>}
                     <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", msg.senderType === "HUMAN" ? "bg-primary text-primary-foreground" : msg.senderType === "AI" ? "bg-elevated text-foreground" : "bg-transparent text-muted-foreground text-xs italic")}>
@@ -293,9 +303,17 @@ export default function Messages() {
                         )
                       )}
                       {msg.text}
+                      {msg.suggestions && msg.suggestions.length > 0 && isLastAi && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {msg.suggestions.map((s, si) => (
+                            <button key={si} onClick={() => sendMessage(s)} className="px-3 py-1.5 rounded-full bg-background border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">{s}</button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 {sending && (
                   <div className="flex gap-2 justify-start">
                     <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><Bot className="w-4 h-4 text-violet-400" /></div>
@@ -313,7 +331,7 @@ export default function Messages() {
                 <button onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
                 <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
-                <button onClick={sendMessage} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
+                <button onClick={() => sendMessage()} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
               </>
               )}
