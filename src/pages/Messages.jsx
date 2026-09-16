@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
@@ -196,22 +197,34 @@ export default function Messages() {
     }
   };
 
-  const generateWithFallback = async (prompt, refImages) => {
-    if (refImages && refImages.length > 0) {
+  const generateWithFallback = async (prompt, refImages, personaMode) => {
+    // For solo female characters: do NOT include the user's body in the image.
+    // The viewer wants to imagine themselves there — only HER, max POV hand.
+    // For couple/male: user reference images are OK.
+    const isSoloFemale = personaMode === "triania";
+    let usedRefs = refImages;
+    let promptText = prompt;
+    if (isSoloFemale) {
+      // Only use the creator's own reference images, not user's uploaded photos
+      const creator = creators.find(c => c.id === activeChat);
+      usedRefs = creator?.referenceImages?.length ? creator.referenceImages : null;
+      promptText = prompt + " IMPORTANT: Only show the woman in the image. Never include a male body or face — the viewer imagines themselves there. At most, a female hand reaching toward the viewer. The camera IS the viewer's eyes.";
+    }
+    if (usedRefs && usedRefs.length > 0) {
       try {
-        const result = await base44.integrations.Core.GenerateImage({ prompt, existing_image_urls: refImages });
+        const result = await base44.integrations.Core.GenerateImage({ prompt: promptText, existing_image_urls: usedRefs });
         return result.url;
       } catch (e) {
         console.error("Image generation with reference failed, retrying without:", e);
       }
     }
     try {
-      const result = await base44.integrations.Core.GenerateImage({ prompt });
+      const result = await base44.integrations.Core.GenerateImage({ prompt: promptText });
       return result.url;
     } catch (e) {
       console.error("Image generation failed, retrying toned-down:", e);
       try {
-        const tonedDown = prompt.replace(/hardcore|explicit|cum/gi, "sensual suggestive alluring");
+        const tonedDown = promptText.replace(/hardcore|explicit|cum/gi, "sensual suggestive alluring");
         const result = await base44.integrations.Core.GenerateImage({ prompt: tonedDown });
         return result.url;
       } catch (e2) {
@@ -236,14 +249,14 @@ export default function Messages() {
       isPPV = true;
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
-      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + ppvMatch[1].trim(), allRefImages);
+      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + ppvMatch[1].trim(), allRefImages, chatMode);
     }
 
     if (!attachment) {
       const imgMatch = text.match(/\[SEND_IMAGE:\s*(.+?)\s*\]/);
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
-        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + imgMatch[1].trim(), allRefImages);
+        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + imgMatch[1].trim(), allRefImages, chatMode);
       }
     }
 
@@ -576,7 +589,14 @@ export default function Messages() {
                             </div>
                           </div>
                         ) : (
-                          <Image src={msg.attachment} fittingType="fill" className="w-48 h-48 rounded-lg mb-1" />
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="block mb-1"><Image src={msg.attachment} fittingType="fill" className="w-48 h-48 rounded-lg transition-opacity hover:opacity-80" /></button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
+                              <img src={msg.attachment} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
+                            </DialogContent>
+                          </Dialog>
                         )
                       )}
                       {msg.text}
