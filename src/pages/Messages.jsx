@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Bot, ArrowLeft, ImagePlus, Mic, Square, Lock } from "lucide-react";
+import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export default function Messages() {
   const [setupStep, setSetupStep] = useState(0);
   const [setupAnswers, setSetupAnswers] = useState({});
   const [setupInput, setSetupInput] = useState("");
+  const { toast } = useToast();
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -150,6 +152,24 @@ export default function Messages() {
     }
   };
 
+  const generateWithFallback = async (prompt, refImages) => {
+    if (refImages && refImages.length > 0) {
+      try {
+        const result = await base44.integrations.Core.GenerateImage({ prompt, existing_image_urls: refImages });
+        return result.url;
+      } catch (e) {
+        console.error("Image generation with reference failed, retrying without:", e);
+      }
+    }
+    try {
+      const result = await base44.integrations.Core.GenerateImage({ prompt });
+      return result.url;
+    } catch (e) {
+      console.error("Image generation failed:", e);
+      return null;
+    }
+  };
+
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {
     let cleanText = text;
     let attachment = null;
@@ -164,20 +184,14 @@ export default function Messages() {
       isPPV = true;
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
-      try {
-        const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + ppvMatch[1].trim(), existing_image_urls: allRefImages });
-        attachment = result.url;
-      } catch (e) { console.error("Image generation failed:", e); }
+      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + ppvMatch[1].trim(), allRefImages);
     }
 
     if (!attachment) {
       const imgMatch = text.match(/\[SEND_IMAGE:\s*(.+?)\s*\]/);
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
-        try {
-          const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + imgMatch[1].trim(), existing_image_urls: allRefImages });
-          attachment = result.url;
-        } catch (e) { console.error("Image generation failed:", e); }
+        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + imgMatch[1].trim(), allRefImages);
       }
     }
 
@@ -215,6 +229,14 @@ export default function Messages() {
       const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText);
       const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, suggestions, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
+
+      const userMsgCount = [...(messages[chatKey] || []), userMsg].filter(m => m.senderType === "HUMAN").length;
+      if (userMsgCount > 0 && userMsgCount % 5 === 0) {
+        toast({
+          title: "🎁 Belohnung freigeschaltet!",
+          description: `Du hast ${userMsgCount} Nachrichten gesendet! Exklusive Inhalte wurden für dich freigeschaltet.`,
+        });
+      }
     } catch (e) {
       const aiMsg = { senderType: "AI", text: "I'm here and ready to chat! What would you like to talk about?", createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
@@ -242,6 +264,14 @@ export default function Messages() {
       const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText, [file_url]);
       const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, suggestions, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
+
+      const userMsgCount = [...(messages[chatKey] || []), userMsg].filter(m => m.senderType === "HUMAN").length;
+      if (userMsgCount > 0 && userMsgCount % 5 === 0) {
+        toast({
+          title: "🎁 Belohnung freigeschaltet!",
+          description: `Du hast ${userMsgCount} Nachrichten gesendet! Exklusive Inhalte wurden für dich freigeschaltet.`,
+        });
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -261,7 +291,11 @@ export default function Messages() {
         <div className={cn("rounded-2xl border border-border bg-card overflow-y-auto", activeChat && "hidden lg:block")}>
           {creators.map(c => (
             <button key={c.id} onClick={() => { setActiveChat(c.id); const n = c.stageName.toLowerCase(); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
-              <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
+              {c.avatar ? (
+                <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
                 <p className="text-xs text-muted-foreground">{c.onlineStatus === "AI_AVAILABLE" ? "AI Available" : c.onlineStatus}</p>
@@ -276,7 +310,11 @@ export default function Messages() {
             <>
               <div className="p-4 border-b border-border flex items-center gap-3">
                 <button onClick={() => setActiveChat(null)} className="lg:hidden"><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
-                <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary">{creators.find(c => c.id === activeChat)?.stageName[0]}</div>
+                {creators.find(c => c.id === activeChat)?.avatar ? (
+                  <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary">{creators.find(c => c.id === activeChat)?.stageName[0]}</div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{creators.find(c => c.id === activeChat)?.stageName}</p>
                   <p className="text-xs text-muted-foreground">{PERSONA_MODES[chatMode].label} mode — AI chat</p>
@@ -323,7 +361,13 @@ export default function Messages() {
                   const isLastAi = msg.senderType === "AI" && !sending && arr.slice(i + 1).every(m => m.senderType !== "AI");
                   return (
                   <div key={i} className={cn("flex gap-2", msg.senderType === "HUMAN" ? "justify-end" : "justify-start")}>
-                    {msg.senderType !== "HUMAN" && <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><Bot className="w-4 h-4 text-violet-400" /></div>}
+                    {msg.senderType !== "HUMAN" && (
+                      creators.find(c => c.id === activeChat)?.avatar ? (
+                        <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-8 h-8 rounded-full flex-shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
+                      )
+                    )}
                     <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", msg.senderType === "HUMAN" ? "bg-primary text-primary-foreground" : msg.senderType === "AI" ? "bg-elevated text-foreground" : "bg-transparent text-muted-foreground text-xs italic")}>
                       {msg.attachment && (
                         msg.isPPV ? (
@@ -353,7 +397,11 @@ export default function Messages() {
                 })}
                 {sending && (
                   <div className="flex gap-2 justify-start">
-                    <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><Bot className="w-4 h-4 text-violet-400" /></div>
+                    {creators.find(c => c.id === activeChat)?.avatar ? (
+                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-8 h-8 rounded-full flex-shrink-0" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
+                    )}
                     <div className="bg-elevated rounded-2xl px-4 py-3 flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
                       <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
