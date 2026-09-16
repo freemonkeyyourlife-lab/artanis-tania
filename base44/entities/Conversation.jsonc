@@ -11,6 +11,20 @@
     "creatorName": {
       "type": "string"
     },
+    "participantId": {
+      "type": "string"
+    },
+    "participantName": {
+      "type": "string"
+    },
+    "conversationType": {
+      "type": "string",
+      "enum": [
+        "AI",
+        "HUMAN"
+      ],
+      "default": "AI"
+    },
     "lastMessageAt": {
       "type": "string",
       "format": "date-time"
@@ -21,7 +35,6 @@
     }
   },
   "required": [
-    "userId",
-    "creatorId"
+    "userId"
   ]
 }

@@ -26,6 +26,10 @@ export default function Messages() {
   const [setupStep, setSetupStep] = useState(0);
   const [setupAnswers, setSetupAnswers] = useState({});
   const [setupInput, setSetupInput] = useState("");
+  const [viewMode, setViewMode] = useState("ai");
+  const [dmUsers, setDmUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [dmParticipantName, setDmParticipantName] = useState("");
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -46,6 +50,7 @@ export default function Messages() {
       setStories(storyData);
       try {
         const user = await base44.auth.me();
+        setCurrentUser(user);
         const prefs = await base44.entities.UserPreference.filter({ userId: user.id });
         if (prefs.length > 0) setUserPref(prefs[0]);
       } catch (e) { /* not logged in or no prefs */ }
@@ -56,6 +61,20 @@ export default function Messages() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeChat]);
+
+  useEffect(() => {
+    if (viewMode !== "dm" || !activeChat) return;
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.data?.conversationId === activeChat && event.type === "create") {
+        setMessages(prev => {
+          const existing = prev[activeChat] || [];
+          if (existing.some(m => m.id === event.data.id)) return prev;
+          return { ...prev, [activeChat]: [...existing, event.data] };
+        });
+      }
+    });
+    return unsubscribe;
+  }, [viewMode, activeChat]);
 
   const buildContext = () => {
     const persona = PERSONA_MODES[chatMode];
@@ -217,6 +236,7 @@ export default function Messages() {
   const sendMessage = async (overrideText) => {
     const msgText = overrideText || input;
     if (!msgText.trim() || !activeChat) return;
+    if (viewMode === "dm") { return sendDmMessage(msgText); }
     const chatKey = activeChat;
     const userMsg = { senderType: "HUMAN", text: msgText, createdAt: new Date().toISOString() };
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
@@ -258,6 +278,16 @@ export default function Messages() {
     const file = e.target.files?.[0];
     if (!file || !activeChat) return;
     const chatKey = activeChat;
+    if (viewMode === "dm") {
+      try {
+        const result = await base44.integrations.Core.UploadPublicFile({ file });
+        const me = await base44.auth.me();
+        const created = await base44.entities.Message.create({ conversationId: chatKey, sender: me.full_name || me.email, senderType: "HUMAN", text: "", attachment: result.file_url });
+        setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), created] }));
+      } catch (err) { console.error(err); }
+      e.target.value = "";
+      return;
+    }
     setSending(true);
     try {
       const result = await base44.integrations.Core.UploadPublicFile({ file });
@@ -312,6 +342,47 @@ export default function Messages() {
     e.target.value = "";
   };
 
+  const loadDmUsers = async () => {
+    try {
+      const me = await base44.auth.me();
+      const users = await base44.entities.User.list();
+      setDmUsers(users.filter(u => u.id !== me.id));
+    } catch (e) { console.error(e); }
+  };
+
+  const startDm = async (otherUser) => {
+    try {
+      const me = await base44.auth.me();
+      const existing = await base44.entities.Conversation.filter({ userId: me.id, participantId: otherUser.id, conversationType: "HUMAN" });
+      let conv;
+      if (existing.length > 0) {
+        conv = existing[0];
+      } else {
+        conv = await base44.entities.Conversation.create({ userId: me.id, participantId: otherUser.id, participantName: otherUser.full_name || otherUser.email, conversationType: "HUMAN" });
+      }
+      setActiveChat(conv.id);
+      setDmParticipantName(otherUser.full_name || otherUser.email);
+      const msgs = await base44.entities.Message.filter({ conversationId: conv.id }, "created_date", 100);
+      setMessages(prev => ({ ...prev, [conv.id]: msgs }));
+    } catch (e) { console.error(e); }
+  };
+
+  const sendDmMessage = async (msgText) => {
+    if (!msgText.trim() || !activeChat) return;
+    const chatKey = activeChat;
+    try {
+      const me = await base44.auth.me();
+      const created = await base44.entities.Message.create({
+        conversationId: chatKey,
+        sender: me.full_name || me.email,
+        senderType: "HUMAN",
+        text: msgText
+      });
+      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), created] }));
+      setInput("");
+    } catch (e) { console.error(e); }
+  };
+
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>;
   }
@@ -320,21 +391,43 @@ export default function Messages() {
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
       <h1 className="font-display text-3xl text-foreground mb-6">Messages</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
-        <div className={cn("rounded-2xl border border-border bg-card overflow-y-auto", activeChat && "hidden lg:block")}>
-          {creators.map(c => (
-            <button key={c.id} onClick={() => { setActiveChat(c.id); const n = c.stageName.toLowerCase(); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
-              {c.avatar ? (
-                <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
+        <div className={cn("rounded-2xl border border-border bg-card overflow-hidden flex flex-col", activeChat && "hidden lg:block")}>
+          <div className="flex gap-1 p-2 border-b border-border">
+            <button onClick={() => { setViewMode("ai"); setActiveChat(null); setDmParticipantName(""); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "ai" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>KI-Models</button>
+            <button onClick={() => { setViewMode("dm"); setActiveChat(null); loadDmUsers(); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "dm" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Direct Messages</button>
+          </div>
+          <div className="overflow-y-auto flex-1">
+            {viewMode === "ai" ? (
+              creators.map(c => (
+                <button key={c.id} onClick={() => { setActiveChat(c.id); const n = c.stageName.toLowerCase(); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+                  {c.avatar ? (
+                    <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
+                    <p className="text-xs text-muted-foreground">{c.onlineStatus === "AI_AVAILABLE" ? "AI Available" : c.onlineStatus}</p>
+                  </div>
+                  {c.onlineStatus === "AI_AVAILABLE" && <StatusBadge experienceType="AI_INTERACTIVE" />}
+                </button>
+              ))
+            ) : (
+              dmUsers.length === 0 ? (
+                <p className="p-4 text-sm text-muted-foreground text-center">Keine anderen Nutzer verfügbar</p>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
-                <p className="text-xs text-muted-foreground">{c.onlineStatus === "AI_AVAILABLE" ? "AI Available" : c.onlineStatus}</p>
-              </div>
-              {c.onlineStatus === "AI_AVAILABLE" && <StatusBadge experienceType="AI_INTERACTIVE" />}
-            </button>
-          ))}
+                dmUsers.map(u => (
+                  <button key={u.id} onClick={() => startDm(u)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors hover:bg-elevated")}>
+                    <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{(u.full_name || u.email || "?")[0]}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{u.full_name || u.email}</p>
+                      <p className="text-xs text-muted-foreground">Direct message</p>
+                    </div>
+                  </button>
+                ))
+              )
+            )}
+          </div>
         </div>
 
         <div className={cn("lg:col-span-2 rounded-2xl border border-border bg-card flex flex-col", !activeChat && "hidden lg:flex")}>
@@ -342,32 +435,34 @@ export default function Messages() {
             <>
               <div className="p-4 border-b border-border flex items-center gap-3">
                 <button onClick={() => setActiveChat(null)} className="lg:hidden"><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
-                {creators.find(c => c.id === activeChat)?.avatar ? (
+                {viewMode === "dm" ? (
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-display text-primary">{(dmParticipantName || "?")[0]}</div>
+                ) : creators.find(c => c.id === activeChat)?.avatar ? (
                   <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary">{creators.find(c => c.id === activeChat)?.stageName[0]}</div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{creators.find(c => c.id === activeChat)?.stageName}</p>
-                  <p className="text-xs text-muted-foreground">{PERSONA_MODES[chatMode].label} mode — AI chat</p>
+                  <p className="text-sm font-medium text-foreground">{viewMode === "dm" ? dmParticipantName : creators.find(c => c.id === activeChat)?.stageName}</p>
+                  <p className="text-xs text-muted-foreground">{viewMode === "dm" ? "Direct message — real person" : PERSONA_MODES[chatMode].label + " mode — AI chat"}</p>
                 </div>
-                <StatusBadge experienceType="AI_INTERACTIVE" className="flex-shrink-0" />
-                {scenario && (
+                {viewMode === "ai" && <StatusBadge experienceType="AI_INTERACTIVE" className="flex-shrink-0" />}
+                {viewMode === "ai" && scenario && (
                   <button onClick={() => { setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className="text-xs text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full bg-elevated whitespace-nowrap flex items-center gap-1">
                     {scenario.id === "free" ? "💬" : scenario.icon} {scenario.title}
                   </button>
                 )}
               </div>
-              {["Artanis", "Triania", "Artanis × Triania"].includes(creators.find(c => c.id === activeChat)?.stageName) && (
+              {viewMode === "ai" && ["Artanis", "Triania", "Artanis × Triania"].includes(creators.find(c => c.id === activeChat)?.stageName) && (
               <div className="px-4 pb-3 flex gap-1.5 border-b border-border overflow-x-auto scrollbar-hide">
                 {Object.entries(PERSONA_MODES).map(([key, mode]) => (
                   <button key={key} onClick={() => setChatMode(key)} className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap", chatMode === key ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>{mode.label}</button>
                 ))}
               </div>
               )}
-              {!scenario ? (
+              {viewMode === "ai" && !scenario ? (
                 <ScenarioSelection onSelect={(s) => { setScenario(s); setSetupStep(0); setSetupAnswers({}); }} />
-              ) : (scenario.setupQuestions && setupStep < scenario.setupQuestions.length) ? (
+              ) : viewMode === "ai" && (scenario.setupQuestions && setupStep < scenario.setupQuestions.length) ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
                   <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">{scenario.setupQuestions[setupStep].question}</p>
                   {scenario.setupQuestions[setupStep].type === "select" && (
@@ -389,18 +484,20 @@ export default function Messages() {
               ) : (
               <>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {(messages[activeChat] || [{ senderType: "SYSTEM", text: "This is an AI assistant. Messages from the real creator will be marked differently." }]).map((msg, i, arr) => {
-                  const isLastAi = msg.senderType === "AI" && !sending && arr.slice(i + 1).every(m => m.senderType !== "AI");
+                {(messages[activeChat] || (viewMode === "dm" ? [] : [{ senderType: "SYSTEM", text: "This is an AI assistant. Messages from the real creator will be marked differently." }])).map((msg, i, arr) => {
+                  const isLastAi = viewMode === "ai" && msg.senderType === "AI" && !sending && arr.slice(i + 1).every(m => m.senderType !== "AI");
                   return (
-                  <div key={i} className={cn("flex gap-2", msg.senderType === "HUMAN" ? "justify-end" : "justify-start")}>
-                    {msg.senderType !== "HUMAN" && (
-                      creators.find(c => c.id === activeChat)?.avatar ? (
+                  <div key={i} className={cn("flex gap-2", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "justify-end" : "justify-start")}>
+                    {(viewMode === "dm" ? msg.created_by_id !== currentUser?.id : msg.senderType !== "HUMAN") && (
+                      viewMode === "dm" ? (
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-primary">{(dmParticipantName || "?")[0]}</span></div>
+                      ) : creators.find(c => c.id === activeChat)?.avatar ? (
                         <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-8 h-8 rounded-full flex-shrink-0" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
                       )
                     )}
-                    <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", msg.senderType === "HUMAN" ? "bg-primary text-primary-foreground" : msg.senderType === "AI" ? "bg-elevated text-foreground" : "bg-transparent text-muted-foreground text-xs italic")}>
+                    <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
                       {msg.attachment && (
                         msg.isPPV ? (
                           <div className="relative w-48 h-48 rounded-lg mb-1 overflow-hidden">
@@ -443,12 +540,12 @@ export default function Messages() {
                 )}
                 <div ref={messagesEndRef} />
               </div>
-              <QuickActions onAction={(text) => sendMessage(text)} disabled={sending} />
+              {viewMode === "ai" && <QuickActions onAction={(text) => sendMessage(text)} disabled={sending} />}
               <div className="p-4 border-t border-border flex gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
                 <input ref={userPhotoInputRef} type="file" accept="image/*" onChange={handleUploadUserPhoto} className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
-                <button onClick={() => userPhotoInputRef.current?.click()} disabled={sending} className="relative w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors" title="Deine Referenzfotos (werden für Bildgenerierungen verwendet)"><UserPlus className="w-4 h-4" />{userPref?.userReferenceImages?.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{userPref.userReferenceImages.length}</span>}</button>
+                {viewMode === "ai" && <button onClick={() => userPhotoInputRef.current?.click()} disabled={sending} className="relative w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors" title="Deine Referenzfotos (werden für Bildgenerierungen verwendet)"><UserPlus className="w-4 h-4" />{userPref?.userReferenceImages?.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{userPref.userReferenceImages.length}</span>}</button>}
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
                 <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={() => sendMessage()} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
