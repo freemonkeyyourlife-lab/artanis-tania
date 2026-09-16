@@ -25,6 +25,7 @@ import Interactive from '@/pages/Interactive';
 import Messages from '@/pages/Messages';
 import RequestPage from '@/pages/RequestPage';
 import Account from '@/pages/Account';
+import ExperiencePlayer from '@/pages/ExperiencePlayer';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,6 +54,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       {/* Add your page Route elements here */}
+      <Route path="/experience/:id" element={<ExperiencePlayer />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/artanis" element={<Artanis />} />

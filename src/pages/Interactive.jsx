@@ -28,7 +28,7 @@ export default function Interactive() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {experiences.map(exp => (
-            <Link key={exp.id} to="/interactive" className="group">
+            <Link key={exp.id} to={`/experience/${exp.id}`} className="group">
               <div className="relative overflow-hidden rounded-2xl border border-border bg-card aspect-video">
                 {exp.cover && <Image src={exp.cover} fittingType="fill" className="w-full h-full transition-transform group-hover:scale-105" />}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
