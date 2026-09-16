@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Send, Bot, ArrowLeft } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
+import { PERSONA_MODES } from "@/lib/personaPrompts";
 
 export default function Messages() {
   const [creators, setCreators] = useState([]);
@@ -11,6 +12,7 @@ export default function Messages() {
   const [messages, setMessages] = useState({});
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [chatMode, setChatMode] = useState("artanis");
   const messagesEndRef = useRef(null);
 
   useEffect(() => { load(); }, []);
@@ -36,8 +38,9 @@ export default function Messages() {
     setSending(true);
 
     try {
+      const persona = PERSONA_MODES[chatMode];
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are ${creator.stageName}'s AI assistant on a private creator platform. The user said: "${userMsg.text}". Respond in a brief, friendly, flirty but respectful way. You are an AI assistant — do not pretend to be a real person. Keep it under 2 sentences. Respond in the same language as the user.`,
+        prompt: persona.prompt + "\n\nThe user said: \"" + userMsg.text + "\"",
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const aiMsg = { senderType: "AI", text: aiText, createdAt: new Date().toISOString() };
@@ -60,7 +63,7 @@ export default function Messages() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
         <div className={cn("rounded-2xl border border-border bg-card overflow-y-auto", activeChat && "hidden lg:block")}>
           {creators.map(c => (
-            <button key={c.id} onClick={() => setActiveChat(c.id)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+            <button key={c.id} onClick={() => { setActiveChat(c.id); const n = c.stageName.toLowerCase(); setChatMode(n.includes("triania") ? "triania" : (n.includes("couple") || c.personaType === "COUPLE") ? "couple" : "artanis"); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
               <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
@@ -77,11 +80,16 @@ export default function Messages() {
               <div className="p-4 border-b border-border flex items-center gap-3">
                 <button onClick={() => setActiveChat(null)} className="lg:hidden"><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
                 <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary">{creators.find(c => c.id === activeChat)?.stageName[0]}</div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{creators.find(c => c.id === activeChat)?.stageName}</p>
-                  <p className="text-xs text-muted-foreground">AI Assistant — you are chatting with AI</p>
+                  <p className="text-xs text-muted-foreground">{PERSONA_MODES[chatMode].label} mode — AI chat</p>
                 </div>
-                <StatusBadge experienceType="AI_INTERACTIVE" className="ml-auto" />
+                <StatusBadge experienceType="AI_INTERACTIVE" className="flex-shrink-0" />
+              </div>
+              <div className="px-4 pb-3 flex gap-1.5 border-b border-border overflow-x-auto scrollbar-hide">
+                {Object.entries(PERSONA_MODES).map(([key, mode]) => (
+                  <button key={key} onClick={() => setChatMode(key)} className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap", chatMode === key ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>{mode.label}</button>
+                ))}
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {(messages[activeChat] || [{ senderType: "SYSTEM", text: "This is an AI assistant. Messages from the real creator will be marked differently." }]).map((msg, i) => (
