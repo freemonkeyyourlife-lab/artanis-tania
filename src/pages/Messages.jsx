@@ -56,7 +56,27 @@ export default function Messages() {
 
   const buildContext = () => {
     const persona = PERSONA_MODES[chatMode];
-    let ctx = persona.prompt;
+
+    // ── SCENARIO ANCHOR #1 (first thing the AI sees) ──
+    let scenarioAnchor = "";
+    if (scenario && scenario.promptContext) {
+      scenarioAnchor = "═══ CURRENT SCENARIO — YOU ARE HERE ═══\n" + scenario.promptContext + "\n\n";
+      if (Object.keys(setupAnswers).length > 0) {
+        scenarioAnchor += "ESTABLISHED FACTS (FIXED — never contradict, never teleport, never change):\n";
+        scenario.setupQuestions.forEach(q => {
+          if (setupAnswers[q.key]) scenarioAnchor += `• ${q.question} → ${setupAnswers[q.key]}\n`;
+        });
+        scenarioAnchor += "\n";
+      }
+      scenarioAnchor += "SPATIAL RULES (CRITICAL — breaking these ruins the experience):\n";
+      scenarioAnchor += "1. You are in this scenario. Never leave it, never change the location mid-conversation.\n";
+      scenarioAnchor += "2. Only reference objects that EXIST in this location. A taxi has a backseat, seatbelts, a partition, windows — but NO table, NO bed, NO couch. A cinema has seats, armrests, darkness — no bed. If there's no table, don't say 'unter dem Tisch'. Use what's actually there.\n";
+      scenarioAnchor += "3. Stay in the physical position established above. If she sits in the back seat, she STAYS in the back seat. Never teleport to the front seat or next to the driver. Never change positions without narrating the movement step by step.\n";
+      scenarioAnchor += "4. For [SEND_IMAGE], only describe what the user would actually see from their position in THIS specific location. The wardrobe and angle MUST match the setup answers.\n";
+      scenarioAnchor += "═══ END SCENARIO ═══\n\n";
+    }
+
+    let ctx = scenarioAnchor + persona.prompt;
     if (contentList.length > 0) {
       ctx += "\n\nAVAILABLE CONTENT (offer matching items when the user's fantasy aligns — use the exact title):\n" +
         contentList.map(c => {
@@ -79,15 +99,9 @@ export default function Messages() {
       if (userPref.whatTheyWantToSee) ctx += `- Wants to see: ${userPref.whatTheyWantToSee}\n`;
       if (userPref.fantasyDescription) ctx += `- Fantasies: ${userPref.fantasyDescription}\n`;
     }
-    if (scenario && scenario.promptContext) {
-      ctx += "\n\n" + scenario.promptContext;
-      if (Object.keys(setupAnswers).length > 0) {
-        ctx += "\n\nSCENARIO SETUP (the user told you this):";
-        scenario.setupQuestions.forEach(q => {
-          if (setupAnswers[q.key]) ctx += `\n- ${q.question} → ${setupAnswers[q.key]}`;
-        });
-      }
-      ctx += "\n\nStay in this scenario. Use the setting to build tension. React to the environment. Take advantage of the location — sneak around, whisper, take secret photos. Don't break character.\n\nCRITICAL RULES:\n- SPATIAL CONSISTENCY: Respect the positions established in the setup answers. If the user said you're sitting in the back seat, you stay in the back seat. If you're across the room, stay across the room. Don't teleport or suddenly be next to someone without moving there step by step. Physical closeness must be earned through the conversation.\n- IMAGE ANGLE & WARDROBE: When generating [SEND_IMAGE] photos, the POV MUST match the physical position from the setup. If the user said 'Nebeneinander' (side by side), the photo shows a SIDE VIEW — cleavage from the side, not from the front. If 'Gegenüber' (across), show them from across the table. If 'Er hinter mir', show from behind. The wardrobe from the setup MUST be visible in the image — if they said 'Kleid mit tiefem Ausschnitt', show that dress and its cleavage from the correct angle. NEVER default to a plain T-shirt or a front-facing shot if the setup says otherwise. The angle and clothing must be consistent with what the user described in the setup.\n- SLOW ESCALATION: Do NOT rush. Start slow — atmosphere, tension, subtle hints. A real encounter builds gradually over many messages. Don't jump to explicit content or physical contact within the first few messages. Let the tension simmer. The first several exchanges should be about mood, setting, anticipation — not action.\n- EARN EVERY STEP: Every escalation must feel natural and earned. Don't skip stages. Flirting → tension → subtle contact → escalation. If you rush, it kills the mood.";
+    // ── SCENARIO ANCHOR #3 (last thing the AI sees — triple-anchored) ──
+    if (scenario) {
+      ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Stay in the established location and position. Do NOT teleport, do NOT change position, do NOT reference objects that don't exist in this scene. Only describe what's physically possible here.";
     }
     return ctx;
   };
@@ -144,7 +158,7 @@ export default function Messages() {
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
       try {
-        const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + ppvMatch[1].trim(), existing_image_urls: allRefImages });
+        const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + ppvMatch[1].trim(), existing_image_urls: allRefImages });
         attachment = result.url;
       } catch (e) { console.error("Image generation failed:", e); }
     }
@@ -154,7 +168,7 @@ export default function Messages() {
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
         try {
-          const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + imgMatch[1].trim(), existing_image_urls: allRefImages });
+          const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + imgMatch[1].trim(), existing_image_urls: allRefImages });
           attachment = result.url;
         } catch (e) { console.error("Image generation failed:", e); }
       }
@@ -186,7 +200,7 @@ export default function Messages() {
         return `${m.senderType === "HUMAN" ? "User" : "You"}: ${t}`;
       }).join("\n");
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: buildContext() + (hist ? "\n\nCONVERSATION SO FAR:\n" + hist : "") + "\n\nThe user said: \"" + userMsg.text + "\"",
+        prompt: buildContext() + (hist ? "\n\nCONVERSATION SO FAR:\n" + hist : "") + "\n\nThe user said: \"" + userMsg.text + "\"" + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : ""),
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const delay = 3000 + Math.floor(Math.random() * 2000);
