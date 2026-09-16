@@ -30,8 +30,11 @@ export default function Messages() {
   const [dmUsers, setDmUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [dmParticipantName, setDmParticipantName] = useState("");
+  const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
+  const dmConvIdsRef = useRef(new Set());
+  const activeChatRef = useRef(null);
   const fileInputRef = useRef(null);
   const userPhotoInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -53,6 +56,9 @@ export default function Messages() {
         setCurrentUser(user);
         const prefs = await base44.entities.UserPreference.filter({ userId: user.id });
         if (prefs.length > 0) setUserPref(prefs[0]);
+        const incoming = await base44.entities.Conversation.filter({ participantId: user.id, conversationType: "HUMAN" });
+        setIncomingConversations(incoming);
+        dmConvIdsRef.current = new Set(incoming.map(c => c.id));
       } catch (e) { /* not logged in or no prefs */ }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -61,6 +67,10 @@ export default function Messages() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeChat]);
+
+  useEffect(() => {
+    activeChatRef.current = activeChat;
+  }, [activeChat]);
 
   useEffect(() => {
     if (viewMode !== "dm" || !activeChat) return;
@@ -75,6 +85,19 @@ export default function Messages() {
     });
     return unsubscribe;
   }, [viewMode, activeChat]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.type !== "create") return;
+      const convId = event.data?.conversationId;
+      if (!dmConvIdsRef.current.has(convId)) return;
+      if (event.data?.created_by_id === currentUser.id) return;
+      if (convId === activeChatRef.current) return;
+      toast({ title: "💬 Neue Nachricht", description: "Du hast eine neue Direktnachricht erhalten!" });
+    });
+    return unsubscribe;
+  }, [currentUser, toast]);
 
   const buildContext = () => {
     const persona = PERSONA_MODES[chatMode];
@@ -188,7 +211,7 @@ export default function Messages() {
     } catch (e) {
       console.error("Image generation failed, retrying toned-down:", e);
       try {
-        const tonedDown = prompt.replace(/nude|topless|bare skin|bare breasts|erotic|explicit|highly sexual|provocative|sexual/gi, "sensual seductive alluring");
+        const tonedDown = prompt.replace(/hardcore pornographic|graphic sexual content|raw amateur porn|cum/gi, "explicit sensual nude erotic");
         const result = await base44.integrations.Core.GenerateImage({ prompt: tonedDown });
         return result.url;
       } catch (e2) {
@@ -213,14 +236,14 @@ export default function Messages() {
       isPPV = true;
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
-      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, highly erotic, sensual, nude, bare skin, glistening, provocative, sexual, explicit, " + ppvMatch[1].trim(), allRefImages);
+      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, fully nude, hardcore pornographic, explicit sexual pose, spread, wet, aroused, erect nipples, glistening skin, cum, graphic sexual content, raw amateur porn, " + ppvMatch[1].trim(), allRefImages);
     }
 
     if (!attachment) {
       const imgMatch = text.match(/\[SEND_IMAGE:\s*(.+?)\s*\]/);
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
-        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, highly erotic, sensual, nude, bare skin, glistening, provocative, sexual, explicit, " + imgMatch[1].trim(), allRefImages);
+        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, fully nude, hardcore pornographic, explicit sexual pose, spread, wet, aroused, erect nipples, glistening skin, cum, graphic sexual content, raw amateur porn, " + imgMatch[1].trim(), allRefImages);
       }
     }
 
@@ -359,7 +382,7 @@ export default function Messages() {
       if (existing.length > 0) {
         conv = existing[0];
       } else {
-        conv = await base44.entities.Conversation.create({ userId: me.id, participantId: otherUser.id, participantName: otherUser.full_name || otherUser.email, conversationType: "HUMAN" });
+        conv = await base44.entities.Conversation.create({ userId: me.id, userName: me.full_name || me.email, participantId: otherUser.id, participantName: otherUser.full_name || otherUser.email, conversationType: "HUMAN" });
       }
       setActiveChat(conv.id);
       setDmParticipantName(otherUser.full_name || otherUser.email);
@@ -384,6 +407,15 @@ export default function Messages() {
     } catch (e) { console.error(e); }
   };
 
+  const openIncomingDm = async (conv) => {
+    const otherUser = dmUsers.find(u => u.id === conv.userId);
+    const name = otherUser?.full_name || otherUser?.email || conv.userName || "Unbekannt";
+    setActiveChat(conv.id);
+    setDmParticipantName(name);
+    const msgs = await base44.entities.Message.filter({ conversationId: conv.id }, "created_date", 100);
+    setMessages(prev => ({ ...prev, [conv.id]: msgs }));
+  };
+
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>;
   }
@@ -395,7 +427,7 @@ export default function Messages() {
         <div className={cn("rounded-2xl border border-border bg-card overflow-hidden flex flex-col", activeChat && "hidden lg:block")}>
           <div className="flex gap-1 p-2 border-b border-border">
             <button onClick={() => { setViewMode("ai"); setActiveChat(null); setDmParticipantName(""); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "ai" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Chats</button>
-            <button onClick={() => { setViewMode("dm"); setActiveChat(null); loadDmUsers(); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "dm" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Direct Messages</button>
+            <button onClick={() => { setViewMode("dm"); setActiveChat(null); loadDmUsers(); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center justify-center gap-1.5", viewMode === "dm" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Direct Messages{incomingConversations.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">{incomingConversations.length}</span>}</button>
           </div>
           <div className="overflow-y-auto flex-1">
             {viewMode === "ai" ? (
@@ -432,7 +464,28 @@ export default function Messages() {
               ))}
               </>
             ) : (
-              dmUsers.length === 0 ? (
+              <>
+              {incomingConversations.length > 0 && (
+                <>
+                <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-primary">Will mit dir chatten</p>
+                {incomingConversations.map(conv => {
+                  const otherUser = dmUsers.find(u => u.id === conv.userId);
+                  const name = otherUser?.full_name || otherUser?.email || conv.userName || "Unbekannt";
+                  return (
+                    <button key={conv.id} onClick={() => openIncomingDm(conv)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === conv.id ? "bg-primary/10" : "hover:bg-elevated")}>
+                      <div className="w-10 h-10 rounded-full bg-emerald-600/20 flex items-center justify-center font-display text-emerald-400 flex-shrink-0">{(name || "?")[0]}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                        <p className="text-xs text-primary">Will mit dir chatten — klicken zum Öffnen</p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold uppercase flex-shrink-0">Neu</span>
+                    </button>
+                  );
+                })}
+                </>
+              )}
+              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Nutzer</p>
+              {dmUsers.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground text-center">Keine anderen Nutzer verfügbar</p>
               ) : (
                 dmUsers.map(u => (
@@ -444,7 +497,8 @@ export default function Messages() {
                     </div>
                   </button>
                 ))
-              )
+              )}
+              </>
             )}
           </div>
         </div>
