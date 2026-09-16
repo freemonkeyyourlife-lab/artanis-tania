@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Bot, ArrowLeft, ImagePlus } from "lucide-react";
+import { Send, Bot, ArrowLeft, ImagePlus, Mic, Square } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
@@ -17,8 +17,12 @@ export default function Messages() {
   const [contentList, setContentList] = useState([]);
   const [stories, setStories] = useState([]);
   const [userPref, setUserPref] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   useEffect(() => { load(); }, []);
   const load = async () => {
@@ -70,6 +74,43 @@ export default function Messages() {
       if (userPref.fantasyDescription) ctx += `- Fantasies: ${userPref.fantasyDescription}\n`;
     }
     return ctx;
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        setIsRecording(false);
+        setTranscribing(true);
+        try {
+          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          const audioFile = new File([audioBlob], "voice.webm", { type: "audio/webm" });
+          const uploadResult = await base44.integrations.Core.UploadPublicFile({ file: audioFile });
+          const transcriptRes = await base44.integrations.Core.TranscribeAudio({ audio_url: uploadResult.file_url });
+          const text = typeof transcriptRes === "string" ? transcriptRes : (transcriptRes.transcript || transcriptRes.text || transcriptRes.output || "");
+          if (text) setInput(prev => prev ? prev + " " + text : text);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setTranscribing(false);
+        }
+      };
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const sendMessage = async () => {
@@ -175,8 +216,9 @@ export default function Messages() {
               </div>
               <div className="p-4 border-t border-border flex gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
-                <button onClick={() => fileInputRef.current?.click()} disabled={sending} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
-                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" />
+                <button onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
+                <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
+                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={sendMessage} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
             </>
