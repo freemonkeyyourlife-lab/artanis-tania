@@ -1,0 +1,47 @@
+{
+  "name": "ExperienceStage",
+  "type": "object",
+  "properties": {
+    "experienceId": {
+      "type": "string"
+    },
+    "order": {
+      "type": "number"
+    },
+    "title": {
+      "type": "string"
+    },
+    "mediaAsset": {
+      "type": "string"
+    },
+    "mediaVariants": {
+      "type": "object"
+    },
+    "triggerType": {
+      "type": "string",
+      "enum": [
+        "USER_CHOICE",
+        "CHAT_COUNT",
+        "TIME_SPENT",
+        "POINTS",
+        "VIP",
+        "PURCHASE",
+        "MANUAL_UNLOCK",
+        "VIEW_COMPLETE"
+      ]
+    },
+    "triggerValue": {
+      "type": "string"
+    },
+    "nextStageId": {
+      "type": "string"
+    },
+    "overlayText": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "experienceId",
+    "order"
+  ]
+}

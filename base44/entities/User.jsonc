@@ -1,0 +1,59 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user",
+        "creator_artanis",
+        "creator_triania",
+        "vip"
+      ],
+      "default": "user"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "dob": {
+      "type": "string",
+      "format": "date"
+    },
+    "age_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "terms_accepted": {
+      "type": "boolean",
+      "default": false
+    },
+    "privacy_accepted": {
+      "type": "boolean",
+      "default": false
+    },
+    "favorite_creator": {
+      "type": "string"
+    },
+    "favorite_topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "favorite_content_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "language": {
+      "type": "string",
+      "default": "de"
+    },
+    "vip_status": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

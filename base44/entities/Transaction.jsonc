@@ -1,0 +1,54 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "FREE",
+        "PPV",
+        "VIP",
+        "TIP",
+        "BOOKING",
+        "PRIVATE_SESSION",
+        "INTERACTIVE_PURCHASE",
+        "CUSTOM_CONTENT"
+      ]
+    },
+    "amount": {
+      "type": "number",
+      "default": 0
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "PAID",
+        "FAILED",
+        "REFUNDED",
+        "CHARGEBACK"
+      ],
+      "default": "PENDING"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "providerId": {
+      "type": "string"
+    },
+    "contentId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId",
+    "type"
+  ]
+}

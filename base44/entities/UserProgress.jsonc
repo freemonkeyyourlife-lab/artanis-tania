@@ -1,0 +1,35 @@
+{
+  "name": "UserProgress",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "experienceId": {
+      "type": "string"
+    },
+    "currentStageId": {
+      "type": "string"
+    },
+    "points": {
+      "type": "number",
+      "default": 0
+    },
+    "timeSpent": {
+      "type": "number",
+      "default": 0
+    },
+    "messagesSent": {
+      "type": "number",
+      "default": 0
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "userId",
+    "experienceId"
+  ]
+}

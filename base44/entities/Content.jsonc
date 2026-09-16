@@ -1,0 +1,172 @@
+{
+  "name": "Content",
+  "type": "object",
+  "properties": {
+    "creatorId": {
+      "type": "string"
+    },
+    "creatorName": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "shortDescription": {
+      "type": "string"
+    },
+    "contentType": {
+      "type": "string",
+      "enum": [
+        "PHOTO",
+        "PHOTO_SET",
+        "VIDEO",
+        "VIDEO_SET",
+        "AUDIO",
+        "STORY",
+        "POST",
+        "TEASER",
+        "BUNDLE",
+        "INTERACTIVE_EXPERIENCE",
+        "LIVE_SESSION"
+      ]
+    },
+    "thumbnail": {
+      "type": "string"
+    },
+    "previewAsset": {
+      "type": "string"
+    },
+    "fullAsset": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number",
+      "default": 0
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "isFree": {
+      "type": "boolean",
+      "default": true
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "PUBLIC",
+        "REGISTERED",
+        "FREE_MEMBER",
+        "VIP",
+        "PPV",
+        "INVITE_ONLY",
+        "PRIVATE",
+        "UNLISTED"
+      ],
+      "default": "PUBLIC"
+    },
+    "published": {
+      "type": "boolean",
+      "default": false
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "duration": {
+      "type": "number"
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "aiPermission": {
+      "type": "string",
+      "enum": [
+        "AI_CAN_RECOMMEND",
+        "AI_CAN_SEND",
+        "AI_CAN_SELL",
+        "AI_FREE_ONLY",
+        "AI_VIP_ONLY",
+        "AI_NEVER_USE"
+      ],
+      "default": "AI_CAN_RECOMMEND"
+    },
+    "aiCanRecommend": {
+      "type": "boolean",
+      "default": true
+    },
+    "aiCanSend": {
+      "type": "boolean",
+      "default": false
+    },
+    "aiCanSell": {
+      "type": "boolean",
+      "default": false
+    },
+    "ageRestricted": {
+      "type": "boolean",
+      "default": true
+    },
+    "futurePrice": {
+      "type": "number"
+    },
+    "monetizationReady": {
+      "type": "boolean",
+      "default": false
+    },
+    "futureVisibility": {
+      "type": "string",
+      "enum": [
+        "PUBLIC",
+        "REGISTERED",
+        "FREE_MEMBER",
+        "VIP",
+        "PPV",
+        "INVITE_ONLY",
+        "PRIVATE",
+        "UNLISTED"
+      ]
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "number"
+          },
+          "end": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "creatorId",
+    "title",
+    "contentType"
+  ]
+}

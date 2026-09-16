@@ -1,0 +1,68 @@
+{
+  "name": "CommunityRequest",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "userName": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "creatorName": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "VIDEO_IDEA",
+        "PHOTO_IDEA",
+        "STORY_IDEA",
+        "LIVE_TOPIC",
+        "INTERACTIVE_IDEA",
+        "QUESTION",
+        "CUSTOM_REQUEST"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "votes": {
+      "type": "number",
+      "default": 0
+    },
+    "votedBy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "NEW",
+        "REVIEWED",
+        "PLANNED",
+        "RECORDED",
+        "CREATED",
+        "DECLINED"
+      ],
+      "default": "NEW"
+    }
+  },
+  "required": [
+    "type",
+    "title"
+  ]
+}

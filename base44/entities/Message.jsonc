@@ -1,0 +1,37 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "conversationId": {
+      "type": "string"
+    },
+    "sender": {
+      "type": "string"
+    },
+    "senderType": {
+      "type": "string",
+      "enum": [
+        "HUMAN",
+        "AI",
+        "SYSTEM"
+      ]
+    },
+    "text": {
+      "type": "string"
+    },
+    "attachment": {
+      "type": "string"
+    },
+    "contentLink": {
+      "type": "string"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "conversationId",
+    "senderType"
+  ]
+}

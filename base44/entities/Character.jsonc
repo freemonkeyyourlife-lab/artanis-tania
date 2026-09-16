@@ -1,0 +1,40 @@
+{
+  "name": "Character",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "adultAge": {
+      "type": "number",
+      "minimum": 18
+    },
+    "description": {
+      "type": "string"
+    },
+    "appearance": {
+      "type": "string"
+    },
+    "personality": {
+      "type": "string"
+    },
+    "relationship": {
+      "type": "string"
+    },
+    "fictional": {
+      "type": "boolean",
+      "default": true
+    },
+    "avatar": {
+      "type": "string"
+    },
+    "sourceConsentVerified": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name",
+    "adultAge"
+  ]
+}

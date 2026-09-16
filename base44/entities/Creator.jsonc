@@ -1,0 +1,87 @@
+{
+  "name": "Creator",
+  "type": "object",
+  "properties": {
+    "stageName": {
+      "type": "string"
+    },
+    "personaType": {
+      "type": "string",
+      "enum": [
+        "SOLO_MALE",
+        "SOLO_FEMALE",
+        "COUPLE"
+      ]
+    },
+    "age": {
+      "type": "number"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "avatar": {
+      "type": "string"
+    },
+    "banner": {
+      "type": "string"
+    },
+    "onlineStatus": {
+      "type": "string",
+      "enum": [
+        "ONLINE",
+        "LIVE",
+        "BUSY",
+        "AWAY",
+        "OFFLINE",
+        "AI_AVAILABLE",
+        "SCHEDULED"
+      ],
+      "default": "OFFLINE"
+    },
+    "profileVisibility": {
+      "type": "string",
+      "enum": [
+        "PUBLIC",
+        "REGISTERED",
+        "VIP",
+        "PRIVATE"
+      ],
+      "default": "PUBLIC"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "stats_followers": {
+      "type": "number",
+      "default": 0
+    },
+    "stats_content": {
+      "type": "number",
+      "default": 0
+    },
+    "stats_rating": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "stageName",
+    "personaType"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "ExperienceChoice",
+  "type": "object",
+  "properties": {
+    "stageId": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "nextStageId": {
+      "type": "string"
+    },
+    "order": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "stageId",
+    "label"
+  ]
+}

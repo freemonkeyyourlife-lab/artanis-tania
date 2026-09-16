@@ -1,0 +1,66 @@
+{
+  "name": "Experience",
+  "type": "object",
+  "properties": {
+    "creatorId": {
+      "type": "string"
+    },
+    "creatorName": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "cover": {
+      "type": "string"
+    },
+    "experienceType": {
+      "type": "string",
+      "enum": [
+        "LIVE",
+        "PRERECORDED_INTERACTIVE",
+        "AI_INTERACTIVE"
+      ]
+    },
+    "price": {
+      "type": "number",
+      "default": 0
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "PUBLIC",
+        "REGISTERED",
+        "FREE_MEMBER",
+        "VIP",
+        "PPV",
+        "INVITE_ONLY",
+        "PRIVATE",
+        "UNLISTED"
+      ],
+      "default": "PUBLIC"
+    },
+    "topicIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "published": {
+      "type": "boolean",
+      "default": false
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "creatorId",
+    "title",
+    "experienceType"
+  ]
+}

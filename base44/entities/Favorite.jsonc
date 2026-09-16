@@ -1,0 +1,28 @@
+{
+  "name": "Favorite",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "targetType": {
+      "type": "string",
+      "enum": [
+        "CREATOR",
+        "VIDEO",
+        "PHOTO",
+        "STORY",
+        "TOPIC",
+        "INTERACTIVE_EXPERIENCE"
+      ]
+    },
+    "targetId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId",
+    "targetType",
+    "targetId"
+  ]
+}

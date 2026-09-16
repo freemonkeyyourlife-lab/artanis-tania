@@ -1,0 +1,27 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "creatorName": {
+      "type": "string"
+    },
+    "lastMessageAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "unreadCount": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "userId",
+    "creatorId"
+  ]
+}

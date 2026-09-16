@@ -1,0 +1,55 @@
+{
+  "name": "ContentPlan",
+  "type": "object",
+  "properties": {
+    "creatorId": {
+      "type": "string"
+    },
+    "requestId": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "CONTENT_IDEA",
+        "VIDEO_PLAN",
+        "STORY_PLAN",
+        "LIVE_TOPIC",
+        "INTERACTIVE_EXPERIENCE"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "IDEA",
+        "PLANNED",
+        "RECORDED",
+        "EDITING",
+        "READY",
+        "PUBLISHED"
+      ],
+      "default": "IDEA"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "scheduledAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "creatorId",
+    "title",
+    "type"
+  ]
+}

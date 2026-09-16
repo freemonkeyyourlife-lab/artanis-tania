@@ -1,0 +1,46 @@
+{
+  "name": "Performer",
+  "type": "object",
+  "properties": {
+    "stageName": {
+      "type": "string"
+    },
+    "legalNameEncrypted": {
+      "type": "string"
+    },
+    "dateOfBirthEncrypted": {
+      "type": "string"
+    },
+    "verificationStatus": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "VERIFIED",
+        "REJECTED"
+      ],
+      "default": "PENDING"
+    },
+    "consentStatus": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "GRANTED",
+        "REVOKED"
+      ],
+      "default": "PENDING"
+    },
+    "verifiedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "stageName"
+  ]
+}
