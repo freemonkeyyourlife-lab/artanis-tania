@@ -129,11 +129,14 @@ export default function Messages() {
     }
   };
 
-  const parseAndGenerateMedia = async (text) => {
+  const parseAndGenerateMedia = async (text, extraRefImages = []) => {
     let cleanText = text;
     let attachment = null;
     let isPPV = false;
     let ppvPrice = null;
+    const creator = creators.find(c => c.id === activeChat);
+    const creatorRefs = creator?.referenceImages?.length ? creator.referenceImages : [];
+    const allRefImages = [...creatorRefs, ...extraRefImages].length ? [...creatorRefs, ...extraRefImages] : null;
 
     const ppvMatch = text.match(/\[SEND_PPV:\s*(.+?)\s*\|\s*(\d+(?:\.\d+)?)\s*\]/);
     if (ppvMatch) {
@@ -141,9 +144,7 @@ export default function Messages() {
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
       try {
-        const creator = creators.find(c => c.id === activeChat);
-        const refImages = creator?.referenceImages?.length ? creator.referenceImages : null;
-        const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + ppvMatch[1].trim(), existing_image_urls: refImages });
+        const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + ppvMatch[1].trim(), existing_image_urls: allRefImages });
         attachment = result.url;
       } catch (e) { console.error("Image generation failed:", e); }
     }
@@ -153,9 +154,7 @@ export default function Messages() {
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
         try {
-          const creator = creators.find(c => c.id === activeChat);
-          const refImages = creator?.referenceImages?.length ? creator.referenceImages : null;
-          const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + imgMatch[1].trim(), existing_image_urls: refImages });
+          const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + imgMatch[1].trim(), existing_image_urls: allRefImages });
           attachment = result.url;
         } catch (e) { console.error("Image generation failed:", e); }
       }
@@ -216,10 +215,10 @@ export default function Messages() {
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: buildContext() + "\n\nThe user sent you a photo. React enthusiastically — tell them what you see or imagine, how it makes you feel, and ask them something about it. Match the user's language.",
+        prompt: buildContext() + "\n\nThe user sent you a photo. React enthusiastically — tell them what you see or imagine, how it makes you feel, and ask them something about it. IMPORTANT: Generate a response image that incorporates the user's photo as visual reference — put yourself in the scene with what they showed you. For example, if they sent a dick pic, use [SEND_IMAGE: POV, your hand wrapped around his hard cock] or [SEND_IMAGE: POV, looking down at him, your hand on him]. If they sent their body, generate an image with you next to them or touching them. The response image should feel like you're physically interacting with what they showed you. Match the user's language.",
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "Sieht geil aus!");
-      const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText);
+      const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText, [file_url]);
       const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, suggestions, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
     } catch (e) {
