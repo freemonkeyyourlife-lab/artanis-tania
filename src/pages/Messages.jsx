@@ -87,7 +87,7 @@ export default function Messages() {
           if (setupAnswers[q.key]) ctx += `\n- ${q.question} → ${setupAnswers[q.key]}`;
         });
       }
-      ctx += "\n\nStay in this scenario. Use the setting to build tension. React to the environment. Take advantage of the location — sneak around, whisper, take secret photos. Don't break character.";
+      ctx += "\n\nStay in this scenario. Use the setting to build tension. React to the environment. Take advantage of the location — sneak around, whisper, take secret photos. Don't break character.\n\nCRITICAL RULES:\n- SPATIAL CONSISTENCY: Respect the positions established in the setup answers. If the user said you're sitting in the back seat, you stay in the back seat. If you're across the room, stay across the room. Don't teleport or suddenly be next to someone without moving there step by step. Physical closeness must be earned through the conversation.\n- SLOW ESCALATION: Do NOT rush. Start slow — atmosphere, tension, subtle hints. A real encounter builds gradually over many messages. Don't jump to explicit content or physical contact within the first few messages. Let the tension simmer. The first several exchanges should be about mood, setting, anticipation — not action.\n- EARN EVERY STEP: Every escalation must feel natural and earned. Don't skip stages. Flirting → tension → subtle contact → escalation. If you rush, it kills the mood.";
     }
     return ctx;
   };
