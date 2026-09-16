@@ -6,6 +6,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
 import ScenarioSelection from "@/components/ScenarioSelection";
+import QuickActions from "@/components/QuickActions";
 
 export default function Messages() {
   const [creators, setCreators] = useState([]);
@@ -326,6 +327,7 @@ export default function Messages() {
                 )}
                 <div ref={messagesEndRef} />
               </div>
+              <QuickActions onAction={(text) => sendMessage(text)} disabled={sending} />
               <div className="p-4 border-t border-border flex gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
