@@ -13,13 +13,18 @@ export default function Messages() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [chatMode, setChatMode] = useState("artanis");
+  const [contentList, setContentList] = useState([]);
   const messagesEndRef = useRef(null);
 
   useEffect(() => { load(); }, []);
   const load = async () => {
     try {
-      const data = await base44.entities.Creator.list();
-      setCreators(data);
+      const [creatorData, contentData] = await Promise.all([
+        base44.entities.Creator.list(),
+        base44.entities.Content.filter({ published: true }, "-created_date", 20)
+      ]);
+      setCreators(creatorData);
+      setContentList(contentData);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -39,8 +44,15 @@ export default function Messages() {
 
     try {
       const persona = PERSONA_MODES[chatMode];
+      const contentContext = contentList.length > 0
+        ? "\n\nAVAILABLE CONTENT (offer matching items when the user's fantasy aligns — use the exact title):\n" +
+          contentList.map(c => {
+            const price = c.isFree ? 'free' : (c.price || 0) > 0 ? `${c.price}€` : 'free';
+            return `- "${c.title}" — ${c.contentType.replace(/_/g, ' ').toLowerCase()}, ${price}`;
+          }).join('\n')
+        : "";
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: persona.prompt + "\n\nThe user said: \"" + userMsg.text + "\"",
+        prompt: persona.prompt + contentContext + "\n\nThe user said: \"" + userMsg.text + "\"",
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const aiMsg = { senderType: "AI", text: aiText, createdAt: new Date().toISOString() };
@@ -103,7 +115,7 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
               <div className="p-4 border-t border-border flex gap-2">
-                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 px-4 py-2.5 rounded-full bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
+                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" />
                 <button onClick={sendMessage} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
             </>
