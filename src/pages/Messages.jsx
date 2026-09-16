@@ -85,6 +85,8 @@ export default function Messages() {
         prompt: buildContext() + "\n\nThe user said: \"" + userMsg.text + "\"",
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
+      const delay = 3000 + Math.floor(Math.random() * 2000);
+      await new Promise(r => setTimeout(r, delay));
       const aiMsg = { senderType: "AI", text: aiText, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
     } catch (e) {
@@ -105,6 +107,8 @@ export default function Messages() {
       const file_url = result.file_url;
       const userMsg = { senderType: "HUMAN", text: "", attachment: file_url, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
+      const delay = 3000 + Math.floor(Math.random() * 2000);
+      await new Promise(r => setTimeout(r, delay));
       const res = await base44.integrations.Core.InvokeLLM({
         prompt: buildContext() + "\n\nThe user sent you a photo. React enthusiastically — tell them what you see or imagine, how it makes you feel, and ask them something about it. Match the user's language.",
       });
