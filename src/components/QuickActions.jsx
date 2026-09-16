@@ -2,6 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 const ACTIONS = [
+  { label: "📸 Foto bitte", text: "Schick mir ein Foto von dem, was du gerade beschreibst — genau aus meiner Sicht" },
   { label: "👀 Mehr sehen", text: "Zeig mir mehr von dir" },
   { label: "🔥 Heißer", text: "Mach es heißer für mich" },
   { label: "👉 Berühren", text: "Ich fass mich an" },
