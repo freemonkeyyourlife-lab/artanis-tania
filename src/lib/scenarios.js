@@ -1,11 +1,13 @@
 const COMMON_SETUP_QUESTIONS = [
-  { key: "wardrobe", question: "Was trägst du?", type: "select", options: ["Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Jacke drüber, wenig drunter", "Kurzer Rock", "Nur Handtuch"] },
+  { key: "aiWardrobe", question: "Was trage ich?", type: "select", options: ["Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Jacke drüber, wenig drunter", "Kurzer Rock", "Nur Handtuch"] },
+  { key: "userWardrobe", question: "Was trägst du?", type: "select", options: ["Anzug", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Bademantel", "Nackt"] },
   { key: "timeOfDay", question: "Wie spät ist es?", type: "select", options: ["Morgens", "Nachmittags", "Abends", "Mitten in der Nacht"] },
-  { key: "mood", question: "Wie ist die Stimmung?", type: "select", options: ["Aufgeregt", "Verspielt", "Gelangweilt", "Geil", "Entspannt", "Nervös"] },
+  { key: "mood", question: "Wie ist die Stimmung zwischen uns?", type: "select", options: ["Aufgeregt", "Verspielt", "Gelangweilt", "Geil", "Entspannt", "Nervös"] },
   { key: "drunk", question: "Bist du angetrunken?", type: "select", options: ["Nüchtern", "Ein bisschen", "Richtig betrunken"] },
-  { key: "behavior", question: "Wie solltest du dich verhalten?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
-  { key: "position", question: "Wo sitzt du relativ zum User?", type: "select", options: ["Nebeneinander", "Gegenüber", "Er hinter mir", "Ich auf seinem Schoß", "Er liegt bei mir", "Ich stehe, er sitzt"] },
-  { key: "talkedAbout", question: "Worüber habt ihr bisher geredet?" },
+  { key: "aiBehavior", question: "Wie soll ich mich verhalten?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
+  { key: "userBehavior", question: "Wie verhältst du dich?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
+  { key: "position", question: "Wo sitzen wir zueinander?", type: "select", options: ["Nebeneinander", "Gegenüber", "Du hinter mir", "Ich auf deinem Schoß", "Du liegst bei mir", "Ich stehe, du sitzt"] },
+  { key: "talkedAbout", question: "Worüber haben wir bisher geredet?" },
   { key: "fetish", question: "Gibt es einen Fetisch / Schwerpunkt?" },
   { key: "age", question: "Wie alt bist du?" },
 ];
