@@ -5,6 +5,7 @@ import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
+import ScenarioSelection from "@/components/ScenarioSelection";
 
 export default function Messages() {
   const [creators, setCreators] = useState([]);
@@ -19,6 +20,10 @@ export default function Messages() {
   const [userPref, setUserPref] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [scenario, setScenario] = useState(null);
+  const [setupStep, setSetupStep] = useState(0);
+  const [setupAnswers, setSetupAnswers] = useState({});
+  const [setupInput, setSetupInput] = useState("");
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -72,6 +77,16 @@ export default function Messages() {
       if (userPref.sexualPreferences?.length) ctx += `- Sexual preferences: ${userPref.sexualPreferences.join(", ")}\n`;
       if (userPref.whatTheyWantToSee) ctx += `- Wants to see: ${userPref.whatTheyWantToSee}\n`;
       if (userPref.fantasyDescription) ctx += `- Fantasies: ${userPref.fantasyDescription}\n`;
+    }
+    if (scenario && scenario.promptContext) {
+      ctx += "\n\n" + scenario.promptContext;
+      if (Object.keys(setupAnswers).length > 0) {
+        ctx += "\n\nSCENARIO SETUP (the user told you this):";
+        scenario.setupQuestions.forEach(q => {
+          if (setupAnswers[q.key]) ctx += `\n- ${q.question} → ${setupAnswers[q.key]}`;
+        });
+      }
+      ctx += "\n\nStay in this scenario. Use the setting to build tension. React to the environment. Take advantage of the location — sneak around, whisper, take secret photos. Don't break character.";
     }
     return ctx;
   };
@@ -212,7 +227,7 @@ export default function Messages() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
         <div className={cn("rounded-2xl border border-border bg-card overflow-y-auto", activeChat && "hidden lg:block")}>
           {creators.map(c => (
-            <button key={c.id} onClick={() => { setActiveChat(c.id); const n = c.stageName.toLowerCase(); setChatMode(n.includes("triania") ? "triania" : (n.includes("couple") || c.personaType === "COUPLE") ? "couple" : "artanis"); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+            <button key={c.id} onClick={() => { setActiveChat(c.id); const n = c.stageName.toLowerCase(); setChatMode(n.includes("triania") ? "triania" : (n.includes("couple") || c.personaType === "COUPLE") ? "couple" : "artanis"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
               <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
@@ -234,12 +249,30 @@ export default function Messages() {
                   <p className="text-xs text-muted-foreground">{PERSONA_MODES[chatMode].label} mode — AI chat</p>
                 </div>
                 <StatusBadge experienceType="AI_INTERACTIVE" className="flex-shrink-0" />
+                {scenario && (
+                  <button onClick={() => { setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className="text-xs text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full bg-elevated whitespace-nowrap flex items-center gap-1">
+                    {scenario.id === "free" ? "💬" : scenario.icon} {scenario.title}
+                  </button>
+                )}
               </div>
               <div className="px-4 pb-3 flex gap-1.5 border-b border-border overflow-x-auto scrollbar-hide">
                 {Object.entries(PERSONA_MODES).map(([key, mode]) => (
                   <button key={key} onClick={() => setChatMode(key)} className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap", chatMode === key ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>{mode.label}</button>
                 ))}
               </div>
+              {!scenario ? (
+                <ScenarioSelection onSelect={(s) => { setScenario(s); setSetupStep(0); setSetupAnswers({}); }} />
+              ) : (scenario.setupQuestions && setupStep < scenario.setupQuestions.length) ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6">
+                  <p className="text-sm text-muted-foreground mb-3 text-center max-w-md">{scenario.setupQuestions[setupStep].question}</p>
+                  <div className="flex gap-2 w-full max-w-md">
+                    <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} placeholder="Deine Antwort..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
+                    <button onClick={() => { if (setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} className="px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
+                  </div>
+                  <button onClick={() => setSetupStep(scenario.setupQuestions.length)} className="mt-3 text-xs text-muted-foreground hover:text-foreground">Überspringen</button>
+                </div>
+              ) : (
+              <>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {(messages[activeChat] || [{ senderType: "SYSTEM", text: "This is an AI assistant. Messages from the real creator will be marked differently." }]).map((msg, i) => (
                   <div key={i} className={cn("flex gap-2", msg.senderType === "HUMAN" ? "justify-end" : "justify-start")}>
@@ -282,6 +315,8 @@ export default function Messages() {
                 <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={sendMessage} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
+              </>
+              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center"><p className="text-muted-foreground">Select a conversation to start chatting</p></div>
