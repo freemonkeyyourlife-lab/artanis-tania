@@ -1,0 +1,67 @@
+{
+  "name": "CreatorConnection",
+  "type": "object",
+  "properties": {
+    "creatorAId": {
+      "type": "string"
+    },
+    "creatorAName": {
+      "type": "string"
+    },
+    "creatorBId": {
+      "type": "string"
+    },
+    "creatorBName": {
+      "type": "string"
+    },
+    "connectionType": {
+      "type": "string",
+      "enum": [
+        "FRIENDS",
+        "PLAYMATES",
+        "LOVERS",
+        "ONE_NIGHT",
+        "RECURRING",
+        "SWING",
+        "GROUP",
+        "CASUAL",
+        "SECRET"
+      ],
+      "default": "PLAYMATES"
+    },
+    "circumstances": {
+      "type": "string"
+    },
+    "story": {
+      "type": "string"
+    },
+    "intensity": {
+      "type": "string",
+      "enum": [
+        "SOFT",
+        "PLAYFUL",
+        "STEAMY",
+        "HARD",
+        "EXTREME"
+      ],
+      "default": "STEAMY"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verified": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "creatorAId",
+    "creatorAName",
+    "creatorBId",
+    "creatorBName",
+    "circumstances"
+  ]
+}
