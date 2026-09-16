@@ -7,6 +7,13 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
+import Home from '@/pages/Home';
+import Artanis from '@/pages/Artanis';
+import Triania from '@/pages/Triania';
+import Couple from '@/pages/Couple';
+import Admin from '@/pages/Admin';
+import Layout from '@/components/Layout';
+import AgeGate from '@/components/AgeGate';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -35,6 +42,13 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       {/* Add your page Route elements here */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/artanis" element={<Artanis />} />
+        <Route path="/triania" element={<Triania />} />
+        <Route path="/couple" element={<Couple />} />
+        <Route path="/admin" element={<Admin />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -48,6 +62,7 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <ScrollToTop />
+          <AgeGate />
           <AuthenticatedApp />
         </Router>
         <Toaster />
