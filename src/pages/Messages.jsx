@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Bot, ArrowLeft } from "lucide-react";
+import { Send, Bot, ArrowLeft, ImagePlus } from "lucide-react";
+import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
@@ -14,17 +15,21 @@ export default function Messages() {
   const [sending, setSending] = useState(false);
   const [chatMode, setChatMode] = useState("artanis");
   const [contentList, setContentList] = useState([]);
+  const [stories, setStories] = useState([]);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => { load(); }, []);
   const load = async () => {
     try {
-      const [creatorData, contentData] = await Promise.all([
+      const [creatorData, contentData, storyData] = await Promise.all([
         base44.entities.Creator.list(),
-        base44.entities.Content.filter({ published: true }, "-created_date", 20)
+        base44.entities.Content.filter({ published: true }, "-created_date", 20),
+        base44.entities.Story.filter({ published: true }, "-created_date", 20)
       ]);
       setCreators(creatorData);
       setContentList(contentData);
+      setStories(storyData);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -33,9 +38,28 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeChat]);
 
+  const buildContext = () => {
+    const persona = PERSONA_MODES[chatMode];
+    let ctx = persona.prompt;
+    if (contentList.length > 0) {
+      ctx += "\n\nAVAILABLE CONTENT (offer matching items when the user's fantasy aligns — use the exact title):\n" +
+        contentList.map(c => {
+          const price = c.isFree ? 'free' : (c.price || 0) > 0 ? `${c.price}€` : 'free';
+          return `- "${c.title}" — ${c.contentType.replace(/_/g, ' ').toLowerCase()}, ${price}`;
+        }).join('\n');
+    }
+    if (stories.length > 0) {
+      ctx += "\n\nYOUR STORIES (tell these as your own experiences when the topic aligns — as if you were there. Don't quote them, retell naturally in your voice):\n" +
+        stories.map(s => {
+          const content = s.content ? s.content.substring(0, 800) : s.preview || "";
+          return `### "${s.title}"\n${content}`;
+        }).join('\n\n');
+    }
+    return ctx;
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || !activeChat) return;
-    const creator = creators.find(c => c.id === activeChat);
     const chatKey = activeChat;
     const userMsg = { senderType: "HUMAN", text: input, createdAt: new Date().toISOString() };
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
@@ -43,16 +67,8 @@ export default function Messages() {
     setSending(true);
 
     try {
-      const persona = PERSONA_MODES[chatMode];
-      const contentContext = contentList.length > 0
-        ? "\n\nAVAILABLE CONTENT (offer matching items when the user's fantasy aligns — use the exact title):\n" +
-          contentList.map(c => {
-            const price = c.isFree ? 'free' : (c.price || 0) > 0 ? `${c.price}€` : 'free';
-            return `- "${c.title}" — ${c.contentType.replace(/_/g, ' ').toLowerCase()}, ${price}`;
-          }).join('\n')
-        : "";
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: persona.prompt + contentContext + "\n\nThe user said: \"" + userMsg.text + "\"",
+        prompt: buildContext() + "\n\nThe user said: \"" + userMsg.text + "\"",
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const aiMsg = { senderType: "AI", text: aiText, createdAt: new Date().toISOString() };
@@ -62,6 +78,30 @@ export default function Messages() {
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeChat) return;
+    const chatKey = activeChat;
+    setSending(true);
+    try {
+      const result = await base44.integrations.Core.UploadPublicFile({ file });
+      const file_url = result.file_url;
+      const userMsg = { senderType: "HUMAN", text: "", attachment: file_url, createdAt: new Date().toISOString() };
+      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: buildContext() + "\n\nThe user sent you a photo. React enthusiastically — tell them what you see or imagine, how it makes you feel, and ask them something about it. Match the user's language.",
+      });
+      const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "Sieht geil aus!");
+      const aiMsg = { senderType: "AI", text: aiText, createdAt: new Date().toISOString() };
+      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSending(false);
+      e.target.value = "";
     }
   };
 
@@ -108,6 +148,7 @@ export default function Messages() {
                   <div key={i} className={cn("flex gap-2", msg.senderType === "HUMAN" ? "justify-end" : "justify-start")}>
                     {msg.senderType !== "HUMAN" && <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><Bot className="w-4 h-4 text-violet-400" /></div>}
                     <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", msg.senderType === "HUMAN" ? "bg-primary text-primary-foreground" : msg.senderType === "AI" ? "bg-elevated text-foreground" : "bg-transparent text-muted-foreground text-xs italic")}>
+                      {msg.attachment && <Image src={msg.attachment} fittingType="fill" className="w-48 h-48 rounded-lg mb-1" />}
                       {msg.text}
                     </div>
                   </div>
@@ -115,6 +156,8 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
               <div className="p-4 border-t border-border flex gap-2">
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
+                <button onClick={() => fileInputRef.current?.click()} disabled={sending} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
                 <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" />
                 <button onClick={sendMessage} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
