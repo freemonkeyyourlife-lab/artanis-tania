@@ -29,9 +29,9 @@
     --chart-4: 0 100% 65%;
     --chart-5: 226 11% 60%;
     --radius: 1rem;
-    --font-heading: "Playfair Display", serif;
-    --font-body: "Plus Jakarta Sans", sans-serif;
-    --font-display: "Playfair Display", serif;
+    --font-heading: "Montserrat", sans-serif;
+    --font-body: "Montserrat", sans-serif;
+    --font-display: "Montserrat", sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --sidebar-background: 227 19% 9%;
     --sidebar-foreground: 240 10% 96%;
