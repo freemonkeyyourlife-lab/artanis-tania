@@ -1,6 +1,7 @@
 const COMMON_SETUP_QUESTIONS = [
-  { key: "aiWardrobe", question: "Was trage ich?", type: "select", options: ["Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Jacke drüber, wenig drunter", "Kurzer Rock", "Nur Handtuch"] },
-  { key: "userWardrobe", question: "Was trägst du?", type: "select", options: ["Anzug", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Bademantel", "Nackt"] },
+  { key: "userGender", question: "Bist du Mann oder Frau?", type: "select", options: ["Mann", "Frau", "Divers"] },
+  { key: "aiWardrobe", question: "Was trage ich?", type: "select", options: ["Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Jacke drüber, wenig drunter", "Kurzer Rock", "Nur Handtuch", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Bademantel", "Nackt"] },
+  { key: "userWardrobe", question: "Was trägst du?", type: "select", options: ["Anzug", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Bademantel", "Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Kurzer Rock", "Nur Handtuch", "Nackt"] },
   { key: "timeOfDay", question: "Wie spät ist es?", type: "select", options: ["Morgens", "Nachmittags", "Abends", "Mitten in der Nacht"] },
   { key: "mood", question: "Wie ist die Stimmung zwischen uns?", type: "select", options: ["Aufgeregt", "Verspielt", "Gelangweilt", "Geil", "Entspannt", "Nervös"] },
   { key: "drunk", question: "Bist du angetrunken?", type: "select", options: ["Nüchtern", "Ein bisschen", "Richtig betrunken"] },

@@ -84,6 +84,7 @@ export default function Messages() {
     if (scenario && scenario.promptContext) {
       scenarioAnchor = "═══ CURRENT SCENARIO — YOU ARE HERE ═══\n" + scenario.promptContext + "\n\n";
       if (Object.keys(setupAnswers).length > 0) {
+        if (setupAnswers.userGender) scenarioAnchor += "USER GENDER: The user is " + setupAnswers.userGender + ". Adapt ALL questions, wardrobe, and roleplay to this gender. NEVER ask a male user about dresses, skirts, or female clothing. NEVER ask a female user about suits or male clothing.\n\n";
         scenarioAnchor += "ESTABLISHED FACTS (FIXED — never contradict, never teleport, never change):\n";
         scenario.setupQuestions.forEach(q => {
           if (setupAnswers[q.key]) scenarioAnchor += `• ${q.question} → ${setupAnswers[q.key]}\n`;
@@ -393,13 +394,15 @@ export default function Messages() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
         <div className={cn("rounded-2xl border border-border bg-card overflow-hidden flex flex-col", activeChat && "hidden lg:block")}>
           <div className="flex gap-1 p-2 border-b border-border">
-            <button onClick={() => { setViewMode("ai"); setActiveChat(null); setDmParticipantName(""); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "ai" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>KI-Models</button>
+            <button onClick={() => { setViewMode("ai"); setActiveChat(null); setDmParticipantName(""); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "ai" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Chats</button>
             <button onClick={() => { setViewMode("dm"); setActiveChat(null); loadDmUsers(); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "dm" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Direct Messages</button>
           </div>
           <div className="overflow-y-auto flex-1">
             {viewMode === "ai" ? (
-              creators.map(c => (
-                <button key={c.id} onClick={() => { setActiveChat(c.id); const n = c.stageName.toLowerCase(); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+              <>
+              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Real</p>
+              {creators.filter(c => c.creatorCategory === "REAL" && c.stageName !== "Testdummy").map(c => (
+                <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
                   ) : (
@@ -407,11 +410,27 @@ export default function Messages() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
-                    <p className="text-xs text-muted-foreground">{c.creatorCategory === "REAL" ? "Real · AI persona" : "KI-Modell"}</p>
+                    <p className="text-xs text-muted-foreground">Real · AI persona</p>
                   </div>
-                  {c.creatorCategory === "REAL" ? <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">Real</span> : <span className="px-2 py-0.5 rounded-full bg-violet-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">KI</span>}
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">Real</span>
                 </button>
-              ))
+              ))}
+              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">KI-Modelle</p>
+              {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy").map(c => (
+                <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+                  {c.avatar ? (
+                    <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
+                    <p className="text-xs text-muted-foreground">KI-Modell</p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-violet-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">KI</span>
+                </button>
+              ))}
+              </>
             ) : (
               dmUsers.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground text-center">Keine anderen Nutzer verfügbar</p>
@@ -444,7 +463,7 @@ export default function Messages() {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{viewMode === "dm" ? dmParticipantName : creators.find(c => c.id === activeChat)?.stageName}</p>
-                  <p className="text-xs text-muted-foreground">{viewMode === "dm" ? "Direct message — real person" : PERSONA_MODES[chatMode].label + " mode — AI chat"}</p>
+                  <p className="text-xs text-muted-foreground">{viewMode === "dm" ? "Direct message — real person" : (creators.find(c => c.id === activeChat)?.creatorCategory === "REAL" ? "Real · AI persona" : "KI-Modell · AI chat")}</p>
                 </div>
                 {viewMode === "ai" && <StatusBadge experienceType="AI_INTERACTIVE" className="flex-shrink-0" />}
                 {viewMode === "ai" && scenario && (
@@ -453,13 +472,7 @@ export default function Messages() {
                   </button>
                 )}
               </div>
-              {viewMode === "ai" && ["Artanis", "Triania", "Artanis × Triania"].includes(creators.find(c => c.id === activeChat)?.stageName) && (
-              <div className="px-4 pb-3 flex gap-1.5 border-b border-border overflow-x-auto scrollbar-hide">
-                {Object.entries(PERSONA_MODES).map(([key, mode]) => (
-                  <button key={key} onClick={() => setChatMode(key)} className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap", chatMode === key ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>{mode.label}</button>
-                ))}
-              </div>
-              )}
+
               {viewMode === "ai" && !scenario ? (
                 <ScenarioSelection onSelect={(s) => { setScenario(s); setSetupStep(0); setSetupAnswers({}); }} />
               ) : viewMode === "ai" && (scenario.setupQuestions && setupStep < scenario.setupQuestions.length) ? (
