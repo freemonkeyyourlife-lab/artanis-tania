@@ -1,3 +1,15 @@
+const COMMON_SETUP_QUESTIONS = [
+  { key: "wardrobe", question: "Was trägst du?", type: "select", options: ["Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Jacke drüber, wenig drunter", "Kurzer Rock", "Nur Handtuch"] },
+  { key: "timeOfDay", question: "Wie spät ist es?", type: "select", options: ["Morgens", "Nachmittags", "Abends", "Mitten in der Nacht"] },
+  { key: "mood", question: "Wie ist die Stimmung?", type: "select", options: ["Aufgeregt", "Verspielt", "Gelangweilt", "Geil", "Entspannt", "Nervös"] },
+  { key: "drunk", question: "Bist du angetrunken?", type: "select", options: ["Nüchtern", "Ein bisschen", "Richtig betrunken"] },
+  { key: "behavior", question: "Wie solltest du dich verhalten?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
+  { key: "position", question: "Wo sitzt du relativ zum User?", type: "select", options: ["Nebeneinander", "Gegenüber", "Er hinter mir", "Ich auf seinem Schoß", "Er liegt bei mir", "Ich stehe, er sitzt"] },
+  { key: "talkedAbout", question: "Worüber habt ihr bisher geredet?" },
+  { key: "fetish", question: "Gibt es einen Fetisch / Schwerpunkt?" },
+  { key: "age", question: "Wie alt bist du?" },
+];
+
 export const SCENARIOS = [
   {
     id: "office",
@@ -7,7 +19,8 @@ export const SCENARIOS = [
     promptContext: "SCENARIO: You and the user are at work in an office. You must be sneaky — coworkers could walk by, the boss could appear. Whisper, be discreet. Take secret photos in the bathroom, stairwell, or at your desk when no one is looking. The thrill is the risk of getting caught. Use [SEND_IMAGE: ...] for 'secret photos' you sneakily took.",
     setupQuestions: [
       { key: "location", question: "Wo genau bist du gerade? (Büro, Meeting, Pausenraum?)" },
-      { key: "mood", question: "Wie fühlst du dich? Gelangweilt? Gestresst? Geil?" },
+      { key: "feeling", question: "Wie fühlst du dich? Gelangweilt? Gestresst? Geil?" },
+      ...COMMON_SETUP_QUESTIONS,
     ],
   },
   {
@@ -18,7 +31,8 @@ export const SCENARIOS = [
     promptContext: "SCENARIO: You and the user are in a dark cinema. The movie is playing. You must whisper — people are around you. Hands can wander in the dark. Take secret photos in the dim light. The thrill is being so close in public, in the dark, where anyone could notice. Use [SEND_IMAGE: ...] for sneaky photos taken in the dark.",
     setupQuestions: [
       { key: "movie", question: "Was läuft für ein Film? Oder interessiert dich der gar nicht?" },
-      { key: "position", question: "Wo sitzt ihr? Hinten? Mitte? Neben wem?" },
+      { key: "row", question: "Wo sitzt ihr? Hinten? Mitte? Neben wem?" },
+      ...COMMON_SETUP_QUESTIONS,
     ],
   },
   {
@@ -29,7 +43,7 @@ export const SCENARIOS = [
     promptContext: "SCENARIO: You and the user are at a public swimming pool. Wet bodies, swimwear, changing rooms nearby. You can sneak glances, take photos when no one is looking. The changing room is a private moment in a public place. The thrill is exposure and the risk of being seen. Use [SEND_IMAGE: ...] for photos you sneak at the pool.",
     setupQuestions: [
       { key: "activity", question: "Was machst du gerade? Schwimmen? Liegen? Duschen?" },
-      { key: "wear", question: "Was trägst du?" },
+      ...COMMON_SETUP_QUESTIONS,
     ],
   },
   {
@@ -39,8 +53,9 @@ export const SCENARIOS = [
     description: "Hintersitz, der Fahrer im Spiegel, geflüsterte Geheimnisse.",
     promptContext: "SCENARIO: You and the user are in the back of a taxi. The driver can see you in the rearview mirror. You must be quiet and discreet. Whispered conversations, hands under coats, secret touches. The driver might notice. The thrill is being watched without knowing. Use [SEND_IMAGE: ...] for photos taken discreetly in the backseat.",
     setupQuestions: [
-      { key: "destination", question: "Wohin fahrt ihr?" },
+      { key: "destination", question: "Wohin fahrt ihr? Schon lange unterwegs?" },
       { key: "relation", question: "Kennt ihr euch schon? Oder gerade erst kennengelernt?" },
+      ...COMMON_SETUP_QUESTIONS,
     ],
   },
   {
@@ -51,7 +66,7 @@ export const SCENARIOS = [
     promptContext: "SCENARIO: You and the user are in an elevator. It's stuck between floors. Close quarters, nowhere to go. Anyone could call the elevator and the doors could open. The thrill is the confined space and the urgency — you never know how much time you have. Use [SEND_IMAGE: ...] for photos taken in the tight space.",
     setupQuestions: [
       { key: "building", question: "In welchem Gebäude seid ihr? Hotel? Büro? Wohnung?" },
-      { key: "feeling", question: "Bist du nervös? Aufgeregt? Oder schon geil?" },
+      ...COMMON_SETUP_QUESTIONS,
     ],
   },
   {
@@ -62,7 +77,7 @@ export const SCENARIOS = [
     promptContext: "SCENARIO: You and the user are in a club. Loud music, dark, people dancing around you. You have to get close to hear each other — whisper in their ear, bodies pressed together. Dark corners, the bathroom, the VIP area. The thrill is anonymity in the crowd. Use [SEND_IMAGE: ...] for photos taken in the dark club.",
     setupQuestions: [
       { key: "vibe", question: "Was für ein Club? Techno? Hip-Hop? Lounge?" },
-      { key: "drink", question: "Hast du was getrunken? Wie fühlst du dich?" },
+      ...COMMON_SETUP_QUESTIONS,
     ],
   },
   {
@@ -72,8 +87,8 @@ export const SCENARIOS = [
     description: "Draußen, Bäume, Bänke, jemand könnte vorbeikommen.",
     promptContext: "SCENARIO: You and the user are in a park. Outdoors, on a bench or in the bushes. People could walk by at any moment. The thrill is being outside, exposed, the risk of being seen by a stranger. Use [SEND_IMAGE: ...] for photos taken outdoors.",
     setupQuestions: [
-      { key: "time", question: "Was für eine Tageszeit ist es? Tag? Abend? Nacht?" },
       { key: "activity", question: "Was macht ihr da? Spazieren? Sitzen? Liegen?" },
+      ...COMMON_SETUP_QUESTIONS,
     ],
   },
   {
@@ -85,6 +100,7 @@ export const SCENARIOS = [
     setupQuestions: [
       { key: "store", question: "In welchem Geschäft seid ihr?" },
       { key: "trying", question: "Was probierst du an?" },
+      ...COMMON_SETUP_QUESTIONS,
     ],
   },
 ];

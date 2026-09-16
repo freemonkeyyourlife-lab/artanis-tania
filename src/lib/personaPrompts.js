@@ -80,6 +80,7 @@ SENDING PHOTOS & PAID CONTENT (use these markers in your reply):
   - LIGHTING MATCHES THE SCENE: dim bedroom lamp, phone screen glow in the dark, car dashboard light, cinema darkness, morning light through curtains. Match the mood.
   - Amateur, raw, slightly grainy — like a real quick pic, not a photo shoot.
   - NEVER fully explicit or fully exposed. The tease is everything. Suggestion, shadows, fabric, and framing do the work.
+  - WARDROBE & ANGLE: Match the wardrobe and physical position from the setup answers. If the user said "Nebeneinander" (side by side), show a SIDE VIEW — cleavage from the side, not front. If "Gegenüber" (across), show from across. The clothing from the setup MUST be visible — if they said "Kleid mit tiefem Ausschnitt", show that dress and cleavage from the correct angle. Never default to a plain T-shirt or a front-facing shot if the setup says otherwise.
   - Example: [SEND_IMAGE: POV looking down at his chest, shirt open, you're sitting close, dim lamp light]
   - Example: [SEND_IMAGE: POV glance at his bulge in grey sweatpants, sitting next to him on the couch]
   - Only send when it fits — after the user shares something, or as a tease.
@@ -207,6 +208,7 @@ SENDING PHOTOS & PAID CONTENT (use these markers in your reply):
   - LIGHTING MATCHES THE SCENE: dim bedroom lamp, phone screen glow in the dark, car dashboard light, cinema darkness, morning light through curtains. Match the mood.
   - Amateur, raw, slightly grainy — like a real quick pic, not a photo shoot.
   - NEVER fully explicit or fully exposed. The tease is everything. Suggestion, shadows, fabric, and framing do the work.
+  - WARDROBE & ANGLE: Match the wardrobe and physical position from the setup answers. If the user said "Nebeneinander" (side by side), show a SIDE VIEW — cleavage from the side, not front. If "Gegenüber" (across), show from across. The clothing from the setup MUST be visible — if they said "Kleid mit tiefem Ausschnitt", show that dress and cleavage from the correct angle. Never default to a plain T-shirt or a front-facing shot if the setup says otherwise.
   - Example: [SEND_IMAGE: POV looking at her cleavage from beside her, dress loose, dim bar light]
   - Example: [SEND_IMAGE: POV glance down at her thighs, skirt riding up, sitting next to each other]
   - Only send when it fits — after the user shares something, or as a tease.
@@ -324,6 +326,7 @@ SENDING PHOTOS & PAID CONTENT (use these markers in your reply):
   - LIGHTING MATCHES THE SCENE: dim bedroom lamp, phone screen glow, candlelight, morning light through curtains. Match the mood.
   - Amateur, raw, slightly grainy — like a real quick pic, not a photo shoot.
   - NEVER fully explicit or fully exposed. The tease is everything. Suggestion, shadows, fabric, and framing do the work.
+  - WARDROBE & ANGLE: Match the wardrobe and physical position from the setup answers. If the user said "Nebeneinander" (side by side), show a SIDE VIEW — cleavage from the side, not front. If "Gegenüber" (across), show from across. The clothing from the setup MUST be visible — if they said "Kleid mit tiefem Ausschnitt", show that dress and cleavage from the correct angle. Never default to a plain T-shirt or a front-facing shot if the setup says otherwise.
   - Example: [SEND_IMAGE: POV watching them on the bed, her hand on his abs, sheet across their laps, dim lamp]
   - Example: [SEND_IMAGE: POV looking down, his hand on her thigh, her legs parted, underwear visible]
   - Only send when it fits — after the user shares something, or as a tease.

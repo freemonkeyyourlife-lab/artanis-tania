@@ -87,7 +87,7 @@ export default function Messages() {
           if (setupAnswers[q.key]) ctx += `\n- ${q.question} → ${setupAnswers[q.key]}`;
         });
       }
-      ctx += "\n\nStay in this scenario. Use the setting to build tension. React to the environment. Take advantage of the location — sneak around, whisper, take secret photos. Don't break character.\n\nCRITICAL RULES:\n- SPATIAL CONSISTENCY: Respect the positions established in the setup answers. If the user said you're sitting in the back seat, you stay in the back seat. If you're across the room, stay across the room. Don't teleport or suddenly be next to someone without moving there step by step. Physical closeness must be earned through the conversation.\n- SLOW ESCALATION: Do NOT rush. Start slow — atmosphere, tension, subtle hints. A real encounter builds gradually over many messages. Don't jump to explicit content or physical contact within the first few messages. Let the tension simmer. The first several exchanges should be about mood, setting, anticipation — not action.\n- EARN EVERY STEP: Every escalation must feel natural and earned. Don't skip stages. Flirting → tension → subtle contact → escalation. If you rush, it kills the mood.";
+      ctx += "\n\nStay in this scenario. Use the setting to build tension. React to the environment. Take advantage of the location — sneak around, whisper, take secret photos. Don't break character.\n\nCRITICAL RULES:\n- SPATIAL CONSISTENCY: Respect the positions established in the setup answers. If the user said you're sitting in the back seat, you stay in the back seat. If you're across the room, stay across the room. Don't teleport or suddenly be next to someone without moving there step by step. Physical closeness must be earned through the conversation.\n- IMAGE ANGLE & WARDROBE: When generating [SEND_IMAGE] photos, the POV MUST match the physical position from the setup. If the user said 'Nebeneinander' (side by side), the photo shows a SIDE VIEW — cleavage from the side, not from the front. If 'Gegenüber' (across), show them from across the table. If 'Er hinter mir', show from behind. The wardrobe from the setup MUST be visible in the image — if they said 'Kleid mit tiefem Ausschnitt', show that dress and its cleavage from the correct angle. NEVER default to a plain T-shirt or a front-facing shot if the setup says otherwise. The angle and clothing must be consistent with what the user described in the setup.\n- SLOW ESCALATION: Do NOT rush. Start slow — atmosphere, tension, subtle hints. A real encounter builds gradually over many messages. Don't jump to explicit content or physical contact within the first few messages. Let the tension simmer. The first several exchanges should be about mood, setting, anticipation — not action.\n- EARN EVERY STEP: Every escalation must feel natural and earned. Don't skip stages. Flirting → tension → subtle contact → escalation. If you rush, it kills the mood.";
     }
     return ctx;
   };
@@ -275,13 +275,23 @@ export default function Messages() {
               {!scenario ? (
                 <ScenarioSelection onSelect={(s) => { setScenario(s); setSetupStep(0); setSetupAnswers({}); }} />
               ) : (scenario.setupQuestions && setupStep < scenario.setupQuestions.length) ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-6">
-                  <p className="text-sm text-muted-foreground mb-3 text-center max-w-md">{scenario.setupQuestions[setupStep].question}</p>
+                <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
+                  <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">{scenario.setupQuestions[setupStep].question}</p>
+                  {scenario.setupQuestions[setupStep].type === "select" && (
+                    <div className="flex flex-wrap gap-2 w-full max-w-lg justify-center mb-4">
+                      {scenario.setupQuestions[setupStep].options.map(opt => (
+                        <button key={opt} onClick={() => { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: opt })); setSetupInput(""); setSetupStep(prev => prev + 1); }} className="px-4 py-2 rounded-full bg-elevated border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">{opt}</button>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex gap-2 w-full max-w-md">
-                    <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} placeholder="Deine Antwort..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
+                    <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} placeholder="Oder eigene Antwort..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
                     <button onClick={() => { if (setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} className="px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
                   </div>
-                  <button onClick={() => setSetupStep(scenario.setupQuestions.length)} className="mt-3 text-xs text-muted-foreground hover:text-foreground">Überspringen</button>
+                  <div className="flex gap-4 mt-3">
+                    <button onClick={() => { setSetupInput(""); setSetupStep(prev => prev + 1); }} className="text-xs text-muted-foreground hover:text-foreground">Frage überspringen</button>
+                    <button onClick={() => setSetupStep(scenario.setupQuestions.length)} className="text-xs text-muted-foreground hover:text-foreground">Alle überspringen</button>
+                  </div>
                 </div>
               ) : (
               <>
