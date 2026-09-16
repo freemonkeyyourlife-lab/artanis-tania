@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Bot, ArrowLeft, ImagePlus, Mic, Square } from "lucide-react";
+import { Send, Bot, ArrowLeft, ImagePlus, Mic, Square, Lock } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
@@ -113,6 +113,37 @@ export default function Messages() {
     }
   };
 
+  const parseAndGenerateMedia = async (text) => {
+    let cleanText = text;
+    let attachment = null;
+    let isPPV = false;
+    let ppvPrice = null;
+
+    const ppvMatch = text.match(/\[SEND_PPV:\s*(.+?)\s*\|\s*(\d+(?:\.\d+)?)\s*\]/);
+    if (ppvMatch) {
+      isPPV = true;
+      ppvPrice = parseFloat(ppvMatch[2]);
+      cleanText = cleanText.replace(ppvMatch[0], "").trim();
+      try {
+        const result = await base44.integrations.Core.GenerateImage({ prompt: ppvMatch[1].trim() });
+        attachment = result.url;
+      } catch (e) { console.error("Image generation failed:", e); }
+    }
+
+    if (!attachment) {
+      const imgMatch = text.match(/\[SEND_IMAGE:\s*(.+?)\s*\]/);
+      if (imgMatch) {
+        cleanText = cleanText.replace(imgMatch[0], "").trim();
+        try {
+          const result = await base44.integrations.Core.GenerateImage({ prompt: imgMatch[1].trim() });
+          attachment = result.url;
+        } catch (e) { console.error("Image generation failed:", e); }
+      }
+    }
+
+    return { cleanText, attachment, isPPV, ppvPrice };
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || !activeChat) return;
     const chatKey = activeChat;
@@ -122,13 +153,19 @@ export default function Messages() {
     setSending(true);
 
     try {
+      const hist = (messages[chatKey] || []).slice(-12).map(m => {
+        let t = m.text || "";
+        if (m.attachment) t += t ? " [also sent a photo]" : "[sent a photo]";
+        return `${m.senderType === "HUMAN" ? "User" : "You"}: ${t}`;
+      }).join("\n");
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: buildContext() + "\n\nThe user said: \"" + userMsg.text + "\"",
+        prompt: buildContext() + (hist ? "\n\nCONVERSATION SO FAR:\n" + hist : "") + "\n\nThe user said: \"" + userMsg.text + "\"",
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
-      const aiMsg = { senderType: "AI", text: aiText, createdAt: new Date().toISOString() };
+      const { cleanText, attachment, isPPV, ppvPrice } = await parseAndGenerateMedia(aiText);
+      const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
     } catch (e) {
       const aiMsg = { senderType: "AI", text: "I'm here and ready to chat! What would you like to talk about?", createdAt: new Date().toISOString() };
@@ -154,7 +191,8 @@ export default function Messages() {
         prompt: buildContext() + "\n\nThe user sent you a photo. React enthusiastically — tell them what you see or imagine, how it makes you feel, and ask them something about it. Match the user's language.",
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "Sieht geil aus!");
-      const aiMsg = { senderType: "AI", text: aiText, createdAt: new Date().toISOString() };
+      const { cleanText, attachment, isPPV, ppvPrice } = await parseAndGenerateMedia(aiText);
+      const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
     } catch (e) {
       console.error(e);
@@ -207,7 +245,20 @@ export default function Messages() {
                   <div key={i} className={cn("flex gap-2", msg.senderType === "HUMAN" ? "justify-end" : "justify-start")}>
                     {msg.senderType !== "HUMAN" && <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><Bot className="w-4 h-4 text-violet-400" /></div>}
                     <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", msg.senderType === "HUMAN" ? "bg-primary text-primary-foreground" : msg.senderType === "AI" ? "bg-elevated text-foreground" : "bg-transparent text-muted-foreground text-xs italic")}>
-                      {msg.attachment && <Image src={msg.attachment} fittingType="fill" className="w-48 h-48 rounded-lg mb-1" />}
+                      {msg.attachment && (
+                        msg.isPPV ? (
+                          <div className="relative w-48 h-48 rounded-lg mb-1 overflow-hidden">
+                            <Image src={msg.attachment} fittingType="fill" className="w-full h-full blur-2xl scale-110" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 gap-1">
+                              <Lock className="w-5 h-5 text-primary" />
+                              <span className="text-sm text-foreground font-semibold">{msg.ppvPrice}€</span>
+                              <button className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">Freischalten</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Image src={msg.attachment} fittingType="fill" className="w-48 h-48 rounded-lg mb-1" />
+                        )
+                      )}
                       {msg.text}
                     </div>
                   </div>
