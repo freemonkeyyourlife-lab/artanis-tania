@@ -28,6 +28,12 @@
     "banner": {
       "type": "string"
     },
+    "referenceImages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "onlineStatus": {
       "type": "string",
       "enum": [

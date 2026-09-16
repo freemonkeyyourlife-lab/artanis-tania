@@ -141,7 +141,9 @@ export default function Messages() {
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
       try {
-        const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, looking at the other person, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, " + ppvMatch[1].trim() });
+        const creator = creators.find(c => c.id === activeChat);
+        const refImages = creator?.referenceImages?.length ? creator.referenceImages : null;
+        const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + ppvMatch[1].trim(), existing_image_urls: refImages });
         attachment = result.url;
       } catch (e) { console.error("Image generation failed:", e); }
     }
@@ -151,7 +153,9 @@ export default function Messages() {
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
         try {
-          const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, looking at the other person, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, " + imgMatch[1].trim() });
+          const creator = creators.find(c => c.id === activeChat);
+          const refImages = creator?.referenceImages?.length ? creator.referenceImages : null;
+          const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + imgMatch[1].trim(), existing_image_urls: refImages });
           attachment = result.url;
         } catch (e) { console.error("Image generation failed:", e); }
       }
