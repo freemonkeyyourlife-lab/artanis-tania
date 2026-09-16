@@ -211,7 +211,7 @@ export default function Messages() {
     } catch (e) {
       console.error("Image generation failed, retrying toned-down:", e);
       try {
-        const tonedDown = prompt.replace(/hardcore pornographic|graphic sexual content|raw amateur porn|cum/gi, "explicit sensual nude erotic");
+        const tonedDown = prompt.replace(/hardcore|explicit|cum/gi, "sensual suggestive alluring");
         const result = await base44.integrations.Core.GenerateImage({ prompt: tonedDown });
         return result.url;
       } catch (e2) {
@@ -236,14 +236,14 @@ export default function Messages() {
       isPPV = true;
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
-      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, fully nude, hardcore pornographic, explicit sexual pose, spread, wet, aroused, erect nipples, glistening skin, cum, graphic sexual content, raw amateur porn, " + ppvMatch[1].trim(), allRefImages);
+      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + ppvMatch[1].trim(), allRefImages);
     }
 
     if (!attachment) {
       const imgMatch = text.match(/\[SEND_IMAGE:\s*(.+?)\s*\]/);
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
-        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, fully nude, hardcore pornographic, explicit sexual pose, spread, wet, aroused, erect nipples, glistening skin, cum, graphic sexual content, raw amateur porn, " + imgMatch[1].trim(), allRefImages);
+        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + imgMatch[1].trim(), allRefImages);
       }
     }
 
