@@ -9,8 +9,13 @@ const NAV_LINKS = [
   { label: "Triania", path: "/triania" },
   { label: "Couple", path: "/couple" },
   { label: "Explore", path: "/explore" },
+  { label: "Videos", path: "/videos" },
+  { label: "Photos", path: "/photos" },
+  { label: "Stories", path: "/stories" },
+  { label: "Topics", path: "/topics" },
   { label: "Live", path: "/live" },
   { label: "Interactive", path: "/interactive" },
+  { label: "Request", path: "/request" },
   { label: "Messages", path: "/messages" },
 ];
 
@@ -42,7 +47,7 @@ export default function Layout() {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "px-3 py-2 rounded-full text-[13px] font-medium transition-colors",
+                  "px-2.5 py-2 rounded-full text-[13px] font-medium transition-colors",
                   location.pathname === link.path
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground"
@@ -93,6 +98,12 @@ export default function Layout() {
                   {link.label}
                 </Link>
               ))}
+              <Link to="/library" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
+                My Library
+              </Link>
+              <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
+                Account
+              </Link>
               <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
                 Admin
               </Link>
