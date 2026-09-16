@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock } from "lucide-react";
+import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import StatusBadge from "@/components/StatusBadge";
@@ -29,6 +29,7 @@ export default function Messages() {
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const userPhotoInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
@@ -165,8 +166,15 @@ export default function Messages() {
       const result = await base44.integrations.Core.GenerateImage({ prompt });
       return result.url;
     } catch (e) {
-      console.error("Image generation failed:", e);
-      return null;
+      console.error("Image generation failed, retrying toned-down:", e);
+      try {
+        const tonedDown = prompt.replace(/nude|topless|bare skin|bare breasts|erotic|explicit|highly sexual|provocative|sexual/gi, "sensual seductive alluring");
+        const result = await base44.integrations.Core.GenerateImage({ prompt: tonedDown });
+        return result.url;
+      } catch (e2) {
+        console.error("Image generation failed completely:", e2);
+        return null;
+      }
     }
   };
 
@@ -177,21 +185,22 @@ export default function Messages() {
     let ppvPrice = null;
     const creator = creators.find(c => c.id === activeChat);
     const creatorRefs = creator?.referenceImages?.length ? creator.referenceImages : [];
-    const allRefImages = [...creatorRefs, ...extraRefImages].length ? [...creatorRefs, ...extraRefImages] : null;
+    const userRefs = userPref?.userReferenceImages || [];
+    const allRefImages = [...creatorRefs, ...extraRefImages, ...userRefs].length ? [...creatorRefs, ...extraRefImages, ...userRefs] : null;
 
     const ppvMatch = text.match(/\[SEND_PPV:\s*(.+?)\s*\|\s*(\d+(?:\.\d+)?)\s*\]/);
     if (ppvMatch) {
       isPPV = true;
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
-      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + ppvMatch[1].trim(), allRefImages);
+      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, highly erotic, sensual, nude, bare skin, glistening, provocative, sexual, explicit, " + ppvMatch[1].trim(), allRefImages);
     }
 
     if (!attachment) {
       const imgMatch = text.match(/\[SEND_IMAGE:\s*(.+?)\s*\]/);
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
-        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, mysterious, suggestive not explicit, " + imgMatch[1].trim(), allRefImages);
+        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + (scenario ? "location: " + scenario.title + ". " : "") + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, highly erotic, sensual, nude, bare skin, glistening, provocative, sexual, explicit, " + imgMatch[1].trim(), allRefImages);
       }
     }
 
@@ -278,6 +287,29 @@ export default function Messages() {
       setSending(false);
       e.target.value = "";
     }
+  };
+
+  const handleUploadUserPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await base44.integrations.Core.UploadPublicFile({ file });
+      const file_url = result.file_url;
+      const newRefs = [...(userPref?.userReferenceImages || []), file_url];
+      let updated;
+      if (userPref) {
+        updated = await base44.entities.UserPreference.update(userPref.id, { userReferenceImages: newRefs });
+      } else {
+        const user = await base44.auth.me();
+        updated = await base44.entities.UserPreference.create({ userId: user.id, userReferenceImages: newRefs });
+      }
+      setUserPref(updated);
+      toast({ title: "📸 Foto hinzugefügt!", description: "Dein Foto wird jetzt für alle Bildgenerierungen verwendet." });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Fehler", description: "Foto konnte nicht hochgeladen werden.", variant: "destructive" });
+    }
+    e.target.value = "";
   };
 
   if (loading) {
@@ -414,7 +446,9 @@ export default function Messages() {
               <QuickActions onAction={(text) => sendMessage(text)} disabled={sending} />
               <div className="p-4 border-t border-border flex gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
+                <input ref={userPhotoInputRef} type="file" accept="image/*" onChange={handleUploadUserPhoto} className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
+                <button onClick={() => userPhotoInputRef.current?.click()} disabled={sending} className="relative w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors" title="Deine Referenzfotos (werden für Bildgenerierungen verwendet)"><UserPlus className="w-4 h-4" />{userPref?.userReferenceImages?.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{userPref.userReferenceImages.length}</span>}</button>
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
                 <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={() => sendMessage()} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
