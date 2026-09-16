@@ -205,10 +205,16 @@ export default function Messages() {
     let usedRefs = refImages;
     let promptText = prompt;
     if (isSoloFemale) {
-      // Only use the creator's own reference images, not user's uploaded photos
+      // Only use the creator's own reference images + avatar, not user's uploaded photos
       const creator = creators.find(c => c.id === activeChat);
-      usedRefs = creator?.referenceImages?.length ? creator.referenceImages : null;
-      promptText = prompt + " IMPORTANT: Only show the woman in the image. Never include a male body or face — the viewer imagines themselves there. At most, a female hand reaching toward the viewer. The camera IS the viewer's eyes.";
+      const creatorRefs = [
+        ...(creator?.referenceImages || []),
+        ...(creator?.avatar ? [creator.avatar] : []),
+      ].filter(Boolean);
+      usedRefs = creatorRefs.length > 0 ? creatorRefs : null;
+      promptText = prompt + " CRITICAL: The woman MUST look EXACTLY like the person in the reference images — same face, body type, hair color and style, skin tone, features. She is the SAME person in every image. Only show her, never include a male body or face. At most, her hand reaching toward the camera.";
+    } else if (usedRefs && usedRefs.length > 0) {
+      promptText = prompt + " CRITICAL: Match the appearance of the person in the reference images — same face, body, hair, skin.";
     }
     if (usedRefs && usedRefs.length > 0) {
       try {
