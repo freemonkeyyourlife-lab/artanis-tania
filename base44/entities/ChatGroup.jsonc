@@ -1,0 +1,46 @@
+{
+  "name": "ChatGroup",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "createdById": {
+      "type": "string"
+    },
+    "createdByName": {
+      "type": "string"
+    },
+    "topicTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "memberIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "memberCount": {
+      "type": "number",
+      "default": 1
+    },
+    "isPrivate": {
+      "type": "boolean",
+      "default": false
+    },
+    "lastActivity": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "createdById"
+  ]
+}

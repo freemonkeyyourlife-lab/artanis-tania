@@ -1,0 +1,45 @@
+{
+  "name": "UserPreference",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "avatar": {
+      "type": "string"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "topicsToDiscuss": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sexualPreferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "whatTheyWantToSee": {
+      "type": "string"
+    },
+    "fantasyDescription": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId"
+  ]
+}

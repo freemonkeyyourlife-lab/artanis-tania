@@ -1,0 +1,34 @@
+{
+  "name": "GroupMessage",
+  "type": "object",
+  "properties": {
+    "groupId": {
+      "type": "string"
+    },
+    "senderId": {
+      "type": "string"
+    },
+    "senderName": {
+      "type": "string"
+    },
+    "senderType": {
+      "type": "string",
+      "enum": [
+        "HUMAN",
+        "AI",
+        "SYSTEM"
+      ],
+      "default": "HUMAN"
+    },
+    "text": {
+      "type": "string"
+    },
+    "attachment": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "groupId",
+    "senderType"
+  ]
+}

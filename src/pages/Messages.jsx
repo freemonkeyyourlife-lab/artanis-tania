@@ -16,6 +16,7 @@ export default function Messages() {
   const [chatMode, setChatMode] = useState("artanis");
   const [contentList, setContentList] = useState([]);
   const [stories, setStories] = useState([]);
+  const [userPref, setUserPref] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -30,6 +31,11 @@ export default function Messages() {
       setCreators(creatorData);
       setContentList(contentData);
       setStories(storyData);
+      try {
+        const user = await base44.auth.me();
+        const prefs = await base44.entities.UserPreference.filter({ userId: user.id });
+        if (prefs.length > 0) setUserPref(prefs[0]);
+      } catch (e) { /* not logged in or no prefs */ }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -54,6 +60,14 @@ export default function Messages() {
           const content = s.content ? s.content.substring(0, 800) : s.preview || "";
           return `### "${s.title}"\n${content}`;
         }).join('\n\n');
+    }
+    if (userPref) {
+      ctx += "\n\nUSER PREFERENCES (adapt to these — this is what the user is into, focus on their interests and ask about them):\n";
+      if (userPref.interests?.length) ctx += `- Interests: ${userPref.interests.join(", ")}\n`;
+      if (userPref.topicsToDiscuss?.length) ctx += `- Wants to discuss: ${userPref.topicsToDiscuss.join(", ")}\n`;
+      if (userPref.sexualPreferences?.length) ctx += `- Sexual preferences: ${userPref.sexualPreferences.join(", ")}\n`;
+      if (userPref.whatTheyWantToSee) ctx += `- Wants to see: ${userPref.whatTheyWantToSee}\n`;
+      if (userPref.fantasyDescription) ctx += `- Fantasies: ${userPref.fantasyDescription}\n`;
     }
     return ctx;
   };

@@ -23,7 +23,9 @@
         "LIVE_TOPIC",
         "INTERACTIVE_IDEA",
         "QUESTION",
-        "CUSTOM_REQUEST"
+        "CUSTOM_REQUEST",
+        "DISCUSSION_TOPIC",
+        "SEXUAL_DIRECTION"
       ]
     },
     "title": {

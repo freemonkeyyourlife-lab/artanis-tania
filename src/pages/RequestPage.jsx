@@ -12,6 +12,8 @@ const REQUEST_TYPES = [
   { value: "INTERACTIVE_IDEA", label: "Interactive Idea" },
   { value: "QUESTION", label: "Question" },
   { value: "CUSTOM_REQUEST", label: "Custom Request" },
+  { value: "DISCUSSION_TOPIC", label: "Discussion Topic" },
+  { value: "SEXUAL_DIRECTION", label: "Sexual Direction" },
 ];
 
 export default function RequestPage() {

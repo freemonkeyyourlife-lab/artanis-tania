@@ -26,6 +26,8 @@ import Messages from '@/pages/Messages';
 import RequestPage from '@/pages/RequestPage';
 import Account from '@/pages/Account';
 import ExperiencePlayer from '@/pages/ExperiencePlayer';
+import Profile from '@/pages/Profile';
+import Groups from '@/pages/Groups';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -72,6 +74,8 @@ const AuthenticatedApp = () => {
         <Route path="/messages" element={<Messages />} />
         <Route path="/request" element={<RequestPage />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/groups" element={<Groups />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

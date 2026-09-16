@@ -16,7 +16,9 @@ const NAV_LINKS = [
   { label: "Live", path: "/live" },
   { label: "Interactive", path: "/interactive" },
   { label: "Request", path: "/request" },
+  { label: "Groups", path: "/groups" },
   { label: "Messages", path: "/messages" },
+  { label: "Profile", path: "/profile" },
 ];
 
 const MOBILE_NAV = [
@@ -24,7 +26,7 @@ const MOBILE_NAV = [
   { icon: Sparkles, label: "Interactive", path: "/interactive" },
   { icon: MessageSquare, label: "Chat", path: "/messages" },
   { icon: Library, label: "Library", path: "/library" },
-  { icon: User, label: "Profile", path: "/account" },
+  { icon: User, label: "Profile", path: "/profile" },
 ];
 
 export default function Layout() {
