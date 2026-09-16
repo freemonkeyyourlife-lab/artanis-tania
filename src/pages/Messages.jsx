@@ -140,7 +140,7 @@ export default function Messages() {
       ppvPrice = parseFloat(ppvMatch[2]);
       cleanText = cleanText.replace(ppvMatch[0], "").trim();
       try {
-        const result = await base44.integrations.Core.GenerateImage({ prompt: "amateur phone selfie photo, realistic, natural lighting, intimate POV angle, slightly grainy, raw, not professional, " + ppvMatch[1].trim() });
+        const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, looking at the other person, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, " + ppvMatch[1].trim() });
         attachment = result.url;
       } catch (e) { console.error("Image generation failed:", e); }
     }
@@ -150,7 +150,7 @@ export default function Messages() {
       if (imgMatch) {
         cleanText = cleanText.replace(imgMatch[0], "").trim();
         try {
-          const result = await base44.integrations.Core.GenerateImage({ prompt: "amateur phone selfie photo, realistic, natural lighting, intimate POV angle, slightly grainy, raw, not professional, " + imgMatch[1].trim() });
+          const result = await base44.integrations.Core.GenerateImage({ prompt: "POV first person view, amateur phone photo, looking at the other person, realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, " + imgMatch[1].trim() });
           attachment = result.url;
         } catch (e) { console.error("Image generation failed:", e); }
       }
