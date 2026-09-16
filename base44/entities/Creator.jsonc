@@ -13,6 +13,14 @@
         "COUPLE"
       ]
     },
+    "creatorCategory": {
+      "type": "string",
+      "enum": [
+        "REAL",
+        "AI_MODEL"
+      ],
+      "default": "AI_MODEL"
+    },
     "age": {
       "type": "number"
     },

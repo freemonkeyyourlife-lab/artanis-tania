@@ -45,7 +45,7 @@ export default function Messages() {
         base44.entities.Content.filter({ published: true }, "-created_date", 20),
         base44.entities.Story.filter({ published: true }, "-created_date", 20)
       ]);
-      setCreators(creatorData);
+      setCreators(creatorData.sort((a, b) => (a.creatorCategory === "REAL" ? 0 : 1) - (b.creatorCategory === "REAL" ? 0 : 1)));
       setContentList(contentData);
       setStories(storyData);
       try {
@@ -407,9 +407,9 @@ export default function Messages() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
-                    <p className="text-xs text-muted-foreground">{c.onlineStatus === "AI_AVAILABLE" ? "AI Available" : c.onlineStatus}</p>
+                    <p className="text-xs text-muted-foreground">{c.creatorCategory === "REAL" ? "Real · AI persona" : "KI-Modell"}</p>
                   </div>
-                  {c.onlineStatus === "AI_AVAILABLE" && <StatusBadge experienceType="AI_INTERACTIVE" />}
+                  {c.creatorCategory === "REAL" ? <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">Real</span> : <span className="px-2 py-0.5 rounded-full bg-violet-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">KI</span>}
                 </button>
               ))
             ) : (
