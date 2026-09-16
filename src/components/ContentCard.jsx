@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Image } from "@/components/ui/image";
 import { Heart, Lock, Play, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isFavorite, toggleFavorite } from "@/lib/favorites";
 
 const VISIBILITY_CONFIG = {
   PUBLIC: { label: "FREE", icon: null, color: "text-emerald-400" },
@@ -15,7 +16,7 @@ const VISIBILITY_CONFIG = {
 };
 
 export default function ContentCard({ content, className }) {
-  const [fav, setFav] = useState(false);
+  const [fav, setFav] = useState(() => isFavorite("content", content.id));
   const vis = VISIBILITY_CONFIG[content.visibility] || VISIBILITY_CONFIG.PUBLIC;
   const VisIcon = vis.icon;
 
@@ -48,7 +49,7 @@ export default function ContentCard({ content, className }) {
           )}
         </div>
         <button
-          onClick={(e) => { e.stopPropagation(); setFav(!fav); }}
+          onClick={(e) => { e.stopPropagation(); const f = toggleFavorite("content", content.id); setFav(f.includes("content:" + content.id)); }}
           className="absolute top-2 left-2 w-8 h-8 rounded-full glass flex items-center justify-center"
         >
           <Heart className={cn("w-4 h-4 transition-colors", fav ? "fill-primary text-primary" : "text-foreground")} />

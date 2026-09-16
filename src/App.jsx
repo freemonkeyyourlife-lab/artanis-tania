@@ -14,6 +14,17 @@ import Couple from '@/pages/Couple';
 import Admin from '@/pages/Admin';
 import Layout from '@/components/Layout';
 import AgeGate from '@/components/AgeGate';
+import Explore from '@/pages/Explore';
+import Videos from '@/pages/Videos';
+import Photos from '@/pages/Photos';
+import Stories from '@/pages/Stories';
+import Topics from '@/pages/Topics';
+import Library from '@/pages/Library';
+import Live from '@/pages/Live';
+import Interactive from '@/pages/Interactive';
+import Messages from '@/pages/Messages';
+import RequestPage from '@/pages/RequestPage';
+import Account from '@/pages/Account';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,6 +59,17 @@ const AuthenticatedApp = () => {
         <Route path="/triania" element={<Triania />} />
         <Route path="/couple" element={<Couple />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/videos" element={<Videos />} />
+        <Route path="/photos" element={<Photos />} />
+        <Route path="/stories" element={<Stories />} />
+        <Route path="/topics" element={<Topics />} />
+        <Route path="/library" element={<Library />} />
+        <Route path="/live" element={<Live />} />
+        <Route path="/interactive" element={<Interactive />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/request" element={<RequestPage />} />
+        <Route path="/account" element={<Account />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
