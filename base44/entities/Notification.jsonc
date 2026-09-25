@@ -1,0 +1,114 @@
+{
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "conversationId": {
+      "type": "string"
+    },
+    "notificationType": {
+      "type": "string",
+      "enum": [
+        "LIVE_REQUEST",
+        "VIDEOCHAT_REQUEST",
+        "HIGH_OFFER",
+        "VIP_ACTIVE",
+        "MEETING_REQUEST",
+        "PHYSICAL_REQUEST",
+        "CUSTOM_CONTENT",
+        "IDEA_SIGNAL",
+        "PAYMENT_ISSUE",
+        "MANUAL_APPROVAL",
+        "FOLLOW_UP",
+        "OTHER"
+      ]
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "URGENT"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "revenueContext": {
+      "type": "number"
+    },
+    "offerId": {
+      "type": "string"
+    },
+    "deepLink": {
+      "type": "string"
+    },
+    "channels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "DASHBOARD",
+          "PUSH",
+          "TELEGRAM",
+          "EMAIL",
+          "WHATSAPP"
+        ]
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "NEW",
+        "SENT",
+        "READ",
+        "DISMISSED",
+        "FAILED"
+      ]
+    },
+    "sentAt": {
+      "type": "string"
+    },
+    "readAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "creatorId",
+    "notificationType",
+    "priority",
+    "title",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "Notification"
+}

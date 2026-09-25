@@ -1,0 +1,168 @@
+{
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "personaId": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "alias": {
+      "type": "string"
+    },
+    "ageVerified": {
+      "type": "boolean"
+    },
+    "ageDeclared": {
+      "type": "number"
+    },
+    "language": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "preferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fantasies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "boundaries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preferredTone": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preferredModes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "relationshipStage": {
+      "type": "string",
+      "enum": [
+        "NEW",
+        "KNOWN",
+        "REGULAR",
+        "TRUSTED",
+        "VIP"
+      ]
+    },
+    "currentIntent": {
+      "type": "string",
+      "enum": [
+        "TALK",
+        "BROWSE",
+        "BUY",
+        "LIVE",
+        "VIDEOCHAT",
+        "INTERACTIVE"
+      ]
+    },
+    "openRequests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "importantStories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "likes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dislikes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lastContactAt": {
+      "type": "string"
+    },
+    "consentMemory": {
+      "type": "boolean"
+    },
+    "consentPersonalization": {
+      "type": "boolean"
+    },
+    "consentFollowUp": {
+      "type": "boolean"
+    },
+    "deletedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId",
+    "creatorId"
+  ],
+  "rls": {
+    "create": {
+      "data.userId": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  },
+  "name": "UserMemory"
+}

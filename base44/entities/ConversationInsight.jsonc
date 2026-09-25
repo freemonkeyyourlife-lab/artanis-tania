@@ -1,0 +1,125 @@
+{
+  "type": "object",
+  "properties": {
+    "conversationId": {
+      "type": "string"
+    },
+    "userId": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "importantFacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "openLoops": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "storyIdeas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contentIdeas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "salesOpportunities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenanceTags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "REAL_MEMORY",
+          "USER_TOLD",
+          "FANTASY",
+          "IDEA",
+          "SALES_SIGNAL"
+        ]
+      }
+    },
+    "analyzedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "conversationId",
+    "userId",
+    "creatorId",
+    "summary"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "ConversationInsight"
+}

@@ -9,7 +9,7 @@ const COMMON_SETUP_QUESTIONS = [
   { key: "userBehavior", question: "Wie verhältst du dich?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
   { key: "position", question: "Wie positionieren wir uns?", type: "select", options: ["Nebeneinander sitzend", "Gegenüber sitzend", "Stehend", "Tanzend", "Aneinander gedrückt", "Du hinter mir", "Ich auf deinem Schoß", "Liegen nebeneinander", "Ich stehe, du kniest", "An der Wand"] },
   { key: "talkedAbout", question: "Worüber haben wir bisher geredet?" },
-  { key: "fetish", question: "Was macht dich an? (Mehrfachauswahl möglich)", type: "multiselect", options: ["Voyeurismus", "Exhibitionismus", "Edging", "Rollenspiel", "Dominanz", "Unterwerfung", "Swinger", "Watersports", "Rough Sex", "Dirty Talk", "Masturbation", "Porn schauen", "Flashing", "Anonym bleiben"] },
+  { key: "fetish", question: "Was macht dich an? (Mehrfachauswahl — wähle so viele du willst)", type: "multiselect", options: ["Voyeurismus", "Exhibitionismus", "Edging", "Rollenspiel", "Dominanz", "Unterwerfung", "Swinger", "Watersports", "Rough Sex", "Dirty Talk", "Masturbation", "Porn schauen", "Flashing", "Anonym bleiben", "Fußfetisch", "Latex & Leder", "Bondage", "Spanking", "Blowjob", "Oral", "Anal", "Fingern", "Nylon & Strümpfe", "Uniformen", "Dessous", "Outdoor", "Im Auto", "Dusche & Bad", "Massage", "Küssen & Zärtlichkeit", "Teasing & Vorspiel", "Rollentausch", "Cuckold", "Dreier", "Lesbisch", "Gruppensex", "Orgien", "Sexting", "Cam & Live", "Spielzeug"] },
   { key: "age", question: "Wie alt bist du?" },
 ];
 

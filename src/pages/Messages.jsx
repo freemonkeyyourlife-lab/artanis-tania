@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus } from "lucide-react";
+import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ export default function Messages() {
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState({});
   const [input, setInput] = useState("");
+  const [pendingImage, setPendingImage] = useState(null);
   const [sending, setSending] = useState(false);
   const [chatMode, setChatMode] = useState("artanis");
   const [contentList, setContentList] = useState([]);
@@ -161,6 +162,15 @@ export default function Messages() {
     return ctx;
   };
 
+  const advanceSetup = () => {
+    const q = scenario?.setupQuestions?.[setupStep];
+    if (q && q.type !== "multiselect" && setupInput.trim()) {
+      setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput }));
+    }
+    setSetupInput("");
+    setSetupStep(prev => prev + 1);
+  };
+
   const toggleRecording = async () => {
     if (isRecording) {
       mediaRecorderRef.current?.stop();
@@ -286,12 +296,14 @@ export default function Messages() {
 
   const sendMessage = async (overrideText) => {
     const msgText = overrideText || input;
-    if (!msgText.trim() || !activeChat) return;
+    const img = pendingImage;
+    if ((!msgText.trim() && !img) || !activeChat) return;
     if (viewMode === "dm") { return sendDmMessage(msgText); }
     const chatKey = activeChat;
-    const userMsg = { senderType: "HUMAN", text: msgText, createdAt: new Date().toISOString() };
+    const userMsg = { senderType: "HUMAN", text: msgText, attachment: img || null, createdAt: new Date().toISOString() };
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
     setInput("");
+    setPendingImage(null);
     setSending(true);
 
     try {
@@ -300,13 +312,16 @@ export default function Messages() {
         if (m.attachment) t += t ? " [also sent a photo]" : "[sent a photo]";
         return `${m.senderType === "HUMAN" ? "User" : "You"}: ${t}`;
       }).join("\n");
+      const userTurn = img
+        ? "\n\nThe user sent you a photo" + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see in the photo. Then generate a response image that incorporates their photo (put yourself in the scene with what they showed you)."
+        : "\n\nThe user said: \"" + userMsg.text + "\"";
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: buildContext() + (hist ? "\n\nCONVERSATION SO FAR:\n" + hist : "") + "\n\nThe user said: \"" + userMsg.text + "\"" + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : ""),
+        prompt: buildContext() + (hist ? "\n\nCONVERSATION SO FAR:\n" + hist : "") + userTurn + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : ""),
       });
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
-      const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText);
+      const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText, img ? [img] : []);
       const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, suggestions, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
 
@@ -327,47 +342,15 @@ export default function Messages() {
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !activeChat) return;
-    const chatKey = activeChat;
-    if (viewMode === "dm") {
-      try {
-        const result = await base44.integrations.Core.UploadPublicFile({ file });
-        const me = await base44.auth.me();
-        const created = await base44.entities.Message.create({ conversationId: chatKey, sender: me.full_name || me.email, senderType: "HUMAN", text: "", attachment: result.file_url });
-        setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), created] }));
-      } catch (err) { console.error(err); }
-      e.target.value = "";
-      return;
-    }
-    setSending(true);
+    if (!file) return;
     try {
       const result = await base44.integrations.Core.UploadPublicFile({ file });
-      const file_url = result.file_url;
-      const userMsg = { senderType: "HUMAN", text: "", attachment: file_url, createdAt: new Date().toISOString() };
-      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
-      const delay = 3000 + Math.floor(Math.random() * 2000);
-      await new Promise(r => setTimeout(r, delay));
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: buildContext() + "\n\nThe user sent you a photo. React enthusiastically — tell them what you see or imagine, how it makes you feel, and ask them something about it. IMPORTANT: Generate a response image that incorporates the user's photo as visual reference — put yourself in the scene with what they showed you. For example, if they sent a dick pic, use [SEND_IMAGE: POV, your hand wrapped around his hard cock] or [SEND_IMAGE: POV, looking down at him, your hand on him]. If they sent their body, generate an image with you next to them or touching them. The response image should feel like you're physically interacting with what they showed you. Match the user's language.",
-      });
-      const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "Sieht geil aus!");
-      const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText, [file_url]);
-      const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, suggestions, createdAt: new Date().toISOString() };
-      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
-
-      const userMsgCount = [...(messages[chatKey] || []), userMsg].filter(m => m.senderType === "HUMAN").length;
-      if (userMsgCount > 0 && userMsgCount % 5 === 0) {
-        toast({
-          title: "🎁 Belohnung freigeschaltet!",
-          description: `Du hast ${userMsgCount} Nachrichten gesendet! Exklusive Inhalte wurden für dich freigeschaltet.`,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSending(false);
-      e.target.value = "";
+      setPendingImage(result.file_url);
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Fehler", description: "Bild konnte nicht hochgeladen werden.", variant: "destructive" });
     }
+    e.target.value = "";
   };
 
   const handleUploadUserPhoto = async (e) => {
@@ -419,7 +402,7 @@ export default function Messages() {
   };
 
   const sendDmMessage = async (msgText) => {
-    if (!msgText.trim() || !activeChat) return;
+    if ((!msgText.trim() && !pendingImage) || !activeChat) return;
     const chatKey = activeChat;
     try {
       const me = await base44.auth.me();
@@ -427,11 +410,25 @@ export default function Messages() {
         conversationId: chatKey,
         sender: me.full_name || me.email,
         senderType: "HUMAN",
-        text: msgText
+        text: msgText,
+        attachment: pendingImage || null
       });
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), created] }));
       setInput("");
+      setPendingImage(null);
     } catch (e) { console.error(e); }
+  };
+
+  const resetChat = () => {
+    if (!activeChat) return;
+    setMessages(prev => { const next = { ...prev }; delete next[activeChat]; return next; });
+    setScenario(null);
+    setSetupStep(0);
+    setSetupAnswers({});
+    setSetupInput("");
+    setInput("");
+    setPendingImage(null);
+    setSending(false);
   };
 
   const openIncomingDm = async (conv) => {
@@ -552,6 +549,9 @@ export default function Messages() {
                     {scenario.id === "free" ? "💬" : scenario.icon} {scenario.title}
                   </button>
                 )}
+                <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
+                  <RotateCcw className="w-4 h-4" />
+                </button>
               </div>
 
               {viewMode === "ai" && !scenario ? (
@@ -578,20 +578,23 @@ export default function Messages() {
                               <button key={opt} onClick={() => {
                                 setSetupAnswers(prev => {
                                   const cur = Array.isArray(prev[q.key]) ? prev[q.key] : [];
-                                  const next = cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt].slice(0, 10);
+                                  const next = cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt].slice(0, 40);
                                   return { ...prev, [q.key]: next };
                                 });
                               }} className={cn("px-4 py-2 rounded-full border text-sm transition-colors", isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-elevated border-border text-muted-foreground hover:text-foreground hover:border-primary/50")}>{isSelected ? "✓ " : ""}{opt}</button>
                             );
                           })}
                         </div>
-                        <p className="text-center text-xs text-muted-foreground mt-3">{Array.isArray(selected) ? selected.length : 0} / 10 ausgewählt</p>
+                        <p className="text-center text-xs text-muted-foreground mt-3">{Array.isArray(selected) ? selected.length : 0} ausgewählt</p>
+                        <div className="flex justify-center mt-3">
+                          <button onClick={advanceSetup} className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
+                        </div>
                       </div>
                     );
                   })()}
                   <div className="flex gap-2 w-full max-w-md">
-                    <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} placeholder="Oder eigene Antwort..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
-                    <button onClick={() => { if (setupInput.trim()) { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: setupInput })); setSetupInput(""); setSetupStep(prev => prev + 1); } }} className="px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
+                    <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") advanceSetup(); }} placeholder="Oder eigene Antwort..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
+                    <button onClick={advanceSetup} className="px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
                   </div>
                   <div className="flex gap-4 mt-3">
                     <button onClick={() => { setSetupInput(""); setSetupStep(prev => prev + 1); }} className="text-xs text-muted-foreground hover:text-foreground">Frage überspringen</button>
@@ -665,6 +668,15 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
               {viewMode === "ai" && <QuickActions onAction={(text) => sendMessage(text)} disabled={sending} scenario={scenario} />}
+              {pendingImage && (
+                <div className="px-4 pt-3 flex items-center gap-3">
+                  <div className="relative flex-shrink-0">
+                    <Image src={pendingImage} fittingType="fill" className="w-16 h-16 rounded-lg" />
+                    <button onClick={() => setPendingImage(null)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-xs leading-none">×</button>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Bild angehängt — schreib was dazu oder sende direkt.</span>
+                </div>
+              )}
               <div className="p-4 border-t border-border flex gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
                 <input ref={userPhotoInputRef} type="file" accept="image/*" onChange={handleUploadUserPhoto} className="hidden" />
@@ -672,7 +684,7 @@ export default function Messages() {
                 {viewMode === "ai" && <button onClick={() => userPhotoInputRef.current?.click()} disabled={sending} className="relative w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors" title="Deine Referenzfotos (werden für Bildgenerierungen verwendet)"><UserPlus className="w-4 h-4" />{userPref?.userReferenceImages?.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{userPref.userReferenceImages.length}</span>}</button>}
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
                 <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
-                <button onClick={() => sendMessage()} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
+                <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingImage) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
               </>
               )}

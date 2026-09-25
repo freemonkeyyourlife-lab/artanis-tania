@@ -1,0 +1,127 @@
+{
+  "type": "object",
+  "properties": {
+    "sessionId": {
+      "type": "string"
+    },
+    "userId": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "deviceId": {
+      "type": "string"
+    },
+    "controlMode": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "USER",
+        "AI",
+        "CREATOR"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING_CONSENT",
+        "ACTIVE",
+        "PAUSED",
+        "STOPPED",
+        "DISCONNECTED",
+        "ENDED"
+      ]
+    },
+    "consentGranted": {
+      "type": "boolean"
+    },
+    "consentGrantedAt": {
+      "type": "string"
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "endedAt": {
+      "type": "string"
+    },
+    "maxIntensity": {
+      "type": "number"
+    },
+    "maxActionSeconds": {
+      "type": "number"
+    },
+    "coinSpend": {
+      "type": "number"
+    },
+    "currencySpend": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "stopReason": {
+      "type": "string"
+    },
+    "lastActionId": {
+      "type": "string"
+    },
+    "lastActionStartedAt": {
+      "type": "string"
+    },
+    "lastActionEndedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "sessionId",
+    "userId",
+    "creatorId",
+    "deviceId",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "ToySession"
+}

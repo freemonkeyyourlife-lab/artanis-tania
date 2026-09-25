@@ -1,0 +1,101 @@
+{
+  "type": "object",
+  "properties": {
+    "actionId": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "GENERIC",
+        "LOVENSE",
+        "BUTTPLUG",
+        "KIIROO",
+        "OTHER"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "capability": {
+      "type": "string"
+    },
+    "pattern": {
+      "type": "string"
+    },
+    "intensityMin": {
+      "type": "number"
+    },
+    "intensityMax": {
+      "type": "number"
+    },
+    "durationSeconds": {
+      "type": "number"
+    },
+    "coinPrice": {
+      "type": "number"
+    },
+    "currencyPrice": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "aiAllowed": {
+      "type": "boolean"
+    },
+    "creatorAllowed": {
+      "type": "boolean"
+    },
+    "requiresUserConfirmation": {
+      "type": "boolean"
+    },
+    "active": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "actionId",
+    "name",
+    "capability",
+    "durationSeconds",
+    "active"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "vip"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "ToyAction"
+}

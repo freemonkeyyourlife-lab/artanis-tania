@@ -1,0 +1,71 @@
+{
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "balance": {
+      "type": "number"
+    },
+    "currencyCode": {
+      "type": "string"
+    },
+    "coinValueInCurrency": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "LOCKED",
+        "CLOSED"
+      ]
+    },
+    "updatedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId",
+    "balance",
+    "currencyCode",
+    "coinValueInCurrency"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "CoinWallet"
+}

@@ -1,0 +1,94 @@
+{
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "walletId": {
+      "type": "string"
+    },
+    "transactionId": {
+      "type": "string"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "CREDIT",
+        "DEBIT"
+      ]
+    },
+    "amountCoins": {
+      "type": "number"
+    },
+    "valueInCurrency": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": [
+        "PURCHASE",
+        "BONUS",
+        "VIP_BONUS",
+        "CREATOR_CREDIT",
+        "REFUND",
+        "CONTENT",
+        "INTERACTIVE",
+        "TOY_ACTION",
+        "VIDEOCHAT",
+        "LIVE_ACTION",
+        "ADJUSTMENT"
+      ]
+    },
+    "sourceId": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "balanceAfter": {
+      "type": "number"
+    },
+    "idempotencyKey": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId",
+    "direction",
+    "amountCoins",
+    "sourceType"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "CoinLedger"
+}

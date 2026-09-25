@@ -1,0 +1,112 @@
+{
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "userId": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "personaId": {
+      "type": "string"
+    },
+    "targetType": {
+      "type": "string",
+      "enum": [
+        "CREATOR",
+        "COUPLE",
+        "VIDEOCHAT",
+        "VIP",
+        "CONTENT",
+        "STORY",
+        "INTERACTIVE",
+        "OFFER"
+      ]
+    },
+    "targetId": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "PLATFORM",
+        "TELEGRAM",
+        "EMAIL",
+        "WHATSAPP",
+        "INSTAGRAM",
+        "SNAPCHAT",
+        "EXTERNAL",
+        "OTHER"
+      ]
+    },
+    "customPrice": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "singleUse": {
+      "type": "boolean"
+    },
+    "maxUses": {
+      "type": "number"
+    },
+    "useCount": {
+      "type": "number"
+    },
+    "startsAt": {
+      "type": "string"
+    },
+    "expiresAt": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean"
+    },
+    "clickCount": {
+      "type": "number"
+    },
+    "registrationCount": {
+      "type": "number"
+    },
+    "purchaseCount": {
+      "type": "number"
+    },
+    "revenueAttributed": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "token",
+    "creatorId",
+    "targetType",
+    "channel",
+    "active"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "InviteLink"
+}

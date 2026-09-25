@@ -1,0 +1,122 @@
+{
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "preferredChannel": {
+      "type": "string",
+      "enum": [
+        "PLATFORM",
+        "TELEGRAM",
+        "EMAIL",
+        "WHATSAPP",
+        "NONE"
+      ]
+    },
+    "allowedChannels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "PLATFORM",
+          "TELEGRAM",
+          "EMAIL",
+          "WHATSAPP"
+        ]
+      }
+    },
+    "allowedMessageTypes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "SERVICE",
+          "FOLLOW_UP",
+          "OFFERS",
+          "LIVE_ALERT",
+          "PAYMENT",
+          "SECURITY"
+        ]
+      }
+    },
+    "quietHoursEnabled": {
+      "type": "boolean"
+    },
+    "quietHoursStart": {
+      "type": "string"
+    },
+    "quietHoursEnd": {
+      "type": "string"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "telegramUserId": {
+      "type": "string"
+    },
+    "whatsappHandle": {
+      "type": "string"
+    },
+    "emailOverride": {
+      "type": "string"
+    },
+    "lastSuccessfulChannel": {
+      "type": "string"
+    },
+    "unsubscribedChannels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "consentUpdatedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId"
+  ],
+  "rls": {
+    "create": {
+      "data.userId": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  },
+  "name": "ChannelPreference"
+}

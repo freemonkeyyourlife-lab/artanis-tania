@@ -1,0 +1,93 @@
+{
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "revenueTotal": {
+      "type": "number"
+    },
+    "purchaseCount": {
+      "type": "number"
+    },
+    "videochatCount": {
+      "type": "number"
+    },
+    "acceptedOffers": {
+      "type": "number"
+    },
+    "rejectedOffers": {
+      "type": "number"
+    },
+    "chargebackCount": {
+      "type": "number"
+    },
+    "issueCount": {
+      "type": "number"
+    },
+    "reliabilityScore": {
+      "type": "number"
+    },
+    "activityScore": {
+      "type": "number"
+    },
+    "contentResponseScore": {
+      "type": "number"
+    },
+    "boundaryRespectScore": {
+      "type": "number"
+    },
+    "relationshipStage": {
+      "type": "string",
+      "enum": [
+        "NEW",
+        "KNOWN",
+        "REGULAR",
+        "TRUSTED",
+        "VIP"
+      ]
+    },
+    "internalPriority": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "URGENT"
+      ]
+    },
+    "lastCalculatedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId",
+    "creatorId"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "UserReputation"
+}

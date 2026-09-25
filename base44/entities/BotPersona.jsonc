@@ -1,0 +1,96 @@
+{
+  "name": "BotPersona",
+  "type": "object",
+  "properties": {
+    "creatorId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "ARTANIS_AI",
+        "TRIANIA_AI",
+        "COUPLE_AI"
+      ]
+    },
+    "identityDisclosure": {
+      "type": "string",
+      "default": "Clearly disclose that this is the AI version of the creator."
+    },
+    "systemPrompt": {
+      "type": "string"
+    },
+    "greetingStrategy": {
+      "type": "string"
+    },
+    "writingStyle": {
+      "type": "string"
+    },
+    "salesStyle": {
+      "type": "string"
+    },
+    "targetAudiences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "boundaries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contentRecommendationPolicy": {
+      "type": "string"
+    },
+    "learnFromExamples": {
+      "type": "boolean",
+      "default": true
+    },
+    "memoryEnabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "modelProvider": {
+      "type": "string"
+    },
+    "modelId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "creatorId",
+    "name",
+    "mode"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

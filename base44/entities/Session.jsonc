@@ -1,0 +1,155 @@
+{
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "personaId": {
+      "type": "string"
+    },
+    "conversationId": {
+      "type": "string"
+    },
+    "roomId": {
+      "type": "string"
+    },
+    "interactiveId": {
+      "type": "string"
+    },
+    "toySessionId": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "AI_ACTIVE",
+        "WAITING_FOR_CREATOR",
+        "CREATOR_ACTIVE",
+        "PAUSED",
+        "COMPLETED",
+        "CANCELLED",
+        "ERROR"
+      ]
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "CHAT",
+        "VIDEOCHAT",
+        "INTERACTIVE",
+        "LIVE",
+        "MIXED"
+      ]
+    },
+    "creatorPresence": {
+      "type": "string",
+      "enum": [
+        "LIVE",
+        "ONLINE",
+        "AI_AVAILABLE",
+        "AWAY",
+        "OFFLINE",
+        "SCHEDULED"
+      ]
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "lastActivityAt": {
+      "type": "string"
+    },
+    "endedAt": {
+      "type": "string"
+    },
+    "resumeToken": {
+      "type": "string"
+    },
+    "coinBalanceAtStart": {
+      "type": "number"
+    },
+    "coinsSpent": {
+      "type": "number"
+    },
+    "currencySpent": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "purchasedSeconds": {
+      "type": "number"
+    },
+    "remainingSeconds": {
+      "type": "number"
+    },
+    "activePermissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "summaryOnClose": {
+      "type": "string"
+    },
+    "handoffToCreator": {
+      "type": "boolean"
+    },
+    "handoffReason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "userId",
+    "creatorId",
+    "status",
+    "mode"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "Session"
+}

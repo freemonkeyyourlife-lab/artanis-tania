@@ -1,0 +1,101 @@
+{
+  "type": "object",
+  "properties": {
+    "topic": {
+      "type": "string"
+    },
+    "ideaType": {
+      "type": "string",
+      "enum": [
+        "STORY",
+        "VIDEO",
+        "PHOTO_SET",
+        "INTERACTIVE",
+        "LIVE",
+        "CUSTOM_CONTENT",
+        "TOPIC",
+        "FETISH"
+      ]
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "frequency": {
+      "type": "number"
+    },
+    "interestedUserCount": {
+      "type": "number"
+    },
+    "revenueSignal": {
+      "type": "number"
+    },
+    "contentGap": {
+      "type": "boolean"
+    },
+    "productionEase": {
+      "type": "number"
+    },
+    "creatorInterest": {
+      "type": "number"
+    },
+    "applicability": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "STORY",
+          "VIDEO",
+          "PHOTO",
+          "INTERACTIVE",
+          "LIVE"
+        ]
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "NEW",
+        "REVIEW",
+        "PLANNED",
+        "IN_PRODUCTION",
+        "DONE",
+        "REJECTED"
+      ]
+    },
+    "anonymizedNotes": {
+      "type": "string"
+    },
+    "lastSeenAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "topic",
+    "ideaType",
+    "creatorId",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "name": "IdeaSignal"
+}
