@@ -52,14 +52,17 @@ export default function CreatorDetail() {
 
       <div className="rounded-2xl overflow-hidden border border-border bg-card">
         <div className="relative aspect-[16/10] sm:aspect-[16/7]">
-          <Image src={creator.banner || creator.avatar} fittingType="fill" className="w-full h-full" />
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+          {/* Weichgezeichneter Hintergrund füllt die Fläche, das Bild selbst steht komplett drin — Kopf ist immer zu sehen. */}
+          <Image src={creator.banner || creator.avatar} fittingType="fill" className="absolute inset-0 w-full h-full scale-125 blur-2xl opacity-70" />
+          <Image src={creator.banner || creator.avatar} fittingType="fit" className="absolute inset-0 w-full h-full" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
           <div className="absolute top-4 left-4"><StatusBadge status={creator.onlineStatus} /></div>
         </div>
 
         <div className="px-6 pb-6 -mt-16 relative">
           <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-border bg-card">
-            <Image src={creator.avatar} fittingType="fill" className="w-full h-full" />
+            {/* Ausschnitt nach oben gezogen — das Gesicht ist im runden Rahmen zu sehen, nicht der Bauch. */}
+            <Image src={creator.avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.12} className="w-full h-full" />
           </div>
           <h1 className="font-display text-3xl text-foreground mt-4">{creator.stageName}</h1>
           {creator.tagline && <p className="text-primary text-sm mt-1">{creator.tagline}</p>}
