@@ -412,7 +412,7 @@ export default function Messages() {
     // Optional voice note
     if (parsed.voice) {
       try {
-        const res = await base44.integrations.Core.GenerateSpeech({ text: parsed.voice });
+        const res = await base44.integrations.Core.GenerateSpeech({ text: parsed.voice, voice: creator?.voice || undefined });
         if (res?.url) attachments.push({ type: "audio", url: res.url, locked: false, price: null });
       } catch (e) {
         console.error("Voice generation failed:", e);

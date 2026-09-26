@@ -18,6 +18,13 @@ const CATEGORIES = [
   { value: "REAL", label: "Real" },
 ];
 const STATUSES = ["AI_AVAILABLE", "ONLINE", "LIVE", "BUSY", "AWAY", "OFFLINE", "SCHEDULED"];
+const VOICES = [
+  { value: "river", label: "River — ruhig, neutral" },
+  { value: "honey", label: "Honey — warm, weich" },
+  { value: "sunny", label: "Sunny — hell, fröhlich" },
+  { value: "storm", label: "Storm — fest, autoritär" },
+  { value: "spark", label: "Spark — energisch, schnell" },
+];
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -36,6 +43,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
     topics: (initial?.topics || []).join(", "),
     tags: (initial?.tags || []).join(", "),
     onlineStatus: initial?.onlineStatus || "AI_AVAILABLE",
+    voice: initial?.voice || "river",
     featured: initial?.featured || false,
     active: initial ? initial.active !== false : true,
     avatar: initial?.avatar || "",
@@ -89,6 +97,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         topics: form.topics.split(",").map((s) => s.trim()).filter(Boolean),
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
         onlineStatus: form.onlineStatus,
+        voice: form.voice,
         featured: form.featured,
         active: form.active,
         avatar: form.avatar,
@@ -147,6 +156,13 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
           <label className="text-xs text-muted-foreground mb-1.5 block">Status</label>
           <select value={form.onlineStatus} onChange={(e) => set("onlineStatus", e.target.value)} className={inputCls}>
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">Stimme (für Sprachnachrichten)</label>
+          <select value={form.voice} onChange={(e) => set("voice", e.target.value)} className={inputCls}>
+            {VOICES.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}
           </select>
         </div>
 

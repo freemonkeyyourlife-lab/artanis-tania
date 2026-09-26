@@ -61,6 +61,16 @@
       ],
       "default": "OFFLINE"
     },
+    "voice": {
+      "type": "string",
+      "enum": [
+        "river",
+        "honey",
+        "sunny",
+        "storm",
+        "spark"
+      ]
+    },
     "profileVisibility": {
       "type": "string",
       "enum": [
