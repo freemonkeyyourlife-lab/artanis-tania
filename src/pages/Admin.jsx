@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Radio, Upload, FileText, Sparkles, MessageSquare, Inbox, TrendingUp, Users, ArrowBigUp } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
+import UserInvite from "@/components/admin/UserInvite";
 import { cn } from "@/lib/utils";
 
 export default function Admin() {
@@ -175,6 +176,11 @@ export default function Admin() {
             ))}
             {requests.length === 0 && <p className="text-muted-foreground text-center py-8">No requests yet</p>}
           </div>
+        </div>
+
+        {/* Users & Invites */}
+        <div className="lg:col-span-2">
+          <UserInvite />
         </div>
       </div>
     </div>

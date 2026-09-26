@@ -35,6 +35,7 @@ export default function Messages() {
   const [dmParticipantName, setDmParticipantName] = useState("");
   const [freeLeft, setFreeLeft] = useState(FREE_CREATIONS);
   const [extraCharacters, setExtraCharacters] = useState([]);
+  const [takeover, setTakeover] = useState(false);
   const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
@@ -79,6 +80,7 @@ export default function Messages() {
 
   useEffect(() => {
     setExtraCharacters([]);
+    setTakeover(false);
   }, [activeChat]);
 
   useEffect(() => {
@@ -351,6 +353,21 @@ export default function Messages() {
     if ((!msgText.trim() && !img) || !activeChat) return;
     if (viewMode === "dm") { return sendDmMessage(msgText); }
     const chatKey = activeChat;
+
+    // Takeover: the admin writes as the character instead of the AI
+    if (takeover) {
+      const asCharacter = {
+        senderType: "AI",
+        text: msgText,
+        attachments: img ? [{ type: "image", url: img, locked: false, price: null }] : [],
+        createdAt: new Date().toISOString(),
+      };
+      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), asCharacter] }));
+      setInput("");
+      setPendingImage(null);
+      return;
+    }
+
     const userMsg = { senderType: "HUMAN", text: msgText, attachment: img || null, createdAt: new Date().toISOString() };
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
     setInput("");
@@ -669,6 +686,15 @@ export default function Messages() {
                     </DialogContent>
                   </Dialog>
                 )}
+                {viewMode === "ai" && (
+                  <button
+                    onClick={() => setTakeover((v) => !v)}
+                    title="Selbst als dieser Charakter schreiben"
+                    className={cn("px-2.5 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-colors", takeover ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+                  >
+                    {takeover ? "Übernommen ✓" : "Selbst schreiben"}
+                  </button>
+                )}
                 <button onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })} title="Zur letzten Nachricht springen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <ArrowDown className="w-4 h-4" />
                 </button>
@@ -854,7 +880,7 @@ export default function Messages() {
                   </Dialog>
                 )}
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
-                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
+                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : takeover ? `Du schreibst als ${creators.find(c => c.id === activeChat)?.stageName || "Charakter"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingImage) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
               </>
