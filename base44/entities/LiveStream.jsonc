@@ -1,0 +1,57 @@
+{
+  "name": "LiveStream",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string",
+      "enum": [
+        "STRIPCHAT",
+        "CHATURBATE",
+        "CAM4",
+        "BONGACAMS",
+        "MYFREECAMS",
+        "ANDERE"
+      ],
+      "default": "STRIPCHAT"
+    },
+    "roomUrl": {
+      "type": "string"
+    },
+    "embedUrl": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OFFLINE",
+        "SCHEDULED",
+        "LIVE",
+        "ENDED"
+      ],
+      "default": "OFFLINE"
+    },
+    "startsAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "description": {
+      "type": "string"
+    },
+    "thumbnail": {
+      "type": "string"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "creatorName": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "platform"
+  ]
+}

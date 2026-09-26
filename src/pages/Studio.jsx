@@ -7,12 +7,14 @@ import CharacterForm from "@/components/studio/CharacterForm";
 import StoryManager from "@/components/studio/StoryManager";
 import TopicManager from "@/components/studio/TopicManager";
 import ContentManager from "@/components/studio/ContentManager";
+import LiveManager from "@/components/studio/LiveManager";
 
 const TABS = [
   { id: "characters", label: "Charaktere" },
   { id: "stories", label: "Storys" },
   { id: "topics", label: "Themen" },
   { id: "content", label: "Preise & Content" },
+  { id: "live", label: "Live-Stream" },
 ];
 
 export default function Studio() {
@@ -60,6 +62,7 @@ export default function Studio() {
       {tab === "stories" && <StoryManager creators={creators} />}
       {tab === "topics" && <TopicManager />}
       {tab === "content" && <ContentManager />}
+      {tab === "live" && <LiveManager />}
 
       {tab === "characters" && (
       <>

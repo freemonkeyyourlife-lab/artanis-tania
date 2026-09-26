@@ -3,22 +3,26 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Link } from "react-router-dom";
 import StatusBadge from "@/components/StatusBadge";
+import LiveStreamBanner from "@/components/LiveStreamBanner";
 import { Radio, Video as VideoIcon } from "lucide-react";
 
 export default function Live() {
   const [experiences, setExperiences] = useState([]);
   const [creators, setCreators] = useState([]);
+  const [streams, setStreams] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, []);
   const load = async () => {
     try {
-      const [e, c] = await Promise.all([
+      const [e, c, s] = await Promise.all([
         base44.entities.Experience.filter({ published: true }, "-created_date", 20),
         base44.entities.Creator.list(),
+        base44.entities.LiveStream.list("-created_date"),
       ]);
       setExperiences(e);
       setCreators(c);
+      setStreams(s.filter(x => x.status === "LIVE" || x.status === "SCHEDULED"));
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -30,6 +34,17 @@ export default function Live() {
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
       <h1 className="font-display text-3xl text-foreground mb-2">Live</h1>
       <p className="text-muted-foreground text-sm mb-8">Real-time sessions and online creators</p>
+
+      {streams.length > 0 && (
+        <section className="mb-10">
+          <h2 className="font-display text-xl text-foreground mb-4 flex items-center gap-2">
+            <Radio className="w-5 h-5 text-primary" /> Jetzt live
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {streams.map((s) => <LiveStreamBanner key={s.id} stream={s} />)}
+          </div>
+        </section>
+      )}
 
       <section className="mb-10">
         <div className="rounded-2xl border border-border bg-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
