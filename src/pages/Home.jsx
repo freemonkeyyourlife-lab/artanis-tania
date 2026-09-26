@@ -57,7 +57,7 @@ export default function Home() {
   // Alle, die mitspielen — er in der Mitte.
   const heroCast = (() => {
     const list = creators.filter((c) => c.active !== false && c.stageName !== "Testdummy" && c.avatar);
-    const me = list.find((c) => c.stageName === "Artanis");
+    const me = creators.find((c) => c.stageName === "Artanis" && c.avatar);
     const others = list.filter((c) => c.id !== me?.id);
     const mid = Math.floor(others.length / 2);
     return [...others.slice(0, mid), ...(me ? [me] : []), ...others.slice(mid)].slice(0, 11);
