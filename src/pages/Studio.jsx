@@ -6,11 +6,13 @@ import { cn } from "@/lib/utils";
 import CharacterForm from "@/components/studio/CharacterForm";
 import StoryManager from "@/components/studio/StoryManager";
 import TopicManager from "@/components/studio/TopicManager";
+import ContentManager from "@/components/studio/ContentManager";
 
 const TABS = [
   { id: "characters", label: "Charaktere" },
   { id: "stories", label: "Storys" },
   { id: "topics", label: "Themen" },
+  { id: "content", label: "Preise & Content" },
 ];
 
 export default function Studio() {
@@ -57,6 +59,7 @@ export default function Studio() {
 
       {tab === "stories" && <StoryManager creators={creators} />}
       {tab === "topics" && <TopicManager />}
+      {tab === "content" && <ContentManager />}
 
       {tab === "characters" && (
       <>

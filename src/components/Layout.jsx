@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck } from "lucide-react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -13,15 +13,15 @@ const NAV_LINKS = [
   { label: "Request", path: "/request" },
   { label: "Admin", path: "/admin" },
   { label: "Studio", path: "/studio" },
-  { label: "Explore", path: "/explore", disabled: true },
-  { label: "Videos", path: "/videos", disabled: true },
-  { label: "Photos", path: "/photos", disabled: true },
-  { label: "Stories", path: "/stories", disabled: true },
-  { label: "Topics", path: "/topics", disabled: true },
-  { label: "Live", path: "/live", disabled: true },
-  { label: "Interactive", path: "/interactive", disabled: true },
-  { label: "Groups", path: "/groups", disabled: true },
-  { label: "Library", path: "/library", disabled: true },
+  { label: "Explore", path: "/explore" },
+  { label: "Videos", path: "/videos" },
+  { label: "Photos", path: "/photos" },
+  { label: "Stories", path: "/stories" },
+  { label: "Topics", path: "/topics" },
+  { label: "Live", path: "/live" },
+  { label: "Interactive", path: "/interactive" },
+  { label: "Groups", path: "/groups" },
+  { label: "Library", path: "/library" },
 ];
 
 const MOBILE_NAV = [
@@ -34,6 +34,7 @@ const MOBILE_NAV = [
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -73,9 +74,18 @@ export default function Layout() {
           </nav>
 
           <div className="flex items-center gap-2 lg:gap-3">
-            <button className="w-9 h-9 rounded-full glass flex items-center justify-center hover:text-primary transition-colors">
+            {location.pathname !== "/" && (
+              <button
+                onClick={() => navigate(-1)}
+                title="Zurück"
+                className="w-9 h-9 rounded-full glass flex items-center justify-center hover:text-primary transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
+            <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
               <Search className="w-4 h-4" />
-            </button>
+            </span>
             <Link to="/messages" className="hidden sm:flex w-9 h-9 rounded-full glass items-center justify-center hover:text-primary transition-colors relative">
               <MessageSquare className="w-4 h-4" />
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />

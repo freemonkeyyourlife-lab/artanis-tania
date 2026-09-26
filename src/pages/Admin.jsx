@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
 import { Radio, Upload, FileText, Sparkles, MessageSquare, Inbox, TrendingUp, Users, ArrowBigUp } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import UserInvite from "@/components/admin/UserInvite";
@@ -51,13 +52,13 @@ export default function Admin() {
   ];
 
   const quickActions = [
-    { label: "Go Live", icon: Radio, color: "bg-red-500/20 text-red-400" },
-    { label: "Create Room", icon: Radio, color: "bg-primary/20 text-primary" },
-    { label: "Upload", icon: Upload, color: "bg-blue-500/20 text-blue-400" },
-    { label: "New Story", icon: FileText, color: "bg-emerald-500/20 text-emerald-400" },
-    { label: "New Experience", icon: Sparkles, color: "bg-violet-500/20 text-violet-400" },
-    { label: "View Requests", icon: Inbox, color: "bg-amber-500/20 text-amber-400" },
-    { label: "Messages", icon: MessageSquare, color: "bg-cyan-500/20 text-cyan-400" },
+    { label: "Go Live", icon: Radio, color: "bg-red-500/20 text-red-400", to: "/live" },
+    { label: "Create Room", icon: Radio, color: "bg-primary/20 text-primary", to: "/call" },
+    { label: "Upload", icon: Upload, color: "bg-blue-500/20 text-blue-400", to: "/studio" },
+    { label: "New Story", icon: FileText, color: "bg-emerald-500/20 text-emerald-400", to: "/studio" },
+    { label: "New Experience", icon: Sparkles, color: "bg-violet-500/20 text-violet-400", to: "/interactive" },
+    { label: "View Requests", icon: Inbox, color: "bg-amber-500/20 text-amber-400", to: "/request" },
+    { label: "Messages", icon: MessageSquare, color: "bg-cyan-500/20 text-cyan-400", to: "/messages" },
   ];
 
   if (loading) {
@@ -78,12 +79,12 @@ export default function Admin() {
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
-            <button key={action.label} className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
+            <Link key={action.label} to={action.to} className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
               <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", action.color)}>
                 <Icon className="w-6 h-6" />
               </div>
               <span className="text-xs font-medium text-foreground text-center">{action.label}</span>
-            </button>
+            </Link>
           );
         })}
       </div>
