@@ -7,6 +7,9 @@ import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Copy, Check, Loade
 export default function VideoCall() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [joined, setJoined] = useState(false);
+  const [wantCam, setWantCam] = useState(true);
+  const [wantMic, setWantMic] = useState(true);
   const [status, setStatus] = useState("connecting");
   const [error, setError] = useState("");
   const [micOn, setMicOn] = useState(true);
@@ -24,13 +27,18 @@ export default function VideoCall() {
   const pendingIceRef = useRef([]);
 
   useEffect(() => {
+    if (!joined) return;
     let active = true;
     let sub;
 
     const createPc = () => {
       const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       pcRef.current = pc;
-      localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current));
+      const localStream = localStreamRef.current;
+      localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+      // Immer empfangen können — auch wenn diese Seite selbst nichts sendet.
+      if (localStream.getVideoTracks().length === 0) pc.addTransceiver("video", { direction: "recvonly" });
+      if (localStream.getAudioTracks().length === 0) pc.addTransceiver("audio", { direction: "recvonly" });
       pc.ontrack = (e) => {
         if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== e.streams[0]) {
           remoteVideoRef.current.srcObject = e.streams[0];
@@ -95,7 +103,12 @@ export default function VideoCall() {
 
     const start = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const constraints = {};
+        if (wantCam) constraints.video = true;
+        if (wantMic) constraints.audio = true;
+        const stream = wantCam || wantMic
+          ? await navigator.mediaDevices.getUserMedia(constraints)
+          : new MediaStream();
         if (!active) { stream.getTracks().forEach((t) => t.stop()); return; }
         localStreamRef.current = stream;
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
@@ -144,15 +157,45 @@ export default function VideoCall() {
       pcRef.current?.close();
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [token]);
+  }, [token, joined, wantCam, wantMic]);
 
-  const toggleMic = () => {
-    const t = localStreamRef.current?.getAudioTracks()[0];
-    if (t) { t.enabled = !t.enabled; setMicOn(t.enabled); }
+  // Kamera/Mikrofon wird erst geholt, wenn der Nutzer es wirklich will.
+  const ensureTrack = async (kind) => {
+    const existing = kind === "video" ? localStreamRef.current?.getVideoTracks()[0] : localStreamRef.current?.getAudioTracks()[0];
+    if (existing) return existing;
+    try {
+      const s = await navigator.mediaDevices.getUserMedia(kind === "video" ? { video: true } : { audio: true });
+      const t = kind === "video" ? s.getVideoTracks()[0] : s.getAudioTracks()[0];
+      localStreamRef.current.addTrack(t);
+      const pc = pcRef.current;
+      if (pc) {
+        pc.onnegotiationneeded = async () => {
+          if (pc.signalingState !== "stable") return;
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          roomRef.current?.send({ type: "signal", data: { sdp: pc.localDescription } });
+        };
+        pc.addTrack(t, localStreamRef.current);
+      }
+      if (kind === "video" && localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current;
+      return t;
+    } catch (e) {
+      setError("Zugriff auf Kamera/Mikrofon nicht möglich.");
+      return null;
+    }
   };
-  const toggleCam = () => {
-    const t = localStreamRef.current?.getVideoTracks()[0];
-    if (t) { t.enabled = !t.enabled; setCamOn(t.enabled); }
+
+  const toggleMic = async () => {
+    const existing = localStreamRef.current?.getAudioTracks()[0];
+    if (existing) { existing.enabled = !existing.enabled; setMicOn(existing.enabled); return; }
+    const t = await ensureTrack("audio");
+    if (t) setMicOn(true);
+  };
+  const toggleCam = async () => {
+    const existing = localStreamRef.current?.getVideoTracks()[0];
+    if (existing) { existing.enabled = !existing.enabled; setCamOn(existing.enabled); return; }
+    const t = await ensureTrack("video");
+    if (t) setCamOn(true);
   };
   const endCall = () => {
     pcRef.current?.close();
@@ -169,6 +212,53 @@ export default function VideoCall() {
       setTimeout(() => setCopied(false), 2000);
     } catch (e) { /* clipboard blocked */ }
   };
+
+  if (!joined) {
+    return (
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-md text-center">
+          <h1 className="font-display text-2xl text-foreground">Video-Call beitreten</h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            Du entscheidest selbst, was du teilst. Kamera und Mikrofon kannst du jederzeit wieder ausschalten.
+          </p>
+
+          <div className="flex gap-3 justify-center mt-6">
+            <button
+              onClick={() => setWantCam((v) => !v)}
+              className={cn("inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-colors", wantCam ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground")}
+            >
+              {wantCam ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+              Kamera {wantCam ? "an" : "aus"}
+            </button>
+            <button
+              onClick={() => setWantMic((v) => !v)}
+              className={cn("inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-colors", wantMic ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground")}
+            >
+              {wantMic ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+              Mikrofon {wantMic ? "an" : "aus"}
+            </button>
+          </div>
+
+          <button
+            onClick={() => { setMicOn(wantMic); setCamOn(wantCam); setJoined(true); }}
+            className="w-full mt-6 px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold"
+          >
+            Jetzt beitreten
+          </button>
+
+          <div className="mt-8 pt-6 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-2">Teile diesen Link, um jemanden einzuladen:</p>
+            <div className="flex items-center gap-2 bg-card border border-border rounded-full px-4 py-2">
+              <span className="text-sm text-foreground truncate flex-1 text-left">{inviteLink}</span>
+              <button onClick={copyLink} className="text-primary flex-shrink-0" title="Link kopieren">
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const statusLabel =
     status === "live" ? `Verbunden mit ${peerName || "Teilnehmer"}` :

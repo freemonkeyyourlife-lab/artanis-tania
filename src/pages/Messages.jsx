@@ -14,6 +14,13 @@ import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/ch
 import CharacterSuggestion from "@/components/CharacterSuggestion";
 import { coinsForPrice } from "@/lib/coins";
 import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_CONSISTENCY } from "@/lib/appearance";
+import { Link } from "react-router-dom";
+
+const LANGUAGE_RULE =
+  "═══ SPRACHE — NUR DEUTSCH ═══\n" +
+  "Du antwortest IMMER auf Deutsch — jede Antwort, jede Frage, jede [SUGGEST: ...]-Option, jede [SEND_IMAGE: ...]- und [SEND_VIDEO: ...]-Beschreibung, jede [SEND_VOICE: ...]-Zeile und jedes [SEND_PPV: ...]-Label. Nie auf Englisch. Wechsle die Sprache niemals mitten im Chat — auch dann nicht, wenn der Nutzer englisch oder in einer anderen Sprache schreibt; antworte dann trotzdem auf Deutsch.\n" +
+  "Schreib natürliches, lockeres Deutsch in der Du-Form, so wie ein echter Mensch textet. Kein Übersetzungs-Deutsch, keine englischen Wörter dazwischen (außer Namen und Dinge, die wirklich kein deutsches Wort haben).\n" +
+  "═══ ENDE SPRACHE ═══\n\n";
 
 export default function Messages() {
   const [creators, setCreators] = useState([]);
@@ -155,7 +162,7 @@ export default function Messages() {
       scenarioAnchor += "═══ END SCENARIO ═══\n\n";
     }
 
-    let ctx = scenarioAnchor + persona.prompt;
+    let ctx = scenarioAnchor + LANGUAGE_RULE + persona.prompt;
 
     // Override name/bio for custom characters (Lena, Mia, etc.)
     const activeCreator = creators.find(c => c.id === activeChat);
@@ -246,6 +253,7 @@ export default function Messages() {
     if (scenario) {
       ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Respect the current location and position — do NOT teleport or jump around. If the user wants to change the location, follow their lead naturally and describe the move. Only reference objects that exist in the current scene.";
     }
+    ctx += "\n\n⚠️ SPRACHE: Antworte ausschließlich auf Deutsch (Du-Form) — auch wenn der Nutzer englisch schreibt. Kein Sprachwechsel.";
     return ctx;
   };
 
@@ -816,10 +824,14 @@ export default function Messages() {
                 <button onClick={() => setActiveChat(null)} className="lg:hidden"><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
                 {viewMode === "dm" ? (
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-display text-primary">{(dmParticipantName || "?")[0]}</div>
-                ) : creators.find(c => c.id === activeChat)?.avatar ? (
-                  <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary">{creators.find(c => c.id === activeChat)?.stageName[0]}</div>
+                  <Link to={`/creator/${activeChat}`} title="Profil ansehen" className="flex-shrink-0">
+                    {creators.find(c => c.id === activeChat)?.avatar ? (
+                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-10 h-10 rounded-full transition-opacity hover:opacity-80" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary">{creators.find(c => c.id === activeChat)?.stageName[0]}</div>
+                    )}
+                  </Link>
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{viewMode === "dm" ? dmParticipantName : creators.find(c => c.id === activeChat)?.stageName}</p>
@@ -967,17 +979,21 @@ export default function Messages() {
               ) : (
               <>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {(messages[activeChat] || (viewMode === "dm" ? [] : [{ senderType: "SYSTEM", text: "This is an AI assistant. Messages from the real creator will be marked differently." }])).map((msg, i, arr) => {
+                {(messages[activeChat] || (viewMode === "dm" ? [] : [{ senderType: "SYSTEM", text: "Das ist ein KI-Assistent. Nachrichten der echten Person werden anders gekennzeichnet." }])).map((msg, i, arr) => {
                   const isLastAi = viewMode === "ai" && msg.senderType === "AI" && !sending && arr.slice(i + 1).every(m => m.senderType !== "AI");
                   return (
                   <div key={i} className={cn("flex gap-2", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "justify-end" : "justify-start")}>
                     {(viewMode === "dm" ? msg.created_by_id !== currentUser?.id : msg.senderType !== "HUMAN") && (
                       viewMode === "dm" ? (
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-primary">{(dmParticipantName || "?")[0]}</span></div>
-                      ) : creators.find(c => c.id === activeChat)?.avatar ? (
-                        <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-8 h-8 rounded-full flex-shrink-0" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
+                        <Link to={`/creator/${activeChat}`} title="Profil ansehen" className="flex-shrink-0">
+                          {creators.find(c => c.id === activeChat)?.avatar ? (
+                            <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-8 h-8 rounded-full transition-opacity hover:opacity-80" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
+                          )}
+                        </Link>
                       )
                     )}
                     <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>

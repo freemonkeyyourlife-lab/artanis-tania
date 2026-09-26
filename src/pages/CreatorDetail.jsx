@@ -1,0 +1,72 @@
+import React, { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import { Image } from "@/components/ui/image";
+import { MessageSquare, ArrowLeft } from "lucide-react";
+import StatusBadge from "@/components/StatusBadge";
+
+export default function CreatorDetail() {
+  const { id } = useParams();
+  const [creator, setCreator] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const c = await base44.entities.Creator.get(id);
+        if (active) setCreator(c);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [id]);
+
+  if (loading) {
+    return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>;
+  }
+
+  if (!creator) {
+    return <div className="flex justify-center py-20"><p className="text-muted-foreground">Profil nicht gefunden</p></div>;
+  }
+
+  return (
+    <div className="max-w-[1000px] mx-auto px-4 lg:px-8 py-8">
+      <Link to="/messages" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
+        <ArrowLeft className="w-4 h-4" /> Zurück zum Chat
+      </Link>
+
+      <div className="rounded-2xl overflow-hidden border border-border bg-card">
+        <div className="relative aspect-[16/10] sm:aspect-[16/7]">
+          <Image src={creator.banner || creator.avatar} fittingType="fill" className="w-full h-full" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+          <div className="absolute top-4 left-4"><StatusBadge status={creator.onlineStatus} /></div>
+        </div>
+
+        <div className="px-6 pb-6 -mt-16 relative">
+          <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-border bg-card">
+            <Image src={creator.avatar} fittingType="fill" className="w-full h-full" />
+          </div>
+          <h1 className="font-display text-3xl text-foreground mt-4">{creator.stageName}</h1>
+          {creator.tagline && <p className="text-primary text-sm mt-1">{creator.tagline}</p>}
+          {creator.bio && <p className="text-sm text-muted-foreground mt-3 max-w-2xl whitespace-pre-line">{creator.bio}</p>}
+
+          {creator.topics?.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {creator.topics.map((t, i) => (
+                <span key={i} className="px-3 py-1.5 rounded-full bg-elevated border border-border text-xs text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          )}
+
+          <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold mt-6">
+            <MessageSquare className="w-4 h-4" /> Nachricht schreiben
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
