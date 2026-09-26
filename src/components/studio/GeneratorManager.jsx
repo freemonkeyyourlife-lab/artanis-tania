@@ -11,13 +11,13 @@ export default function GeneratorManager({ creators }) {
   const [creatorId, setCreatorId] = useState("");
   const [prompt, setPrompt] = useState("");
   const [animated, setAnimated] = useState(false);
-  const [extraRef, setExtraRef] = useState(null);
+  const [extraRefs, setExtraRefs] = useState([]);
   const [busy, setBusy] = useState(null);
   const [result, setResult] = useState(null);
   const { toast } = useToast();
 
   const creator = creators.find((c) => c.id === creatorId);
-  const refs = [creator?.avatar, ...(creator?.referenceImages || []), extraRef]
+  const refs = [creator?.avatar, ...(creator?.referenceImages || []), ...extraRefs]
     .filter(Boolean)
     .filter((v, i, a) => a.indexOf(v) === i)
     .slice(0, 6);
@@ -67,11 +67,20 @@ export default function GeneratorManager({ creators }) {
     }
   };
 
-  const uploadRef = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const res = await base44.integrations.Core.UploadPublicFile({ file });
-    setExtraRef(res.file_url);
+  // Mehrere eigene Bilder auf einmal — je mehr Vorlagen, desto gleichmäßiger das Gesicht.
+  const uploadRefs = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    try {
+      const urls = [];
+      for (const file of files) {
+        const res = await base44.integrations.Core.UploadPublicFile({ file });
+        urls.push(res.file_url);
+      }
+      setExtraRefs((prev) => [...prev, ...urls].filter((v, i, a) => a.indexOf(v) === i).slice(0, 6));
+    } catch (err) {
+      toast({ title: "Upload fehlgeschlagen", variant: "destructive" });
+    }
     e.target.value = "";
   };
 
@@ -137,15 +146,15 @@ export default function GeneratorManager({ creators }) {
             {animated ? "Animiert ✓" : "Animiert"}
           </button>
           <label className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground cursor-pointer">
-            <Plus className="w-3.5 h-3.5" /> Eigenes Bild
-            <input type="file" accept="image/*" onChange={uploadRef} className="hidden" />
+            <Plus className="w-3.5 h-3.5" /> Eigene Bilder
+            <input type="file" accept="image/*" multiple onChange={uploadRefs} className="hidden" />
           </label>
-          {extraRef && (
-            <div className="relative">
-              <Image src={extraRef} fittingType="fill" className="w-10 h-10 rounded-lg" />
-              <button onClick={() => setExtraRef(null)} className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-white text-[10px] leading-none">×</button>
+          {extraRefs.map((url) => (
+            <div key={url} className="relative">
+              <Image src={url} fittingType="fill" className="w-10 h-10 rounded-lg" />
+              <button onClick={() => setExtraRefs((prev) => prev.filter((u) => u !== url))} className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-white text-[10px] leading-none">×</button>
             </div>
-          )}
+          ))}
         </div>
 
         {refs.length > 0 && (
