@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Radio, Upload, FileText, Sparkles, MessageSquare, Inbox, TrendingUp, Users, ArrowBigUp } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import UserInvite from "@/components/admin/UserInvite";
+import PurchaseRequests from "@/components/admin/PurchaseRequests";
 import { cn } from "@/lib/utils";
 
 export default function Admin() {
@@ -182,6 +183,11 @@ export default function Admin() {
         {/* Users & Invites */}
         <div className="lg:col-span-2">
           <UserInvite />
+        </div>
+
+        {/* Pending payments */}
+        <div className="lg:col-span-2">
+          <PurchaseRequests />
         </div>
       </div>
     </div>

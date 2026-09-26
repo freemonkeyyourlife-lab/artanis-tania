@@ -10,8 +10,16 @@ export function parseReply(text) {
   let voice = null;
   let suggestions = [];
 
-  clean = clean.replace(/\[SEND_PPV:\s*(.+?)\s*\|\s*(\d+(?:\.\d+)?)\s*\]/g, (_, desc, price) => {
-    images.push({ desc: desc.trim(), price: parseFloat(price) });
+  // [SEND_PPV: Label | description | price] — the label names the direction.
+  // The older two-part form [SEND_PPV: description | price] still works.
+  clean = clean.replace(/\[SEND_PPV:\s*(.+?)\s*\|\s*(\d+(?:\.\d+)?)\s*\]/g, (_, body, price) => {
+    const parts = body.split("|").map((p) => p.trim());
+    const hasLabel = parts.length > 1;
+    images.push({
+      label: hasLabel ? parts[0] : null,
+      desc: (hasLabel ? parts.slice(1).join(" | ") : parts[0]) || "",
+      price: parseFloat(price),
+    });
     return "";
   });
   clean = clean.replace(/\[SEND_IMAGE:\s*([^\]]+?)\s*\]/g, (_, desc) => {

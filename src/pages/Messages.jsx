@@ -186,7 +186,7 @@ export default function Messages() {
     ctx += "- [SEND_IMAGE: description] — a teasing photo. Up to 3 per reply, each a DIFFERENT angle or body part.\n";
     ctx += "- [SEND_VIDEO: description] — a short intimate video clip. Use sparingly (most expensive).\n";
     ctx += "- [SEND_VOICE: your spoken line] — a voice note in your voice. Use it sometimes.\n";
-    ctx += "- [SEND_PPV: description | price] — locked content behind a paywall.\n";
+    ctx += "- [SEND_PPV: Label | description | price] — locked content behind a paywall. The Label names the direction in 1–3 words (e.g. 'Sanft & zärtlich', 'Hart & dominant', 'Erst schauen') so the user instantly knows where each path leads. When it fits, offer 2–3 DIFFERENT paths at once so the user can choose one — or several. Never more than 3.\n";
     ctx += "- [SUGGEST: a | b | c] — three clickable next-step options.\n";
     ctx += "APPEARANCE CONSISTENCY (critical): the person must look identical in every image — same face, same hair COLOUR and length, same skin tone, same body. NEVER change her hair colour.\n";
     ctx += "STAY SUGGESTIVE & TEASING: imply, leave something to the imagination — that is what keeps them coming back and spending. Go as far as the platform allows, but the tease is the point.\n";
@@ -319,7 +319,7 @@ export default function Messages() {
       const url = await generateWithFallback(buildImgPrompt(item.desc), allRefImages, chatMode);
       if (!url) continue;
       if (item.price) {
-        attachments.push({ type: "image", url, locked: true, price: item.price });
+        attachments.push({ type: "image", url, locked: true, price: item.price, label: item.label || null });
       } else {
         const isFree = consumeFree(currentUser?.id);
         attachments.push({ type: "image", url, locked: !isFree, price: isFree ? null : 4.99 });
@@ -501,6 +501,25 @@ export default function Messages() {
       setInput("");
       setPendingImage(null);
     } catch (e) { console.error(e); }
+  };
+
+  const requestUnlock = async (item) => {
+    try {
+      const me = currentUser || await base44.auth.me();
+      await base44.entities.Transaction.create({
+        userId: me.id,
+        type: "PPV",
+        amount: item.price || 0,
+        currency: "EUR",
+        status: "PENDING",
+      });
+      toast({
+        title: "Anfrage ist raus",
+        description: `${item.label || "Freischaltung"} · ${item.price} € — der Zugang kommt, sobald die Zahlung bestätigt ist.`,
+      });
+    } catch (e) {
+      toast({ title: "Fehler", description: "Anfrage konnte nicht gesendet werden.", variant: "destructive" });
+    }
   };
 
   const toggleExtra = (c) => {
@@ -776,37 +795,48 @@ export default function Messages() {
                     <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
                       {(() => {
                         const items = msg.attachments?.length ? msg.attachments : (msg.attachment ? [{ type: "image", url: msg.attachment, locked: msg.isPPV, price: msg.ppvPrice }] : []);
-                        return items.map((it, ii) => (
-                          <div key={ii} className="mb-1">
-                            {it.locked ? (
-                              <div className="relative w-48 h-48 rounded-lg overflow-hidden">
-                                {it.type === "image" ? (
-                                  <Image src={it.url} fittingType="fill" className="w-full h-full blur-2xl scale-110" />
-                                ) : (
-                                  <div className="w-full h-full bg-black" />
-                                )}
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 gap-1">
-                                  <Lock className="w-5 h-5 text-primary" />
-                                  <span className="text-sm text-foreground font-semibold">{it.price}€</span>
-                                  <button className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">Freischalten</button>
-                                </div>
-                              </div>
-                            ) : it.type === "video" ? (
-                              <video src={it.url} controls playsInline className="w-56 rounded-lg" />
-                            ) : it.type === "audio" ? (
-                              <audio src={it.url} controls className="w-56" />
-                            ) : (
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <button className="block"><Image src={it.url} fittingType="fill" className="w-48 h-48 rounded-lg transition-opacity hover:opacity-80" /></button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
-                                  <img src={it.url} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
-                                </DialogContent>
-                              </Dialog>
+                        const hasChoice = items.filter((i) => i.locked).length > 1;
+                        return (
+                          <>
+                            {hasChoice && (
+                              <p className="text-xs font-semibold text-primary mb-2">Wähle deinen Weg — eins oder beide:</p>
                             )}
-                          </div>
-                        ));
+                            <div className={cn(hasChoice && "flex gap-2 flex-wrap")}>
+                              {items.map((it, ii) => (
+                                <div key={ii} className="mb-1">
+                                  {it.locked ? (
+                                    <div className="relative w-44 h-44 rounded-lg overflow-hidden">
+                                      {it.type === "image" ? (
+                                        <Image src={it.url} fittingType="fill" className="w-full h-full blur-2xl scale-110" />
+                                      ) : (
+                                        <div className="w-full h-full bg-black" />
+                                      )}
+                                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 gap-1 px-2 text-center">
+                                        <Lock className="w-5 h-5 text-primary" />
+                                        {it.label && <span className="text-[11px] font-semibold uppercase tracking-wide text-primary leading-tight">{it.label}</span>}
+                                        <span className="text-sm text-foreground font-semibold">{it.price} €</span>
+                                        <button onClick={() => requestUnlock(it)} className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">Freischalten</button>
+                                      </div>
+                                    </div>
+                                  ) : it.type === "video" ? (
+                                    <video src={it.url} controls playsInline className="w-56 rounded-lg" />
+                                  ) : it.type === "audio" ? (
+                                    <audio src={it.url} controls className="w-56" />
+                                  ) : (
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <button className="block"><Image src={it.url} fittingType="fill" className="w-48 h-48 rounded-lg transition-opacity hover:opacity-80" /></button>
+                                      </DialogTrigger>
+                                      <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
+                                        <img src={it.url} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
+                                      </DialogContent>
+                                    </Dialog>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        );
                       })()}
                       {msg.text}
                       {msg.suggestions && msg.suggestions.length > 0 && isLastAi && (
