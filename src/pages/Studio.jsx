@@ -52,6 +52,12 @@ export default function Studio() {
     load();
   };
 
+  // Ein Klick: derselbe Charakter einmal echt, einmal als Zeichentrickfigur.
+  const toggleStyle = async (c) => {
+    await base44.entities.Creator.update(c.id, { artStyle: c.artStyle === "CARTOON" ? "PHOTOREAL" : "CARTOON" });
+    load();
+  };
+
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>;
   }
@@ -133,6 +139,18 @@ export default function Studio() {
                   )}
                 >
                   {c.active === false ? "Aktivieren" : "Deaktivieren"}
+                </button>
+                <button
+                  onClick={() => toggleStyle(c)}
+                  title="Diesen Charakter als Zeichentrickfigur anzeigen"
+                  className={cn(
+                    "w-full mt-2 px-3 py-2 rounded-full text-xs font-semibold transition-colors",
+                    c.artStyle === "CARTOON"
+                      ? "bg-violet-600/25 text-violet-300 hover:bg-violet-600/35"
+                      : "bg-elevated border border-border text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {c.artStyle === "CARTOON" ? "Zeichentrick ✓" : "Zeichentrick"}
                 </button>
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => setEditing(c)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground hover:text-foreground transition-colors">

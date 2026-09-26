@@ -15,7 +15,7 @@ import CharacterSuggestion from "@/components/CharacterSuggestion";
 import ReadAloudButton from "@/components/ReadAloudButton";
 import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
-import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, EROTIC_CRAFT, IMAGE_CONSISTENCY, PHOTOREAL } from "@/lib/appearance";
+import { APPEARANCE_DIRECTIVE, CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, EROTIC_CRAFT, IMAGE_CONSISTENCY, PHOTOREAL } from "@/lib/appearance";
 import { Link } from "react-router-dom";
 import ChatTabs from "@/components/chat/ChatTabs";
 
@@ -438,7 +438,9 @@ export default function Messages() {
     const who = spannerMode && extraCharacters.length > 0
       ? "Amateur phone photo of the women together in frame — both visible, they are with each other, "
       : "Amateur phone photo of the couple together in frame — him and her, both visible, ";
-    return PHOTOREAL + APPEARANCE_DIRECTIVE + " " + IMAGE_CONSISTENCY + " " + EROTIC_CRAFT + " " + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, teasing and suggestive, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
+    // Zeichentrick-Charaktere bekommen die gezeichnete Fassung, alle anderen das echte Foto.
+    const style = creators.find((c) => c.id === activeChat)?.artStyle === "CARTOON" ? CARTOON_STYLE : PHOTOREAL;
+    return style + APPEARANCE_DIRECTIVE + " " + IMAGE_CONSISTENCY + " " + EROTIC_CRAFT + " " + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, teasing and suggestive, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
   };
 
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {

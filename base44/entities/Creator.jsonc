@@ -23,6 +23,14 @@
       ],
       "default": "AI_MODEL"
     },
+    "artStyle": {
+      "type": "string",
+      "enum": [
+        "PHOTOREAL",
+        "CARTOON"
+      ],
+      "default": "PHOTOREAL"
+    },
     "active": {
       "type": "boolean",
       "default": true
