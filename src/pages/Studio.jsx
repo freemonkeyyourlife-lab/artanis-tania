@@ -12,11 +12,13 @@ import LiveManager from "@/components/studio/LiveManager";
 import MemberManager from "@/components/studio/MemberManager";
 import ContestManager from "@/components/studio/ContestManager";
 import GeneratorManager from "@/components/studio/GeneratorManager";
+import GuideManager from "@/components/studio/GuideManager";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
 
 const TABS = [
+  { id: "guide", label: "Anleitung" },
   { id: "characters", label: "Charaktere" },
   { id: "generator", label: "Generator" },
   { id: "stories", label: "Storys" },
@@ -28,7 +30,7 @@ const TABS = [
 ];
 
 export default function Studio() {
-  const [tab, setTab] = useState("characters");
+  const [tab, setTab] = useState("guide");
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | "new" | creator
@@ -83,6 +85,7 @@ export default function Studio() {
         ))}
       </div>
 
+      {tab === "guide" && <GuideManager />}
       {tab === "generator" && <GeneratorManager creators={creators} />}
       {tab === "stories" && <StoryManager creators={creators} />}
       {tab === "topics" && <TopicManager />}
