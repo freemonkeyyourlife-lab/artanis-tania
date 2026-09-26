@@ -45,8 +45,8 @@ export default function Home() {
     }
   };
 
-  const realCreators = creators.filter(c => c.creatorCategory === "REAL");
-  const aiCharacters = creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy");
+  const realCreators = creators.filter(c => c.creatorCategory === "REAL" && c.active !== false);
+  const aiCharacters = creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy" && c.active !== false);
   const artanis = creators.find(c => c.stageName === "Artanis");
   const triania = creators.find(c => c.stageName === "Triania");
   const couple = creators.find(c => c.stageName === "Artanis × Triania");

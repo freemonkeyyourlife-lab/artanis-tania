@@ -9,6 +9,9 @@ import TopicManager from "@/components/studio/TopicManager";
 import ContentManager from "@/components/studio/ContentManager";
 import LiveManager from "@/components/studio/LiveManager";
 
+const personaLabel = (t) =>
+  t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : "Frau";
+
 const TABS = [
   { id: "characters", label: "Charaktere" },
   { id: "stories", label: "Storys" },
@@ -25,7 +28,10 @@ export default function Studio() {
 
   useEffect(() => { load(); }, []);
   const load = async () => {
-    try { setCreators(await base44.entities.Creator.list("-created_date")); }
+    try {
+      const data = await base44.entities.Creator.list("-created_date");
+      setCreators(data.sort((a, b) => (a.active === false ? 1 : 0) - (b.active === false ? 1 : 0)));
+    }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -33,6 +39,11 @@ export default function Studio() {
   const remove = async (c) => {
     if (!window.confirm(`"${c.stageName}" wirklich löschen?`)) return;
     await base44.entities.Creator.delete(c.id);
+    load();
+  };
+
+  const toggleActive = async (c) => {
+    await base44.entities.Creator.update(c.id, { active: c.active === false });
     load();
   };
 
@@ -90,21 +101,33 @@ export default function Studio() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {creators.map((c) => (
-            <div key={c.id} className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div key={c.id} className={cn("rounded-2xl border border-border bg-card overflow-hidden", c.active === false && "opacity-60")}>
               <div className="relative aspect-[3/4] bg-elevated">
                 {c.avatar ? (
-                  <Image src={c.avatar} fittingType="fill" className="w-full h-full" />
+                  <Image src={c.avatar} fittingType="fill" className={cn("w-full h-full", c.active === false && "grayscale")} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center font-display text-3xl text-primary">{c.stageName[0]}</div>
                 )}
                 {c.featured && <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">Featured</span>}
+                {c.active === false && <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-destructive text-white text-[10px] font-semibold uppercase">Inaktiv</span>}
               </div>
               <div className="p-3">
                 <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {c.personaType === "SOLO_MALE" ? "Mann" : c.personaType === "COUPLE" ? "Paar" : "Frau"} · {c.creatorCategory === "REAL" ? "Real" : "KI"}
+                  {personaLabel(c.personaType)} · {c.creatorCategory === "REAL" ? "Real" : "KI"}
                 </p>
-                <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => toggleActive(c)}
+                  className={cn(
+                    "w-full mt-3 px-3 py-2 rounded-full text-xs font-semibold transition-colors",
+                    c.active === false
+                      ? "bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30"
+                      : "bg-elevated border border-border text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {c.active === false ? "Aktivieren" : "Deaktivieren"}
+                </button>
+                <div className="flex gap-2 mt-2">
                   <button onClick={() => setEditing(c)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <Pencil className="w-3.5 h-3.5" /> Bearbeiten
                   </button>

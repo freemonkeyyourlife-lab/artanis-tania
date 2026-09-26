@@ -10,6 +10,7 @@
       "enum": [
         "SOLO_MALE",
         "SOLO_FEMALE",
+        "SHEMALE",
         "COUPLE"
       ]
     },
@@ -20,6 +21,10 @@
         "AI_MODEL"
       ],
       "default": "AI_MODEL"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
     },
     "age": {
       "type": "number"

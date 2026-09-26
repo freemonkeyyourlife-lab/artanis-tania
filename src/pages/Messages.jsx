@@ -610,7 +610,7 @@ export default function Messages() {
             {viewMode === "ai" ? (
               <>
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Real</p>
-              {creators.filter(c => c.creatorCategory === "REAL" && c.stageName !== "Testdummy").map(c => (
+              {creators.filter(c => c.creatorCategory === "REAL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
@@ -625,7 +625,7 @@ export default function Messages() {
                 </button>
               ))}
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">KI-Modelle</p>
-              {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy").map(c => (
+              {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
@@ -724,7 +724,7 @@ export default function Messages() {
                       <h3 className="font-display text-lg text-foreground mb-1">Person hinzufügen</h3>
                       <p className="text-xs text-muted-foreground mb-4">Hol jemanden in diesen Chat — sie spielt dann mit.</p>
                       <div className="max-h-[60vh] overflow-y-auto space-y-2">
-                        {creators.filter((c) => c.id !== activeChat && c.stageName !== "Testdummy").map((c) => {
+                        {creators.filter((c) => c.id !== activeChat && c.stageName !== "Testdummy" && c.active !== false).map((c) => {
                           const added = extraCharacters.some((x) => x.id === c.id);
                           return (
                             <button key={c.id} onClick={() => toggleExtra(c)} className={cn("w-full p-3 flex items-center gap-3 rounded-xl border text-left transition-colors", added ? "border-primary bg-primary/10" : "border-border hover:bg-elevated")}>

@@ -9,6 +9,7 @@ import VoiceInput from "@/components/VoiceInput";
 const PERSONA_TYPES = [
   { value: "SOLO_FEMALE", label: "Frau (solo)" },
   { value: "SOLO_MALE", label: "Mann (solo)" },
+  { value: "SHEMALE", label: "Shemale / Trans" },
   { value: "COUPLE", label: "Paar" },
 ];
 const CATEGORIES = [
@@ -35,6 +36,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
     tags: (initial?.tags || []).join(", "),
     onlineStatus: initial?.onlineStatus || "AI_AVAILABLE",
     featured: initial?.featured || false,
+    active: initial ? initial.active !== false : true,
     avatar: initial?.avatar || "",
     banner: initial?.banner || "",
     referenceImages: initial?.referenceImages || [],
@@ -87,6 +89,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
         onlineStatus: form.onlineStatus,
         featured: form.featured,
+        active: form.active,
         avatar: form.avatar,
         banner: form.banner || form.avatar,
         referenceImages: form.referenceImages,
@@ -213,9 +216,15 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
           )}
         </div>
 
-        <div className="sm:col-span-2 flex items-center gap-2">
-          <input id="featured" type="checkbox" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} className="w-4 h-4 accent-primary" />
-          <label htmlFor="featured" className="text-sm text-muted-foreground">Featured (hervorgehoben)</label>
+        <div className="sm:col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="flex items-center gap-2">
+            <input id="featured" type="checkbox" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} className="w-4 h-4 accent-primary" />
+            <label htmlFor="featured" className="text-sm text-muted-foreground">Featured (hervorgehoben)</label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input id="active" type="checkbox" checked={form.active} onChange={(e) => set("active", e.target.checked)} className="w-4 h-4 accent-primary" />
+            <label htmlFor="active" className="text-sm text-muted-foreground">Aktiv (sichtbar & anwählbar)</label>
+          </div>
         </div>
       </div>
 
