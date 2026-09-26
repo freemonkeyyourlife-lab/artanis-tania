@@ -77,6 +77,14 @@ export default class CallRoom extends Actor {
       return;
     }
 
+    // Text chat runs alongside the video — everyone in the room sees it, live.
+    if (msg.type === 'chat') {
+      const text = String(msg.text ?? '').trim().slice(0, 2000);
+      if (!text) return;
+      this.broadcast({ type: 'chat', seat: me.seat, name: me.name || 'Gast', text });
+      return;
+    }
+
     if (msg.type === 'media') {
       const cam = msg.cam === true;
       const mic = msg.mic === true;

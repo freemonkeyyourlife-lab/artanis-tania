@@ -14,6 +14,9 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
   const [allowMic, setAllowMic] = useState(true);
   const [camOn, setCamOn] = useState(wantCam);
   const [micOn, setMicOn] = useState(wantMic);
+  const [mySeat, setMySeat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [sharing, setSharing] = useState(false);
 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -27,6 +30,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
   const mySeatRef = useRef(null);
   const camRef = useRef(wantCam);
   const micRef = useRef(wantMic);
+  const screenRef = useRef(null); // laufender Bildschirm-Stream, falls geteilt wird
 
   const syncPeers = useCallback(() => {
     setPeers(
@@ -193,6 +197,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
         if (!msg || typeof msg !== "object") return;
         if (msg.type === "you") {
           mySeatRef.current = msg.seat;
+          setMySeat(msg.seat);
           setIsHost(!!msg.host);
           if (pendingPeersRef.current) {
             const list = pendingPeersRef.current;
@@ -208,6 +213,8 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
           else applyPeers(list);
         } else if (msg.type === "signal") {
           handleSignal(msg.from, msg.data);
+        } else if (msg.type === "chat") {
+          setMessages((prev) => [...prev.slice(-199), { seat: msg.seat, name: msg.name, text: msg.text }]);
         } else if (msg.type === "denied") {
           applyTrack(msg.what === "cam" ? "video" : "audio", false);
           setError(msg.what === "cam"
@@ -237,6 +244,8 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
       connectedRef.clear();
       pendingPeersRef.current = null;
       mySeatRef.current = null;
+      screenRef.current?.getTracks().forEach((t) => t.stop());
+      screenRef.current = null;
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
     };
@@ -320,8 +329,58 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
     roomRef.current?.send({ type: "flags", allowCam: allowCam, allowMic: value });
   }, [allowCam]);
 
+  // Nachricht an alle im Call — geht denselben Weg wie die Video-Signale.
+  const sendChat = useCallback((text) => {
+    const t = String(text || "").trim();
+    if (!t) return;
+    roomRef.current?.send({ type: "chat", text: t.slice(0, 2000) });
+  }, []);
+
+  // Bildschirm statt Kamera senden — alle sehen ihn sofort, ohne neu zu verbinden.
+  const stopShare = useCallback(() => {
+    const screen = screenRef.current;
+    if (!screen) return;
+    screenRef.current = null;
+    screen.onended = null;
+    screen.getTracks().forEach((t) => t.stop());
+    const cam = localStreamRef.current?.getVideoTracks()[0] || null;
+    for (const pc of pcsRef.current.values()) {
+      const sender = pc.getSenders().find((s) => s.track && s.track.kind === "video");
+      if (sender && cam) sender.replaceTrack(cam).catch(() => {});
+    }
+    if (localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current;
+    setSharing(false);
+  }, []);
+
+  const toggleShare = useCallback(async () => {
+    if (screenRef.current) { stopShare(); return; }
+    setError("");
+    try {
+      if (!localStreamRef.current?.getVideoTracks()[0]) {
+        const t = await ensureTrack("video");
+        if (!t) return;
+      }
+      const display = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      const track = display.getVideoTracks()[0];
+      screenRef.current = track;
+      for (const pc of pcsRef.current.values()) {
+        const sender = pc.getSenders().find((s) => s.track && s.track.kind === "video");
+        if (sender) sender.replaceTrack(track).catch(() => {});
+      }
+      if (localVideoRef.current) localVideoRef.current.srcObject = display;
+      track.onended = () => stopShare();
+      setSharing(true);
+    } catch (e) {
+      console.error("Bildschirm teilen nicht möglich:", e);
+      setError(window.self !== window.top
+        ? "Bildschirm teilen ist in der Vorschau blockiert. Öffne die App in einem eigenen Tab — dort funktioniert es."
+        : "Bildschirm teilen wurde abgebrochen oder ist nicht erlaubt.");
+    }
+  }, [ensureTrack, stopShare]);
+
   return {
     status, error, peers, isHost, allowCam, allowMic, camOn, micOn,
     localVideoRef, toggleCam, toggleMic, setGuestCam, setGuestMic,
+    messages, sendChat, sharing, toggleShare, mySeat,
   };
 }

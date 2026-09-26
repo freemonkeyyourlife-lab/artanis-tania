@@ -1,10 +1,11 @@
 import React from "react";
-import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Lock } from "lucide-react";
+import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Lock, Monitor, MonitorOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function CallControls({
   micOn, camOn, toggleMic, toggleCam, onEnd,
   isHost, allowCam, allowMic, setGuestCam, setGuestMic,
+  sharing, onToggleShare,
 }) {
   const micBlocked = !isHost && !allowMic;
   const camBlocked = !isHost && !allowCam;
@@ -47,6 +48,13 @@ export default function CallControls({
           title={camBlocked ? "Der Gastgeber hat Kameras gesperrt" : camOn ? "Kamera aus" : "Kamera an"}
         >
           {camOn ? <VideoIcon className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+        </button>
+        <button
+          onClick={onToggleShare}
+          className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-colors", sharing ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}
+          title={sharing ? "Bildschirm-Teilen beenden" : "Bildschirm teilen"}
+        >
+          {sharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
         </button>
         <button
           onClick={onEnd}

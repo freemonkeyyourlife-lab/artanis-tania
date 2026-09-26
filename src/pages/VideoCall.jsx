@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
-import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home } from "lucide-react";
+import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSquare, X } from "lucide-react";
 import useCallRoom from "@/hooks/useCallRoom";
 import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
+import CallChat from "@/components/call/CallChat";
 import CallLink from "@/components/call/CallLink";
 import { resetCallToken } from "@/lib/callLink";
 
@@ -16,6 +17,7 @@ export default function VideoCall() {
   const [wantCam, setWantCam] = useState(true);
   const [wantMic, setWantMic] = useState(true);
   const [myName, setMyName] = useState("Du");
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -31,6 +33,7 @@ export default function VideoCall() {
   const {
     status, error, peers, isHost, allowCam, allowMic, camOn, micOn,
     localVideoRef, toggleCam, toggleMic, setGuestCam, setGuestMic,
+    messages, sendChat, sharing, toggleShare, mySeat,
   } = useCallRoom({ token, joined, wantCam, wantMic });
 
   const inviteLink = `${window.location.origin}/call/${token}`;
@@ -119,20 +122,45 @@ export default function VideoCall() {
           <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", status === "live" ? "bg-emerald-500" : status === "error" ? "bg-destructive" : "bg-amber-500 animate-pulse")} />
           <span className="text-sm text-foreground font-medium truncate">{statusLabel}</span>
         </div>
-        {isHost && (
-          <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold uppercase tracking-wider flex-shrink-0">
-            Gastgeber
-          </span>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => setChatOpen((v) => !v)}
+            title="Chat im Call"
+            className={cn("relative w-9 h-9 rounded-full flex items-center justify-center transition-colors", chatOpen ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+          >
+            <MessageSquare className="w-4 h-4" />
+            {!chatOpen && messages.length > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{messages.length}</span>
+            )}
+          </button>
+          {isHost && (
+            <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold uppercase tracking-wider flex-shrink-0">
+              Gastgeber
+            </span>
+          )}
+        </div>
       </div>
 
-      <CallStage
-        localVideoRef={localVideoRef}
-        camOn={camOn}
-        micOn={micOn}
-        myName={myName}
-        peers={peers}
-      />
+      <div className="flex-1 flex min-h-0 relative">
+        <CallStage
+          localVideoRef={localVideoRef}
+          camOn={camOn}
+          micOn={micOn}
+          myName={myName}
+          peers={peers}
+        />
+        {chatOpen && (
+          <aside className="absolute inset-0 z-20 sm:static sm:inset-auto sm:z-auto w-full sm:w-80 border-l border-border bg-card flex flex-col">
+            <div className="px-3 py-2 border-b border-border flex items-center justify-between flex-shrink-0">
+              <span className="text-sm font-medium text-foreground">Chat im Call</span>
+              <button onClick={() => setChatOpen(false)} className="text-muted-foreground hover:text-foreground" title="Chat schließen">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <CallChat messages={messages} mySeat={mySeat} onSend={sendChat} />
+          </aside>
+        )}
+      </div>
 
       {error && (
         <div className="px-4 pb-3 text-center">
@@ -157,6 +185,8 @@ export default function VideoCall() {
         camOn={camOn}
         toggleMic={toggleMic}
         toggleCam={toggleCam}
+        sharing={sharing}
+        onToggleShare={toggleShare}
         onEnd={() => navigate("/live")}
         isHost={isHost}
         allowCam={allowCam}
