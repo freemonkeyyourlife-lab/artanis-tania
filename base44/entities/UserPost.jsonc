@@ -1,0 +1,63 @@
+{
+  "name": "UserPost",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "userName": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "mediaType": {
+      "type": "string",
+      "enum": [
+        "IMAGE",
+        "VIDEO"
+      ],
+      "default": "IMAGE"
+    },
+    "mediaUrl": {
+      "type": "string"
+    },
+    "thumbnail": {
+      "type": "string"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "likes": {
+      "type": "number",
+      "default": 0
+    },
+    "likedBy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ratingSum": {
+      "type": "number",
+      "default": 0
+    },
+    "ratingCount": {
+      "type": "number",
+      "default": 0
+    },
+    "ratedBy": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "userId",
+    "mediaUrl"
+  ]
+}

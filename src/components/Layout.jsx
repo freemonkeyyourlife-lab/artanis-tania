@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { base44 } from "@/api/base44Client";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
@@ -21,6 +22,7 @@ const NAV_LINKS = [
   { label: "Live", path: "/live" },
   { label: "Interactive", path: "/interactive" },
   { label: "Groups", path: "/groups" },
+  { label: "Community", path: "/community" },
   { label: "Library", path: "/library" },
 ];
 
@@ -98,6 +100,13 @@ export default function Layout() {
               <User className="w-4 h-4" />
             </Link>
             <button
+              onClick={() => base44.auth.logout("/")}
+              title="Abmelden"
+              className="w-9 h-9 rounded-full glass flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden w-9 h-9 rounded-full glass flex items-center justify-center"
             >
@@ -134,6 +143,9 @@ export default function Layout() {
               <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
                 Account
               </Link>
+              <button onClick={() => base44.auth.logout("/")} className="text-left px-4 py-3 rounded-xl text-sm font-medium text-destructive">
+                Abmelden
+              </button>
             </nav>
           </div>
         )}

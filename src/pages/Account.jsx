@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { User as UserIcon, Crown, Settings } from "lucide-react";
+import { User as UserIcon, Crown, Settings, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Account() {
@@ -84,6 +84,17 @@ export default function Account() {
         <h2 className="font-display text-xl text-foreground mb-2">VIP Membership</h2>
         <p className="text-sm text-muted-foreground mb-4">{user.vip_status ? "You are a VIP member!" : "Upgrade to VIP for exclusive content, private rooms, and priority requests."}</p>
         {!user.vip_status && <button className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:accent-glow-strong transition-all">Become VIP</button>}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <h2 className="font-display text-xl text-foreground mb-2">Konto</h2>
+        <p className="text-sm text-muted-foreground mb-4">Melde dich ab, um das Konto zu wechseln.</p>
+        <button
+          onClick={() => base44.auth.logout("/")}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-elevated border border-border text-sm font-medium text-foreground hover:border-destructive/50 transition-colors"
+        >
+          <LogOut className="w-4 h-4" /> Abmelden
+        </button>
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ export default function Groups() {
   useEffect(() => { load(); }, []);
   const load = async () => {
     try {
-      const data = await base44.entities.ChatGroup.list("-created_date", 30);
+      const data = await base44.entities.ChatGroup.list("-lastActivity", 30);
       setGroups(data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -74,7 +74,7 @@ export default function Groups() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-3xl text-foreground">Groups</h1>
-          <p className="text-sm text-muted-foreground mt-1">Join like-minded people and share ideas</p>
+          <p className="text-sm text-muted-foreground mt-1">Offene Chats — jeder kann rein, jeder kann mitschreiben.</p>
         </div>
         <button onClick={() => setShowCreate(!showCreate)} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:accent-glow transition-all">
           <Plus className="w-4 h-4" /> New Group
@@ -98,7 +98,7 @@ export default function Groups() {
             <button key={g.id} onClick={() => join(g)} className="text-left rounded-2xl border border-border bg-card p-5 hover:border-primary/40 transition-colors">
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-display text-lg text-foreground">{g.title}</h3>
-                <Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <span className="px-2 py-0.5 rounded-full bg-emerald-600/20 text-emerald-400 text-[10px] font-semibold uppercase flex-shrink-0">Offen</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{g.description || "No description"}</p>
               {g.topicTags?.length > 0 && (

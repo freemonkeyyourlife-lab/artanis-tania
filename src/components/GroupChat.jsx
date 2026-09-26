@@ -23,6 +23,14 @@ export default function GroupChat({ group, onBack }) {
   }, [group.id]);
 
   useEffect(() => {
+    const unsubscribe = base44.entities.GroupMessage.subscribe((event) => {
+      if (event.type !== "create" || event.data?.groupId !== group.id) return;
+      setMessages((prev) => prev.some((m) => m.id === event.data.id) ? prev : [...prev, event.data]);
+    });
+    return unsubscribe;
+  }, [group.id]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 

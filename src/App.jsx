@@ -14,6 +14,7 @@ import Couple from '@/pages/Couple';
 import Admin from '@/pages/Admin';
 import Layout from '@/components/Layout';
 import AgeGate from '@/components/AgeGate';
+import LustGate from '@/components/LustGate';
 import Explore from '@/pages/Explore';
 import Videos from '@/pages/Videos';
 import Photos from '@/pages/Photos';
@@ -31,6 +32,7 @@ import Groups from '@/pages/Groups';
 import StartCall from '@/pages/StartCall';
 import VideoCall from '@/pages/VideoCall';
 import Studio from '@/pages/Studio';
+import Community from '@/pages/Community';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -81,6 +83,7 @@ const AuthenticatedApp = () => {
         <Route path="/account" element={<Account />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/groups" element={<Groups />} />
+        <Route path="/community" element={<Community />} />
         <Route path="/studio" element={<Studio />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
@@ -97,6 +100,7 @@ function App() {
         <Router>
           <ScrollToTop />
           <AgeGate />
+          <LustGate />
           <AuthenticatedApp />
         </Router>
         <Toaster />
