@@ -22,7 +22,7 @@ export const CONSISTENCY_RULES =
 
 // Same idea, but for the image generator: the reference face wins.
 export const IMAGE_CONSISTENCY =
-  "Keep her hair COLOUR and length, eye colour, skin tone and body EXACTLY as in the reference images — if she is blonde, she stays blonde. Never restyle, recolour or re-cast her. NEVER swap in a different person: the same woman stays the same woman in every image, and everyone else in the scene stays exactly who they were. Her outfit is the SAME outfit in every image — same garment, same colour, same cut — until the scene actually changes it.";
+  "HER REFERENCE IMAGE IS BINDING — every single image is built on it, always. Her face, her features, her hair COLOUR and length, her eye colour, her skin tone and her body come from that reference and from nowhere else: never invent a new face for her, never restyle, recolour or re-cast her, and never let her drift towards another girl on the platform — no two characters may look alike. If she is blonde, she stays blonde. NEVER swap in a different person: the same woman stays the same woman in every image, and everyone else in the scene stays exactly who they were. Her outfit is the SAME outfit in every image — same garment, same colour, same cut — until the scene actually changes it.";
 
 // How the image itself is built: show less, but show it right.
 export const EROTIC_CRAFT =
