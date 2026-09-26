@@ -10,6 +10,18 @@ import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 const LANGUAGE_RULE =
   "Du bist in einem VIDEOCHAT und sprichst laut. Antworte deshalb IMMER auf Deutsch, in der Du-Form, kurz und gesprochen — 1 bis 3 Sätze, wie ein echter Mensch am Telefon. Keine Aufzählungen, keine Regieanweisungen, kein Sternchen-Text, keine Emojis. Nur das, was du wirklich sagen würdest.";
 
+// Jede Aufnahme eine andere Position — so lebt das Bild im Call.
+const VARIATIONS = [
+  "She stands in front of the camera, three-quarter view, wide shot — head, chest and hips fully in frame, plenty of space around her.",
+  "She sits on the edge of the bed, wide shot — her whole body from head to knees in frame, the room clearly visible around her.",
+  "She leans against the door frame, wide shot — head, chest and hips fully in frame, nothing cut off.",
+  "She lies on her back on the bed, camera further away — her upper body and her whole face are in frame, the bed and the room around her visible.",
+  "She sits on a chair with one leg crossed, wide shot — her whole body in frame, the room around her visible.",
+  "She walks slowly towards the camera, wide shot — her whole body from head to knees in frame.",
+  "She stands sideways and looks over her shoulder at the camera, wide shot — head, chest and hips fully in frame.",
+  "She kneels on the bed and looks straight into the camera, wide shot — head, chest and hips fully in frame, the room around her visible.",
+];
+
 // Videochat mit einem KI-Charakter: sie spricht, du sprichst, das Bild lebt.
 export default function AiVideoCall() {
   const { id } = useParams();
@@ -32,6 +44,8 @@ export default function AiVideoCall() {
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const audioRef = useRef(null);
+  const variationRef = useRef(0);
+  const busyRef = useRef(false);
 
   useEffect(() => { load(); }, [id]);
 
@@ -75,15 +89,21 @@ export default function AiVideoCall() {
   const proActive = hasProAccess(user);
 
   const newFrame = async (desc) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     const refs = [creator?.avatar, ...(creator?.referenceImages || [])].filter(Boolean).slice(0, 4);
     const style = creator?.artStyle === "CARTOON" ? CARTOON_STYLE : PHOTOREAL;
+    const view = VARIATIONS[variationRef.current % VARIATIONS.length];
+    variationRef.current += 1;
     try {
       const res = await base44.integrations.Core.GenerateImage({
-        prompt: `${style}${IMAGE_SAFE_RULES} Videochat camera: ${creator?.stageName} sits in front of the camera and talks. Medium shot from a normal distance — head, shoulders and upper body fully in frame, the face completely visible and centred, nothing cut off. ${desc}`,
+        prompt: `${style}${IMAGE_SAFE_RULES} Video call camera, WIDE SHOT from far away — she is NOT close to the camera: ${creator?.stageName} is on a video call. ${view} Her whole upper body and her whole face are visible at the SAME time, nothing is cropped, plenty of empty space around her. ${desc}`,
         existing_image_urls: refs.length ? refs : undefined,
       });
       if (res?.url) setFrame(res.url);
-    } catch (e) { /* altes Bild bleibt stehen */ }
+    } catch (e) { /* altes Bild bleibt stehen */ } finally {
+      busyRef.current = false;
+    }
   };
 
   const reply = async (userText) => {
@@ -112,6 +132,14 @@ export default function AiVideoCall() {
   // Beim Öffnen hebt sie ab.
   useEffect(() => {
     if (creator && !history.length && !line) reply("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [creator]);
+
+  // Das Bild lebt: alle paar Sekunden eine neue Aufnahme aus einer anderen Position.
+  useEffect(() => {
+    if (!creator) return;
+    const t = setInterval(() => newFrame(""), 12000);
+    return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creator]);
 
@@ -154,7 +182,8 @@ export default function AiVideoCall() {
   const hangUp = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     audioRef.current?.pause();
-    navigate(-1);
+    // Immer raus aus dem Vollbild-Call — zurück in den Chat.
+    navigate("/messages");
   };
 
   const clock = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
@@ -187,7 +216,7 @@ export default function AiVideoCall() {
 
       <div className="relative flex-1 overflow-hidden">
         {frame ? (
-          <Image src={frame} fittingType="fill" className="absolute inset-0 w-full h-full" />
+          <Image src={frame} fittingType="fit" className="absolute inset-0 w-full h-full" />
         ) : (
           <div className="absolute inset-0 bg-elevated" />
         )}
