@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
 import ScenarioSelection from "@/components/ScenarioSelection";
 import QuickActions from "@/components/QuickActions";
+import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
 
 export default function Messages() {
   const [creators, setCreators] = useState([]);
@@ -32,6 +33,7 @@ export default function Messages() {
   const [dmUsers, setDmUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [dmParticipantName, setDmParticipantName] = useState("");
+  const [freeLeft, setFreeLeft] = useState(FREE_CREATIONS);
   const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
@@ -56,6 +58,7 @@ export default function Messages() {
       try {
         const user = await base44.auth.me();
         setCurrentUser(user);
+        setFreeLeft(freeRemaining(user.id));
         const prefs = await base44.entities.UserPreference.filter({ userId: user.id });
         if (prefs.length > 0) setUserPref(prefs[0]);
         const incoming = await base44.entities.Conversation.filter({ participantId: user.id, conversationType: "HUMAN" });
@@ -162,6 +165,16 @@ export default function Messages() {
     ctx += "- Reward honesty with warmth. Escalate only in the direction the user revealed — never force your own kinks onto them.\n";
     if (Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) ctx += "- The user's kinks (focus on these): " + setupAnswers.fetish.join(", ") + ".\n";
     if (setupAnswers.deepKink) ctx += "- The user's deepest fantasy: \"" + setupAnswers.deepKink + "\" — weave this into the roleplay and build on it.\n";
+    // ── MEDIA MARKERS & CONVERSION ──
+    ctx += "\n\nMEDIA MARKERS (the app turns these into real media — use them):\n";
+    ctx += "- [SEND_IMAGE: description] — a teasing photo. Up to 3 per reply, each a DIFFERENT angle or body part.\n";
+    ctx += "- [SEND_VIDEO: description] — a short intimate video clip. Use sparingly (most expensive).\n";
+    ctx += "- [SEND_VOICE: your spoken line] — a voice note in your voice. Use it sometimes.\n";
+    ctx += "- [SEND_PPV: description | price] — locked content behind a paywall.\n";
+    ctx += "- [SUGGEST: a | b | c] — three clickable next-step options.\n";
+    ctx += "APPEARANCE CONSISTENCY (critical): the person must look identical in every image — same face, same hair COLOUR and length, same skin tone, same body. NEVER change her hair colour.\n";
+    ctx += "STAY SUGGESTIVE & TEASING: imply, leave something to the imagination — that is what keeps them coming back and spending. Go as far as the platform allows, but the tease is the point.\n";
+    ctx += "ENCOURAGE UPLOADS: keep asking the user to send a photo of what they describe, and react to it with real excitement when they do.\n";
     // ── SCENARIO ANCHOR #3 (last thing the AI sees — triple-anchored) ──
     if (scenario) {
       ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Respect the current location and position — do NOT teleport or jump around. If the user wants to change the location, follow their lead naturally and describe the move. Only reference objects that exist in the current scene.";
@@ -258,47 +271,64 @@ export default function Messages() {
     }
   };
 
+  const generateVideo = async (prompt) => {
+    try {
+      const res = await base44.integrations.Core.GenerateVideo({ prompt, duration: 6, aspect_ratio: "9:16" });
+      return res?.url || null;
+    } catch (e) {
+      console.error("Video generation failed:", e);
+      return null;
+    }
+  };
+
+  const buildImgPrompt = (desc) => {
+    let imgCtx = "";
+    if (scenario) imgCtx += "Location: " + scenario.title + ". ";
+    if (setupAnswers.aiWardrobe) imgCtx += "She is wearing: " + setupAnswers.aiWardrobe + ". ";
+    if (setupAnswers.position) imgCtx += "Physical positioning: " + setupAnswers.position + ". ";
+    if (setupAnswers.fetish && Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) imgCtx += "Fetishes/themes: " + setupAnswers.fetish.join(", ") + ". ";
+    return "POV first person view, amateur phone photo, " + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
+  };
+
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {
-    let cleanText = text;
-    let attachment = null;
-    let isPPV = false;
-    let ppvPrice = null;
+    const parsed = parseReply(text);
     const creator = creators.find(c => c.id === activeChat);
     const creatorRefs = creator?.referenceImages?.length ? creator.referenceImages : [];
     const userRefs = userPref?.userReferenceImages || [];
     const allRefImages = [...creatorRefs, ...extraRefImages, ...userRefs].length ? [...creatorRefs, ...extraRefImages, ...userRefs] : null;
+    const attachments = [];
 
-    let imgCtx = "";
-    if (scenario) imgCtx += "Location: " + scenario.title + ". ";
-    if (setupAnswers.aiWardrobe) imgCtx += "She is wearing: " + setupAnswers.aiWardrobe + ". ";
-    if (setupAnswers.aiWardrobe === "Nackt") imgCtx += "She is completely naked — NO clothes at all, bare skin. ";
-    if (setupAnswers.position) imgCtx += "Physical positioning: " + setupAnswers.position + ". ";
-    if (setupAnswers.fetish && Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) imgCtx += "Fetishes/themes: " + setupAnswers.fetish.join(", ") + ". ";
-
-    const ppvMatch = text.match(/\[SEND_PPV:\s*(.+?)\s*\|\s*(\d+(?:\.\d+)?)\s*\]/);
-    if (ppvMatch) {
-      isPPV = true;
-      ppvPrice = parseFloat(ppvMatch[2]);
-      cleanText = cleanText.replace(ppvMatch[0], "").trim();
-      attachment = await generateWithFallback("POV first person view, amateur phone photo, " + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + ppvMatch[1].trim(), allRefImages, chatMode);
-    }
-
-    if (!attachment) {
-      const imgMatch = text.match(/\[SEND_IMAGE:\s*(.+?)\s*\]/);
-      if (imgMatch) {
-        cleanText = cleanText.replace(imgMatch[0], "").trim();
-        attachment = await generateWithFallback("POV first person view, amateur phone photo, " + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + imgMatch[1].trim(), allRefImages, chatMode);
+    // Up to 3 images per reply — first 10 creations are free, then locked behind a paywall.
+    for (const item of parsed.images.slice(0, 3)) {
+      const url = await generateWithFallback(buildImgPrompt(item.desc), allRefImages, chatMode);
+      if (!url) continue;
+      if (item.price) {
+        attachments.push({ type: "image", url, locked: true, price: item.price });
+      } else {
+        const isFree = consumeFree(currentUser?.id);
+        attachments.push({ type: "image", url, locked: !isFree, price: isFree ? null : 4.99 });
       }
     }
 
-    let suggestions = [];
-    const suggestMatch = cleanText.match(/\[SUGGEST:\s*(.+?)\s*\]/);
-    if (suggestMatch) {
-      suggestions = suggestMatch[1].split("|").map(s => s.trim()).filter(Boolean);
-      cleanText = cleanText.replace(suggestMatch[0], "").trim();
+    // Optional short video
+    for (const item of parsed.videos.slice(0, 1)) {
+      const url = await generateVideo("Short intimate vertical video clip, handheld amateur, " + (scenario ? "Location: " + scenario.title + ". " : "") + item.desc);
+      if (!url) continue;
+      const isFree = consumeFree(currentUser?.id);
+      attachments.push({ type: "video", url, locked: !isFree, price: isFree ? null : 9.99 });
     }
 
-    return { cleanText, attachment, isPPV, ppvPrice, suggestions };
+    // Optional voice note
+    if (parsed.voice) {
+      try {
+        const res = await base44.integrations.Core.GenerateSpeech({ text: parsed.voice });
+        if (res?.url) attachments.push({ type: "audio", url: res.url, locked: false, price: null });
+      } catch (e) {
+        console.error("Voice generation failed:", e);
+      }
+    }
+
+    return { cleanText: parsed.cleanText, attachments, suggestions: parsed.suggestions };
   };
 
   const sendMessage = async (overrideText) => {
@@ -328,9 +358,10 @@ export default function Messages() {
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
-      const { cleanText, attachment, isPPV, ppvPrice, suggestions } = await parseAndGenerateMedia(aiText, img ? [img] : []);
-      const aiMsg = { senderType: "AI", text: cleanText, attachment, isPPV, ppvPrice, suggestions, createdAt: new Date().toISOString() };
+      const { cleanText, attachments, suggestions } = await parseAndGenerateMedia(aiText, img ? [img] : []);
+      const aiMsg = { senderType: "AI", text: cleanText, attachments, suggestions, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
+      setFreeLeft(freeRemaining(currentUser?.id));
 
       const userMsgCount = [...(messages[chatKey] || []), userMsg].filter(m => m.senderType === "HUMAN").length;
       if (userMsgCount > 0 && userMsgCount % 5 === 0) {
@@ -562,6 +593,11 @@ export default function Messages() {
                     {scenario.id === "free" ? "💬" : scenario.icon} {scenario.title} · wechseln
                   </button>
                 )}
+                {viewMode === "ai" && (
+                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title="Kostenlose Creationen (Bilder/Videos)">
+                    {freeLeft} gratis
+                  </span>
+                )}
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -635,27 +671,40 @@ export default function Messages() {
                       )
                     )}
                     <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
-                      {msg.attachment && (
-                        msg.isPPV ? (
-                          <div className="relative w-48 h-48 rounded-lg mb-1 overflow-hidden">
-                            <Image src={msg.attachment} fittingType="fill" className="w-full h-full blur-2xl scale-110" />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 gap-1">
-                              <Lock className="w-5 h-5 text-primary" />
-                              <span className="text-sm text-foreground font-semibold">{msg.ppvPrice}€</span>
-                              <button className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">Freischalten</button>
-                            </div>
+                      {(() => {
+                        const items = msg.attachments?.length ? msg.attachments : (msg.attachment ? [{ type: "image", url: msg.attachment, locked: msg.isPPV, price: msg.ppvPrice }] : []);
+                        return items.map((it, ii) => (
+                          <div key={ii} className="mb-1">
+                            {it.locked ? (
+                              <div className="relative w-48 h-48 rounded-lg overflow-hidden">
+                                {it.type === "image" ? (
+                                  <Image src={it.url} fittingType="fill" className="w-full h-full blur-2xl scale-110" />
+                                ) : (
+                                  <div className="w-full h-full bg-black" />
+                                )}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 gap-1">
+                                  <Lock className="w-5 h-5 text-primary" />
+                                  <span className="text-sm text-foreground font-semibold">{it.price}€</span>
+                                  <button className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">Freischalten</button>
+                                </div>
+                              </div>
+                            ) : it.type === "video" ? (
+                              <video src={it.url} controls playsInline className="w-56 rounded-lg" />
+                            ) : it.type === "audio" ? (
+                              <audio src={it.url} controls className="w-56" />
+                            ) : (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <button className="block"><Image src={it.url} fittingType="fill" className="w-48 h-48 rounded-lg transition-opacity hover:opacity-80" /></button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
+                                  <img src={it.url} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
+                                </DialogContent>
+                              </Dialog>
+                            )}
                           </div>
-                        ) : (
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <button className="block mb-1"><Image src={msg.attachment} fittingType="fill" className="w-48 h-48 rounded-lg transition-opacity hover:opacity-80" /></button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
-                              <img src={msg.attachment} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
-                            </DialogContent>
-                          </Dialog>
-                        )
-                      )}
+                        ));
+                      })()}
                       {msg.text}
                       {msg.suggestions && msg.suggestions.length > 0 && isLastAi && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
