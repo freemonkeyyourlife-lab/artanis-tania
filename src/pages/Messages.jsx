@@ -227,6 +227,9 @@ export default function Messages() {
     }
     ctx += "STAY SUGGESTIVE & TEASING: imply, leave something to the imagination — that is what keeps them coming back and spending. Go as far as the platform allows, but the tease is the point.\n";
     ctx += "ENCOURAGE UPLOADS: keep asking the user to send a photo of what they describe, and react to it with real excitement when they do.\n";
+    if (userPref?.userReferenceImages?.length > 0) {
+      ctx += "\nREFERENCE PHOTOS (BINDING — this is his fantasy, hold it): he has saved " + userPref.userReferenceImages.length + " reference photo(s) of how he and the other people in his scenes look. These references are the truth. Every person he showed keeps exactly that face, body, hair colour, skin tone and look — in every image, in every scene, forever. NEVER invent a different appearance and never describe anyone differently than his references show. When he uploads a new photo and says someone should look like that from now on, treat it as the new binding reference and confirm it out loud.\n";
+    }
     // ── THIRD-PERSON / VOYEUR MODE ──
     if (spannerMode) {
       ctx += "\n\n═══ THIRD-PERSON MODE — HE WATCHES, YOU PERFORM ═══\n";
@@ -313,10 +316,10 @@ export default function Messages() {
     const activeCreator = creators.find((c) => c.id === activeChat);
     const creatorRefs = [...(activeCreator?.referenceImages || []), activeCreator?.avatar].filter(Boolean);
     const extraRefs = extraCharacters.flatMap((c) => [c.avatar, ...(c.referenceImages || [])]).filter(Boolean);
-    const usedRefs = [...new Set([...creatorRefs, ...extraRefs, ...(refImages || []), ...maleRefs])];
+    const usedRefs = [...new Set([...(refImages || []), ...creatorRefs, ...extraRefs, ...maleRefs])];
     let promptText = prompt;
     if (usedRefs.length > 0 && showMale) {
-      promptText += " CRITICAL: There are TWO people in this photo — the woman from her reference images and the man from his reference images. Keep BOTH faces, bodies, hair and skin tone EXACTLY identical to their references. They are together in the scene, close to each other, touching. NEVER remove the man and never replace him with a different man.";
+      promptText += " CRITICAL: Every person in this photo comes from the reference images — the woman, the man, and anyone else the user added. Keep EVERY face, body, hair colour and skin tone EXACTLY identical to their reference. They are together in the scene, close to each other, touching. NEVER remove anyone from the references and never replace them with a different person.";
     } else if (usedRefs.length > 0) {
       promptText += " CRITICAL: Every person in this photo is taken from the reference images — keep each face, body, hair colour and skin tone EXACTLY identical to their reference. They are together in the scene, close to each other, touching each other.";
     }
@@ -371,7 +374,9 @@ export default function Messages() {
     const creator = creators.find(c => c.id === activeChat);
     const creatorRefs = creator?.referenceImages?.length ? creator.referenceImages : [];
     const userRefs = userPref?.userReferenceImages || [];
-    const allRefImages = [...creatorRefs, ...extraRefImages, ...userRefs].length ? [...creatorRefs, ...extraRefImages, ...userRefs] : null;
+    const allRefImages = [...creatorRefs, ...extraRefImages, ...userRefs].length
+      ? [...userRefs, ...extraRefImages, ...creatorRefs]
+      : null;
     const attachments = [];
     const isGold = currentUser?.memberStatus === "GOLD";
 
@@ -434,6 +439,7 @@ export default function Messages() {
 
     const userMsg = { senderType: "HUMAN", text: msgText, attachment: img || null, createdAt: new Date().toISOString() };
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
+    if (img) saveUserReference(img);
     const conv = await ensureConv(chatKey);
     if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: currentUser?.full_name || currentUser?.email, senderType: "HUMAN", text: msgText, attachment: img || null }).catch(() => {});
     setInput("");
@@ -447,7 +453,7 @@ export default function Messages() {
         return `${m.senderType === "HUMAN" ? "User" : "You"}: ${t}`;
       }).join("\n");
       const userTurn = img
-        ? "\n\nThe user sent you a photo" + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see in the photo. Then generate a response image that incorporates their photo (put yourself in the scene with what they showed you)."
+        ? "\n\nThe user sent you a photo" + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see in the photo. This photo is now saved as a PERMANENT reference: whoever is in it keeps exactly that face, body, hair colour and skin in every future image — never change them again. Say out loud that you'll keep it. Then generate a response image that incorporates their photo (put yourself in the scene with what they showed you)."
         : "\n\nThe user said: \"" + userMsg.text + "\"";
       const res = await base44.integrations.Core.InvokeLLM({
         prompt: buildContext() + (hist ? "\n\nCONVERSATION SO FAR:\n" + hist : "") + userTurn + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : ""),
@@ -501,6 +507,19 @@ export default function Messages() {
       updated = await base44.entities.UserPreference.create({ userId: user.id, userReferenceImages: refs });
     }
     setUserPref(updated);
+  };
+
+  // Anything the user uploads or marks becomes a permanent reference —
+  // every future image is built on it.
+  const saveUserReference = async (url) => {
+    if (!url) return;
+    const existing = userPref?.userReferenceImages || [];
+    if (existing.includes(url)) return;
+    try {
+      await persistUserRefs([...existing, url]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleUploadUserPhoto = async (e) => {
@@ -993,14 +1012,24 @@ export default function Messages() {
                                   ) : it.type === "audio" ? (
                                     <audio src={it.url} controls className="w-56" />
                                   ) : (
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <button className="block"><Image src={it.url} fittingType="fill" className="w-48 h-48 rounded-lg transition-opacity hover:opacity-80" /></button>
-                                      </DialogTrigger>
-                                      <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
-                                        <img src={it.url} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
-                                      </DialogContent>
-                                    </Dialog>
+                                    <div className="relative">
+                                      <Dialog>
+                                        <DialogTrigger asChild>
+                                          <button className="block"><Image src={it.url} fittingType="fill" className="w-48 h-48 rounded-lg transition-opacity hover:opacity-80" /></button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
+                                          <img src={it.url} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
+                                        </DialogContent>
+                                      </Dialog>
+                                      {viewMode === "ai" && (
+                                        <button
+                                          onClick={() => { saveUserReference(it.url); toast({ title: "Als Referenz gemerkt", description: "So sieht sie ab jetzt aus — in allen neuen Bildern." }); }}
+                                          className="absolute bottom-2 right-2 px-2.5 py-1 rounded-full bg-black/65 text-[11px] text-white hover:bg-black/85 transition-colors"
+                                        >
+                                          Als Referenz merken
+                                        </button>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               ))}
