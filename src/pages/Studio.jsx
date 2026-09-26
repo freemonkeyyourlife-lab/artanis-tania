@@ -10,7 +10,7 @@ import ContentManager from "@/components/studio/ContentManager";
 import LiveManager from "@/components/studio/LiveManager";
 
 const personaLabel = (t) =>
-  t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : "Frau";
+  t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
 
 const TABS = [
   { id: "characters", label: "Charaktere" },

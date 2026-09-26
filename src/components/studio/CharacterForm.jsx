@@ -11,6 +11,7 @@ const PERSONA_TYPES = [
   { value: "SOLO_MALE", label: "Mann (solo)" },
   { value: "SHEMALE", label: "Shemale / Trans" },
   { value: "COUPLE", label: "Paar" },
+  { value: "GROUP", label: "Gruppe (mehrere)" },
 ];
 const CATEGORIES = [
   { value: "AI_MODEL", label: "KI-Modell" },

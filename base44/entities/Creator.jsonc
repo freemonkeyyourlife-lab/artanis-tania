@@ -11,7 +11,8 @@
         "SOLO_MALE",
         "SOLO_FEMALE",
         "SHEMALE",
-        "COUPLE"
+        "COUPLE",
+        "GROUP"
       ]
     },
     "creatorCategory": {

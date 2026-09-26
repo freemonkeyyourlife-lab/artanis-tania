@@ -152,7 +152,13 @@ export default function Messages() {
 
     // Override name/bio for custom characters (Lena, Mia, etc.)
     const activeCreator = creators.find(c => c.id === activeChat);
-    if (activeCreator && !["Artanis", "Triania", "Artanis × Triania"].includes(activeCreator.stageName)) {
+    if (activeCreator && activeCreator.personaType === "GROUP") {
+      ctx += "\n\n═══ GROUP SCENE — you are SEVERAL people at once ═══\n";
+      ctx += `This is the group "${activeCreator.stageName}". Everyone described here is present and speaks for herself.\n`;
+      ctx += (activeCreator.bio || "") + "\n";
+      ctx += "RULES: Start EVERY spoken line with the speaker's name in brackets, e.g. [Name]: ... Each has her own voice, her own mood and her own secret — never mix them up. They react to each other, tease each other and the user, and can touch each other. The user can address anyone by name — only that one answers first. Keep every character present in the scene.\n";
+      ctx += "═══ END GROUP ═══\n";
+    } else if (activeCreator && !["Artanis", "Triania", "Artanis × Triania"].includes(activeCreator.stageName)) {
       ctx += `\n\nIMPORTANT: Your name is ${activeCreator.stageName} — NOT Triania or Artanis. You are ${activeCreator.stageName}. ${activeCreator.bio || ""} You are a friend of Triania's. Use the personality template above, but your identity is ${activeCreator.stageName}. When you refer to yourself, use the name ${activeCreator.stageName}.`;
       ctx += `\n\nAPPEARANCE: ${CHARACTER_ALLURE}`;
     }
@@ -611,7 +617,7 @@ export default function Messages() {
               <>
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Real</p>
               {creators.filter(c => c.creatorCategory === "REAL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
-                <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+                <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : (c.personaType === "COUPLE" || c.personaType === "GROUP") ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
                   ) : (
@@ -626,7 +632,7 @@ export default function Messages() {
               ))}
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">KI-Modelle</p>
               {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
-                <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : c.personaType === "COUPLE" ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+                <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : (c.personaType === "COUPLE" || c.personaType === "GROUP") ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
                   ) : (
@@ -735,7 +741,7 @@ export default function Messages() {
                               )}
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm text-foreground truncate">{c.stageName}</p>
-                                <p className="text-xs text-muted-foreground">{c.personaType === "SOLO_MALE" ? "Mann" : c.personaType === "COUPLE" ? "Paar" : "Frau"}</p>
+                                <p className="text-xs text-muted-foreground">{c.personaType === "SOLO_MALE" ? "Mann" : c.personaType === "COUPLE" ? "Paar" : c.personaType === "GROUP" ? "Gruppe" : "Frau"}</p>
                               </div>
                               <span className="text-xs text-primary font-medium flex-shrink-0">{added ? "Drin" : "Hinzufügen"}</span>
                             </button>
