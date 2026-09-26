@@ -34,9 +34,17 @@ function PeerTile({ peer }) {
 }
 
 export default function CallStage({ localVideoRef, camOn, micOn, myName, peers }) {
+  const count = peers.length + 1;
+  // Wenige Leute groß, viele Leute kompakt — derselbe Raum trägt jede Gruppengröße.
+  const layout = count <= 2
+    ? "grid-cols-1 sm:grid-cols-2"
+    : count <= 4
+    ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+    : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+
   return (
     <div className={cn("flex-1 overflow-y-auto p-3 sm:p-4", peers.length === 0 && "flex items-center justify-center")}>
-      <div className={cn("grid gap-3 w-full", peers.length === 0 ? "max-w-xl" : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3")}>
+      <div className={cn("grid gap-3 w-full", peers.length === 0 ? "max-w-xl" : layout)}>
         {peers.map((peer) => (
           <PeerTile key={peer.seat} peer={peer} />
         ))}

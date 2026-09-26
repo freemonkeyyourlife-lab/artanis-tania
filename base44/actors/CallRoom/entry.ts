@@ -3,7 +3,8 @@ import { Actor } from 'base44:runtime/actors';
 // One room = one private video call. The room id (token) is the only admission
 // control, so it is minted client-side and shared as an invite link. The link is
 // stable — the host keeps the same room id until they deliberately mint a new one.
-const MAX = 6;
+// Any group size works over the same link — one person, a pair, or a whole circle.
+const MAX = 10;
 
 export default class CallRoom extends Actor {
   users = new Map(); // conn.id -> { seat, name, cam, mic, host }
