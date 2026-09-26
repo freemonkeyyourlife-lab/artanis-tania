@@ -68,19 +68,26 @@ export default function Layout() {
   // Leute, die mit dir chatten wollen — sichtbar am Messages-Symbol.
   useEffect(() => {
     let unsubscribe;
+    let timer;
     (async () => {
       try {
         const me = await base44.auth.me();
         if (!me) return;
         const load = async () => {
-          const convs = await base44.entities.Conversation.filter({ participantId: me.id, conversationType: "HUMAN" });
-          setIncomingCount(convs.length);
+          try {
+            const convs = await base44.entities.Conversation.filter({ participantId: me.id, conversationType: "HUMAN" });
+            setIncomingCount(convs.length);
+          } catch (e) { /* kurz nicht erreichbar — nächster Versuch später */ }
         };
         await load();
-        unsubscribe = base44.entities.Conversation.subscribe(() => { load(); });
+        // Ereignisse sammeln: höchstens eine Abfrage alle paar Sekunden.
+        unsubscribe = base44.entities.Conversation.subscribe(() => {
+          clearTimeout(timer);
+          timer = setTimeout(load, 5000);
+        });
       } catch (e) { /* nicht angemeldet */ }
     })();
-    return () => unsubscribe?.();
+    return () => { clearTimeout(timer); unsubscribe?.(); };
   }, []);
 
   return (
