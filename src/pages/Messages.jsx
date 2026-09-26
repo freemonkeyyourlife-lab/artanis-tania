@@ -18,6 +18,8 @@ import { coinsForPrice } from "@/lib/coins";
 import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, EROTIC_CRAFT, IMAGE_CONSISTENCY } from "@/lib/appearance";
 import { Link } from "react-router-dom";
 
+const ACTIVE_CHAT_KEY = "artanis_active_chat";
+
 const LANGUAGE_RULE =
   "═══ SPRACHE — NUR DEUTSCH ═══\n" +
   "Du antwortest IMMER auf Deutsch — jede Antwort, jede Frage, jede [SUGGEST: ...]-Option, jede [SEND_IMAGE: ...]- und [SEND_VIDEO: ...]-Beschreibung, jede [SEND_VOICE: ...]-Zeile und jedes [SEND_PPV: ...]-Label. Nie auf Englisch. Wechsle die Sprache niemals mitten im Chat — auch dann nicht, wenn der Nutzer englisch oder in einer anderen Sprache schreibt; antworte dann trotzdem auf Deutsch.\n" +
@@ -57,6 +59,7 @@ export default function Messages() {
   const activeChatRef = useRef(null);
   const aiConvsRef = useRef({});
   const fileInputRef = useRef(null);
+  const restoredRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
@@ -107,6 +110,38 @@ export default function Messages() {
   useEffect(() => {
     activeChatRef.current = activeChat;
   }, [activeChat]);
+
+  // Der offene Chat überlebt ein Neuladen — man landet nie wieder draußen.
+  useEffect(() => {
+    if (!activeChat) return;
+    try {
+      localStorage.setItem(ACTIVE_CHAT_KEY, JSON.stringify({ viewMode, id: activeChat }));
+    } catch (e) { /* ignore */ }
+  }, [activeChat, viewMode]);
+
+  // Nach einem Reload automatisch wieder im letzten Gespräch stehen.
+  useEffect(() => {
+    if (loading || restoredRef.current) return;
+    restoredRef.current = true;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(ACTIVE_CHAT_KEY) || "null"); } catch (e) { /* ignore */ }
+    if (!saved?.id) return;
+    if (saved.viewMode === "dm") {
+      (async () => {
+        try {
+          const conv = await base44.entities.Conversation.get(saved.id);
+          setViewMode("dm");
+          setActiveChat(conv.id);
+          setDmParticipantName(conv.participantName || conv.userName || "Unbekannt");
+          const msgs = await base44.entities.Message.filter({ conversationId: conv.id }, "created_date", 100);
+          setMessages((prev) => ({ ...prev, [conv.id]: msgs }));
+        } catch (e) { console.error(e); }
+      })();
+    } else {
+      const creator = creators.find((c) => c.id === saved.id);
+      if (creator) openAiChat(creator);
+    }
+  }, [loading, creators]);
 
   useEffect(() => {
     setExtraCharacters([]);
