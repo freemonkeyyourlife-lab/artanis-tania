@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import CharacterForm from "@/components/studio/CharacterForm";
 import StoryManager from "@/components/studio/StoryManager";
@@ -108,15 +109,15 @@ export default function Studio() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {creators.map((c) => (
             <div key={c.id} className={cn("rounded-2xl border border-border bg-card overflow-hidden", c.active === false && "opacity-60")}>
-              <div className="relative aspect-[3/4] bg-elevated">
+              <Link to={`/creator/${c.id}`} title="Profil ansehen" className="relative block aspect-[3/4] bg-elevated">
                 {c.avatar ? (
-                  <Image src={c.avatar} fittingType="fill" className={cn("w-full h-full", c.active === false && "grayscale")} />
+                  <Image src={c.avatar} fittingType="fill" className={cn("w-full h-full transition-opacity hover:opacity-80", c.active === false && "grayscale")} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center font-display text-3xl text-primary">{c.stageName[0]}</div>
                 )}
                 {c.featured && <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">Featured</span>}
                 {c.active === false && <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-destructive text-white text-[10px] font-semibold uppercase">Inaktiv</span>}
-              </div>
+              </Link>
               <div className="p-3">
                 <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
                 <p className="text-xs text-muted-foreground truncate">
