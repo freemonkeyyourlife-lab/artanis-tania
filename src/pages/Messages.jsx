@@ -34,6 +34,7 @@ export default function Messages() {
   const [currentUser, setCurrentUser] = useState(null);
   const [dmParticipantName, setDmParticipantName] = useState("");
   const [freeLeft, setFreeLeft] = useState(FREE_CREATIONS);
+  const [extraCharacters, setExtraCharacters] = useState([]);
   const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
@@ -75,6 +76,10 @@ export default function Messages() {
 
   useEffect(() => {
     activeChatRef.current = activeChat;
+  }, [activeChat]);
+
+  useEffect(() => {
+    setExtraCharacters([]);
   }, [activeChat]);
 
   useEffect(() => {
@@ -134,6 +139,16 @@ export default function Messages() {
     const activeCreator = creators.find(c => c.id === activeChat);
     if (activeCreator && !["Artanis", "Triania", "Artanis × Triania"].includes(activeCreator.stageName)) {
       ctx += `\n\nIMPORTANT: Your name is ${activeCreator.stageName} — NOT Triania or Artanis. You are ${activeCreator.stageName}. ${activeCreator.bio || ""} You are a friend of Triania's. Use the personality template above, but your identity is ${activeCreator.stageName}. When you refer to yourself, use the name ${activeCreator.stageName}.`;
+    }
+
+    if (extraCharacters.length > 0) {
+      ctx += "\n\n═══ MULTI-CHARACTER SCENE — you are playing SEVERAL people at once ═══\n";
+      ctx += `Main character: ${activeCreator?.stageName || persona.label}\n`;
+      extraCharacters.forEach((c) => {
+        ctx += `- ${c.stageName}${c.age ? ` (${c.age})` : ""}: ${c.bio || "a close friend of the main character"}\n`;
+      });
+      ctx += "RULES: Start EVERY spoken line with the speaker's name in brackets, e.g. [Name]: ... Never mix them up — each has her own voice, mood and her own secret. They react to each other, flirt with each other and with the user, and can touch each other. The user can address any of them by name — only that one answers first. Keep every character present in the scene.\n";
+      ctx += "═══ END MULTI-CHARACTER ═══\n";
     }
 
     if (contentList.length > 0) {
@@ -457,6 +472,10 @@ export default function Messages() {
     } catch (e) { console.error(e); }
   };
 
+  const toggleExtra = (c) => {
+    setExtraCharacters((prev) => prev.some((x) => x.id === c.id) ? prev.filter((x) => x.id !== c.id) : [...prev, c]);
+  };
+
   const resetChat = () => {
     if (!activeChat) return;
     setMessages(prev => { const next = { ...prev }; delete next[activeChat]; return next; });
@@ -593,10 +612,48 @@ export default function Messages() {
                     {scenario.id === "free" ? "💬" : scenario.icon} {scenario.title} · wechseln
                   </button>
                 )}
+                {viewMode === "ai" && extraCharacters.length > 0 && (
+                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0">
+                    +{extraCharacters.map((c) => c.stageName).join(", ")}
+                  </span>
+                )}
                 {viewMode === "ai" && (
                   <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title="Kostenlose Creationen (Bilder/Videos)">
                     {freeLeft} gratis
                   </span>
+                )}
+                {viewMode === "ai" && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button title="Person hinzufügen" className="relative w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
+                        <UserPlus className="w-4 h-4" />
+                        {extraCharacters.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{extraCharacters.length}</span>}
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <h3 className="font-display text-lg text-foreground mb-1">Person hinzufügen</h3>
+                      <p className="text-xs text-muted-foreground mb-4">Hol jemanden in diesen Chat — sie spielt dann mit.</p>
+                      <div className="max-h-[60vh] overflow-y-auto space-y-2">
+                        {creators.filter((c) => c.id !== activeChat && c.stageName !== "Testdummy").map((c) => {
+                          const added = extraCharacters.some((x) => x.id === c.id);
+                          return (
+                            <button key={c.id} onClick={() => toggleExtra(c)} className={cn("w-full p-3 flex items-center gap-3 rounded-xl border text-left transition-colors", added ? "border-primary bg-primary/10" : "border-border hover:bg-elevated")}>
+                              {c.avatar ? (
+                                <Image src={c.avatar} fittingType="fill" className="w-9 h-9 rounded-full flex-shrink-0" />
+                              ) : (
+                                <div className="w-9 h-9 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-foreground truncate">{c.stageName}</p>
+                                <p className="text-xs text-muted-foreground">{c.personaType === "SOLO_MALE" ? "Mann" : c.personaType === "COUPLE" ? "Paar" : "Frau"}</p>
+                              </div>
+                              <span className="text-xs text-primary font-medium flex-shrink-0">{added ? "Drin" : "Hinzufügen"}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 )}
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <RotateCcw className="w-4 h-4" />
