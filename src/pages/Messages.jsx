@@ -59,6 +59,7 @@ export default function Messages() {
   const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
+  const chatScrollRef = useRef(null);
   const dmConvIdsRef = useRef(new Set());
   const activeChatRef = useRef(null);
   const aiConvsRef = useRef({});
@@ -117,9 +118,14 @@ export default function Messages() {
     finally { setLoading(false); }
   };
 
+  // Immer unten bleiben — auch wenn Bilder erst nachträglich fertig geladen werden.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activeChat]);
+    const el = chatScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+    const t = setTimeout(() => { el.scrollTop = el.scrollHeight; }, 700);
+    return () => clearTimeout(t);
+  }, [messages, activeChat, sending]);
 
   useEffect(() => {
     activeChatRef.current = activeChat;
@@ -309,6 +315,11 @@ export default function Messages() {
     if (scenario) {
       ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Respect the current location and position — do NOT teleport or jump around. If the user wants to change the location, follow their lead naturally and describe the move. Only reference objects that exist in the current scene.";
     }
+    // Letzte, stärkste Anweisung: hinzugefügte Personen dürfen nicht stumm bleiben.
+    if (extraCharacters.length > 0) {
+      const names = [activeCreator?.stageName, ...extraCharacters.map((c) => c.stageName)].filter(Boolean);
+      ctx += `\n\n⚠️ ES SIND ${names.length} FRAUEN IM RAUM: ${names.join(", ")}. JEDE von ihnen MUSS in JEDER Antwort mindestens einen Satz sagen, immer mit ihrem Namen in eckigen Klammern davor — z.B. [${names[1] || names[0]}]: … Keine Antwort darf eine von ihnen stumm lassen. Alle sind im Bild zu sehen, und keine verlässt den Raum.`;
+    }
     ctx += "\n\n⚠️ SPRACHE: Antworte ausschließlich auf Deutsch (Du-Form) — auch wenn der Nutzer englisch schreibt. Kein Sprachwechsel.";
     return ctx;
   };
@@ -424,12 +435,18 @@ export default function Messages() {
     if (setupAnswers.position) imgCtx += "Physical positioning: " + setupAnswers.position + ". ";
     if (setupAnswers.aiAge) imgCtx += "Her age: " + setupAnswers.aiAge + ". ";
     if (setupAnswers.fetish && Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) imgCtx += "Fetishes/themes: " + setupAnswers.fetish.join(", ") + ". ";
-    const who = spannerMode && extraCharacters.length > 0
-      ? "Amateur phone photo of the women together in frame — both visible, they are with each other, "
-      : "Amateur phone photo of the couple together in frame — him and her, both visible, ";
+    const mainCreator = creators.find((c) => c.id === activeChat);
+    const women = [mainCreator, ...extraCharacters].filter(Boolean);
+    const womenNames = women.map((c) => c.stageName).join(", ");
+    const showMale = !(spannerMode && extraCharacters.length > 0);
+    const who = showMale
+      ? `Amateur phone photo. EXACTLY ${women.length + 1} people are in frame: the ${women.length === 1 ? "woman" : "women"} ${womenNames}, each one clearly visible and recognisable, together with the SAME man as in his reference photo. `
+      : `Amateur phone photo. EXACTLY ${women.length} people are in frame: ${womenNames} — all of them together, each one clearly visible and recognisable. `;
+    const sameMan = showMale ? "The man is ALWAYS the same man — the one from the man's reference photo. Never a different man, never a different face. " : "";
+    const fixedOutfit = "OUTFIT IS FIXED: every woman wears EXACTLY the same clothes as in her own reference photo — same garment, same colour, same cut. No outfit change, no new clothes, nobody dressed differently. ";
     // Zeichentrick-Charaktere bekommen die gezeichnete Fassung, alle anderen das echte Foto.
-    const style = creators.find((c) => c.id === activeChat)?.artStyle === "CARTOON" ? CARTOON_STYLE : PHOTOREAL;
-    return style + IMAGE_SAFE_RULES + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, tasteful and teasing, leave something to the imagination, " + desc;
+    const style = mainCreator?.artStyle === "CARTOON" ? CARTOON_STYLE : PHOTOREAL;
+    return style + IMAGE_SAFE_RULES + who + sameMan + fixedOutfit + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, tasteful and teasing, leave something to the imagination, " + desc;
   };
 
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {
@@ -877,7 +894,7 @@ export default function Messages() {
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
+                    <p className="text-[15px] font-medium text-foreground truncate">{c.stageName}</p>
                     <p className="text-xs text-muted-foreground">Real · AI persona</p>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">Real</span>
@@ -892,7 +909,7 @@ export default function Messages() {
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
+                    <p className="text-[15px] font-medium text-foreground truncate">{c.stageName}</p>
                     <p className="text-xs text-muted-foreground">KI-Modell</p>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-violet-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">KI</span>
@@ -1118,7 +1135,7 @@ export default function Messages() {
                 </div>
               ) : (
               <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
                 {(messages[activeChat] || (viewMode === "dm" ? [] : [{ senderType: "SYSTEM", text: "Das ist ein KI-Assistent. Nachrichten der echten Person werden anders gekennzeichnet." }])).map((msg, i, arr) => {
                   const isLastAi = viewMode === "ai" && msg.senderType === "AI" && !sending && arr.slice(i + 1).every(m => m.senderType !== "AI");
                   return (
@@ -1136,7 +1153,7 @@ export default function Messages() {
                         </Link>
                       )
                     )}
-                    <div className={cn("max-w-[70%] px-4 py-2.5 rounded-2xl text-sm", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
+                    <div className={cn("max-w-[70%] px-4 py-3 rounded-2xl text-base leading-relaxed", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
                       {(() => {
                         const items = msg.attachments?.length ? msg.attachments : (msg.attachment ? [{ type: "image", url: msg.attachment, locked: msg.isPPV, price: msg.ppvPrice }] : []);
                         const hasChoice = items.filter((i) => i.locked).length > 1;
@@ -1311,7 +1328,7 @@ export default function Messages() {
                   </Dialog>
                 )}
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
-                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : takeover ? `Du schreibst als ${creators.find(c => c.id === activeChat)?.stageName || "Charakter"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
+                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : takeover ? `Du schreibst als ${creators.find(c => c.id === activeChat)?.stageName || "Charakter"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingImage) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
               </>

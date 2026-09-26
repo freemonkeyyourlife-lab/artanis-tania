@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { MessageSquare, ArrowLeft, Pencil } from "lucide-react";
+import { MessageSquare, ArrowLeft, Pencil, Video } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import CharacterForm from "@/components/studio/CharacterForm";
 
@@ -76,6 +76,9 @@ export default function CreatorDetail() {
           <div className="flex flex-wrap gap-3 mt-6">
             <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
               <MessageSquare className="w-4 h-4" /> Nachricht schreiben
+            </Link>
+            <Link to={`/ai-call/${creator.id}`} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-elevated border border-border text-foreground text-sm font-semibold hover:border-primary/30 transition-all">
+              <Video className="w-4 h-4" /> Videochat — jederzeit anrufbar
             </Link>
             <button
               onClick={() => setEditing(true)}
