@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video } from "lucide-react";
+import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -28,6 +28,18 @@ const LANGUAGE_RULE =
   "Schreib natürliches, lockeres Deutsch in der Du-Form, so wie ein echter Mensch textet. Kein Übersetzungs-Deutsch, keine englischen Wörter dazwischen (außer Namen und Dinge, die wirklich kein deutsches Wort haben).\n" +
   "═══ ENDE SPRACHE ═══\n\n";
 
+// "Noch ein Bild" läuft der Reihe nach durch diese Aufnahmen — immer derselbe Look.
+const EXTRA_SHOTS = [
+  "she looks straight into the camera, three-quarter view, wide shot, her whole upper body and her face in frame",
+  "she looks over her shoulder at the camera, wide shot, head, chest and hips in frame",
+  "she sits on the edge of the bed, wide shot, her whole body in frame, the room visible around her",
+  "she stands leaning against the wall, wide shot, head, chest and hips in frame",
+  "she lies on the bed on her side, wide shot, her upper body and her face in frame",
+  "she walks towards the camera, wide shot, her whole body in frame",
+  "she stands by the window with the light behind her, wide shot, head, chest and hips in frame",
+  "she sits on the floor, wide shot, her whole body in frame, the room visible around her",
+];
+
 export default function Messages() {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +49,7 @@ export default function Messages() {
   const [drafts, setDrafts] = useState({});
   const [pendingImage, setPendingImage] = useState(null);
   const [sending, setSending] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [chatMode, setChatMode] = useState("artanis");
   const [contentList, setContentList] = useState([]);
   const [stories, setStories] = useState([]);
@@ -60,6 +73,7 @@ export default function Messages() {
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
   const chatScrollRef = useRef(null);
+  const extraShotRef = useRef(0);
   const dmConvIdsRef = useRef(new Set());
   const activeChatRef = useRef(null);
   const aiConvsRef = useRef({});
@@ -569,6 +583,39 @@ export default function Messages() {
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
     } finally {
       setSending(false);
+    }
+  };
+
+  // Ein Klick, ein neues Bild — im gleichen Stil, ohne dass die KI erst antworten muss.
+  const requestAnotherImage = async () => {
+    if (!activeChat || generating || sending) return;
+    const chatKey = activeChat;
+    setGenerating(true);
+    try {
+      const creator = creators.find((c) => c.id === chatKey);
+      const desc = EXTRA_SHOTS[extraShotRef.current % EXTRA_SHOTS.length];
+      extraShotRef.current += 1;
+      const refs = [
+        ...(creator?.referenceImages?.length ? creator.referenceImages : []),
+        ...(userPref?.userReferenceImages || []),
+      ];
+      const url = await generateWithFallback(buildImgPrompt(desc), refs, chatMode);
+      if (!url) {
+        toast({ title: "Kein Bild", description: "Versuch es gleich nochmal.", variant: "destructive" });
+        return;
+      }
+      const isGold = hasProAccess(currentUser);
+      const isFree = isGold || consumeFree(currentUser?.id);
+      const attachment = { type: "image", url, locked: !isFree, price: isFree ? null : 4.99 };
+      const aiMsg = { senderType: "AI", text: "", attachments: [attachment], createdAt: new Date().toISOString() };
+      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
+      const conv = await ensureConv(chatKey);
+      if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: creator?.stageName, senderType: "AI", text: "", attachments: [attachment] }).catch(() => {});
+      setFreeLeft(freeRemaining(currentUser?.id));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -1257,10 +1304,11 @@ export default function Messages() {
                       {viewMode === "ai" && msg.senderType === "AI" && isLastAi && !sending && (
                         <div className="mt-2">
                           <button
-                            onClick={() => sendMessage("Noch eins — bitte noch ein Bild, andere Perspektive.")}
-                            className="px-3 py-1.5 rounded-full bg-primary/15 border border-primary/40 text-xs font-semibold text-primary hover:bg-primary/25 transition-colors"
+                            onClick={requestAnotherImage}
+                            disabled={generating}
+                            className="px-3 py-1.5 rounded-full bg-primary/15 border border-primary/40 text-xs font-semibold text-primary hover:bg-primary/25 transition-colors disabled:opacity-50"
                           >
-                            Noch eins
+                            {generating ? "Wird erzeugt …" : "Noch ein Bild"}
                           </button>
                         </div>
                       )}
@@ -1297,6 +1345,17 @@ export default function Messages() {
               <div className="p-4 border-t border-border flex gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
+                {viewMode === "ai" && (
+                  <button
+                    onClick={requestAnotherImage}
+                    disabled={generating || sending}
+                    title="Sofort ein neues Bild im gleichen Stil"
+                    className="inline-flex items-center gap-1.5 px-3 h-10 rounded-full bg-primary/15 border border-primary/40 text-primary text-xs font-semibold whitespace-nowrap flex-shrink-0 hover:bg-primary/25 transition-colors disabled:opacity-50"
+                  >
+                    {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                    <span className="hidden sm:inline">Noch ein Bild</span>
+                  </button>
+                )}
                 {viewMode === "ai" && (
                   <Dialog>
                     <DialogTrigger asChild>
