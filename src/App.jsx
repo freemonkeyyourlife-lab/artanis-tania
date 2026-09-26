@@ -36,6 +36,8 @@ import Community from '@/pages/Community';
 import Coins from '@/pages/Coins';
 import InviteClaim from '@/components/InviteClaim';
 import CreatorDetail from '@/pages/CreatorDetail';
+import Contests from '@/pages/Contests';
+import ContestDetail from '@/pages/ContestDetail';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -92,6 +94,8 @@ const AuthenticatedApp = () => {
         <Route path="/coins" element={<Coins />} />
         <Route path="/studio" element={<Studio />} />
         <Route path="/creator/:id" element={<CreatorDetail />} />
+        <Route path="/contests" element={<Contests />} />
+        <Route path="/contests/:id" element={<ContestDetail />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>

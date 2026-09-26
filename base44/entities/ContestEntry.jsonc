@@ -1,0 +1,94 @@
+{
+  "name": "ContestEntry",
+  "type": "object",
+  "properties": {
+    "contestId": {
+      "type": "string"
+    },
+    "userId": {
+      "type": "string"
+    },
+    "userName": {
+      "type": "string"
+    },
+    "anonymous": {
+      "type": "boolean",
+      "default": false
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "mediaType": {
+      "type": "string",
+      "enum": [
+        "IMAGE",
+        "VIDEO",
+        "TEXT"
+      ],
+      "default": "IMAGE"
+    },
+    "mediaUrl": {
+      "type": "string"
+    },
+    "thumbnail": {
+      "type": "string"
+    },
+    "votes": {
+      "type": "number",
+      "default": 0
+    },
+    "votedBy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "juryScore": {
+      "type": "number",
+      "default": 0
+    },
+    "juryNote": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "WINNER"
+      ],
+      "default": "APPROVED"
+    },
+    "round": {
+      "type": "number",
+      "default": 1
+    }
+  },
+  "required": [
+    "contestId",
+    "userId"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {},
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

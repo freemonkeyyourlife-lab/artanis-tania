@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { label: "Triania", path: "/triania" },
   { label: "Couple", path: "/couple" },
   { label: "Messages", path: "/messages" },
+  { label: "Wettbewerbe", path: "/contests" },
   { label: "Profile", path: "/profile" },
   { label: "Request", path: "/request" },
   { label: "Admin", path: "/admin" },

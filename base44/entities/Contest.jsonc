@@ -1,0 +1,196 @@
+{
+  "name": "Contest",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "rules": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "BIGGEST_COCK",
+        "BEST_LOOKING",
+        "MOST_CUM_FACIAL",
+        "WILDEST_ACTION",
+        "BEST_BODY",
+        "DIRTIEST_STORY",
+        "MOST_CREATIVE",
+        "BEST_COUPLE",
+        "CUSTOM"
+      ],
+      "default": "BEST_LOOKING"
+    },
+    "customCategory": {
+      "type": "string"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "WEEKLY",
+        "MONTHLY",
+        "ONE_TIME"
+      ],
+      "default": "WEEKLY"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "UPCOMING",
+        "ACTIVE",
+        "VOTING",
+        "ENDED"
+      ],
+      "default": "DRAFT"
+    },
+    "mediaType": {
+      "type": "string",
+      "enum": [
+        "IMAGE",
+        "VIDEO",
+        "TEXT",
+        "ANY"
+      ],
+      "default": "IMAGE"
+    },
+    "startsAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endsAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "autoRepeat": {
+      "type": "boolean",
+      "default": true
+    },
+    "round": {
+      "type": "number",
+      "default": 1
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "PUBLIC",
+        "REGISTERED",
+        "VIP",
+        "INVITE_ONLY"
+      ],
+      "default": "REGISTERED"
+    },
+    "entriesOpen": {
+      "type": "boolean",
+      "default": true
+    },
+    "maxEntriesPerUser": {
+      "type": "number",
+      "default": 1
+    },
+    "entryFeeCoins": {
+      "type": "number",
+      "default": 0
+    },
+    "allowAnonymousEntries": {
+      "type": "boolean",
+      "default": false
+    },
+    "autoApproveEntries": {
+      "type": "boolean",
+      "default": true
+    },
+    "votingEnabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "votesPerUser": {
+      "type": "number",
+      "default": 1
+    },
+    "juryMode": {
+      "type": "boolean",
+      "default": false
+    },
+    "prizeDescription": {
+      "type": "string"
+    },
+    "prizeCoins": {
+      "type": "number",
+      "default": 0
+    },
+    "prizeGold": {
+      "type": "boolean",
+      "default": false
+    },
+    "prizeCustom": {
+      "type": "string"
+    },
+    "winnerAnnounced": {
+      "type": "boolean",
+      "default": false
+    },
+    "winnerEntryId": {
+      "type": "string"
+    },
+    "winnerUserId": {
+      "type": "string"
+    },
+    "winnerName": {
+      "type": "string"
+    },
+    "coverImage": {
+      "type": "string"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "published": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

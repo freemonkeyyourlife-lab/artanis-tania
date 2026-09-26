@@ -76,6 +76,30 @@ export default async function (req) {
       return Response.json({ balance: result.balance, spent: amount });
     }
 
+    // Admins only: Gewinn-Coins an einen Nutzer ausschütten.
+    if (action === 'grant') {
+      if (user.role !== 'admin') {
+        return Response.json({ error: 'Nur Admins' }, { status: 403 });
+      }
+
+      const targetId = String(body.userId || '');
+      const amount = Math.round(Number(body.amount));
+      if (!targetId || !Number.isFinite(amount) || amount <= 0) {
+        return Response.json({ error: 'Ungültiger Betrag' }, { status: 400 });
+      }
+
+      const balance = await creditCoins(
+        base44,
+        targetId,
+        amount,
+        'BONUS',
+        String(body.description || 'Gewinn').slice(0, 120),
+        'contest',
+      );
+
+      return Response.json({ balance, credited: amount });
+    }
+
     if (action === 'purchase') {
       const pkg = COIN_PACKAGES.find((p) => p.id === body.packageId);
       if (!pkg) return Response.json({ error: 'Unbekanntes Paket' }, { status: 400 });

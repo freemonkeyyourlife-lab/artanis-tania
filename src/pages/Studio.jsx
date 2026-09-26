@@ -9,6 +9,7 @@ import TopicManager from "@/components/studio/TopicManager";
 import ContentManager from "@/components/studio/ContentManager";
 import LiveManager from "@/components/studio/LiveManager";
 import MemberManager from "@/components/studio/MemberManager";
+import ContestManager from "@/components/studio/ContestManager";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -19,6 +20,7 @@ const TABS = [
   { id: "topics", label: "Themen" },
   { id: "content", label: "Preise & Content" },
   { id: "live", label: "Live-Stream" },
+  { id: "contests", label: "Wettbewerbe" },
   { id: "members", label: "Mitglieder" },
 ];
 
@@ -76,6 +78,7 @@ export default function Studio() {
       {tab === "topics" && <TopicManager />}
       {tab === "content" && <ContentManager />}
       {tab === "live" && <LiveManager />}
+      {tab === "contests" && <ContestManager />}
       {tab === "members" && <MemberManager />}
 
       {tab === "characters" && (
