@@ -13,6 +13,7 @@ import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
 import CharacterSuggestion from "@/components/CharacterSuggestion";
 import ReadAloudButton from "@/components/ReadAloudButton";
+import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
 import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_CONSISTENCY } from "@/lib/appearance";
 import { Link } from "react-router-dom";
@@ -1032,7 +1033,12 @@ export default function Messages() {
                                       </div>
                                     </div>
                                   ) : it.type === "video" ? (
-                                    <video src={it.url} controls playsInline className="w-56 rounded-lg" />
+                                    <div>
+                                      <video src={it.url} controls playsInline className="w-56 rounded-lg" />
+                                      <div className="mt-1.5">
+                                        <DownloadButton url={it.url} filename="video.mp4" />
+                                      </div>
+                                    </div>
                                   ) : it.type === "audio" ? (
                                     <audio src={it.url} controls className="w-56" />
                                   ) : (
@@ -1043,8 +1049,10 @@ export default function Messages() {
                                         </DialogTrigger>
                                         <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
                                           <img src={it.url} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
+                                          <DownloadButton url={it.url} filename="bild.jpg" className="absolute bottom-4 left-4" />
                                         </DialogContent>
                                       </Dialog>
+                                      <DownloadButton url={it.url} filename="bild.jpg" className="absolute bottom-2 left-2" />
                                       {viewMode === "ai" && (
                                         <button
                                           onClick={() => { saveUserReference(it.url); toast({ title: "Als Referenz gemerkt", description: "So sieht sie ab jetzt aus — in allen neuen Bildern." }); }}
