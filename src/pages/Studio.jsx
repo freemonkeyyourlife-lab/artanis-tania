@@ -2,9 +2,19 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import CharacterForm from "@/components/studio/CharacterForm";
+import StoryManager from "@/components/studio/StoryManager";
+import TopicManager from "@/components/studio/TopicManager";
+
+const TABS = [
+  { id: "characters", label: "Charaktere" },
+  { id: "stories", label: "Storys" },
+  { id: "topics", label: "Themen" },
+];
 
 export default function Studio() {
+  const [tab, setTab] = useState("characters");
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | "new" | creator
@@ -28,11 +38,29 @@ export default function Studio() {
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-6 gap-4">
-        <div>
-          <h1 className="font-display text-3xl text-foreground">Charakter-Studio</h1>
-          <p className="text-muted-foreground text-sm">Erstelle und bearbeite deine Charaktere</p>
-        </div>
+      <div className="mb-6">
+        <h1 className="font-display text-3xl text-foreground">Studio</h1>
+        <p className="text-muted-foreground text-sm">Verwalte Charaktere, Storys und Themen — alles selbst, ohne Umweg.</p>
+      </div>
+
+      <div className="flex gap-1 p-1 rounded-full bg-elevated border border-border w-fit mb-6">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={cn("px-5 py-2 rounded-full text-sm font-medium transition-colors", tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "stories" && <StoryManager creators={creators} />}
+      {tab === "topics" && <TopicManager />}
+
+      {tab === "characters" && (
+      <>
+      <div className="flex justify-end mb-4">
         <button
           onClick={() => setEditing("new")}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold whitespace-nowrap"
@@ -82,6 +110,8 @@ export default function Studio() {
             </div>
           ))}
         </div>
+      )}
+      </>
       )}
     </div>
   );
