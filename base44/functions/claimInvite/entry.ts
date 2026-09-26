@@ -5,8 +5,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await base44.auth.me().catch(() => null);
 
     const body = await req.json().catch(() => ({}));
     const token = String(body.token || '').trim();
@@ -23,6 +22,13 @@ export default async function (req) {
     const claimedBy = invite.claimedBy || [];
     const grantStatus = invite.grantStatus || 'GOLD';
     const maxUses = Number(invite.maxUses) || 0;
+
+    // Besucher ohne Konto: der Status wird im Browser gespeichert statt am User.
+    // Nur bei unbegrenzten Einladungen, sonst könnte man die Grenze umgehen.
+    if (!user) {
+      if (maxUses > 0) return Response.json({ error: 'Bitte zuerst anmelden' }, { status: 401 });
+      return Response.json({ status: grantStatus, label: invite.label || null, anonymous: true });
+    }
 
     if (claimedBy.includes(user.id)) {
       return Response.json({ status: grantStatus, label: invite.label || null, already: true });

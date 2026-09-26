@@ -4,6 +4,7 @@ import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCh
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
+import { hasProAccess, localProActive } from "@/lib/proAccess";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
@@ -45,7 +46,9 @@ export default function Layout() {
   const [incomingCount, setIncomingCount] = useState(0);
 
   useEffect(() => {
-    base44.auth.me().then((me) => setMemberStatus(me?.memberStatus || "STANDARD")).catch(() => {});
+    base44.auth.me()
+      .then((me) => setMemberStatus(hasProAccess(me) ? "GOLD" : (me?.memberStatus || "STANDARD")))
+      .catch(() => setMemberStatus(localProActive() ? "GOLD" : "STANDARD"));
   }, []);
 
   // Leute, die mit dir chatten wollen — sichtbar am Messages-Symbol.

@@ -18,6 +18,7 @@ import { coinsForPrice } from "@/lib/coins";
 import { APPEARANCE_DIRECTIVE, CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, EROTIC_CRAFT, IMAGE_CONSISTENCY, PHOTOREAL } from "@/lib/appearance";
 import { Link } from "react-router-dom";
 import ChatTabs from "@/components/chat/ChatTabs";
+import { hasProAccess } from "@/lib/proAccess";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
 
@@ -455,7 +456,7 @@ export default function Messages() {
       : null;
     const attachments = [];
     // Admins und Gold-Member zahlen nie — für sie ist alles offen.
-    const isGold = currentUser?.memberStatus === "GOLD" || currentUser?.role === "admin";
+    const isGold = hasProAccess(currentUser);
 
     // Up to 3 images per reply — first 10 creations are free, then locked behind a paywall.
     // Gold Members get everything for free, forever.
@@ -861,6 +862,7 @@ export default function Messages() {
   };
 
   const isAdmin = currentUser?.role === "admin";
+  const proActive = hasProAccess(currentUser);
 
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>;
@@ -991,8 +993,8 @@ export default function Messages() {
                   </span>
                 )}
                 {viewMode === "ai" && (
-                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title={isAdmin ? "Admin — alles gratis, kein Freischalten" : currentUser?.memberStatus === "GOLD" ? "Gold Member — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
-                    {isAdmin ? "Admin · alles gratis" : currentUser?.memberStatus === "GOLD" ? "Gold · alles gratis" : `${freeLeft} gratis`}
+                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title={isAdmin ? "Admin — alles gratis, kein Freischalten" : proActive ? "Pro — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
+                    {isAdmin ? "Admin · alles gratis" : proActive ? "Pro · alles gratis" : `${freeLeft} gratis`}
                   </span>
                 )}
                 {viewMode === "ai" && (

@@ -142,7 +142,7 @@ export default function Studio() {
                 </button>
                 <button
                   onClick={() => toggleStyle(c)}
-                  title="Diesen Charakter als Zeichentrickfigur anzeigen"
+                  title="Diesen Charakter animiert (gezeichnet) anzeigen"
                   className={cn(
                     "w-full mt-2 px-3 py-2 rounded-full text-xs font-semibold transition-colors",
                     c.artStyle === "CARTOON"
@@ -150,7 +150,7 @@ export default function Studio() {
                       : "bg-elevated border border-border text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {c.artStyle === "CARTOON" ? "Zeichentrick ✓" : "Zeichentrick"}
+                  {c.artStyle === "CARTOON" ? "Animiert ✓" : "Animiert"}
                 </button>
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => setEditing(c)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground hover:text-foreground transition-colors">

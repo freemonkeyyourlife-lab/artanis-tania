@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
+import { grantLocalPro } from "@/lib/proAccess";
 
 const STORAGE_KEY = "pendingInvite";
 
@@ -20,9 +21,11 @@ export default function InviteClaim() {
       .invoke("claimInvite", { token })
       .then((res) => {
         localStorage.removeItem(STORAGE_KEY);
+        // Der Status bleibt auch ohne Konto im Browser — so wirkt der Link sofort.
+        if (res.data?.status) grantLocalPro(res.data.status);
         if (res.data?.already) return;
         toast({
-          title: res.data?.status === "GOLD" ? "Du bist Gold Member" : "Status freigeschaltet",
+          title: "Pro freigeschaltet",
           description: "Ab jetzt ist alles für dich frei — viel Spaß.",
         });
       })
