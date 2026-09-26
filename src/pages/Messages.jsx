@@ -15,7 +15,7 @@ import CharacterSuggestion from "@/components/CharacterSuggestion";
 import ReadAloudButton from "@/components/ReadAloudButton";
 import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
-import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_CONSISTENCY } from "@/lib/appearance";
+import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, EROTIC_CRAFT, IMAGE_CONSISTENCY } from "@/lib/appearance";
 import { Link } from "react-router-dom";
 
 const LANGUAGE_RULE =
@@ -221,7 +221,7 @@ export default function Messages() {
     if (setupAnswers.deepKink) ctx += "- The user's deepest fantasy: \"" + setupAnswers.deepKink + "\" — weave this into the roleplay and build on it.\n";
     // ── MEDIA MARKERS & CONVERSION ──
     ctx += "\n\nMEDIA MARKERS (the app turns these into real media — use them):\n";
-    ctx += "- [SEND_IMAGE: description] — a teasing photo. Up to 3 per reply, each a DIFFERENT angle or body part.\n";
+    ctx += "- [SEND_IMAGE: description] — a teasing photo. Up to 3 per reply, each a DIFFERENT angle or detail. Describe ONE clear focus per image (her gaze, the neckline, the curve of a hip, a strap, a hem that slipped) — setting, outfit and light stay exactly as they were in the previous image.\n";
     ctx += "- [SEND_VIDEO: description] — a short intimate video clip. Use sparingly (most expensive).\n";
     ctx += "- [SEND_VOICE: your spoken line] — a voice note in your voice. Use it sometimes.\n";
     ctx += "- [SEND_PPV: Label | description | price] — locked content behind a paywall. The Label names the direction in 1–3 words (e.g. 'Sanft & zärtlich', 'Hart & dominant', 'Erst schauen') so the user instantly knows where each path leads. When it fits, offer 2–3 DIFFERENT paths at once so the user can choose one — or several. Never more than 3.\n";
@@ -372,11 +372,12 @@ export default function Messages() {
     if (scenario) imgCtx += "Location: " + scenario.title + ". ";
     if (setupAnswers.aiWardrobe) imgCtx += "She is wearing: " + setupAnswers.aiWardrobe + ". ";
     if (setupAnswers.position) imgCtx += "Physical positioning: " + setupAnswers.position + ". ";
+    if (setupAnswers.aiAge) imgCtx += "Her age: " + setupAnswers.aiAge + ". ";
     if (setupAnswers.fetish && Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) imgCtx += "Fetishes/themes: " + setupAnswers.fetish.join(", ") + ". ";
     const who = spannerMode && extraCharacters.length > 0
       ? "Amateur phone photo of the women together in frame — both visible, they are with each other, "
       : "Amateur phone photo of the couple together in frame — him and her, both visible, ";
-    return APPEARANCE_DIRECTIVE + " " + IMAGE_CONSISTENCY + " " + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, teasing and suggestive, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
+    return APPEARANCE_DIRECTIVE + " " + IMAGE_CONSISTENCY + " " + EROTIC_CRAFT + " " + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, teasing and suggestive, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
   };
 
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {

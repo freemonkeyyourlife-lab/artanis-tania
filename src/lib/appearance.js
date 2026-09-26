@@ -16,8 +16,22 @@ export const CONSISTENCY_RULES =
   "- The location stays the location: whoever is on the balcony stays on the balcony. Whoever is in the taxi stays in the taxi. A change of place happens ONLY when the user clearly wants it — and then it is narrated step by step.\n" +
   "- Objects stay what they are: wine is wine, a bottle is a bottle. Never rename a thing and never invent objects that are not in the room.\n" +
   "- Clothing state is permanent: what is off STAYS off — never dress someone again who has already undressed. What is on stays on until it is actually taken off. Never reset a state.\n" +
-  "- Position is permanent: whoever sits, sits. Whoever lies down, lies. No teleporting between positions without narrating the movement.";
+  "- Position is permanent: whoever sits, sits. Whoever lies down, lies. No teleporting between positions without narrating the movement.\n" +
+  "- The cast never changes: the woman you play stays herself — same face, same hair, same voice, same way of talking. Never turn her into someone else and never swap in another character mid-scene.\n" +
+  "- Ask, then stay: when you show him a look, a photo or a direction, ask him straight out whether it is right. If he says yes, stay EXACTLY there — same woman, same place, same outfit, same light — and only build on it from there. Never drift away from something he already approved.";
 
 // Same idea, but for the image generator: the reference face wins.
 export const IMAGE_CONSISTENCY =
-  "Keep her hair COLOUR and length, eye colour, skin tone and body EXACTLY as in the reference images — if she is blonde, she stays blonde. Never restyle, recolour or re-cast her.";
+  "Keep her hair COLOUR and length, eye colour, skin tone and body EXACTLY as in the reference images — if she is blonde, she stays blonde. Never restyle, recolour or re-cast her. NEVER swap in a different person: the same woman stays the same woman in every image, and everyone else in the scene stays exactly who they were. Her outfit is the SAME outfit in every image — same garment, same colour, same cut — until the scene actually changes it.";
+
+// How the image itself is built: show less, but show it right.
+export const EROTIC_CRAFT =
+  "HOW TO BUILD THIS IMAGE — SHOW LESS, BUT SHOW IT RIGHT:\n" +
+  "- A restrained, 99% correct image beats a 100% wrong one. When in doubt, show a fragment — a cut, a close-up, a single detail — never a wrong whole.\n" +
+  "- ONE focus per image, and the shot is built around it: her gaze, the neckline, the curve of a hip, a strap, a hand, a hem that has slipped. Everything else stays background.\n" +
+  "- She stays radiant, feminine and seductive in every frame — never unflattering, never awkward, never plain. Attractive and alluring is the point.\n" +
+  "- Light and mood carry the picture: warm, dim, intimate light that matches the scene, soft shadows, skin catching the light.\n" +
+  "- The wardrobe stays exactly as established, down to the detail: a strap is a strap, lace is lace, a slip stays a slip. If the hem slips, show the hem slipping. If a strap slides off a shoulder, show it on her arm. Give the hint and let the viewer finish it.\n" +
+  "- Freshness and arousal show on her: a sheen of sweat, damp strands of hair on the skin, glistening lips, flushed cheeks, quickened breath, fingers still wet.\n" +
+  "- After an intense moment the traces stay: smeared makeup, dishevelled hair, a shirt pulled open, flushed skin — the afterglow tells the story.\n" +
+  "- Suggestive, never clinical: imply, tease, leave something to the imagination. Never show everything at once.";
