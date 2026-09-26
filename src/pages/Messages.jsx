@@ -10,6 +10,7 @@ import { PERSONA_MODES } from "@/lib/personaPrompts";
 import ScenarioSelection from "@/components/ScenarioSelection";
 import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
+import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE } from "@/lib/appearance";
 
 export default function Messages() {
   const [creators, setCreators] = useState([]);
@@ -151,6 +152,7 @@ export default function Messages() {
     const activeCreator = creators.find(c => c.id === activeChat);
     if (activeCreator && !["Artanis", "Triania", "Artanis × Triania"].includes(activeCreator.stageName)) {
       ctx += `\n\nIMPORTANT: Your name is ${activeCreator.stageName} — NOT Triania or Artanis. You are ${activeCreator.stageName}. ${activeCreator.bio || ""} You are a friend of Triania's. Use the personality template above, but your identity is ${activeCreator.stageName}. When you refer to yourself, use the name ${activeCreator.stageName}.`;
+      ctx += `\n\nAPPEARANCE: ${CHARACTER_ALLURE}`;
     }
 
     if (extraCharacters.length > 0) {
@@ -314,7 +316,7 @@ export default function Messages() {
     if (setupAnswers.aiWardrobe) imgCtx += "She is wearing: " + setupAnswers.aiWardrobe + ". ";
     if (setupAnswers.position) imgCtx += "Physical positioning: " + setupAnswers.position + ". ";
     if (setupAnswers.fetish && Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) imgCtx += "Fetishes/themes: " + setupAnswers.fetish.join(", ") + ". ";
-    return "POV first person view, amateur phone photo, " + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
+    return APPEARANCE_DIRECTIVE + " POV first person view, amateur phone photo, " + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
   };
 
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {
