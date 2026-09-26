@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
-import { Mic, MicOff, Video as VideoIcon, VideoOff } from "lucide-react";
+import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home } from "lucide-react";
 import useCallRoom from "@/hooks/useCallRoom";
 import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
@@ -44,6 +44,13 @@ export default function VideoCall() {
   if (!joined) {
     return (
       <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-6 overflow-y-auto">
+        {/* Immer sichtbar — hier hängt niemand fest. */}
+        <button
+          onClick={() => navigate("/")}
+          className="fixed top-4 left-4 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-border text-sm text-foreground hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Zurück
+        </button>
         <div className="w-full max-w-md text-center py-8">
           <h1 className="font-display text-2xl text-foreground">Video-Call beitreten</h1>
           <p className="text-sm text-muted-foreground mt-2">
@@ -102,6 +109,13 @@ export default function VideoCall() {
     <div className="fixed inset-0 bg-background flex flex-col">
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2 min-w-0">
+          <button
+            onClick={() => navigate("/")}
+            title="Zurück zur Startseite"
+            className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors"
+          >
+            <Home className="w-4 h-4" />
+          </button>
           <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", status === "live" ? "bg-emerald-500" : status === "error" ? "bg-destructive" : "bg-amber-500 animate-pulse")} />
           <span className="text-sm text-foreground font-medium truncate">{statusLabel}</span>
         </div>
@@ -121,7 +135,17 @@ export default function VideoCall() {
       />
 
       {error && (
-        <p className="px-4 pb-3 text-center text-xs text-destructive">{error}</p>
+        <div className="px-4 pb-3 text-center">
+          <p className="text-xs text-destructive mb-2">{error}</p>
+          {window.self !== window.top && (
+            <button
+              onClick={() => window.open(window.location.href, "_blank")}
+              className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+            >
+              In neuem Tab öffnen — dort läuft die Kamera
+            </button>
+          )}
+        </div>
       )}
 
       <div className="px-4 pb-3 flex justify-center">
