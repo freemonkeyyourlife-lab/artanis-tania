@@ -7,7 +7,7 @@ const STATUS_CONFIG = {
   BUSY: { label: "Busy", dot: "bg-amber-400" },
   AWAY: { label: "Away", dot: "bg-amber-400" },
   OFFLINE: { label: "Offline", dot: "bg-slate-500" },
-  AI_AVAILABLE: { label: "AI Available", dot: "bg-violet-500" },
+  AI_AVAILABLE: { label: "AI Available", dot: "bg-emerald-400" },
   SCHEDULED: { label: "Scheduled", dot: "bg-blue-400" },
 };
 

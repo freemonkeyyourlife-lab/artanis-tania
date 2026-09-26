@@ -40,9 +40,28 @@ export default function Layout() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [memberStatus, setMemberStatus] = useState(null);
+  const [incomingCount, setIncomingCount] = useState(0);
 
   useEffect(() => {
     base44.auth.me().then((me) => setMemberStatus(me?.memberStatus || "STANDARD")).catch(() => {});
+  }, []);
+
+  // Leute, die mit dir chatten wollen — sichtbar am Messages-Symbol.
+  useEffect(() => {
+    let unsubscribe;
+    (async () => {
+      try {
+        const me = await base44.auth.me();
+        if (!me) return;
+        const load = async () => {
+          const convs = await base44.entities.Conversation.filter({ participantId: me.id, conversationType: "HUMAN" });
+          setIncomingCount(convs.length);
+        };
+        await load();
+        unsubscribe = base44.entities.Conversation.subscribe(() => { load(); });
+      } catch (e) { /* nicht angemeldet */ }
+    })();
+    return () => unsubscribe?.();
   }, []);
 
   return (
@@ -99,9 +118,11 @@ export default function Layout() {
             <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
               <Search className="w-4 h-4" />
             </span>
-            <Link to="/messages" className="hidden sm:flex w-9 h-9 rounded-full glass items-center justify-center hover:text-primary transition-colors relative">
+            <Link to="/messages" title={incomingCount > 0 ? `${incomingCount} wollen mit dir chatten` : "Messages"} className="hidden sm:flex w-9 h-9 rounded-full glass items-center justify-center hover:text-primary transition-colors relative">
               <MessageSquare className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
+              {incomingCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{incomingCount}</span>
+              )}
             </Link>
             <Link to="/admin" className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -176,11 +197,14 @@ export default function Layout() {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-colors",
+                  "relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-colors",
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 <Icon className="w-5 h-5" />
+                {item.path === "/messages" && incomingCount > 0 && (
+                  <span className="absolute top-0 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{incomingCount}</span>
+                )}
                 <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             );
