@@ -113,9 +113,15 @@ export default function VideoCall() {
         localStreamRef.current = stream;
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
       } catch (e) {
-        setStatus("error");
-        setError("Kamera und Mikrofon konnten nicht gestartet werden. Bitte Zugriff erlauben.");
-        return;
+        // Ohne Kamera weitermachen — sehen und hören kann man trotzdem.
+        console.error("Kamera/Mikrofon nicht verfügbar:", e);
+        localStreamRef.current = new MediaStream();
+        setCamOn(false);
+        setMicOn(false);
+        setStatus("waiting");
+        setError(window.self !== window.top
+          ? "Kamera und Mikrofon sind in der Vorschau blockiert. Öffne die App in einem eigenen Tab — dort startet die Kamera."
+          : "Kamera und Mikrofon konnten nicht gestartet werden. Bitte im Browser erlauben und neu laden.");
       }
 
       let connId = sessionStorage.getItem("callConnId");
@@ -221,6 +227,16 @@ export default function VideoCall() {
           <p className="text-sm text-muted-foreground mt-2">
             Du entscheidest selbst, was du teilst. Kamera und Mikrofon kannst du jederzeit wieder ausschalten.
           </p>
+
+          {window.self !== window.top && (
+            <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-left">
+              <p className="text-sm font-medium text-foreground mb-1">Kamera startet in der Vorschau nicht</p>
+              <p className="text-xs text-muted-foreground mb-3">Die Vorschau blockiert Kamera und Mikrofon. Öffne die App in einem eigenen Tab — dort läuft der Video-Call.</p>
+              <button onClick={() => window.open(window.location.href, "_blank")} className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+                In neuem Tab öffnen
+              </button>
+            </div>
+          )}
 
           <div className="flex gap-3 justify-center mt-6">
             <button
