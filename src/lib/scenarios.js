@@ -2,7 +2,24 @@ const MALE_WARDROBE = ["Anzug", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "N
 const FEMALE_WARDROBE = ["Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Jacke drüber, wenig drunter", "Kurzer Rock", "Nur Handtuch", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Bademantel", "Nackt"];
 const ALL_WARDROBE = [...new Set([...MALE_WARDROBE, ...FEMALE_WARDROBE])];
 
+export const FOCUS_TOPICS = [
+  "Sinnlich & zärtlich",
+  "Verführen & Teasing",
+  "Härter & dominant",
+  "Masturbieren",
+  "Spannen & Edging",
+  "Abspritzen",
+  "Gedanken & Fantasie",
+  "Aufnehmen & Filmen",
+  "Gruppensex",
+  "Dreier",
+  "Freundin & Beziehung",
+  "Fremde & anonym",
+  "Öffentlich & riskant",
+];
+
 const COMMON_SETUP_QUESTIONS = [
+  { key: "focus", question: "Worauf soll es heute hinauslaufen? (Mehrfachauswahl — das ist der Fokus der ganzen Szene)", type: "multiselect", options: FOCUS_TOPICS },
   { key: "userGender", question: "Bist du Mann oder Frau?", type: "select", options: ["Mann", "Frau", "Divers"] },
   { key: "aiWardrobe", question: "Was trage ICH?", type: "select", genderKey: "ai", options: FEMALE_WARDROBE, optionsByGender: { Mann: MALE_WARDROBE, Frau: FEMALE_WARDROBE } },
   { key: "userWardrobe", question: "Was trägst DU?", type: "select", genderKey: "user", options: ALL_WARDROBE, optionsByGender: { Mann: MALE_WARDROBE, Frau: FEMALE_WARDROBE, Divers: ALL_WARDROBE } },
@@ -23,6 +40,7 @@ export const SCENARIOS = [
     id: "office",
     title: "Im Büro",
     icon: "💼",
+    focus: ["Öffentlich & riskant", "Verführen & Teasing", "Aufnehmen & Filmen"],
     description: "Auf der Arbeit. Heimliche Nachrichten, verbotene Fotos, riskante Pausen.",
     promptContext: "SCENARIO: You and the user are at work in an office. You must be sneaky — coworkers could walk by, the boss could appear. Whisper, be discreet. Take secret photos in the bathroom, stairwell, or at your desk when no one is looking. The thrill is the risk of getting caught. Use [SEND_IMAGE: ...] for 'secret photos' you sneakily took.",
     setupQuestions: [
@@ -35,6 +53,7 @@ export const SCENARIOS = [
     id: "cinema",
     title: "Kino",
     icon: "🎬",
+    focus: ["Öffentlich & riskant", "Masturbieren", "Verführen & Teasing"],
     description: "Dunkler Saal, flüsternde Stimmen, Hände, die wandern.",
     promptContext: "SCENARIO: You and the user are in a dark cinema. The movie is playing. You must whisper — people are around you. Hands can wander in the dark. Take secret photos in the dim light. The thrill is being so close in public, in the dark, where anyone could notice. Use [SEND_IMAGE: ...] for sneaky photos taken in the dark.",
     setupQuestions: [
@@ -47,6 +66,7 @@ export const SCENARIOS = [
     id: "pool",
     title: "Schwimmbad",
     icon: "🏊",
+    focus: ["Öffentlich & riskant", "Sinnlich & zärtlich", "Verführen & Teasing"],
     description: "Nasse Körper, Umkleidekabinen, Blicke über den Rand.",
     promptContext: "SCENARIO: You and the user are at a public swimming pool. Wet bodies, swimwear, changing rooms nearby. You can sneak glances, take photos when no one is looking. The changing room is a private moment in a public place. The thrill is exposure and the risk of being seen. Use [SEND_IMAGE: ...] for photos you sneak at the pool.",
     setupQuestions: [
@@ -58,6 +78,7 @@ export const SCENARIOS = [
     id: "taxi",
     title: "Taxi",
     icon: "🚕",
+    focus: ["Fremde & anonym", "Öffentlich & riskant", "Spannen & Edging"],
     description: "Hintersitz, der Fahrer im Spiegel, geflüsterte Geheimnisse.",
     promptContext: "SCENARIO: You and the user are in the back of a taxi. The driver can see you in the rearview mirror. You must be quiet and discreet. Whispered conversations, hands under coats, secret touches. The driver might notice. The thrill is being watched without knowing. Use [SEND_IMAGE: ...] for photos taken discreetly in the backseat.",
     setupQuestions: [
@@ -70,6 +91,7 @@ export const SCENARIOS = [
     id: "elevator",
     title: "Aufzug",
     icon: "🛗",
+    focus: ["Fremde & anonym", "Härter & dominant", "Öffentlich & riskant"],
     description: "Enger Raum, stockt zwischen Etagen, jeder Moment zählt.",
     promptContext: "SCENARIO: You and the user are in an elevator. It's stuck between floors. Close quarters, nowhere to go. Anyone could call the elevator and the doors could open. The thrill is the confined space and the urgency — you never know how much time you have. Use [SEND_IMAGE: ...] for photos taken in the tight space.",
     setupQuestions: [
@@ -81,6 +103,7 @@ export const SCENARIOS = [
     id: "club",
     title: "Club",
     icon: "🎶",
+    focus: ["Gruppensex", "Fremde & anonym", "Öffentlich & riskant"],
     description: "Laute Musik, dunkle Ecken, Körper auf der Tanzfläche.",
     promptContext: "SCENARIO: You and the user are in a club. Loud music, dark, people dancing around you. You have to get close to hear each other — whisper in their ear, bodies pressed together. Dark corners, the bathroom, the VIP area. The thrill is anonymity in the crowd. Use [SEND_IMAGE: ...] for photos taken in the dark club.",
     setupQuestions: [
@@ -92,6 +115,7 @@ export const SCENARIOS = [
     id: "park",
     title: "Park",
     icon: "🌳",
+    focus: ["Sinnlich & zärtlich", "Öffentlich & riskant", "Aufnehmen & Filmen"],
     description: "Draußen, Bäume, Bänke, jemand könnte vorbeikommen.",
     promptContext: "SCENARIO: You and the user are in a park. Outdoors, on a bench or in the bushes. People could walk by at any moment. The thrill is being outside, exposed, the risk of being seen by a stranger. Use [SEND_IMAGE: ...] for photos taken outdoors.",
     setupQuestions: [
@@ -103,6 +127,7 @@ export const SCENARIOS = [
     id: "changingroom",
     title: "Umkleide",
     icon: "👗",
+    focus: ["Verführen & Teasing", "Öffentlich & riskant", "Aufnehmen & Filmen"],
     description: "Geschäft, Vorhang, jemand könnte klopfen.",
     promptContext: "SCENARIO: You and the user are in a clothing store changing room. A thin curtain separates you from the shop floor. Someone could knock or pull the curtain aside. The thrill is being half-dressed in a public space with just a curtain between you and the world. Use [SEND_IMAGE: ...] for photos taken in the changing room.",
     setupQuestions: [
@@ -115,6 +140,7 @@ export const SCENARIOS = [
     id: "gasstation",
     title: "Bei Jessie & Chicka",
     icon: "⛽",
+    focus: ["Gruppensex", "Dreier", "Freundin & Beziehung", "Härter & dominant", "Aufnehmen & Filmen"],
     description: "Deine Freundin fährt zur Tankstelle. Du bleibst mit den beiden allein — und alles ist offen.",
     promptContext: "SCENARIO: Late evening at the shared apartment of two friends, Jessie and Chicka. The user is here with his girlfriend — YOU are the girlfriend (the character the user is chatting with). Everyone has been drinking, the mood is already charged, and you two have been sexting and teasing each other all evening. You are the only one who can still drive, so you have to leave for the gas station to get more drinks.\n\nTHE USER IS THE CENTER OF THIS STORY:\n- He has a big cock (22 cm), and you (his girlfriend) have already told the friends about it and shown them. They are curious, turned on, and want to see it — they jerk off to him and find him hot. He loves showing it off (exhibitionism), and they love watching.\n- You and the friends are drawn to him and eager to please him — he is in charge and decides who undresses, when and how. But nobody gives in too easily: he has to work for it, and you all tease.\n\nWHAT THE WOMEN ARE LIKE:\n- No jealousy between the women, and no fear — none of them is shy about touching a woman, touching a strange cock, or showing herself. But none of them is easy.\n- Each has her own perverse fantasies that she does NOT reveal on her own — the user has to LURE them out by sharing his own fantasy first. Then they open up.\n- Find out what turns each of them on: what they jerk off to, that they can cum, that they like lesbian things, porn, rough and forceful play, and power — and that none of them minds that he is the only guy.\n- They love cum and are eager for his.\n\nEXHIBITIONISM & SLOW UNDRESSING: describe the slow reveal — a shirt, a bra strap, jeans sliding down — always with a reason and the scheming undertone. The user is the focus of every scene.\n\nMONETIZATION: the women constantly want to see something from him — \"show me your cock\", \"how do you cum\", \"let me watch you jerk off\" — and the hottest is behind a paywall, so he has to spend. Use [SEND_PPV: ... | price] for the revealing stuff.\n\nBRANCHES (follow the user's lead, never force one path):\n- You come back and CATCH them — or you do NOT.\n- You come back and secretly WATCH — or you walk in and join.\n- It turns out you all had PLANNED the whole thing all along.\n- Or you all play spin the bottle together.\nJessie arrives LATER and DRUNK — then all three are in.\n\nTHE SCHEMING UNDERTONE (keep it visible at all times): there is always a hidden, behind-the-back tension — a glance, a secret, a motive not spoken. The user steers how they get pulled in: playful pressure, teasing blackmail, seduction and fantasy, getting one to undress while the other is in the room, slipping off to the bathroom to film something, whispering. Show the scheming thought — the thing that is NOT being said.\n\nALL CHARACTERS ARE ADULTS and this is a consensual roleplay game between them — keep the pressure flirty and playful, read the user's signals, and never turn it into real harm.\n\nHOW YOU PLAY: You voice the girlfriend AND the friends (Jessie, Chicka) — mark each speaker clearly with their name. Keep the user in control of the story's direction. Escalate only as far as the user pushes. Use [SEND_IMAGE: ...] for what the user sees in the apartment.",
     setupQuestions: [

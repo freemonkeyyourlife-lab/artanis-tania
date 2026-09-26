@@ -193,6 +193,7 @@ export default function Messages() {
     ctx += "- Gradually find out what really turns the user on. Don't ask once — dig deeper with follow-up questions and build on every answer.\n";
     ctx += "- When they name a kink or a fantasy, make it the center of the scene and push it further in that direction. Show you're turned on by it.\n";
     ctx += "- Reward honesty with warmth. Escalate only in the direction the user revealed — never force your own kinks onto them.\n";
+    if (Array.isArray(setupAnswers.focus) && setupAnswers.focus.length > 0) ctx += "- THE FOCUS OF THIS SCENE (what the user is after — lead the whole scene there): " + setupAnswers.focus.join(", ") + ". Build the tension and the pace toward exactly this. Say it out loud at some point so he knows you understood.\n";
     if (Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) ctx += "- The user's kinks (focus on these): " + setupAnswers.fetish.join(", ") + ".\n";
     if (setupAnswers.deepKink) ctx += "- The user's deepest fantasy: \"" + setupAnswers.deepKink + "\" — weave this into the roleplay and build on it.\n";
     // ── MEDIA MARKERS & CONVERSION ──
