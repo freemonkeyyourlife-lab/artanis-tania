@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { MessageSquare, Heart, Sparkles } from "lucide-react";
+import { MessageSquare, Heart, Sparkles, Pencil } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import ContentCard from "@/components/ContentCard";
+import CharacterForm from "@/components/studio/CharacterForm";
 import { cn } from "@/lib/utils";
 
 export default function CreatorProfile({ personaType }) {
@@ -14,6 +15,7 @@ export default function CreatorProfile({ personaType }) {
   const [loading, setLoading] = useState(true);
   const [followed, setFollowed] = useState(false);
   const [tab, setTab] = useState("all");
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => { loadData(); }, [personaType]);
 
@@ -58,6 +60,16 @@ export default function CreatorProfile({ personaType }) {
 
   return (
     <div>
+      {editing && (
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 pt-8">
+          <CharacterForm
+            initial={creator}
+            onSaved={() => { setEditing(false); loadData(); }}
+            onCancel={() => setEditing(false)}
+          />
+        </div>
+      )}
+
       {/* Banner */}
       <div className="relative h-[40vh] min-h-[300px] w-full overflow-hidden">
         <Image src={creator.banner || creator.avatar} fittingType="fill" className="w-full h-full" />
@@ -96,6 +108,12 @@ export default function CreatorProfile({ personaType }) {
               <Link to="/interactive" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass border border-border text-foreground text-sm font-semibold hover:border-primary/30 transition-all">
                 <Sparkles className="w-4 h-4 text-primary" /> Interactive
               </Link>
+              <button
+                onClick={() => setEditing(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass border border-border text-foreground text-sm font-semibold hover:border-primary/30 transition-all"
+              >
+                <Pencil className="w-4 h-4" /> Bearbeiten
+              </button>
             </div>
 
             <div className="flex gap-6 mt-5">
