@@ -705,6 +705,10 @@ export default function Messages() {
         await base44.entities.Conversation.update(conv.id, { scenario: null, setupAnswers: {} });
       } catch (e) { console.error(e); }
     }
+    // Ein Neustart ist ein echter Neustart: auch die Referenzfotos werden gelöscht.
+    if ((userPref?.userReferenceImages || []).length > 0) {
+      try { await persistUserRefs([]); } catch (e) { console.error(e); }
+    }
     setMessages(prev => { const next = { ...prev }; delete next[activeChat]; return next; });
     setScenario(null);
     setSetupStep(0);
