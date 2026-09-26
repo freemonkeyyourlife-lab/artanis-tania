@@ -17,6 +17,7 @@ import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
 import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, EROTIC_CRAFT, IMAGE_CONSISTENCY } from "@/lib/appearance";
 import { Link } from "react-router-dom";
+import ChatTabs from "@/components/chat/ChatTabs";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
 
@@ -30,8 +31,9 @@ export default function Messages() {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeChat, setActiveChat] = useState(null);
+  const [openChats, setOpenChats] = useState([]);
   const [messages, setMessages] = useState({});
-  const [input, setInput] = useState("");
+  const [drafts, setDrafts] = useState({});
   const [pendingImage, setPendingImage] = useState(null);
   const [sending, setSending] = useState(false);
   const [chatMode, setChatMode] = useState("artanis");
@@ -63,6 +65,16 @@ export default function Messages() {
   const restoredRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+
+  // Jedes offene Gespräch behält seinen eigenen Entwurf.
+  const input = activeChat ? (drafts[activeChat] || "") : "";
+  const setInput = (value) => {
+    if (!activeChat) return;
+    setDrafts((prev) => ({
+      ...prev,
+      [activeChat]: typeof value === "function" ? value(prev[activeChat] || "") : value,
+    }));
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -131,9 +143,11 @@ export default function Messages() {
       (async () => {
         try {
           const conv = await base44.entities.Conversation.get(saved.id);
+          const name = conv.participantName || conv.userName || "Unbekannt";
           setViewMode("dm");
+          addTab({ id: conv.id, type: "dm", name });
           setActiveChat(conv.id);
-          setDmParticipantName(conv.participantName || conv.userName || "Unbekannt");
+          setDmParticipantName(name);
           const msgs = await base44.entities.Message.filter({ conversationId: conv.id }, "created_date", 100);
           setMessages((prev) => ({ ...prev, [conv.id]: msgs }));
         } catch (e) { console.error(e); }
@@ -147,6 +161,7 @@ export default function Messages() {
   useEffect(() => {
     setExtraCharacters([]);
     setTakeover(false);
+    setPendingImage(null);
   }, [activeChat]);
 
   useEffect(() => {
@@ -640,18 +655,54 @@ export default function Messages() {
     }
   };
 
-  const openAiChat = async (c) => {
-    setActiveChat(c.id);
-    setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : (c.personaType === "COUPLE" || c.personaType === "GROUP") ? "couple" : "triania");
-    setSetupInput("");
-    setMessages((prev) => ({ ...prev, [c.id]: [] }));
-    const conv = await ensureConv(c.id);
-    if (!conv) { setScenario(null); setSetupAnswers({}); setSetupStep(0); return; }
-    const restoredScenario = conv.scenario || null;
-    const restoredAnswers = conv.setupAnswers || {};
+  const addTab = (tab) => {
+    setOpenChats((prev) => prev.some((t) => t.id === tab.id)
+      ? prev.map((t) => (t.id === tab.id ? { ...t, ...tab } : t))
+      : [...prev, tab]);
+  };
+
+  // Zurück in ein offenes Gespräch — Szenario und Einstellungen werden wiederhergestellt.
+  const restoreAiContext = (chatId) => {
+    const creator = creators.find((c) => c.id === chatId);
+    setChatMode(creator?.personaType === "SOLO_MALE" ? "artanis" : (creator?.personaType === "COUPLE" || creator?.personaType === "GROUP") ? "couple" : "triania");
+    const conv = aiConvsRef.current[chatId];
+    const restoredScenario = conv?.scenario || null;
+    const restoredAnswers = conv?.setupAnswers || {};
     setScenario(restoredScenario);
     setSetupAnswers(restoredAnswers);
     setSetupStep(restoredScenario && Object.keys(restoredAnswers).length > 0 ? (restoredScenario.setupQuestions?.length || 0) : 0);
+    setSetupInput("");
+  };
+
+  const activateTab = (tab) => {
+    setActiveChat(tab.id);
+    if (tab.type === "ai") {
+      setViewMode("ai");
+      restoreAiContext(tab.id);
+    } else {
+      setViewMode("dm");
+      setDmParticipantName(tab.name);
+      setDmPartnerId(tab.partnerId || null);
+    }
+  };
+
+  const closeTab = (id) => {
+    const idx = openChats.findIndex((t) => t.id === id);
+    const next = openChats.filter((t) => t.id !== id);
+    setOpenChats(next);
+    if (id !== activeChat) return;
+    const fallback = next[idx] || next[idx - 1] || null;
+    if (fallback) activateTab(fallback);
+    else setActiveChat(null);
+  };
+
+  const openAiChat = async (c) => {
+    addTab({ id: c.id, type: "ai", name: c.stageName });
+    setActiveChat(c.id);
+    setMessages((prev) => ({ ...prev, [c.id]: [] }));
+    const conv = await ensureConv(c.id);
+    restoreAiContext(c.id);
+    if (!conv) return;
     try {
       const msgs = await base44.entities.Message.filter({ conversationId: conv.id }, "created_date", 200);
       setMessages((prev) => ({ ...prev, [c.id]: msgs }));
@@ -663,6 +714,7 @@ export default function Messages() {
     if (viewMode !== "ai" || !activeChat) return;
     const conv = aiConvsRef.current[activeChat];
     if (!conv) return;
+    aiConvsRef.current[activeChat] = { ...conv, scenario: scenario || null, setupAnswers };
     base44.entities.Conversation.update(conv.id, {
       scenario: scenario || null,
       setupAnswers,
@@ -680,6 +732,7 @@ export default function Messages() {
       } else {
         conv = await base44.entities.Conversation.create({ userId: me.id, userName: me.full_name || me.email, participantId: otherUser.id, participantName: otherUser.full_name || otherUser.email, conversationType: "HUMAN" });
       }
+      addTab({ id: conv.id, type: "dm", name: otherUser.full_name || otherUser.email, partnerId: otherUser.id });
       setActiveChat(conv.id);
       setDmParticipantName(otherUser.full_name || otherUser.email);
       setDmPartnerId(otherUser.id);
@@ -788,6 +841,7 @@ export default function Messages() {
   const openIncomingDm = async (conv) => {
     const otherUser = dmUsers.find(u => u.id === conv.userId);
     const name = otherUser?.full_name || otherUser?.email || conv.userName || "Unbekannt";
+    addTab({ id: conv.id, type: "dm", name, partnerId: otherUser?.id || conv.userId });
     setActiveChat(conv.id);
     setDmParticipantName(name);
     setDmPartnerId(otherUser?.id || conv.userId);
@@ -893,6 +947,7 @@ export default function Messages() {
         <div className={cn("lg:col-span-2 rounded-2xl border border-border bg-card flex flex-col", !activeChat && "hidden lg:flex")}>
           {activeChat ? (
             <>
+              <ChatTabs tabs={openChats} activeId={activeChat} onActivate={activateTab} onClose={closeTab} />
               <div className="p-4 border-b border-border flex items-center gap-3">
                 <button onClick={() => setActiveChat(null)} className="lg:hidden"><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
                 {viewMode === "dm" ? (
