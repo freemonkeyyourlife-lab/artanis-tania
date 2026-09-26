@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Link } from "react-router-dom";
 import StatusBadge from "@/components/StatusBadge";
-import { Radio } from "lucide-react";
+import { Radio, Video as VideoIcon } from "lucide-react";
 
 export default function Live() {
   const [experiences, setExperiences] = useState([]);
@@ -30,6 +30,18 @@ export default function Live() {
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
       <h1 className="font-display text-3xl text-foreground mb-2">Live</h1>
       <p className="text-muted-foreground text-sm mb-8">Real-time sessions and online creators</p>
+
+      <section className="mb-10">
+        <div className="rounded-2xl border border-border bg-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-xl text-foreground flex items-center gap-2">
+              <VideoIcon className="w-5 h-5 text-primary" /> Privater Video-Call
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">Starte einen Video-Call und teile den Link, um jemanden einzuladen.</p>
+          </div>
+          <Link to="/call" className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap">Video-Call starten</Link>
+        </div>
+      </section>
 
       <section className="mb-10">
         <h2 className="font-display text-xl text-foreground mb-4 flex items-center gap-2">

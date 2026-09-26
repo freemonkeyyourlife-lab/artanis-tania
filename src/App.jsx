@@ -28,6 +28,8 @@ import Account from '@/pages/Account';
 import ExperiencePlayer from '@/pages/ExperiencePlayer';
 import Profile from '@/pages/Profile';
 import Groups from '@/pages/Groups';
+import StartCall from '@/pages/StartCall';
+import VideoCall from '@/pages/VideoCall';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +59,8 @@ const AuthenticatedApp = () => {
     <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
+      <Route path="/call" element={<StartCall />} />
+      <Route path="/call/:token" element={<VideoCall />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/artanis" element={<Artanis />} />
