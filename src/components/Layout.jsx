@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { label: "Profile", path: "/profile" },
   { label: "Request", path: "/request" },
   { label: "Admin", path: "/admin" },
+  { label: "Studio", path: "/studio" },
   { label: "Explore", path: "/explore", disabled: true },
   { label: "Videos", path: "/videos", disabled: true },
   { label: "Photos", path: "/photos", disabled: true },
