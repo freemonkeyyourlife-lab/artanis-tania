@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw } from "lucide-react";
+import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -41,7 +41,6 @@ export default function Messages() {
   const dmConvIdsRef = useRef(new Set());
   const activeChatRef = useRef(null);
   const fileInputRef = useRef(null);
-  const userPhotoInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
@@ -406,27 +405,42 @@ export default function Messages() {
     e.target.value = "";
   };
 
+  const persistUserRefs = async (refs) => {
+    let updated;
+    if (userPref) {
+      updated = await base44.entities.UserPreference.update(userPref.id, { userReferenceImages: refs });
+    } else {
+      const user = await base44.auth.me();
+      updated = await base44.entities.UserPreference.create({ userId: user.id, userReferenceImages: refs });
+    }
+    setUserPref(updated);
+  };
+
   const handleUploadUserPhoto = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     try {
-      const result = await base44.integrations.Core.UploadPublicFile({ file });
-      const file_url = result.file_url;
-      const newRefs = [...(userPref?.userReferenceImages || []), file_url];
-      let updated;
-      if (userPref) {
-        updated = await base44.entities.UserPreference.update(userPref.id, { userReferenceImages: newRefs });
-      } else {
-        const user = await base44.auth.me();
-        updated = await base44.entities.UserPreference.create({ userId: user.id, userReferenceImages: newRefs });
+      const urls = [];
+      for (const file of files) {
+        const result = await base44.integrations.Core.UploadPublicFile({ file });
+        urls.push(result.file_url);
       }
-      setUserPref(updated);
+      await persistUserRefs([...(userPref?.userReferenceImages || []), ...urls]);
       toast({ title: "📸 Foto hinzugefügt!", description: "Dein Foto wird jetzt für alle Bildgenerierungen verwendet." });
     } catch (err) {
       console.error(err);
       toast({ title: "Fehler", description: "Foto konnte nicht hochgeladen werden.", variant: "destructive" });
     }
     e.target.value = "";
+  };
+
+  const removeUserPhoto = async (url) => {
+    try {
+      await persistUserRefs((userPref?.userReferenceImages || []).filter((u) => u !== url));
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Fehler", description: "Foto konnte nicht entfernt werden.", variant: "destructive" });
+    }
   };
 
   const loadDmUsers = async () => {
@@ -655,6 +669,9 @@ export default function Messages() {
                     </DialogContent>
                   </Dialog>
                 )}
+                <button onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })} title="Zur letzten Nachricht springen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
+                  <ArrowDown className="w-4 h-4" />
+                </button>
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -667,7 +684,9 @@ export default function Messages() {
                   setSetupStep(hasAnswers ? (s.setupQuestions?.length || 0) : 0);
                 }} />
               ) : viewMode === "ai" && (scenario.setupQuestions && setupStep < scenario.setupQuestions.length) ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto">
+                  <div className="min-h-full flex flex-col items-center justify-center p-6">
+                  <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground mb-2">Frage {setupStep + 1} von {scenario.setupQuestions.length}</p>
                   <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">{scenario.setupQuestions[setupStep].question}</p>
                   {scenario.setupQuestions[setupStep].type === "select" && (
                     <div className="flex flex-wrap gap-2 w-full max-w-lg justify-center mb-4">
@@ -681,7 +700,7 @@ export default function Messages() {
                     const selected = setupAnswers[q.key] || [];
                     return (
                       <div className="w-full max-w-lg mb-4">
-                        <div className="flex flex-wrap gap-2 justify-center">
+                        <div className="flex flex-wrap gap-2 justify-center max-h-[42vh] overflow-y-auto p-1">
                           {getOptions(q).map(opt => {
                             const isSelected = Array.isArray(selected) && selected.includes(opt);
                             return (
@@ -709,6 +728,7 @@ export default function Messages() {
                   <div className="flex gap-4 mt-3">
                     <button onClick={() => { setSetupInput(""); setSetupStep(prev => prev + 1); }} className="text-xs text-muted-foreground hover:text-foreground">Frage überspringen</button>
                     <button onClick={() => setSetupStep(scenario.setupQuestions.length)} className="text-xs text-muted-foreground hover:text-foreground">Alle überspringen</button>
+                  </div>
                   </div>
                 </div>
               ) : (
@@ -802,9 +822,37 @@ export default function Messages() {
               )}
               <div className="p-4 border-t border-border flex gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
-                <input ref={userPhotoInputRef} type="file" accept="image/*" onChange={handleUploadUserPhoto} className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
-                {viewMode === "ai" && <button onClick={() => userPhotoInputRef.current?.click()} disabled={sending} className="relative w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors" title="Deine Referenzfotos (werden für Bildgenerierungen verwendet)"><UserPlus className="w-4 h-4" />{userPref?.userReferenceImages?.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{userPref.userReferenceImages.length}</span>}</button>}
+                {viewMode === "ai" && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button disabled={sending} className="relative w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors" title="Deine Referenzfotos">
+                        <UserPlus className="w-4 h-4" />
+                        {userPref?.userReferenceImages?.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{userPref.userReferenceImages.length}</span>}
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <h3 className="font-display text-lg text-foreground mb-1">Meine Bilder</h3>
+                      <p className="text-xs text-muted-foreground mb-4">Diese Bilder nutzt die KI als Vorlage für deine Kreationen.</p>
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <ImagePlus className="w-4 h-4" /> Bilder hochladen
+                        <input type="file" accept="image/*" multiple onChange={handleUploadUserPhoto} className="hidden" />
+                      </label>
+                      {userPref?.userReferenceImages?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {userPref.userReferenceImages.map((url) => (
+                            <div key={url} className="relative">
+                              <Image src={url} fittingType="fill" className="w-20 h-20 rounded-xl" />
+                              <button onClick={() => removeUserPhoto(url)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center">
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                )}
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
                 <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingImage) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
