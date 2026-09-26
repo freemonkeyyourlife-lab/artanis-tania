@@ -2,11 +2,12 @@
 
 export const FREE_CREATIONS = 10;
 
-// Returns { cleanText, images:[{desc,price}], videos:[{desc}], voice, suggestions }
+// Returns { cleanText, images:[{desc,price}], videos:[{desc}], voice, suggestions, characters }
 export function parseReply(text) {
   let clean = text || "";
   const images = [];
   const videos = [];
+  const characters = [];
   let voice = null;
   let suggestions = [];
 
@@ -43,7 +44,14 @@ export function parseReply(text) {
     clean = clean.replace(sm[0], "");
   }
 
-  return { cleanText: clean.trim(), images, videos, voice, suggestions };
+  // [CHARACTER: Name | why she fits] — the AI points at an existing character.
+  let cm;
+  while ((cm = clean.match(/\[CHARACTER:\s*([^\]|]+?)\s*(?:\|\s*([^\]]+?)\s*)?\]/))) {
+    characters.push({ name: cm[1].trim(), reason: (cm[2] || "").trim() });
+    clean = clean.replace(cm[0], "");
+  }
+
+  return { cleanText: clean.trim(), images, videos, voice, suggestions, characters };
 }
 
 function storageKey(userId) {

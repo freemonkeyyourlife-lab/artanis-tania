@@ -11,6 +11,7 @@ import ScenarioSelection from "@/components/ScenarioSelection";
 import VoiceInput from "@/components/VoiceInput";
 import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
+import CharacterSuggestion from "@/components/CharacterSuggestion";
 import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_CONSISTENCY } from "@/lib/appearance";
 
 export default function Messages() {
@@ -44,6 +45,7 @@ export default function Messages() {
   const messagesEndRef = useRef(null);
   const dmConvIdsRef = useRef(new Set());
   const activeChatRef = useRef(null);
+  const aiConvsRef = useRef({});
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -79,6 +81,10 @@ export default function Messages() {
         const incoming = await base44.entities.Conversation.filter({ participantId: user.id, conversationType: "HUMAN" });
         setIncomingConversations(incoming);
         dmConvIdsRef.current = new Set(incoming.map(c => c.id));
+        const aiConvsData = await base44.entities.Conversation.filter({ userId: user.id, conversationType: "AI" });
+        const convMap = {};
+        aiConvsData.forEach((c) => { if (c.creatorId) convMap[c.creatorId] = c; });
+        aiConvsRef.current = convMap;
       } catch (e) { /* not logged in or no prefs */ }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -212,6 +218,12 @@ export default function Messages() {
     ctx += "- [SUGGEST: a | b | c] — three clickable next-step options.\n";
     ctx += "APPEARANCE CONSISTENCY (critical): the person must look identical in every image — same face, same hair COLOUR and length, same skin tone, same body. NEVER change her hair colour.\n";
     ctx += "\n" + CONSISTENCY_RULES + "\n";
+    const roster = creators.filter((c) => c.id !== activeChat && c.stageName !== "Testdummy" && c.active !== false);
+    if (roster.length > 0) {
+      ctx += "\n\nTHE CAST YOU CAN BRING IN (other characters that already exist on the platform):\n";
+      ctx += roster.map((c) => `- ${c.stageName}${c.tagline ? ` — ${c.tagline}` : ""}`).join("\n");
+      ctx += "\nIF WHAT THE USER DESCRIBES FITS SOMEONE FROM THIS CAST: say it out loud in your reply and add [CHARACTER: Name | one short line why she fits] so the user can open her directly. At most one per reply, only when it genuinely fits what the user just said, and NEVER invent a name that is not in this cast.\n";
+    }
     ctx += "STAY SUGGESTIVE & TEASING: imply, leave something to the imagination — that is what keeps them coming back and spending. Go as far as the platform allows, but the tease is the point.\n";
     ctx += "ENCOURAGE UPLOADS: keep asking the user to send a photo of what they describe, and react to it with real excitement when they do.\n";
     // ── THIRD-PERSON / VOYEUR MODE ──
@@ -391,7 +403,7 @@ export default function Messages() {
       }
     }
 
-    return { cleanText: parsed.cleanText, attachments, suggestions: parsed.suggestions };
+    return { cleanText: parsed.cleanText, attachments, suggestions: parsed.suggestions, characters: parsed.characters };
   };
 
   const sendMessage = async (overrideText) => {
@@ -410,6 +422,8 @@ export default function Messages() {
         createdAt: new Date().toISOString(),
       };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), asCharacter] }));
+      const conv = await ensureConv(chatKey);
+      if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: creators.find(c => c.id === chatKey)?.stageName, senderType: "AI", text: msgText, attachments: asCharacter.attachments }).catch(() => {});
       setInput("");
       setPendingImage(null);
       return;
@@ -417,6 +431,8 @@ export default function Messages() {
 
     const userMsg = { senderType: "HUMAN", text: msgText, attachment: img || null, createdAt: new Date().toISOString() };
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
+    const conv = await ensureConv(chatKey);
+    if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: currentUser?.full_name || currentUser?.email, senderType: "HUMAN", text: msgText, attachment: img || null }).catch(() => {});
     setInput("");
     setPendingImage(null);
     setSending(true);
@@ -436,9 +452,13 @@ export default function Messages() {
       const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
-      const { cleanText, attachments, suggestions } = await parseAndGenerateMedia(aiText, img ? [img] : []);
-      const aiMsg = { senderType: "AI", text: cleanText, attachments, suggestions, createdAt: new Date().toISOString() };
+      const { cleanText, attachments, suggestions, characters } = await parseAndGenerateMedia(aiText, img ? [img] : []);
+      const aiMsg = { senderType: "AI", text: cleanText, attachments, suggestions, characters, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
+      if (conv) {
+        base44.entities.Message.create({ conversationId: conv.id, sender: creators.find(c => c.id === chatKey)?.stageName, senderType: "AI", text: cleanText, attachments, suggestions, characters }).catch(() => {});
+        base44.entities.Conversation.update(conv.id, { lastMessageAt: new Date().toISOString() }).catch(() => {});
+      }
       setFreeLeft(freeRemaining(currentUser?.id));
 
       const userMsgCount = [...(messages[chatKey] || []), userMsg].filter(m => m.senderType === "HUMAN").length;
@@ -515,6 +535,58 @@ export default function Messages() {
     } catch (e) { console.error(e); }
   };
 
+  // ── Persistent AI chats: one Conversation per user × character ──
+  const ensureConv = async (creatorId) => {
+    if (aiConvsRef.current[creatorId]) return aiConvsRef.current[creatorId];
+    try {
+      const me = currentUser || await base44.auth.me();
+      const existing = await base44.entities.Conversation.filter({ userId: me.id, creatorId, conversationType: "AI" });
+      const creator = creators.find((c) => c.id === creatorId);
+      const conv = existing[0] || await base44.entities.Conversation.create({
+        userId: me.id,
+        userName: me.full_name || me.email,
+        creatorId,
+        creatorName: creator?.stageName,
+        conversationType: "AI",
+      });
+      aiConvsRef.current = { ...aiConvsRef.current, [creatorId]: conv };
+      return conv;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
+
+  const openAiChat = async (c) => {
+    setActiveChat(c.id);
+    setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : (c.personaType === "COUPLE" || c.personaType === "GROUP") ? "couple" : "triania");
+    setSetupInput("");
+    setMessages((prev) => ({ ...prev, [c.id]: [] }));
+    const conv = await ensureConv(c.id);
+    if (!conv) { setScenario(null); setSetupAnswers({}); setSetupStep(0); return; }
+    const restoredScenario = conv.scenario || null;
+    const restoredAnswers = conv.setupAnswers || {};
+    setScenario(restoredScenario);
+    setSetupAnswers(restoredAnswers);
+    setSetupStep(restoredScenario && Object.keys(restoredAnswers).length > 0 ? (restoredScenario.setupQuestions?.length || 0) : 0);
+    try {
+      const msgs = await base44.entities.Message.filter({ conversationId: conv.id }, "created_date", 200);
+      setMessages((prev) => ({ ...prev, [c.id]: msgs }));
+    } catch (e) { console.error(e); }
+  };
+
+  // Keeps the scenario + setup of the running chat, so you resume where you left off.
+  useEffect(() => {
+    if (viewMode !== "ai" || !activeChat) return;
+    const conv = aiConvsRef.current[activeChat];
+    if (!conv) return;
+    base44.entities.Conversation.update(conv.id, {
+      scenario: scenario || null,
+      setupAnswers,
+      lastMessageAt: new Date().toISOString(),
+    }).catch(() => {});
+  }, [scenario, setupAnswers, activeChat, viewMode]);
+
   const startDm = async (otherUser) => {
     try {
       const me = await base44.auth.me();
@@ -573,8 +645,15 @@ export default function Messages() {
     setExtraCharacters((prev) => prev.some((x) => x.id === c.id) ? prev.filter((x) => x.id !== c.id) : [...prev, c]);
   };
 
-  const resetChat = () => {
+  const resetChat = async () => {
     if (!activeChat) return;
+    const conv = aiConvsRef.current[activeChat];
+    if (conv) {
+      try {
+        await base44.entities.Message.deleteMany({ conversationId: conv.id });
+        await base44.entities.Conversation.update(conv.id, { scenario: null, setupAnswers: {} });
+      } catch (e) { console.error(e); }
+    }
     setMessages(prev => { const next = { ...prev }; delete next[activeChat]; return next; });
     setScenario(null);
     setSetupStep(0);
@@ -618,7 +697,7 @@ export default function Messages() {
               <>
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Real</p>
               {creators.filter(c => c.creatorCategory === "REAL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
-                <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : (c.personaType === "COUPLE" || c.personaType === "GROUP") ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+                <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
                   ) : (
@@ -633,7 +712,7 @@ export default function Messages() {
               ))}
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">KI-Modelle</p>
               {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
-                <button key={c.id} onClick={() => { setActiveChat(c.id); setChatMode(c.personaType === "SOLO_MALE" ? "artanis" : (c.personaType === "COUPLE" || c.personaType === "GROUP") ? "couple" : "triania"); setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
+                <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
                   ) : (
@@ -905,6 +984,19 @@ export default function Messages() {
                         );
                       })()}
                       {msg.text}
+                      {msg.characters?.length > 0 && (
+                        <div className="flex flex-col gap-1.5 mt-2">
+                          {msg.characters.map((ch, ci) => (
+                            <CharacterSuggestion
+                              key={ci}
+                              name={ch.name}
+                              reason={ch.reason}
+                              creator={creators.find((c) => c.stageName.toLowerCase() === (ch.name || "").toLowerCase())}
+                              onOpen={openAiChat}
+                            />
+                          ))}
+                        </div>
+                      )}
                       {msg.suggestions && msg.suggestions.length > 0 && isLastAi && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {msg.suggestions.map((s, si) => (

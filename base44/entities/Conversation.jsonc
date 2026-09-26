@@ -28,6 +28,12 @@
       ],
       "default": "AI"
     },
+    "scenario": {
+      "type": "object"
+    },
+    "setupAnswers": {
+      "type": "object"
+    },
     "lastMessageAt": {
       "type": "string",
       "format": "date-time"
