@@ -28,7 +28,11 @@ export default function ContentCard({ content, className }) {
     <div className={cn("group cursor-pointer", className)}>
       <div onClick={() => setOpen(true)} className="relative overflow-hidden rounded-2xl border border-border bg-card aspect-video">
         {content.thumbnail ? (
-          <Image src={content.thumbnail} fittingType="fill" className="w-full h-full transition-transform group-hover:scale-105" />
+          <>
+            {/* Das Bild steht komplett drin, dahinter dieselbe Aufnahme weichgezeichnet — nichts wird abgeschnitten. */}
+            <Image src={content.thumbnail} fittingType="fill" className="absolute inset-0 w-full h-full scale-125 blur-2xl opacity-60" />
+            <Image src={content.thumbnail} fittingType="fit" className="relative w-full h-full transition-transform group-hover:scale-105" />
+          </>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-elevated to-card" />
         )}

@@ -936,7 +936,7 @@ export default function Messages() {
               {creators.filter(c => c.creatorCategory === "REAL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
-                    <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
+                    <Image src={c.avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-10 h-10 rounded-full flex-shrink-0" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                   )}
@@ -951,7 +951,7 @@ export default function Messages() {
               {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
-                    <Image src={c.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
+                    <Image src={c.avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-10 h-10 rounded-full flex-shrink-0" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                   )}
@@ -1066,7 +1066,7 @@ export default function Messages() {
                           return (
                             <button key={c.id} onClick={() => toggleExtra(c)} className={cn("w-full p-3 flex items-center gap-3 rounded-xl border text-left transition-colors", added ? "border-primary bg-primary/10" : "border-border hover:bg-elevated")}>
                               {c.avatar ? (
-                                <Image src={c.avatar} fittingType="fill" className="w-9 h-9 rounded-full flex-shrink-0" />
+                                <Image src={c.avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-9 h-9 rounded-full flex-shrink-0" />
                               ) : (
                                 <div className="w-9 h-9 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                               )}
@@ -1193,7 +1193,7 @@ export default function Messages() {
                       ) : (
                         <Link to={`/creator/${activeChat}`} title="Profil ansehen" className="flex-shrink-0">
                           {creators.find(c => c.id === activeChat)?.avatar ? (
-                            <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-8 h-8 rounded-full transition-opacity hover:opacity-80" />
+                            <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-8 h-8 rounded-full transition-opacity hover:opacity-80" />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
                           )}
@@ -1319,7 +1319,7 @@ export default function Messages() {
                 {sending && (
                   <div className="flex gap-2 justify-start">
                     {creators.find(c => c.id === activeChat)?.avatar ? (
-                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-8 h-8 rounded-full flex-shrink-0" />
+                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-8 h-8 rounded-full flex-shrink-0" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
                     )}

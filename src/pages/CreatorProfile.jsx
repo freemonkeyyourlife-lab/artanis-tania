@@ -72,7 +72,9 @@ export default function CreatorProfile({ personaType }) {
 
       {/* Banner */}
       <div className="relative h-[40vh] min-h-[300px] w-full overflow-hidden">
-        <Image src={creator.banner || creator.avatar} fittingType="fill" className="w-full h-full" />
+        {/* Weichgezeichneter Hintergrund füllt die Fläche, das Bild selbst steht komplett drin — der Kopf ist immer zu sehen. */}
+        <Image src={creator.banner || creator.avatar} fittingType="fill" className="absolute inset-0 w-full h-full scale-125 blur-2xl opacity-70" />
+        <Image src={creator.banner || creator.avatar} fittingType="fit" className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute top-4 left-4">
           <StatusBadge status={creator.onlineStatus} />
@@ -83,7 +85,8 @@ export default function CreatorProfile({ personaType }) {
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8 -mt-20 relative z-10">
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <div className="w-28 h-28 lg:w-36 lg:h-36 rounded-2xl overflow-hidden border-2 border-border bg-card flex-shrink-0">
-            <Image src={creator.avatar} fittingType="fill" className="w-full h-full" />
+            {/* Ausschnitt nach oben gezogen — im Rahmen sitzt das Gesicht, nicht der Bauch. */}
+            <Image src={creator.avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-full h-full" />
           </div>
           <div className="flex-1 pt-2 lg:pt-16">
             <h1 className="font-display text-3xl lg:text-4xl text-foreground">{creator.stageName}</h1>
