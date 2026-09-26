@@ -4,7 +4,7 @@ import { Image } from "@/components/ui/image";
 import { Sparkles, Loader2, Video, Bookmark, Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { APPEARANCE_DIRECTIVE, CARTOON_STYLE, IMAGE_CONSISTENCY, PHOTOREAL } from "@/lib/appearance";
+import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
 export default function GeneratorManager({ creators }) {
@@ -24,7 +24,7 @@ export default function GeneratorManager({ creators }) {
 
   const buildPrompt = () => {
     const style = animated ? CARTOON_STYLE : PHOTOREAL;
-    let p = style + APPEARANCE_DIRECTIVE + " " + IMAGE_CONSISTENCY + " ";
+    let p = style + IMAGE_SAFE_RULES + " ";
     if (creator) {
       p += `The woman in the reference images is ${creator.stageName}. Keep her face, hair colour, hair length, body and skin tone EXACTLY as in her reference images — she must be recognisable. `;
     }

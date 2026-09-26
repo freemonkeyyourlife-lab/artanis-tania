@@ -5,7 +5,7 @@ import { Image } from "@/components/ui/image";
 import { Mic, Square, PhoneOff, Loader2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasProAccess } from "@/lib/proAccess";
-import { APPEARANCE_DIRECTIVE, CARTOON_STYLE, IMAGE_CONSISTENCY, PHOTOREAL } from "@/lib/appearance";
+import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 
 const LANGUAGE_RULE =
   "Du bist in einem VIDEOCHAT und sprichst laut. Antworte deshalb IMMER auf Deutsch, in der Du-Form, kurz und gesprochen — 1 bis 3 Sätze, wie ein echter Mensch am Telefon. Keine Aufzählungen, keine Regieanweisungen, kein Sternchen-Text, keine Emojis. Nur das, was du wirklich sagen würdest.";
@@ -79,7 +79,7 @@ export default function AiVideoCall() {
     const style = creator?.artStyle === "CARTOON" ? CARTOON_STYLE : PHOTOREAL;
     try {
       const res = await base44.integrations.Core.GenerateImage({
-        prompt: `${style}${APPEARANCE_DIRECTIVE} ${IMAGE_CONSISTENCY} Videochat-Kamera: ${creator?.stageName} sitzt vor der Kamera und redet. ${desc}`,
+        prompt: `${style}${IMAGE_SAFE_RULES} Videochat camera: ${creator?.stageName} sits in front of the camera and talks. Medium shot from a normal distance — head, shoulders and upper body fully in frame, the face completely visible and centred, nothing cut off. ${desc}`,
         existing_image_urls: refs.length ? refs : undefined,
       });
       if (res?.url) setFrame(res.url);

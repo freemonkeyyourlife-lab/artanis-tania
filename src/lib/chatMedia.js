@@ -71,3 +71,12 @@ export function consumeFree(userId) {
   localStorage.setItem(k, String(used + 1));
   return true;
 }
+
+// Wörter, an denen der Bildfilter hängt — vor dem nächsten Versuch entschärfen,
+// damit trotzdem ein Bild ankommt statt nur "Nachdrehen lassen".
+const RISKY_WORDS =
+  /\b(explicit|hardcore|nude|naked|nackt|nipple|nipples|breast|breasts|tits|cum|cumshot|penis|cock|pussy|vagina|sex|fucking|orgasm|erotic|erotisch|aroused|arousal|horny|geil|fuck)\b/gi;
+
+export function sanitizeImagePrompt(text) {
+  return (text || "").replace(RISKY_WORDS, "tasteful").replace(/\s{2,}/g, " ").trim();
+}

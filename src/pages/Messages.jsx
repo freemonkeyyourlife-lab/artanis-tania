@@ -10,12 +10,12 @@ import { PERSONA_MODES } from "@/lib/personaPrompts";
 import ScenarioSelection from "@/components/ScenarioSelection";
 import VoiceInput from "@/components/VoiceInput";
 import QuickActions from "@/components/QuickActions";
-import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
+import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS, sanitizeImagePrompt } from "@/lib/chatMedia";
 import CharacterSuggestion from "@/components/CharacterSuggestion";
 import ReadAloudButton from "@/components/ReadAloudButton";
 import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
-import { APPEARANCE_DIRECTIVE, CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, EROTIC_CRAFT, IMAGE_CONSISTENCY, PHOTOREAL } from "@/lib/appearance";
+import { CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { Link } from "react-router-dom";
 import ChatTabs from "@/components/chat/ChatTabs";
 import { hasProAccess } from "@/lib/proAccess";
@@ -387,36 +387,24 @@ export default function Messages() {
     } else if (usedRefs.length > 0) {
       promptText += " CRITICAL: Every person in this photo is taken from the reference images — keep each face, body, hair colour and skin tone EXACTLY identical to their reference. They are together in the scene, close to each other, touching each other.";
     }
-    if (usedRefs.length > 0) {
+    // Erst normal, dann entschärft: der Bildfilter blockt sonst gern und es käme nie ein Bild an.
+    const attempts = [
+      { text: promptText, refs: usedRefs },
+      { text: sanitizeImagePrompt(promptText), refs: usedRefs },
+      { text: sanitizeImagePrompt(promptText), refs: [] },
+    ];
+    for (const attempt of attempts) {
       try {
-        const result = await base44.integrations.Core.GenerateImage({ prompt: promptText, existing_image_urls: usedRefs });
-        return result.url;
+        const result = await base44.integrations.Core.GenerateImage({
+          prompt: attempt.text,
+          existing_image_urls: attempt.refs.length ? attempt.refs : undefined,
+        });
+        if (result?.url) return result.url;
       } catch (e) {
-        console.error("Image generation with reference failed, retrying without:", e);
+        console.error("Bildversuch fehlgeschlagen:", e);
       }
     }
-    // Verdichtet: eng beschnitten, nur ein Ausschnitt im Bild — der Rest bleibt draußen.
-    const condensed = "Tight cropped framing: only one detail fills the frame (bare skin, a shoulder, the curve of a hip, a hand, a strap), everything else stays out of frame or in deep shadow. Suggestive and tasteful — nothing explicit is visible. " + promptText;
-    try {
-      const result = await base44.integrations.Core.GenerateImage({ prompt: condensed, existing_image_urls: usedRefs.length ? usedRefs : undefined });
-      return result.url;
-    } catch (e) {
-      console.error("Condensed image generation failed:", e);
-    }
-    try {
-      const result = await base44.integrations.Core.GenerateImage({ prompt: promptText });
-      return result.url;
-    } catch (e) {
-      console.error("Image generation failed, retrying toned-down:", e);
-      try {
-        const tonedDown = promptText.replace(/hardcore|explicit|cum/gi, "sensual suggestive alluring");
-        const result = await base44.integrations.Core.GenerateImage({ prompt: tonedDown });
-        return result.url;
-      } catch (e2) {
-        console.error("Image generation failed completely:", e2);
-        return null;
-      }
-    }
+    return null;
   };
 
   const generateVideo = async (prompt) => {
@@ -441,7 +429,7 @@ export default function Messages() {
       : "Amateur phone photo of the couple together in frame — him and her, both visible, ";
     // Zeichentrick-Charaktere bekommen die gezeichnete Fassung, alle anderen das echte Foto.
     const style = creators.find((c) => c.id === activeChat)?.artStyle === "CARTOON" ? CARTOON_STYLE : PHOTOREAL;
-    return style + APPEARANCE_DIRECTIVE + " " + IMAGE_CONSISTENCY + " " + EROTIC_CRAFT + " " + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, teasing and suggestive, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
+    return style + IMAGE_SAFE_RULES + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, tasteful and teasing, leave something to the imagination, " + desc;
   };
 
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {
@@ -1247,6 +1235,16 @@ export default function Messages() {
                           {msg.suggestions.map((s, si) => (
                             <button key={si} onClick={() => sendMessage(s)} className="px-3 py-1.5 rounded-full bg-background border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">{s}</button>
                           ))}
+                        </div>
+                      )}
+                      {viewMode === "ai" && msg.senderType === "AI" && isLastAi && !sending && (
+                        <div className="mt-2">
+                          <button
+                            onClick={() => sendMessage("Noch eins — bitte noch ein Bild, andere Perspektive.")}
+                            className="px-3 py-1.5 rounded-full bg-primary/15 border border-primary/40 text-xs font-semibold text-primary hover:bg-primary/25 transition-colors"
+                          >
+                            Noch eins
+                          </button>
                         </div>
                       )}
                     </div>
