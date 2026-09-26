@@ -398,7 +398,8 @@ export default function Messages() {
       ? [...userRefs, ...extraRefImages, ...creatorRefs]
       : null;
     const attachments = [];
-    const isGold = currentUser?.memberStatus === "GOLD";
+    // Admins und Gold-Member zahlen nie — für sie ist alles offen.
+    const isGold = currentUser?.memberStatus === "GOLD" || currentUser?.role === "admin";
 
     // Up to 3 images per reply — first 10 creations are free, then locked behind a paywall.
     // Gold Members get everything for free, forever.
@@ -750,6 +751,8 @@ export default function Messages() {
     return q.optionsByGender[g] || q.options || [];
   };
 
+  const isAdmin = currentUser?.role === "admin";
+
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>;
   }
@@ -869,8 +872,8 @@ export default function Messages() {
                   </span>
                 )}
                 {viewMode === "ai" && (
-                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title={currentUser?.memberStatus === "GOLD" ? "Gold Member — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
-                    {currentUser?.memberStatus === "GOLD" ? "Gold · alles gratis" : `${freeLeft} gratis`}
+                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title={isAdmin ? "Admin — alles gratis, kein Freischalten" : currentUser?.memberStatus === "GOLD" ? "Gold Member — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
+                    {isAdmin ? "Admin · alles gratis" : currentUser?.memberStatus === "GOLD" ? "Gold · alles gratis" : `${freeLeft} gratis`}
                   </span>
                 )}
                 {viewMode === "ai" && (
