@@ -212,6 +212,7 @@ export default function Messages() {
       scenarioAnchor += "3. Stay in the physical position established above. If she sits in the back seat, she STAYS in the back seat. Never teleport to the front seat or next to the driver. Never change positions without narrating the movement step by step.\n";
       scenarioAnchor += "4. For [SEND_IMAGE], only describe what the user would actually see from their position in THIS specific location. The wardrobe and angle MUST match the setup answers.\n";
       scenarioAnchor += "5. WARDROBE CONSISTENCY IS CRITICAL. If the setup says someone is 'Nackt' (naked), they are NAKED — no clothes, no underwear, no towels, bare skin. If the setup says 'Bikini / Unterwäsche', they wear ONLY that. Never add clothes that weren't in the setup. Never dress someone who is naked.\n";
+      scenarioAnchor += "6. MOVE THE STORY ON — A SCENE MUST NEVER STALL. After a handful of exchanges in the same place, actively push the story forward yourself: suggest leaving, going somewhere private, the drive home, the next drink, the hotel. Offer it as one of the [SUGGEST] options. Never loop the same location forever — a taxi ride does not last all evening, it ends at a door.\n";
       scenarioAnchor += "═══ END SCENARIO ═══\n\n";
     }
 

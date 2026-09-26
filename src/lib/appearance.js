@@ -2,7 +2,8 @@
 // femininity and allure are the product — never plain, never grim, never unhappy.
 
 export const APPEARANCE_DIRECTIVE =
-  "The woman is EXTREMELY attractive, drop-dead gorgeous and seductive — flawless glowing skin, tasteful makeup with defined eyes and lips, groomed and alluring, confident. Emphasise her femininity: curves, softness, sexiness, a teasing hint of seduction, revealing or clinging clothing. She must look irresistible, desirable and mysterious — a woman you instantly want to talk to. NEVER plain, NEVER unattractive, NEVER grim, tired or unhappy, no matter the setting, mood or character type. Even a wild party girl, a shy girl or an edgy girl is beautiful and desirable.";
+  "The woman is EXTREMELY attractive, drop-dead gorgeous and seductive — flawless glowing skin, tasteful makeup with defined eyes and lips, groomed and alluring, confident. Emphasise her femininity: curves, softness, sexiness, a teasing hint of seduction, revealing or clinging clothing. She must look irresistible, desirable and mysterious — a woman you instantly want to talk to. NEVER plain, NEVER unattractive, NEVER grim, tired or unhappy, no matter the setting, mood or character type. Even a wild party girl, a shy girl or an edgy girl is beautiful and desirable. " +
+  "WARDROBE & SKIN: NEVER dress her in black by default — black is the exception, not the rule. Dress her in something revealing and feminine in warm, light or rich colours (white, cream, red, silk, satin, lace, denim, a slip, a loose shirt, a low neckline, thin clinging fabric), and always show plenty of bare skin: shoulders, décolleté, the curve of a breast, the line of a hip, a strap that has slipped down the arm. More skin and more femininity always beat more fabric.";
 
 // Injected into the chat personality of custom characters, so their written
 // voice carries the same allure as their pictures.
@@ -34,4 +35,5 @@ export const EROTIC_CRAFT =
   "- The wardrobe stays exactly as established, down to the detail: a strap is a strap, lace is lace, a slip stays a slip. If the hem slips, show the hem slipping. If a strap slides off a shoulder, show it on her arm. Give the hint and let the viewer finish it.\n" +
   "- Freshness and arousal show on her: a sheen of sweat, damp strands of hair on the skin, glistening lips, flushed cheeks, quickened breath, fingers still wet.\n" +
   "- After an intense moment the traces stay: smeared makeup, dishevelled hair, a shirt pulled open, flushed skin — the afterglow tells the story.\n" +
-  "- Suggestive, never clinical: imply, tease, leave something to the imagination. Never show everything at once.";
+  "- Suggestive, never clinical: imply, tease, leave something to the imagination. Never show everything at once.\n" +
+  "- MORE SKIN, ALWAYS: bare shoulders, décolleté, the curve of a breast, a strap that has slipped off the shoulder, a neckline pulled low, a nipple showing through thin fabric, the line of a hip, a bare thigh. Sexy and feminine beats covered and plain every single time — and never default to black clothing, vary the garment and its colour.";
