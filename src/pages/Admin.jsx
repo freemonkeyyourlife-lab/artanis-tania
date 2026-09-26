@@ -5,6 +5,7 @@ import { Radio, Upload, FileText, Sparkles, MessageSquare, Inbox, TrendingUp, Us
 import StatusBadge from "@/components/StatusBadge";
 import UserInvite from "@/components/admin/UserInvite";
 import PurchaseRequests from "@/components/admin/PurchaseRequests";
+import CreatorToggleList from "@/components/admin/CreatorToggleList";
 import { cn } from "@/lib/utils";
 
 export default function Admin() {
@@ -178,6 +179,15 @@ export default function Admin() {
             ))}
             {requests.length === 0 && <p className="text-muted-foreground text-center py-8">No requests yet</p>}
           </div>
+        </div>
+
+        {/* Charaktere: an/aus & Stil */}
+        <div className="p-5 rounded-2xl border border-border bg-card lg:col-span-2">
+          <h2 className="font-display text-xl text-foreground mb-1">Charaktere</h2>
+          <p className="text-xs text-muted-foreground mb-4">
+            „Deaktivieren" nimmt jemanden aus der App, „Animiert" schaltet zwischen Foto und gezeichneter Figur.
+          </p>
+          <CreatorToggleList creators={creators} onChanged={loadData} />
         </div>
 
         {/* Users & Invites */}
