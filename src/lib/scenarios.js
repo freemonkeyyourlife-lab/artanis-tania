@@ -22,6 +22,7 @@ const COMMON_SETUP_QUESTIONS = [
   { key: "focus", question: "Worauf soll es heute hinauslaufen? (Mehrfachauswahl — das ist der Fokus der ganzen Szene)", type: "multiselect", options: FOCUS_TOPICS },
   { key: "userGender", question: "Bist du Mann oder Frau?", type: "select", options: ["Mann", "Frau", "Divers"] },
   { key: "aiWardrobe", question: "Was trage ICH?", type: "select", genderKey: "ai", options: FEMALE_WARDROBE, optionsByGender: { Mann: MALE_WARDROBE, Frau: FEMALE_WARDROBE } },
+  { key: "aiAge", question: "Wie alt bin ICH?" },
   { key: "userWardrobe", question: "Was trägst DU?", type: "select", genderKey: "user", options: ALL_WARDROBE, optionsByGender: { Mann: MALE_WARDROBE, Frau: FEMALE_WARDROBE, Divers: ALL_WARDROBE } },
   { key: "timeOfDay", question: "Wie spät ist es?", type: "select", options: ["Morgens", "Nachmittags", "Abends", "Mitten in der Nacht"] },
   { key: "mood", question: "Wie ist die Stimmung zwischen uns?", type: "select", options: ["Aufgeregt", "Verspielt", "Gelangweilt", "Geil", "Entspannt", "Nervös"] },

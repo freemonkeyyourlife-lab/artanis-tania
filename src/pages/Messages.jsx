@@ -12,6 +12,7 @@ import VoiceInput from "@/components/VoiceInput";
 import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
 import CharacterSuggestion from "@/components/CharacterSuggestion";
+import ReadAloudButton from "@/components/ReadAloudButton";
 import { coinsForPrice } from "@/lib/coins";
 import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_CONSISTENCY } from "@/lib/appearance";
 import { Link } from "react-router-dom";
@@ -975,6 +976,9 @@ export default function Messages() {
                   </div>
                   )}
                   <div className="flex gap-4 mt-3">
+                    {setupStep > 0 && (
+                      <button onClick={() => { setSetupInput(""); setSetupStep(prev => prev - 1); }} className="text-xs text-primary hover:underline">← Zurück</button>
+                    )}
                     <button onClick={() => { setSetupInput(""); setSetupStep(prev => prev + 1); }} className="text-xs text-muted-foreground hover:text-foreground">Frage überspringen</button>
                     <button onClick={() => setSetupStep(scenario.setupQuestions.length)} className="text-xs text-muted-foreground hover:text-foreground">Alle überspringen</button>
                   </div>
@@ -1058,6 +1062,11 @@ export default function Messages() {
                         );
                       })()}
                       {msg.text}
+                      {viewMode === "ai" && msg.senderType === "AI" && msg.text && (
+                        <div className="mt-1.5">
+                          <ReadAloudButton text={msg.text} voice={creators.find((c) => c.id === activeChat)?.voice} />
+                        </div>
+                      )}
                       {msg.characters?.length > 0 && (
                         <div className="flex flex-col gap-1.5 mt-2">
                           {msg.characters.map((ch, ci) => (
