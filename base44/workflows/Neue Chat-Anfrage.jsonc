@@ -1,0 +1,42 @@
+{
+  "name": "Neue Chat-Anfrage",
+  "description": "Meldet dir per E-Mail, wenn jemand einen Chat starten will",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "Conversation",
+      "events": [
+        "create"
+      ]
+    },
+    "condition": "${ .trigger.data.conversationType == \"HUMAN\" }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "neue_chat_anfrage",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "melde_chat_anfrage": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "notifyAdmin",
+            "args": {
+              "title": "Neue Chat-Anfrage",
+              "message": "Jemand will mit dir chatten.",
+              "link": "/messages"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Melde neue Chat-Anfrage",
+            "description": "E-Mail an dich"
+          }
+        }
+      }
+    ]
+  }
+}

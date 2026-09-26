@@ -1,0 +1,43 @@
+{
+  "name": "Zahlung eingegangen",
+  "description": "Meldet dir per E-Mail, sobald eine Zahlung bezahlt ist",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "Transaction",
+      "events": [
+        "create",
+        "update"
+      ]
+    },
+    "condition": "${ .trigger.data.status == \"PAID\" and .trigger.old_data.status != \"PAID\" }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "zahlung_eingegangen",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "melde_zahlung": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "notifyAdmin",
+            "args": {
+              "title": "Zahlung eingegangen",
+              "message": "${ .trigger.data.type } \u2014 ${ .trigger.data.amount } ${ .trigger.data.currency }",
+              "link": "/admin"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Melde eingegangene Zahlung",
+            "description": "E-Mail an dich"
+          }
+        }
+      }
+    ]
+  }
+}

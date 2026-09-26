@@ -1,0 +1,42 @@
+{
+  "description": "Meldet dir per E-Mail, wenn jemand an einem Wettbewerb teilnimmt",
+  "name": "Neuer Contest-Beitrag",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "ContestEntry"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "neuer_contest_beitrag",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "melde_contest_beitrag": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "notifyAdmin",
+            "args": {
+              "title": "Neuer Contest-Beitrag",
+              "message": "Beitrag: ${ .trigger.data.title }",
+              "link": "/contests"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Melde neuen Contest-Beitrag",
+            "description": "E-Mail an dich"
+          }
+        }
+      }
+    ]
+  }
+}

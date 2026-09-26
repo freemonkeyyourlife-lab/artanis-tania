@@ -1,0 +1,42 @@
+{
+  "description": "Meldet dir per E-Mail, wenn jemand eine Anfrage oder Idee einreicht",
+  "name": "Neue Community-Anfrage",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "CommunityRequest"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "neue_community_anfrage",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "melde_community_anfrage": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "notifyAdmin",
+            "args": {
+              "title": "Neue Community-Anfrage",
+              "message": "Typ: ${ .trigger.data.type } \u2014 ${ .trigger.data.title }",
+              "link": "/community"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Melde neue Community-Anfrage",
+            "description": "E-Mail an dich"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "description": "Meldet dir per E-Mail, wenn jemand etwas in der Community postet",
+  "name": "Neuer Community-Post",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "UserPost"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "neuer_community_post",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "melde_community_post": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "notifyAdmin",
+            "args": {
+              "title": "Neuer Community-Post",
+              "message": "Titel: ${ .trigger.data.title }",
+              "link": "/community"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Melde neuen Community-Post",
+            "description": "E-Mail an dich"
+          }
+        }
+      }
+    ]
+  }
+}
