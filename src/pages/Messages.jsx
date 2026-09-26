@@ -11,7 +11,7 @@ import ScenarioSelection from "@/components/ScenarioSelection";
 import VoiceInput from "@/components/VoiceInput";
 import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
-import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE } from "@/lib/appearance";
+import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_CONSISTENCY } from "@/lib/appearance";
 
 export default function Messages() {
   const [creators, setCreators] = useState([]);
@@ -211,6 +211,7 @@ export default function Messages() {
     ctx += "- [SEND_PPV: Label | description | price] — locked content behind a paywall. The Label names the direction in 1–3 words (e.g. 'Sanft & zärtlich', 'Hart & dominant', 'Erst schauen') so the user instantly knows where each path leads. When it fits, offer 2–3 DIFFERENT paths at once so the user can choose one — or several. Never more than 3.\n";
     ctx += "- [SUGGEST: a | b | c] — three clickable next-step options.\n";
     ctx += "APPEARANCE CONSISTENCY (critical): the person must look identical in every image — same face, same hair COLOUR and length, same skin tone, same body. NEVER change her hair colour.\n";
+    ctx += "\n" + CONSISTENCY_RULES + "\n";
     ctx += "STAY SUGGESTIVE & TEASING: imply, leave something to the imagination — that is what keeps them coming back and spending. Go as far as the platform allows, but the tease is the point.\n";
     ctx += "ENCOURAGE UPLOADS: keep asking the user to send a photo of what they describe, and react to it with real excitement when they do.\n";
     // ── THIRD-PERSON / VOYEUR MODE ──
@@ -349,7 +350,7 @@ export default function Messages() {
     const who = spannerMode && extraCharacters.length > 0
       ? "Amateur phone photo of the women together in frame — both visible, they are with each other, "
       : "Amateur phone photo of the couple together in frame — him and her, both visible, ";
-    return APPEARANCE_DIRECTIVE + " " + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, teasing and suggestive, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
+    return APPEARANCE_DIRECTIVE + " " + IMAGE_CONSISTENCY + " " + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, teasing and suggestive, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
   };
 
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {
