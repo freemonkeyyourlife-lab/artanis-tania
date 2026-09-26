@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
+import InviteShareButton from "@/components/InviteShareButton";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
@@ -116,6 +117,7 @@ export default function Layout() {
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
+            <InviteShareButton className="hidden sm:flex" />
             <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
               <Search className="w-4 h-4" />
             </span>
@@ -173,6 +175,7 @@ export default function Layout() {
                   </Link>
                 )
               )}
+              <InviteShareButton className="w-full justify-center py-3 text-sm my-1" />
               <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
                 Account
               </Link>
