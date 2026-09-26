@@ -24,6 +24,17 @@ export default function RequestPage() {
   const [form, setForm] = useState({ type: "VIDEO_IDEA", title: "", description: "", creatorName: "" });
 
   useEffect(() => { load(); }, []);
+
+  // Vorbelegung, wenn der Nutzer aus dem Chat heraus das Nachdrehen anfragt.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setForm((prev) => ({
+      ...prev,
+      type: params.get("type") || prev.type,
+      creatorName: params.get("creator") || prev.creatorName,
+      title: params.get("title") || prev.title,
+    }));
+  }, []);
   const load = async () => {
     try {
       const data = await base44.entities.CommunityRequest.list("-votes", 20);

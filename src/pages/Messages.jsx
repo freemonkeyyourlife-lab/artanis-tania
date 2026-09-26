@@ -226,6 +226,7 @@ export default function Messages() {
     ctx += "- [SEND_VOICE: your spoken line] — a voice note in your voice. Use it sometimes.\n";
     ctx += "- [SEND_PPV: Label | description | price] — locked content behind a paywall. The Label names the direction in 1–3 words (e.g. 'Sanft & zärtlich', 'Hart & dominant', 'Erst schauen') so the user instantly knows where each path leads. When it fits, offer 2–3 DIFFERENT paths at once so the user can choose one — or several. Never more than 3.\n";
     ctx += "- [SUGGEST: a | b | c] — three clickable next-step options.\n";
+    ctx += "WHEN A PHOTO CANNOT SHOW IT: if he wants something a teasing photo cannot deliver, say it out loud — that you and your girlfriend can shoot that for real — and offer it as a custom photo set or clip he can order. The app puts a button under your message for that.\n";
     ctx += "APPEARANCE CONSISTENCY (critical): the person must look identical in every image — same face, same hair COLOUR and length, same skin tone, same body. NEVER change her hair colour.\n";
     ctx += "\n" + CONSISTENCY_RULES + "\n";
     const roster = creators.filter((c) => c.id !== activeChat && c.stageName !== "Testdummy" && c.active !== false);
@@ -341,6 +342,14 @@ export default function Messages() {
         console.error("Image generation with reference failed, retrying without:", e);
       }
     }
+    // Verdichtet: eng beschnitten, nur ein Ausschnitt im Bild — der Rest bleibt draußen.
+    const condensed = "Tight cropped framing: only one detail fills the frame (bare skin, a shoulder, the curve of a hip, a hand, a strap), everything else stays out of frame or in deep shadow. Suggestive and tasteful — nothing explicit is visible. " + promptText;
+    try {
+      const result = await base44.integrations.Core.GenerateImage({ prompt: condensed, existing_image_urls: usedRefs.length ? usedRefs : undefined });
+      return result.url;
+    } catch (e) {
+      console.error("Condensed image generation failed:", e);
+    }
     try {
       const result = await base44.integrations.Core.GenerateImage({ prompt: promptText });
       return result.url;
@@ -393,9 +402,10 @@ export default function Messages() {
 
     // Up to 3 images per reply — first 10 creations are free, then locked behind a paywall.
     // Gold Members get everything for free, forever.
+    let missed = null;
     for (const item of parsed.images.slice(0, 3)) {
       const url = await generateWithFallback(buildImgPrompt(item.desc), allRefImages, chatMode);
-      if (!url) continue;
+      if (!url) { if (!missed) missed = item.desc; continue; }
       if (item.price) {
         attachments.push({ type: "image", url, locked: !isGold, price: isGold ? null : item.price, label: item.label || null });
       } else {
@@ -421,6 +431,9 @@ export default function Messages() {
         console.error("Voice generation failed:", e);
       }
     }
+
+    // Konnte ein Bild nicht erzeugt werden: direkt aus dem Chat das Nachdrehen anbieten.
+    if (missed) attachments.push({ type: "reshoot", note: missed });
 
     return { cleanText: parsed.cleanText, attachments, suggestions: parsed.suggestions, characters: parsed.characters };
   };
@@ -1042,6 +1055,17 @@ export default function Messages() {
                                     </div>
                                   ) : it.type === "audio" ? (
                                     <audio src={it.url} controls className="w-56" />
+                                  ) : it.type === "reshoot" ? (
+                                    <div className="w-56 rounded-xl border border-primary/40 bg-background/60 p-3">
+                                      <p className="text-xs font-semibold text-foreground mb-1">Das kann die KI so nicht zeigen</p>
+                                      <p className="text-[11px] text-muted-foreground mb-2">Soll {creators.find((c) => c.id === activeChat)?.stageName} das für dich nachdrehen?</p>
+                                      <Link
+                                        to={`/request?type=CUSTOM_REQUEST&creator=${encodeURIComponent(creators.find((c) => c.id === activeChat)?.stageName || "")}&title=${encodeURIComponent("Nachdrehen: " + (it.note || ""))}`}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium"
+                                      >
+                                        Nachdrehen lassen
+                                      </Link>
+                                    </div>
                                   ) : (
                                     <div className="relative">
                                       <Dialog>
