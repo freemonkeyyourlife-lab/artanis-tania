@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, User } from "lucide-react";
+import { Save, User, Upload, X } from "lucide-react";
+import { Image } from "@/components/ui/image";
 
 export default function Profile() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [userImages, setUserImages] = useState([]);
   const [prefId, setPrefId] = useState(null);
   const [form, setForm] = useState({
     displayName: "",
@@ -26,6 +29,7 @@ export default function Profile() {
       if (existing.length > 0) {
         const p = existing[0];
         setPrefId(p.id);
+        setUserImages(p.userReferenceImages || []);
         setForm({
           displayName: p.displayName || user.full_name || "",
           bio: p.bio || "",
@@ -40,6 +44,47 @@ export default function Profile() {
       }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+  };
+
+  const persistImages = async (user, next) => {
+    if (prefId) {
+      await base44.entities.UserPreference.update(prefId, { userReferenceImages: next });
+    } else {
+      const created = await base44.entities.UserPreference.create({ userId: user.id, userReferenceImages: next });
+      setPrefId(created.id);
+    }
+  };
+
+  const uploadImage = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      const user = await base44.auth.me();
+      const urls = [];
+      for (const f of files) {
+        const res = await base44.integrations.Core.UploadPublicFile({ file: f });
+        urls.push(res.file_url);
+      }
+      const next = [...userImages, ...urls];
+      await persistImages(user, next);
+      setUserImages(next);
+      toast({ title: "Bilder hinzugefügt", description: "Sie werden ab jetzt für deine Bilder im Chat verwendet." });
+    } catch (err) {
+      toast({ title: "Fehler", description: "Upload fehlgeschlagen.", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeImage = async (url) => {
+    try {
+      const user = await base44.auth.me();
+      const next = userImages.filter((u) => u !== url);
+      await persistImages(user, next);
+      setUserImages(next);
+    } catch (err) { console.error(err); }
   };
 
   const save = async () => {
@@ -118,6 +163,26 @@ export default function Profile() {
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Your fantasies (the more detail, the better we adapt)</label>
           <textarea value={form.fantasyDescription} onChange={(e) => setForm({ ...form, fantasyDescription: e.target.value })} placeholder="Tell us your deepest fantasies..." rows={4} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
+        </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">Meine Bilder (werden für deine Bilder im Chat verwendet)</label>
+          <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Upload className="w-4 h-4" /> {uploading ? "Lädt …" : "Bilder hochladen"}
+            <input type="file" accept="image/*" multiple onChange={uploadImage} className="hidden" />
+          </label>
+          {userImages.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {userImages.map((url) => (
+                <div key={url} className="relative">
+                  <Image src={url} fittingType="fill" className="w-20 h-20 rounded-xl" />
+                  <button onClick={() => removeImage(url)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:accent-glow transition-all">
