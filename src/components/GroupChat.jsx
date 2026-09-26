@@ -59,7 +59,7 @@ export default function GroupChat({ group, onBack }) {
         <button onClick={onBack}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
         <div className="flex-1">
           <h1 className="font-display text-xl text-foreground">{group.title}</h1>
-          <p className="text-xs text-muted-foreground">{group.memberCount || 0} members</p>
+          <p className="text-xs text-muted-foreground">{group.memberCount || 0} Mitglieder</p>
         </div>
       </div>
 
@@ -73,11 +73,11 @@ export default function GroupChat({ group, onBack }) {
               </div>
             </div>
           ))}
-          {messages.length === 0 && <p className="text-muted-foreground text-center py-8 text-sm">No messages yet — start the conversation!</p>}
+          {messages.length === 0 && <p className="text-muted-foreground text-center py-8 text-sm">Noch keine Nachrichten — fang einfach an!</p>}
           <div ref={messagesEndRef} />
         </div>
         <div className="p-4 border-t border-border flex gap-2">
-          <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" />
+          <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Nachricht schreiben..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" />
           <button onClick={sendMessage} disabled={!input.trim() || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
         </div>
       </div>

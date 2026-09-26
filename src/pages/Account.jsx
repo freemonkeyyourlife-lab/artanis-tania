@@ -29,9 +29,9 @@ export default function Account() {
     setSaving(true);
     try {
       await base44.auth.updateMe({ display_name: displayName, language });
-      toast({ title: "Settings saved!" });
+      toast({ title: "Einstellungen gespeichert" });
     } catch (e) {
-      toast({ title: "Error", description: "Could not save settings.", variant: "destructive" });
+      toast({ title: "Fehler", description: "Einstellungen konnten nicht gespeichert werden.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -47,27 +47,27 @@ export default function Account() {
         <div className="w-16 h-16 mx-auto rounded-full glass-strong flex items-center justify-center mb-6">
           <UserIcon className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="font-display text-2xl text-foreground mb-2">Account</h1>
-        <p className="text-muted-foreground text-sm mb-6">Sign in to personalize your experience, save favorites, and access VIP content.</p>
-        <a href="/login" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:accent-glow transition-all">Sign In</a>
+        <h1 className="font-display text-2xl text-foreground mb-2">Konto</h1>
+        <p className="text-muted-foreground text-sm mb-6">Melde dich an, um dein Erlebnis anzupassen, Favoriten zu speichern und VIP-Inhalte zu sehen.</p>
+        <a href="/login" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:accent-glow transition-all">Anmelden</a>
       </div>
     );
   }
 
   return (
     <div className="max-w-[800px] mx-auto px-4 lg:px-8 py-8">
-      <h1 className="font-display text-3xl text-foreground mb-2">Account</h1>
-      <p className="text-muted-foreground text-sm mb-8">Manage your profile and preferences</p>
+      <h1 className="font-display text-3xl text-foreground mb-2">Konto</h1>
+      <p className="text-muted-foreground text-sm mb-8">Verwalte dein Profil und deine Einstellungen</p>
 
       <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-        <h2 className="font-display text-xl text-foreground mb-4 flex items-center gap-2"><Settings className="w-5 h-5 text-primary" /> Profile</h2>
+        <h2 className="font-display text-xl text-foreground mb-4 flex items-center gap-2"><Settings className="w-5 h-5 text-primary" /> Profil</h2>
         <div className="space-y-4">
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">Display Name</label>
-            <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Choose a display name" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
+            <label className="text-xs text-muted-foreground mb-1.5 block">Anzeigename</label>
+            <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Wähle einen Anzeigenamen" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">Language</label>
+            <label className="text-xs text-muted-foreground mb-1.5 block">Sprache</label>
             <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground focus:outline-none focus:border-primary/50 cursor-pointer">
               <option value="de">Deutsch</option>
               <option value="en">English</option>
@@ -75,15 +75,15 @@ export default function Account() {
               <option value="fr">Français</option>
             </select>
           </div>
-          <button onClick={save} disabled={saving} className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:accent-glow transition-all">Save Changes</button>
+          <button onClick={save} disabled={saving} className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:accent-glow transition-all">Änderungen speichern</button>
         </div>
       </div>
 
       <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-6 accent-glow mb-6">
         <Crown className="w-8 h-8 text-primary mb-3" />
-        <h2 className="font-display text-xl text-foreground mb-2">VIP Membership</h2>
-        <p className="text-sm text-muted-foreground mb-4">{user.vip_status ? "You are a VIP member!" : "Upgrade to VIP for exclusive content, private rooms, and priority requests."}</p>
-        {!user.vip_status && <button className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:accent-glow-strong transition-all">Become VIP</button>}
+        <h2 className="font-display text-xl text-foreground mb-2">VIP-Mitgliedschaft</h2>
+        <p className="text-sm text-muted-foreground mb-4">{user.vip_status ? "Du bist VIP-Mitglied!" : "Hol dir VIP für exklusive Inhalte, private Räume und bevorzugte Wünsche."}</p>
+        {!user.vip_status && <button className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:accent-glow-strong transition-all">VIP werden</button>}
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-6">

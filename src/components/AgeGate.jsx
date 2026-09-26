@@ -25,17 +25,17 @@ export default function AgeGate() {
           <ShieldCheck className="w-8 h-8 text-primary" />
         </div>
         <h1 className="font-display text-3xl text-foreground mb-2">ARTANIS × TRIANIA</h1>
-        <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-8">Private Interactive Archive</p>
+        <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-8">Privates interaktives Archiv</p>
 
         <div className="glass rounded-2xl border border-border p-6 mb-6 text-left">
           <div className="flex items-start gap-3 mb-4">
             <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-foreground">
-              This website contains adult content intended for adults aged 18 and older. By entering, you confirm that you are at least 18 years of age and consent to viewing adult content.
+              Diese Seite enthält Inhalte für Erwachsene ab 18 Jahren. Mit dem Betreten bestätigst du, dass du mindestens 18 Jahre alt bist und damit einverstanden bist, solche Inhalte zu sehen.
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
-            All performers and characters depicted are 18 years of age or older.
+            Alle dargestellten Personen und Charaktere sind 18 Jahre oder älter. Die KI-Modelle sind computergeneriert und zeigen keine realen Personen.
           </p>
         </div>
 
@@ -44,13 +44,13 @@ export default function AgeGate() {
             onClick={handleConfirm}
             className="w-full py-4 rounded-full bg-primary text-primary-foreground font-semibold text-sm tracking-wide hover:accent-glow-strong transition-all"
           >
-            I AM 18+
+            ICH BIN 18+
           </button>
           <button
             onClick={handleExit}
             className="w-full py-4 rounded-full border border-border text-muted-foreground font-medium text-sm hover:text-foreground hover:border-foreground/20 transition-all"
           >
-            EXIT
+            VERLASSEN
           </button>
         </div>
       </div>

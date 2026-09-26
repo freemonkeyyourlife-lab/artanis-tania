@@ -107,9 +107,9 @@ export default function Profile() {
         const created = await base44.entities.UserPreference.create(data);
         setPrefId(created.id);
       }
-      toast({ title: "Profile saved!", description: "Your preferences are now active in chat." });
+      toast({ title: "Profil gespeichert", description: "Deine Vorlieben sind jetzt im Chat aktiv." });
     } catch (e) {
-      toast({ title: "Error", description: "Could not save profile.", variant: "destructive" });
+      toast({ title: "Fehler", description: "Profil konnte nicht gespeichert werden.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -124,45 +124,45 @@ export default function Profile() {
       <div className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 rounded-full bg-elevated flex items-center justify-center"><User className="w-6 h-6 text-primary" /></div>
         <div>
-          <h1 className="font-display text-2xl text-foreground">My Profile</h1>
-          <p className="text-sm text-muted-foreground">Tell us what you're into — the AI adapts to you</p>
+          <h1 className="font-display text-2xl text-foreground">Mein Profil</h1>
+          <p className="text-sm text-muted-foreground">Sag uns, worauf du stehst — die KI richtet sich danach</p>
         </div>
       </div>
 
       <div className="space-y-5">
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Display Name</label>
-          <input type="text" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} placeholder="How should we call you?" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
+          <label className="text-xs text-muted-foreground mb-1.5 block">Anzeigename</label>
+          <input type="text" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} placeholder="Wie sollen wir dich nennen?" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Bio</label>
-          <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Tell us about yourself..." rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
+          <label className="text-xs text-muted-foreground mb-1.5 block">Über mich</label>
+          <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Erzähl uns etwas über dich …" rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Interests (one per line)</label>
-          <textarea value={form.interests} onChange={(e) => setForm({ ...form, interests: e.target.value })} placeholder={"Exhibitionism\nOutdoor\nSwinging"} rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
+          <label className="text-xs text-muted-foreground mb-1.5 block">Interessen (eine pro Zeile)</label>
+          <textarea value={form.interests} onChange={(e) => setForm({ ...form, interests: e.target.value })} placeholder={"Exhibitionismus\nOutdoor\nSwinger"} rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Topics you want to discuss (one per line)</label>
-          <textarea value={form.topicsToDiscuss} onChange={(e) => setForm({ ...form, topicsToDiscuss: e.target.value })} placeholder={"Public flashing\nPartner swapping\nFirst experiences"} rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
+          <label className="text-xs text-muted-foreground mb-1.5 block">Themen, über die du reden willst (eins pro Zeile)</label>
+          <textarea value={form.topicsToDiscuss} onChange={(e) => setForm({ ...form, topicsToDiscuss: e.target.value })} placeholder={"Öffentliches Zeigen\nPartnertausch\nErste Erfahrungen"} rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Your sexual preferences (one per line)</label>
-          <textarea value={form.sexualPreferences} onChange={(e) => setForm({ ...form, sexualPreferences: e.target.value })} placeholder={"Rough sex\nEdging\nWatersports"} rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
+          <label className="text-xs text-muted-foreground mb-1.5 block">Deine sexuellen Vorlieben (eine pro Zeile)</label>
+          <textarea value={form.sexualPreferences} onChange={(e) => setForm({ ...form, sexualPreferences: e.target.value })} placeholder={"Hart\nLange hinziehen\nSpiele"} rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">What do you want to see from us?</label>
-          <textarea value={form.whatTheyWantToSee} onChange={(e) => setForm({ ...form, whatTheyWantToSee: e.target.value })} placeholder="Describe what content or experiences you'd love..." rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
+          <label className="text-xs text-muted-foreground mb-1.5 block">Was willst du von uns sehen?</label>
+          <textarea value={form.whatTheyWantToSee} onChange={(e) => setForm({ ...form, whatTheyWantToSee: e.target.value })} placeholder="Beschreib, welche Inhalte oder Erlebnisse du dir wünschst …" rows={3} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Your fantasies (the more detail, the better we adapt)</label>
-          <textarea value={form.fantasyDescription} onChange={(e) => setForm({ ...form, fantasyDescription: e.target.value })} placeholder="Tell us your deepest fantasies..." rows={4} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
+          <label className="text-xs text-muted-foreground mb-1.5 block">Deine Fantasien (je mehr Details, desto besser passen wir uns an)</label>
+          <textarea value={form.fantasyDescription} onChange={(e) => setForm({ ...form, fantasyDescription: e.target.value })} placeholder="Erzähl uns deine tiefsten Fantasien …" rows={4} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
         </div>
 
         <div>
@@ -186,7 +186,7 @@ export default function Profile() {
         </div>
 
         <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:accent-glow transition-all">
-          <Save className="w-4 h-4" /> Save Profile
+          <Save className="w-4 h-4" /> Profil speichern
         </button>
       </div>
     </div>
