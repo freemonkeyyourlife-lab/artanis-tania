@@ -8,6 +8,7 @@ import StoryManager from "@/components/studio/StoryManager";
 import TopicManager from "@/components/studio/TopicManager";
 import ContentManager from "@/components/studio/ContentManager";
 import LiveManager from "@/components/studio/LiveManager";
+import MemberManager from "@/components/studio/MemberManager";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -18,6 +19,7 @@ const TABS = [
   { id: "topics", label: "Themen" },
   { id: "content", label: "Preise & Content" },
   { id: "live", label: "Live-Stream" },
+  { id: "members", label: "Mitglieder" },
 ];
 
 export default function Studio() {
@@ -74,6 +76,7 @@ export default function Studio() {
       {tab === "topics" && <TopicManager />}
       {tab === "content" && <ContentManager />}
       {tab === "live" && <LiveManager />}
+      {tab === "members" && <MemberManager />}
 
       {tab === "characters" && (
       <>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,16 +39,26 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [memberStatus, setMemberStatus] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then((me) => setMemberStatus(me?.memberStatus || "STANDARD")).catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border" style={{ height: "72px" }}>
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
-          <Link to="/" className="flex-shrink-0">
-            <span className="font-display text-lg lg:text-xl text-foreground tracking-wide">
-              ARTANIS <span className="text-primary">×</span> TRIANIA
-            </span>
-          </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link to="/">
+              <span className="font-display text-lg lg:text-xl text-foreground tracking-wide">
+                ARTANIS <span className="text-primary">×</span> TRIANIA
+              </span>
+            </Link>
+            {memberStatus === "GOLD" && (
+              <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wider">Gold</span>
+            )}
+          </div>
 
           <nav className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) =>

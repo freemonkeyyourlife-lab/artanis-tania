@@ -8,6 +8,10 @@
     "userName": {
       "type": "string"
     },
+    "anonymous": {
+      "type": "boolean",
+      "default": false
+    },
     "title": {
       "type": "string"
     },

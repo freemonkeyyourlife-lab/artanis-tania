@@ -77,6 +77,26 @@
     },
     "revenueAttributed": {
       "type": "number"
+    },
+    "label": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "grantStatus": {
+      "type": "string",
+      "enum": [
+        "STANDARD",
+        "GOLD"
+      ],
+      "default": "GOLD"
+    },
+    "claimedBy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [

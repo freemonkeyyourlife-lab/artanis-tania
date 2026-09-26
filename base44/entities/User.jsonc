@@ -54,6 +54,17 @@
     "vip_status": {
       "type": "boolean",
       "default": false
+    },
+    "memberStatus": {
+      "type": "string",
+      "enum": [
+        "STANDARD",
+        "GOLD"
+      ],
+      "default": "STANDARD"
+    },
+    "statusNote": {
+      "type": "string"
     }
   }
 }

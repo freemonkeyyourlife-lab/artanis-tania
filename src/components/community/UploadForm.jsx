@@ -11,6 +11,7 @@ export default function UploadForm({ onSaved, onCancel }) {
   const [form, setForm] = useState({ title: "", description: "", topics: "" });
   const [media, setMedia] = useState(null);
   const [mediaType, setMediaType] = useState("IMAGE");
+  const [anonymous, setAnonymous] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -43,7 +44,8 @@ export default function UploadForm({ onSaved, onCancel }) {
       const me = await base44.auth.me();
       await base44.entities.UserPost.create({
         userId: me.id,
-        userName: me.full_name || me.email,
+        userName: anonymous ? "Anonym" : (me.full_name || me.email),
+        anonymous,
         title: form.title,
         description: form.description,
         mediaType,
@@ -105,6 +107,13 @@ export default function UploadForm({ onSaved, onCancel }) {
             <label className="text-xs text-muted-foreground mb-1.5 block">Themen (mit Komma trennen)</label>
             <input value={form.topics} onChange={(e) => set("topics", e.target.value)} placeholder="sinnlich, outdoor, solo" className={inputCls} />
           </div>
+          <label className="flex items-start gap-3 p-3 rounded-xl bg-elevated border border-border cursor-pointer">
+            <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} className="mt-0.5 w-4 h-4 accent-current flex-shrink-0" />
+            <span>
+              <span className="text-sm text-foreground block">Anonym veröffentlichen</span>
+              <span className="text-xs text-muted-foreground">Niemand sieht, dass es von dir ist — nur dein Körper, kein Name.</span>
+            </span>
+          </label>
         </div>
       </div>
 

@@ -34,6 +34,7 @@ import VideoCall from '@/pages/VideoCall';
 import Studio from '@/pages/Studio';
 import Community from '@/pages/Community';
 import Coins from '@/pages/Coins';
+import InviteClaim from '@/components/InviteClaim';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -60,7 +61,9 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
+    <>
+      <InviteClaim />
+      <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
       <Route path="/call" element={<StartCall />} />
@@ -89,7 +92,8 @@ const AuthenticatedApp = () => {
         <Route path="/studio" element={<Studio />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
-    </Routes>
+      </Routes>
+    </>
   );
 };
 

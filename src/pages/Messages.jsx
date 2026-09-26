@@ -373,15 +373,17 @@ export default function Messages() {
     const userRefs = userPref?.userReferenceImages || [];
     const allRefImages = [...creatorRefs, ...extraRefImages, ...userRefs].length ? [...creatorRefs, ...extraRefImages, ...userRefs] : null;
     const attachments = [];
+    const isGold = currentUser?.memberStatus === "GOLD";
 
     // Up to 3 images per reply — first 10 creations are free, then locked behind a paywall.
+    // Gold Members get everything for free, forever.
     for (const item of parsed.images.slice(0, 3)) {
       const url = await generateWithFallback(buildImgPrompt(item.desc), allRefImages, chatMode);
       if (!url) continue;
       if (item.price) {
-        attachments.push({ type: "image", url, locked: true, price: item.price, label: item.label || null });
+        attachments.push({ type: "image", url, locked: !isGold, price: isGold ? null : item.price, label: item.label || null });
       } else {
-        const isFree = consumeFree(currentUser?.id);
+        const isFree = isGold || consumeFree(currentUser?.id);
         attachments.push({ type: "image", url, locked: !isFree, price: isFree ? null : 4.99 });
       }
     }
@@ -390,7 +392,7 @@ export default function Messages() {
     for (const item of parsed.videos.slice(0, 1)) {
       const url = await generateVideo("Short intimate vertical video clip, handheld amateur, " + (scenario ? "Location: " + scenario.title + ". " : "") + item.desc);
       if (!url) continue;
-      const isFree = consumeFree(currentUser?.id);
+      const isFree = isGold || consumeFree(currentUser?.id);
       attachments.push({ type: "video", url, locked: !isFree, price: isFree ? null : 9.99 });
     }
 
@@ -816,8 +818,8 @@ export default function Messages() {
                   </span>
                 )}
                 {viewMode === "ai" && (
-                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title="Kostenlose Creationen (Bilder/Videos)">
-                    {freeLeft} gratis
+                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title={currentUser?.memberStatus === "GOLD" ? "Gold Member — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
+                    {currentUser?.memberStatus === "GOLD" ? "Gold · alles gratis" : `${freeLeft} gratis`}
                   </span>
                 )}
                 {viewMode === "ai" && (

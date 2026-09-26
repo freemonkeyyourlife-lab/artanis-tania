@@ -23,7 +23,7 @@ export default function PostCard({ post, currentUserId, onLike, onRate }) {
 
       <div className="p-3 flex flex-col flex-1">
         {post.title && <p className="text-sm font-medium text-foreground truncate">{post.title}</p>}
-        <p className="text-xs text-muted-foreground truncate">von {post.userName || "Unbekannt"}</p>
+        <p className="text-xs text-muted-foreground truncate">{post.anonymous ? "anonym" : `von ${post.userName || "Unbekannt"}`}</p>
         {post.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.description}</p>}
 
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
