@@ -45,6 +45,17 @@ export default function Messages() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("checkout");
+    if (status === "success") {
+      toast({ title: "Zahlung erfolgreich", description: "Dein Zugang ist freigeschaltet." });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (status === "cancel") {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   useEffect(() => { load(); }, []);
   const load = async () => {
     try {
@@ -504,21 +515,21 @@ export default function Messages() {
   };
 
   const requestUnlock = async (item) => {
+    if (window.self !== window.top) {
+      toast({ title: "Bezahlen nur in der App", description: "Öffne die App in einem eigenen Tab, um zu bezahlen.", variant: "destructive" });
+      return;
+    }
     try {
-      const me = currentUser || await base44.auth.me();
-      await base44.entities.Transaction.create({
-        userId: me.id,
-        type: "PPV",
-        amount: item.price || 0,
-        currency: "EUR",
-        status: "PENDING",
+      const res = await base44.functions.invoke("stripePpvCheckout", {
+        amount: item.price,
+        label: item.label || "Freischaltung",
+        creatorId: activeChat,
       });
-      toast({
-        title: "Anfrage ist raus",
-        description: `${item.label || "Freischaltung"} · ${item.price} € — der Zugang kommt, sobald die Zahlung bestätigt ist.`,
-      });
+      const url = res?.data?.url;
+      if (!url) throw new Error(res?.data?.error || "Kein Checkout-Link");
+      window.location.href = url;
     } catch (e) {
-      toast({ title: "Fehler", description: "Anfrage konnte nicht gesendet werden.", variant: "destructive" });
+      toast({ title: "Fehler", description: "Bezahlung konnte nicht gestartet werden.", variant: "destructive" });
     }
   };
 
