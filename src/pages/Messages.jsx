@@ -8,6 +8,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
 import ScenarioSelection from "@/components/ScenarioSelection";
+import VoiceInput from "@/components/VoiceInput";
 import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
 import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE } from "@/lib/appearance";
@@ -209,6 +210,17 @@ export default function Messages() {
       ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Respect the current location and position — do NOT teleport or jump around. If the user wants to change the location, follow their lead naturally and describe the move. Only reference objects that exist in the current scene.";
     }
     return ctx;
+  };
+
+  const addCustomOption = (q, value) => {
+    const v = (value || "").trim();
+    if (!v) return;
+    setSetupAnswers(prev => {
+      const cur = Array.isArray(prev[q.key]) ? prev[q.key] : [];
+      if (cur.includes(v)) return prev;
+      return { ...prev, [q.key]: [...cur, v] };
+    });
+    setSetupInput("");
   };
 
   const advanceSetup = () => {
@@ -755,34 +767,44 @@ export default function Messages() {
                   )}
                   {scenario.setupQuestions[setupStep].type === "multiselect" && (() => {
                     const q = scenario.setupQuestions[setupStep];
-                    const selected = setupAnswers[q.key] || [];
+                    const selected = Array.isArray(setupAnswers[q.key]) ? setupAnswers[q.key] : [];
+                    const options = getOptions(q);
+                    const custom = selected.filter(o => !options.includes(o));
+                    const toggleOpt = (opt) => {
+                      setSetupAnswers(prev => {
+                        const cur = Array.isArray(prev[q.key]) ? prev[q.key] : [];
+                        return { ...prev, [q.key]: cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt] };
+                      });
+                    };
                     return (
                       <div className="w-full max-w-lg mb-4">
                         <div className="flex flex-wrap gap-2 justify-center max-h-[42vh] overflow-y-auto p-1">
-                          {getOptions(q).map(opt => {
-                            const isSelected = Array.isArray(selected) && selected.includes(opt);
+                          {[...options, ...custom].map(opt => {
+                            const isSelected = selected.includes(opt);
                             return (
-                              <button key={opt} onClick={() => {
-                                setSetupAnswers(prev => {
-                                  const cur = Array.isArray(prev[q.key]) ? prev[q.key] : [];
-                                  const next = cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt].slice(0, 40);
-                                  return { ...prev, [q.key]: next };
-                                });
-                              }} className={cn("px-4 py-2 rounded-full border text-sm transition-colors", isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-elevated border-border text-muted-foreground hover:text-foreground hover:border-primary/50")}>{isSelected ? "✓ " : ""}{opt}</button>
+                              <button key={opt} onClick={() => toggleOpt(opt)} className={cn("px-4 py-2 rounded-full border text-sm transition-colors", isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-elevated border-border text-muted-foreground hover:text-foreground hover:border-primary/50")}>{isSelected ? "✓ " : ""}{opt}</button>
                             );
                           })}
                         </div>
-                        <p className="text-center text-xs text-muted-foreground mt-3">{Array.isArray(selected) ? selected.length : 0} ausgewählt</p>
+                        <p className="text-center text-xs text-muted-foreground mt-3">{selected.length} ausgewählt — wähle so viele du willst</p>
+                        <div className="flex gap-2 mt-3">
+                          <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addCustomOption(q, setupInput); }} placeholder="Eigenes hinzufügen — tippen oder sprechen" className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" />
+                          <button onClick={() => addCustomOption(q, setupInput)} title="Hinzufügen" className="w-10 h-10 rounded-full bg-elevated border border-border text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">+</button>
+                          <VoiceInput onResult={(t) => addCustomOption(q, t)} />
+                        </div>
                         <div className="flex justify-center mt-3">
                           <button onClick={advanceSetup} className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
                         </div>
                       </div>
                     );
                   })()}
+                  {scenario.setupQuestions[setupStep].type !== "multiselect" && (
                   <div className="flex gap-2 w-full max-w-md">
-                    <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") advanceSetup(); }} placeholder="Oder eigene Antwort..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
+                    <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") advanceSetup(); }} placeholder="Eigene Antwort — tippen oder sprechen..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
+                    <VoiceInput onResult={(t) => { setSetupAnswers(prev => ({ ...prev, [scenario.setupQuestions[setupStep].key]: t })); setSetupInput(""); setSetupStep(p => p + 1); }} />
                     <button onClick={advanceSetup} className="px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
                   </div>
+                  )}
                   <div className="flex gap-4 mt-3">
                     <button onClick={() => { setSetupInput(""); setSetupStep(prev => prev + 1); }} className="text-xs text-muted-foreground hover:text-foreground">Frage überspringen</button>
                     <button onClick={() => setSetupStep(scenario.setupQuestions.length)} className="text-xs text-muted-foreground hover:text-foreground">Alle überspringen</button>

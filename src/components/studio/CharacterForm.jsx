@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Upload, X, Save, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import VoiceInput from "@/components/VoiceInput";
 
 const PERSONA_TYPES = [
   { value: "SOLO_FEMALE", label: "Frau (solo)" },
@@ -152,7 +153,11 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
 
         <div className="sm:col-span-2">
           <label className="text-xs text-muted-foreground mb-1.5 block">Bio / Persönlichkeit</label>
-          <textarea value={form.bio} onChange={(e) => set("bio", e.target.value)} rows={4} placeholder="Wie ist der Charakter? Aussehen, Art, Vorlieben …" className={cn(inputCls, "resize-none")} />
+          <textarea value={form.bio} onChange={(e) => set("bio", e.target.value)} rows={4} placeholder="Wie ist der Charakter? Aussehen, Art, Vorlieben … — tippen oder sprechen" className={cn(inputCls, "resize-none")} />
+          <div className="flex items-center gap-2 mt-2">
+            <VoiceInput onResult={(t) => set("bio", form.bio ? form.bio + " " + t : t)} />
+            <span className="text-xs text-muted-foreground">Sprechen statt tippen — wird zu Text</span>
+          </div>
         </div>
 
         <div>
