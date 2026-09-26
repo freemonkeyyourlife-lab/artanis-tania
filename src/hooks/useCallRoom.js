@@ -17,6 +17,9 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
   const [mySeat, setMySeat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [sharing, setSharing] = useState(false);
+  const [mode, setModeState] = useState("OPEN");
+  const [watchers, setWatchers] = useState(0);
+  const [closed, setClosed] = useState(false);
 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -33,11 +36,11 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
   const screenRef = useRef(null); // laufender Bildschirm-Stream, falls geteilt wird
 
   const syncPeers = useCallback(() => {
-    setPeers(
-      [...infoRef.current.entries()]
-        .map(([seat, info]) => ({ seat, ...info, stream: streamsRef.current.get(seat) || null }))
-        .sort((a, b) => a.seat - b.seat)
-    );
+    // Zuschauer bleiben unsichtbar — sie tauchen in keiner Kachel auf.
+    const all = [...infoRef.current.entries()]
+      .map(([seat, info]) => ({ seat, ...info, stream: streamsRef.current.get(seat) || null }));
+    setWatchers(all.filter((p) => p.watcher).length);
+    setPeers(all.filter((p) => !p.watcher).sort((a, b) => a.seat - b.seat));
   }, []);
 
   useEffect(() => {
@@ -215,6 +218,12 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
           handleSignal(msg.from, msg.data);
         } else if (msg.type === "chat") {
           setMessages((prev) => [...prev.slice(-199), { seat: msg.seat, name: msg.name, text: msg.text }]);
+        } else if (msg.type === "closed") {
+          setClosed(true);
+          localStreamRef.current?.getTracks().forEach((t) => t.stop());
+          localStreamRef.current = null;
+        } else if (msg.type === "mode") {
+          setModeState(msg.mode || "OPEN");
         } else if (msg.type === "denied") {
           applyTrack(msg.what === "cam" ? "video" : "audio", false);
           setError(msg.what === "cam"
@@ -329,6 +338,11 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
     roomRef.current?.send({ type: "flags", allowCam: allowCam, allowMic: value });
   }, [allowCam]);
 
+  // Nur der Gastgeber darf das — der Raum prüft es serverseitig nochmal.
+  const setMode = useCallback((next) => {
+    roomRef.current?.send({ type: "mode", mode: next });
+  }, []);
+
   // Nachricht an alle im Call — geht denselben Weg wie die Video-Signale.
   const sendChat = useCallback((text) => {
     const t = String(text || "").trim();
@@ -382,5 +396,6 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
     status, error, peers, isHost, allowCam, allowMic, camOn, micOn,
     localVideoRef, toggleCam, toggleMic, setGuestCam, setGuestMic,
     messages, sendChat, sharing, toggleShare, mySeat,
+    mode, setMode, watchers, closed,
   };
 }

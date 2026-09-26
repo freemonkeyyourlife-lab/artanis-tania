@@ -2,10 +2,16 @@ import React from "react";
 import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Lock, Monitor, MonitorOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const ROOM_MODES = [
+  { id: "OPEN", label: "Offen", hint: "Alle mit dem Link kommen rein" },
+  { id: "WATCH", label: "Zuschauer", hint: "Neue schauen nur heimlich zu" },
+  { id: "PRIVATE", label: "Privat", hint: "Raum geschlossen — niemand Neues kommt rein" },
+];
+
 export default function CallControls({
   micOn, camOn, toggleMic, toggleCam, onEnd,
   isHost, allowCam, allowMic, setGuestCam, setGuestMic,
-  sharing, onToggleShare,
+  sharing, onToggleShare, mode, setMode,
 }) {
   const micBlocked = !isHost && !allowMic;
   const camBlocked = !isHost && !allowCam;
@@ -13,8 +19,22 @@ export default function CallControls({
   return (
     <div className="border-t border-border">
       {isHost && (
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 py-3 border-b border-border">
-          <span className="text-[11px] uppercase tracking-wider text-muted-foreground w-full text-center sm:w-auto">Du bestimmst</span>
+        <div className="px-4 py-3 border-b border-border space-y-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Zugang</span>
+            {ROOM_MODES.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id)}
+                title={m.hint}
+                className={cn("px-4 py-2 rounded-full text-xs font-semibold transition-colors", mode === m.id ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Gäste</span>
           <button
             onClick={() => setGuestCam(!allowCam)}
             className={cn("inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-colors", allowCam ? "bg-elevated text-foreground" : "bg-destructive text-white")}
@@ -29,6 +49,7 @@ export default function CallControls({
             {allowMic ? <Mic className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
             Gäste-Mikrofon {allowMic ? "erlaubt" : "gesperrt"}
           </button>
+          </div>
         </div>
       )}
 

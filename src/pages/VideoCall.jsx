@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
-import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSquare, X } from "lucide-react";
+import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSquare, X, Lock, Eye } from "lucide-react";
 import useCallRoom from "@/hooks/useCallRoom";
 import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
@@ -34,6 +34,7 @@ export default function VideoCall() {
     status, error, peers, isHost, allowCam, allowMic, camOn, micOn,
     localVideoRef, toggleCam, toggleMic, setGuestCam, setGuestMic,
     messages, sendChat, sharing, toggleShare, mySeat,
+    mode, setMode, watchers, closed,
   } = useCallRoom({ token, joined, wantCam, wantMic });
 
   const inviteLink = `${window.location.origin}/call/${token}`;
@@ -103,6 +104,25 @@ export default function VideoCall() {
     );
   }
 
+  // Der Gastgeber hat den Raum zugemacht — hier kommt niemand mehr rein.
+  if (closed) {
+    return (
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-6 text-center">
+        <button
+          onClick={() => navigate("/")}
+          className="fixed top-4 left-4 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-border text-sm text-foreground hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Zurück
+        </button>
+        <Lock className="w-10 h-10 text-muted-foreground mb-4" />
+        <h1 className="font-display text-2xl text-foreground mb-2">Dieser Raum ist geschlossen</h1>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          Der Gastgeber lässt gerade niemanden Neues herein. Frag ihn, ob er den Raum wieder öffnet.
+        </p>
+      </div>
+    );
+  }
+
   const statusLabel =
     status === "live" ? `${peers.length + 1} Personen im Call` :
     status === "waiting" ? "Warte auf weitere Teilnehmer…" :
@@ -123,6 +143,11 @@ export default function VideoCall() {
           <span className="text-sm text-foreground font-medium truncate">{statusLabel}</span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          {isHost && watchers > 0 && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-600/20 text-violet-300 text-[11px] font-semibold whitespace-nowrap flex-shrink-0">
+              <Eye className="w-3 h-3" /> {watchers} Zuschauer
+            </span>
+          )}
           <button
             onClick={() => setChatOpen((v) => !v)}
             title="Chat im Call"
@@ -187,6 +212,8 @@ export default function VideoCall() {
         toggleCam={toggleCam}
         sharing={sharing}
         onToggleShare={toggleShare}
+        mode={mode}
+        setMode={setMode}
         onEnd={() => navigate("/live")}
         isHost={isHost}
         allowCam={allowCam}

@@ -11,6 +11,9 @@ export default class CallRoom extends Actor {
   nextSeat = 1;
   allowCam = true; // host setting, applies to everyone but the host
   allowMic = true;
+  // OPEN = everyone with the link joins. WATCH = new arrivals only watch silently.
+  // PRIVATE = the room is closed, nobody new gets in.
+  mode = 'OPEN';
 
   async handleStart() {
     const saved = await this.storage.get('users');
@@ -20,6 +23,8 @@ export default class CallRoom extends Actor {
       this.allowCam = flags.allowCam !== false;
       this.allowMic = flags.allowMic !== false;
     }
+    const mode = await this.storage.get('mode');
+    if (mode === 'OPEN' || mode === 'WATCH' || mode === 'PRIVATE') this.mode = mode;
     const live = new Set(this.getConnections().map((c) => c.id));
     for (const id of this.users.keys()) if (!live.has(id)) this.users.delete(id);
     this.nextSeat = Math.max(0, ...[...this.users.values()].map((u) => u.seat)) + 1;
@@ -32,15 +37,28 @@ export default class CallRoom extends Actor {
     }
     // Reconnects are routine — a returning id reclaims its seat, name and role.
     if (!this.users.has(conn.id)) {
+      const host = await this.isHost(conn);
+      // A closed room takes nobody new — only the host keeps a way back in.
+      if (this.mode === 'PRIVATE' && !host) {
+        this.users.set(conn.id, { seat: this.nextSeat++, name: '', cam: false, mic: false, host: false, watcher: false, blocked: true });
+        await this.save();
+        conn.send({ type: 'closed' });
+        return;
+      }
       // cam/mic stay null until the client reports its real state, so nobody
       // gets a wrong "camera off" pushed onto them right after joining.
-      const user = { seat: this.nextSeat++, name: '', cam: null, mic: null, host: false };
-      this.users.set(conn.id, user);
-      user.host = await this.isHost(conn);
+      const watcher = this.mode === 'WATCH' && !host;
+      this.users.set(conn.id, {
+        seat: this.nextSeat++, name: '', host, watcher, blocked: false,
+        cam: watcher ? false : null,
+        mic: watcher ? false : null,
+      });
       await this.save();
     }
     const me = this.users.get(conn.id);
-    conn.send({ type: 'you', seat: me.seat, host: me.host });
+    if (me.blocked) { conn.send({ type: 'closed' }); return; }
+    conn.send({ type: 'you', seat: me.seat, host: me.host, watcher: !!me.watcher });
+    conn.send({ type: 'mode', mode: this.mode });
     conn.send({ type: 'flags', allowCam: this.allowCam, allowMic: this.allowMic });
     this.broadcastPeers();
   }
@@ -86,6 +104,14 @@ export default class CallRoom extends Actor {
     }
 
     if (msg.type === 'media') {
+      // Zuschauer bleiben stumm und unsichtbar — sie schauen nur zu.
+      if (me.watcher) {
+        me.cam = false;
+        me.mic = false;
+        await this.save();
+        this.broadcastPeers();
+        return;
+      }
       const cam = msg.cam === true;
       const mic = msg.mic === true;
       if (!me.host) {
@@ -112,6 +138,25 @@ export default class CallRoom extends Actor {
       await this.save();
       this.broadcast({ type: 'flags', allowCam: this.allowCam, allowMic: this.allowMic });
       this.broadcastPeers();
+      return;
+    }
+
+    // Der Gastgeber bestimmt, wer überhaupt herein darf.
+    if (msg.type === 'mode') {
+      if (!me.host) return;
+      const next = msg.mode;
+      if (next !== 'OPEN' && next !== 'WATCH' && next !== 'PRIVATE') return;
+      this.mode = next;
+      // Zurück auf offen: wer bisher nur zugeschaut hat, darf wieder mitmachen.
+      if (next === 'OPEN') {
+        for (const u of this.users.values()) {
+          if (u.watcher) { u.watcher = false; u.cam = false; u.mic = false; }
+        }
+        await this.save();
+        this.broadcastPeers();
+      }
+      await this.storage.put('mode', next);
+      this.broadcast({ type: 'mode', mode: next });
     }
   }
 
@@ -137,7 +182,9 @@ export default class CallRoom extends Actor {
   broadcastPeers() {
     this.broadcast({
       type: 'peers',
-      peers: [...this.users.values()].map((u) => ({ seat: u.seat, name: u.name, cam: u.cam, mic: u.mic, host: u.host })),
+      peers: [...this.users.values()]
+        .filter((u) => !u.blocked)
+        .map((u) => ({ seat: u.seat, name: u.name, cam: u.cam, mic: u.mic, host: u.host, watcher: !!u.watcher })),
     });
   }
 }

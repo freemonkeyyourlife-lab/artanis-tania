@@ -48,6 +48,7 @@ export default function Messages() {
   const [dmUsers, setDmUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [dmParticipantName, setDmParticipantName] = useState("");
+  const [dmPartnerId, setDmPartnerId] = useState(null);
   const [freeLeft, setFreeLeft] = useState(FREE_CREATIONS);
   const [extraCharacters, setExtraCharacters] = useState([]);
   const [takeover, setTakeover] = useState(false);
@@ -681,9 +682,22 @@ export default function Messages() {
       }
       setActiveChat(conv.id);
       setDmParticipantName(otherUser.full_name || otherUser.email);
+      setDmPartnerId(otherUser.id);
       const msgs = await base44.entities.Message.filter({ conversationId: conv.id }, "created_date", 100);
       setMessages(prev => ({ ...prev, [conv.id]: msgs }));
     } catch (e) { console.error(e); }
+  };
+
+  // Als Admin jederzeit entscheiden: diese Person bekommt alles gratis.
+  const giveFreeAccess = async () => {
+    if (!dmPartnerId) return;
+    try {
+      await base44.entities.User.update(dmPartnerId, { memberStatus: "GOLD" });
+      toast({ title: "Gratis freigeschaltet", description: `${dmParticipantName} hat ab jetzt alles frei.` });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Fehler", description: "Freischaltung hat nicht geklappt.", variant: "destructive" });
+    }
   };
 
   const sendDmMessage = async (msgText) => {
@@ -776,6 +790,7 @@ export default function Messages() {
     const name = otherUser?.full_name || otherUser?.email || conv.userName || "Unbekannt";
     setActiveChat(conv.id);
     setDmParticipantName(name);
+    setDmPartnerId(otherUser?.id || conv.userId);
     const msgs = await base44.entities.Message.filter({ conversationId: conv.id }, "created_date", 100);
     setMessages(prev => ({ ...prev, [conv.id]: msgs }));
   };
@@ -896,6 +911,15 @@ export default function Messages() {
                   <p className="text-xs text-muted-foreground">{viewMode === "dm" ? "Direct message — real person" : (creators.find(c => c.id === activeChat)?.creatorCategory === "REAL" ? "Real · AI persona" : "KI-Modell · AI chat")}</p>
                 </div>
                 {viewMode === "ai" && <StatusBadge experienceType="AI_INTERACTIVE" className="flex-shrink-0" />}
+                {viewMode === "dm" && isAdmin && dmPartnerId && dmPartnerId !== currentUser?.id && (
+                  <button
+                    onClick={giveFreeAccess}
+                    title="Diese Person bekommt ab jetzt alles gratis"
+                    className="px-2.5 py-1.5 rounded-full bg-elevated text-muted-foreground text-[11px] font-semibold whitespace-nowrap flex-shrink-0 hover:text-foreground transition-colors"
+                  >
+                    Gratis geben
+                  </button>
+                )}
                 {viewMode === "ai" && scenario && (
                   <button onClick={() => setScenario(null)} title="Szenario wechseln" className="text-xs text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full bg-elevated whitespace-nowrap flex items-center gap-1">
                     {scenario.id === "free" ? "💬" : scenario.icon} {scenario.title} · wechseln
