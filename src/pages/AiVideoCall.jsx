@@ -74,17 +74,6 @@ export default function AiVideoCall() {
 
   const proActive = hasProAccess(user);
 
-  const speak = async (t) => {
-    try {
-      const res = await base44.integrations.Core.GenerateSpeech({ text: t, voice: creator?.voice || undefined });
-      if (!res?.url) return;
-      audioRef.current?.pause();
-      const audio = new Audio(res.url);
-      audioRef.current = audio;
-      audio.play().catch(() => {});
-    } catch (e) { /* Stimme optional */ }
-  };
-
   const newFrame = async (desc) => {
     const refs = [creator?.avatar, ...(creator?.referenceImages || [])].filter(Boolean).slice(0, 4);
     const style = creator?.artStyle === "CARTOON" ? CARTOON_STYLE : PHOTOREAL;
@@ -112,7 +101,6 @@ export default function AiVideoCall() {
       const clean = said.replace(/[*_#`]/g, "").trim();
       setLine(clean);
       setHistory((h) => [...h, ...(userText ? [{ role: "user", text: userText }] : []), { role: "ai", text: clean }]);
-      await speak(clean);
       newFrame(clean.slice(0, 160));
     } catch (e) {
       console.error(e);
