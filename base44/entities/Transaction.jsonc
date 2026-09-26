@@ -15,7 +15,8 @@
         "BOOKING",
         "PRIVATE_SESSION",
         "INTERACTIVE_PURCHASE",
-        "CUSTOM_CONTENT"
+        "CUSTOM_CONTENT",
+        "COIN_PURCHASE"
       ]
     },
     "amount": {

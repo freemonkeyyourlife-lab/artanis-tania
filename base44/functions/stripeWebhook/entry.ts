@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import Stripe from 'npm:stripe@17';
 import { secrets } from 'base44:runtime';
+import { creditCoins } from '../../shared/coins.ts';
 
 // Stripe webhook: marks a pending PPV transaction as paid.
 export default async function (req) {
@@ -21,9 +22,18 @@ export default async function (req) {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const txId = session.metadata && session.metadata.transaction_id;
-      if (txId) {
-        await base44.asServiceRole.entities.Transaction.update(txId, { status: 'PAID', providerId: session.id });
+      const meta = session.metadata || {};
+
+      // Coin top-up: credit the buyer's wallet.
+      if (meta.kind === 'coins' && meta.user_id) {
+        const coins = parseInt(meta.coins, 10);
+        if (Number.isFinite(coins) && coins > 0) {
+          await creditCoins(base44, meta.user_id, coins, 'PURCHASE', coins + ' Coins gekauft');
+        }
+      }
+
+      if (meta.transaction_id) {
+        await base44.asServiceRole.entities.Transaction.update(meta.transaction_id, { status: 'PAID', providerId: session.id });
       }
     }
 

@@ -33,6 +33,7 @@ import StartCall from '@/pages/StartCall';
 import VideoCall from '@/pages/VideoCall';
 import Studio from '@/pages/Studio';
 import Community from '@/pages/Community';
+import Coins from '@/pages/Coins';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -84,6 +85,7 @@ const AuthenticatedApp = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/groups" element={<Groups />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/coins" element={<Coins />} />
         <Route path="/studio" element={<Studio />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />

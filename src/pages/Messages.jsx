@@ -12,6 +12,7 @@ import VoiceInput from "@/components/VoiceInput";
 import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS } from "@/lib/chatMedia";
 import CharacterSuggestion from "@/components/CharacterSuggestion";
+import { coinsForPrice } from "@/lib/coins";
 import { APPEARANCE_DIRECTIVE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_CONSISTENCY } from "@/lib/appearance";
 
 export default function Messages() {
@@ -641,6 +642,27 @@ export default function Messages() {
     }
   };
 
+  // Pay for an unlock with coins from the Börse instead of Stripe.
+  const unlockWithCoins = async (msg, item) => {
+    if (!activeChat) return;
+    const chatKey = activeChat;
+    const coins = coinsForPrice(item.price);
+    try {
+      const res = await base44.functions.invoke("coinWallet", {
+        action: "spend",
+        amount: coins,
+        description: item.label || "Freischaltung",
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+      const items = (msg.attachments || []).map((it) => (it === item ? { ...it, locked: false, price: null } : it));
+      if (msg.id) base44.entities.Message.update(msg.id, { attachments: items }).catch(() => {});
+      setMessages((prev) => ({ ...prev, [chatKey]: (prev[chatKey] || []).map((m) => (m === msg ? { ...m, attachments: items } : m)) }));
+      toast({ title: "Freigeschaltet", description: `${coins} Coins abgezogen — neuer Stand: ${res.data.balance} Coins.` });
+    } catch (e) {
+      toast({ title: "Nicht freigeschaltet", description: "Nicht genug Coins — hol dir Nachschub in der Börse.", variant: "destructive" });
+    }
+  };
+
   const toggleExtra = (c) => {
     setExtraCharacters((prev) => prev.some((x) => x.id === c.id) ? prev.filter((x) => x.id !== c.id) : [...prev, c]);
   };
@@ -956,11 +978,12 @@ export default function Messages() {
                                       ) : (
                                         <div className="w-full h-full bg-black" />
                                       )}
-                                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 gap-1 px-2 text-center">
+                                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 gap-1.5 px-2 text-center">
                                         <Lock className="w-5 h-5 text-primary" />
                                         {it.label && <span className="text-[11px] font-semibold uppercase tracking-wide text-primary leading-tight">{it.label}</span>}
                                         <span className="text-sm text-foreground font-semibold">{it.price} €</span>
                                         <button onClick={() => requestUnlock(it)} className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">Freischalten</button>
+                                        <button onClick={() => unlockWithCoins(msg, it)} className="px-3 py-1 rounded-full bg-elevated border border-primary/40 text-primary text-[11px] font-medium hover:border-primary">{coinsForPrice(it.price)} Coins</button>
                                       </div>
                                     </div>
                                   ) : it.type === "video" ? (

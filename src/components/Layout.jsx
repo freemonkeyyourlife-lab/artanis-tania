@@ -23,6 +23,7 @@ const NAV_LINKS = [
   { label: "Interactive", path: "/interactive" },
   { label: "Groups", path: "/groups" },
   { label: "Community", path: "/community" },
+  { label: "Börse", path: "/coins" },
   { label: "Library", path: "/library" },
 ];
 
