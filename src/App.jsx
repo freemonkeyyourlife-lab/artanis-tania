@@ -38,6 +38,7 @@ import InviteClaim from '@/components/InviteClaim';
 import CreatorDetail from '@/pages/CreatorDetail';
 import Contests from '@/pages/Contests';
 import ContestDetail from '@/pages/ContestDetail';
+import AiVideoCall from '@/pages/AiVideoCall';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -69,6 +70,7 @@ const AuthenticatedApp = () => {
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
+      <Route path="/ai-call/:id" element={<AiVideoCall />} />
       <Route path="/call" element={<StartCall />} />
       <Route path="/call/:token" element={<VideoCall />} />
       <Route element={<Layout />}>

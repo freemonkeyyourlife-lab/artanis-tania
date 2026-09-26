@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X } from "lucide-react";
+import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -1047,6 +1047,11 @@ export default function Messages() {
                   >
                     {takeover ? "Übernommen ✓" : "Selbst schreiben"}
                   </button>
+                )}
+                {viewMode === "ai" && (
+                  <Link to={`/ai-call/${activeChat}`} title="Videochat starten" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-primary transition-colors">
+                    <Video className="w-4 h-4" />
+                  </Link>
                 )}
                 <button onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })} title="Zur letzten Nachricht springen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <ArrowDown className="w-4 h-4" />
