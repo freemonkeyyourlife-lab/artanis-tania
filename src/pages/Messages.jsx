@@ -38,6 +38,7 @@ export default function Messages() {
   const [freeLeft, setFreeLeft] = useState(FREE_CREATIONS);
   const [extraCharacters, setExtraCharacters] = useState([]);
   const [takeover, setTakeover] = useState(false);
+  const [spannerMode, setSpannerMode] = useState(false);
   const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
   const messagesEndRef = useRef(null);
@@ -206,6 +207,18 @@ export default function Messages() {
     ctx += "APPEARANCE CONSISTENCY (critical): the person must look identical in every image — same face, same hair COLOUR and length, same skin tone, same body. NEVER change her hair colour.\n";
     ctx += "STAY SUGGESTIVE & TEASING: imply, leave something to the imagination — that is what keeps them coming back and spending. Go as far as the platform allows, but the tease is the point.\n";
     ctx += "ENCOURAGE UPLOADS: keep asking the user to send a photo of what they describe, and react to it with real excitement when they do.\n";
+    // ── THIRD-PERSON / VOYEUR MODE ──
+    if (spannerMode) {
+      ctx += "\n\n═══ THIRD-PERSON MODE — HE WATCHES, YOU PERFORM ═══\n";
+      ctx += "The user is NOT part of the action right now. He stands apart and watches you (and everyone else in the scene). You do not treat him as a partner — you perform FOR him.\n";
+      ctx += "- Play with the other people present: touch them, kiss them, talk to them. He is the audience.\n";
+      ctx += "- Every now and then look over at him, hold eye contact, and ask whether he likes what he sees and what he wants you to do next.\n";
+      ctx += "- Do exactly what he tells you — he directs the scene. Never pull him into the action on your own, only when he clearly asks to join.\n";
+      ctx += "- Narrate what he sees: who is where, in which position, what is happening to whom.\n";
+      ctx += "- If you are alone in the scene, put on a show for him and let him tell you what he wants to watch.\n";
+      ctx += "═══ END THIRD-PERSON ═══\n";
+    }
+
     // ── SCENARIO ANCHOR #3 (last thing the AI sees — triple-anchored) ──
     if (scenario) {
       ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Respect the current location and position — do NOT teleport or jump around. If the user wants to change the location, follow their lead naturally and describe the move. Only reference objects that exist in the current scene.";
@@ -271,25 +284,23 @@ export default function Messages() {
   };
 
   const generateWithFallback = async (prompt, refImages, personaMode) => {
-    // For solo female characters: do NOT include the user's body in the image.
-    // The viewer wants to imagine themselves there — only HER, max POV hand.
-    // For couple/male: user reference images are OK.
-    const isSoloFemale = personaMode === "triania";
-    let usedRefs = refImages;
+    // YOU are in every image — always together with the character.
+    const maleLead = creators.find((c) => c.stageName === "Artanis")
+      || creators.find((c) => c.personaType === "SOLO_MALE" && c.stageName !== "Testdummy");
+    // In Spanner mode he watches — the women are in frame with each other, not with him.
+    const showMale = !(spannerMode && extraCharacters.length > 0);
+    const maleRefs = showMale ? [maleLead?.avatar, ...(maleLead?.referenceImages || [])].filter(Boolean) : [];
+    const activeCreator = creators.find((c) => c.id === activeChat);
+    const creatorRefs = [...(activeCreator?.referenceImages || []), activeCreator?.avatar].filter(Boolean);
+    const extraRefs = extraCharacters.flatMap((c) => [c.avatar, ...(c.referenceImages || [])]).filter(Boolean);
+    const usedRefs = [...new Set([...creatorRefs, ...extraRefs, ...(refImages || []), ...maleRefs])];
     let promptText = prompt;
-    if (isSoloFemale) {
-      // Only use the creator's own reference images + avatar, not user's uploaded photos
-      const creator = creators.find(c => c.id === activeChat);
-      const creatorRefs = [
-        ...(creator?.referenceImages || []),
-        ...(creator?.avatar ? [creator.avatar] : []),
-      ].filter(Boolean);
-      usedRefs = creatorRefs.length > 0 ? creatorRefs : null;
-      promptText = prompt + " CRITICAL: The woman MUST look EXACTLY like the person in the reference images — same face, body type, hair color and style, skin tone, features. She is the SAME person in every image. Only show her, never include a male body or face. At most, her hand reaching toward the camera.";
-    } else if (usedRefs && usedRefs.length > 0) {
-      promptText = prompt + " CRITICAL: Match the appearance of the person in the reference images — same face, body, hair, skin.";
+    if (usedRefs.length > 0 && showMale) {
+      promptText += " CRITICAL: There are TWO people in this photo — the woman from her reference images and the man from his reference images. Keep BOTH faces, bodies, hair and skin tone EXACTLY identical to their references. They are together in the scene, close to each other, touching. NEVER remove the man and never replace him with a different man.";
+    } else if (usedRefs.length > 0) {
+      promptText += " CRITICAL: Every person in this photo is taken from the reference images — keep each face, body, hair colour and skin tone EXACTLY identical to their reference. They are together in the scene, close to each other, touching each other.";
     }
-    if (usedRefs && usedRefs.length > 0) {
+    if (usedRefs.length > 0) {
       try {
         const result = await base44.integrations.Core.GenerateImage({ prompt: promptText, existing_image_urls: usedRefs });
         return result.url;
@@ -329,7 +340,10 @@ export default function Messages() {
     if (setupAnswers.aiWardrobe) imgCtx += "She is wearing: " + setupAnswers.aiWardrobe + ". ";
     if (setupAnswers.position) imgCtx += "Physical positioning: " + setupAnswers.position + ". ";
     if (setupAnswers.fetish && Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) imgCtx += "Fetishes/themes: " + setupAnswers.fetish.join(", ") + ". ";
-    return APPEARANCE_DIRECTIVE + " POV first person view, amateur phone photo, " + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, minimal face visible, teasing and suggestive, focus on a single body part, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
+    const who = spannerMode && extraCharacters.length > 0
+      ? "Amateur phone photo of the women together in frame — both visible, they are with each other, "
+      : "Amateur phone photo of the couple together in frame — him and her, both visible, ";
+    return APPEARANCE_DIRECTIVE + " " + who + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, teasing and suggestive, leave something to the imagination, perfect flawless skin, sexy provocative angle, artistic erotic, sensual, " + desc;
   };
 
   const parseAndGenerateMedia = async (text, extraRefImages = []) => {
@@ -730,6 +744,15 @@ export default function Messages() {
                       </div>
                     </DialogContent>
                   </Dialog>
+                )}
+                {viewMode === "ai" && (
+                  <button
+                    onClick={() => setSpannerMode((v) => !v)}
+                    title="Du schaust nur zu und steuerst als dritte Person"
+                    className={cn("px-2.5 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-colors", spannerMode ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+                  >
+                    {spannerMode ? "Spanner ✓" : "Spanner"}
+                  </button>
                 )}
                 {viewMode === "ai" && (
                   <button
