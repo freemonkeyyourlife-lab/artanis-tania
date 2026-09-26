@@ -446,8 +446,10 @@ export default function Messages() {
     const creator = creators.find(c => c.id === activeChat);
     const creatorRefs = creator?.referenceImages?.length ? creator.referenceImages : [];
     const userRefs = userPref?.userReferenceImages || [];
+    // Die Vorlagen der Figur stehen IMMER vorne — ihr Gesicht, ihre Haare,
+    // ihr Make-up und ihr Outfit geben jedes Bild vor.
     const allRefImages = [...creatorRefs, ...extraRefImages, ...userRefs].length
-      ? [...userRefs, ...extraRefImages, ...creatorRefs]
+      ? [...creatorRefs, ...extraRefImages, ...userRefs]
       : null;
     const attachments = [];
     // Admins und Gold-Member zahlen nie — für sie ist alles offen.
