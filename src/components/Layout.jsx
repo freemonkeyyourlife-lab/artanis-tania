@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut } from "lucide-react";
+import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
@@ -8,15 +9,21 @@ import { hasProAccess, localProActive } from "@/lib/proAccess";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
-  { label: "Artanis", path: "/artanis" },
-  { label: "Triania", path: "/triania" },
-  { label: "Couple", path: "/couple" },
   { label: "Messages", path: "/messages" },
   { label: "Wettbewerbe", path: "/contests" },
   { label: "Profile", path: "/profile" },
-  { label: "Request", path: "/request" },
   { label: "Admin", path: "/admin" },
   { label: "Studio", path: "/studio" },
+];
+
+const PERSONA_LINKS = [
+  { label: "Artanis", path: "/artanis" },
+  { label: "Triania", path: "/triania" },
+  { label: "Couple", path: "/couple" },
+];
+
+const MORE_LINKS = [
+  { label: "Request", path: "/request" },
   { label: "Explore", path: "/explore" },
   { label: "Videos", path: "/videos" },
   { label: "Photos", path: "/photos" },
@@ -28,6 +35,13 @@ const NAV_LINKS = [
   { label: "Community", path: "/community" },
   { label: "Börse", path: "/coins" },
   { label: "Library", path: "/library" },
+];
+
+const MOBILE_LINKS = [
+  { label: "Home", path: "/" },
+  ...PERSONA_LINKS,
+  ...NAV_LINKS.slice(1),
+  ...MORE_LINKS,
 ];
 
 const MOBILE_NAV = [
@@ -85,29 +99,84 @@ export default function Layout() {
           </div>
 
           <nav className="hidden lg:flex items-center gap-1">
-            {NAV_LINKS.map((link) =>
-              link.disabled ? (
-                <span
-                  key={link.path}
-                  className="px-2.5 py-2 rounded-full text-[13px] font-medium text-muted-foreground/40 cursor-not-allowed"
-                >
-                  {link.label}
-                </span>
-              ) : (
-                <Link
-                  key={link.path}
-                  to={link.path}
+            {[NAV_LINKS[0]].map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={cn(
+                  "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
+                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
                   className={cn(
-                    "px-2.5 py-2 rounded-full text-[13px] font-medium transition-colors",
-                    location.pathname === link.path
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground"
+                    "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors flex items-center gap-1",
+                    PERSONA_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {link.label}
-                </Link>
-              )
-            )}
+                  Personen <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="glass-strong border-border">
+                {PERSONA_LINKS.map((l) => (
+                  <DropdownMenuItem key={l.path} asChild>
+                    <Link to={l.path} className="text-sm cursor-pointer">{l.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {NAV_LINKS.slice(1, 4).map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={cn(
+                  "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
+                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors flex items-center gap-1",
+                    MORE_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Mehr <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="glass-strong border-border">
+                {MORE_LINKS.map((l) => (
+                  <DropdownMenuItem key={l.path} asChild>
+                    <Link to={l.path} className="text-sm cursor-pointer">{l.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {NAV_LINKS.slice(4).map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={cn(
+                  "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
+                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           <div className="flex items-center gap-2 lg:gap-3">
@@ -130,10 +199,6 @@ export default function Layout() {
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{incomingCount}</span>
               )}
             </Link>
-            <Link to="/admin" className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Admin
-            </Link>
             <Link to="/account" className="w-9 h-9 rounded-full glass flex items-center justify-center hover:text-primary transition-colors">
               <User className="w-4 h-4" />
             </Link>
@@ -155,29 +220,20 @@ export default function Layout() {
 
         {mobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 glass-strong border-b border-border p-4">
-            <nav className="flex flex-col gap-1">
-              {NAV_LINKS.map((link) =>
-                link.disabled ? (
-                  <span
-                    key={link.path}
-                    className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground/40 cursor-not-allowed"
-                  >
-                    {link.label}
-                  </span>
-                ) : (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      "px-4 py-3 rounded-xl text-sm font-medium",
-                      location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground"
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                )
-              )}
+            <nav className="flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
+              {MOBILE_LINKS.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "px-4 py-3 rounded-xl text-sm font-medium",
+                    location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
               <InviteShareButton className="w-full justify-center py-3 text-sm my-1" />
               <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
                 Account
