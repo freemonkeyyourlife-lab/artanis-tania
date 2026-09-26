@@ -1,16 +1,21 @@
+const MALE_WARDROBE = ["Anzug", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Boxershorts", "Bademantel", "Nackt"];
+const FEMALE_WARDROBE = ["Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Jacke drüber, wenig drunter", "Kurzer Rock", "Nur Handtuch", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Bademantel", "Nackt"];
+const ALL_WARDROBE = [...new Set([...MALE_WARDROBE, ...FEMALE_WARDROBE])];
+
 const COMMON_SETUP_QUESTIONS = [
   { key: "userGender", question: "Bist du Mann oder Frau?", type: "select", options: ["Mann", "Frau", "Divers"] },
-  { key: "aiWardrobe", question: "Was trage ich?", type: "select", options: ["Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Jacke drüber, wenig drunter", "Kurzer Rock", "Nur Handtuch", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Bademantel", "Nackt"] },
-  { key: "userWardrobe", question: "Was trägst du?", type: "select", options: ["Anzug", "Hemd, aufgeknöpft", "T-Shirt", "Sportzeug", "Nur Unterhose", "Bademantel", "Kleid mit tiefem Ausschnitt", "Crop-Top", "Bluse, aufgeknöpft", "Trägershirt", "Bikini / Unterwäsche", "Kurzer Rock", "Nur Handtuch", "Nackt"] },
+  { key: "aiWardrobe", question: "Was trage ICH?", type: "select", genderKey: "ai", options: FEMALE_WARDROBE, optionsByGender: { Mann: MALE_WARDROBE, Frau: FEMALE_WARDROBE } },
+  { key: "userWardrobe", question: "Was trägst DU?", type: "select", genderKey: "user", options: ALL_WARDROBE, optionsByGender: { Mann: MALE_WARDROBE, Frau: FEMALE_WARDROBE, Divers: ALL_WARDROBE } },
   { key: "timeOfDay", question: "Wie spät ist es?", type: "select", options: ["Morgens", "Nachmittags", "Abends", "Mitten in der Nacht"] },
   { key: "mood", question: "Wie ist die Stimmung zwischen uns?", type: "select", options: ["Aufgeregt", "Verspielt", "Gelangweilt", "Geil", "Entspannt", "Nervös"] },
   { key: "drunk", question: "Bist du angetrunken?", type: "select", options: ["Nüchtern", "Ein bisschen", "Richtig betrunken"] },
-  { key: "aiBehavior", question: "Wie soll ich mich verhalten?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
-  { key: "userBehavior", question: "Wie verhältst du dich?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
+  { key: "aiBehavior", question: "Wie soll ICH mich verhalten?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
+  { key: "userBehavior", question: "Wie verhältst DU dich?", type: "select", options: ["Scheu", "Flirty", "Selbstbewusst", "Dominant", "Verspielt", "Teasing"] },
   { key: "position", question: "Wie positionieren wir uns?", type: "select", options: ["Nebeneinander sitzend", "Gegenüber sitzend", "Stehend", "Tanzend", "Aneinander gedrückt", "Du hinter mir", "Ich auf deinem Schoß", "Liegen nebeneinander", "Ich stehe, du kniest", "An der Wand"] },
   { key: "talkedAbout", question: "Worüber haben wir bisher geredet?" },
-  { key: "fetish", question: "Was macht dich an? (Mehrfachauswahl — wähle so viele du willst)", type: "multiselect", options: ["Voyeurismus", "Exhibitionismus", "Edging", "Rollenspiel", "Dominanz", "Unterwerfung", "Swinger", "Watersports", "Rough Sex", "Dirty Talk", "Masturbation", "Porn schauen", "Flashing", "Anonym bleiben", "Fußfetisch", "Latex & Leder", "Bondage", "Spanking", "Blowjob", "Oral", "Anal", "Fingern", "Nylon & Strümpfe", "Uniformen", "Dessous", "Outdoor", "Im Auto", "Dusche & Bad", "Massage", "Küssen & Zärtlichkeit", "Teasing & Vorspiel", "Rollentausch", "Cuckold", "Dreier", "Lesbisch", "Gruppensex", "Orgien", "Sexting", "Cam & Live", "Spielzeug"] },
-  { key: "age", question: "Wie alt bist du?" },
+  { key: "fetish", question: "Was macht dich an? (Mehrfachauswahl — wähle so viele du willst)", type: "multiselect", options: ["Voyeurismus", "Exhibitionismus", "Edging", "Rollenspiel", "Dominanz", "Unterwerfung", "Swinger", "Watersports", "Rough Sex", "Dirty Talk", "Masturbation", "Pornos", "Flashing", "Anonym bleiben", "Fußfetisch", "Latex & Leder", "Bondage", "Spanking", "Blowjob", "Oral", "Anal", "Fingern", "Nylon & Strümpfe", "Uniformen", "Dessous", "Outdoor", "Im Auto", "Dusche & Bad", "Massage", "Küssen & Zärtlichkeit", "Teasing & Vorspiel", "Rollentausch", "Cuckold", "Dreier", "Lesbisch", "Gruppensex", "Orgien", "Sexting", "Cam & Live", "Spielzeug", "Bestrafung", "Erziehung", "Petplay", "Öffentlich", "Squirting", "Creampie", "Facials", "Kleider-Fetisch"] },
+  { key: "deepKink", question: "Was ist deine tiefste Fantasie — das, was du nie laut sagst?" },
+  { key: "age", question: "Wie alt bist DU?" },
 ];
 
 export const SCENARIOS = [

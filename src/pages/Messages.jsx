@@ -117,7 +117,7 @@ export default function Messages() {
         scenarioAnchor += "\n";
       }
       scenarioAnchor += "SPATIAL RULES (CRITICAL — breaking these ruins the experience):\n";
-      scenarioAnchor += "1. You are in this scenario. Never leave it, never change the location mid-conversation.\n";
+      scenarioAnchor += "1. You START in this scenario. The user can change the location or move on at any time — follow their lead, narrate the transition naturally, then continue in the new place. Never resist a location change.\n";
       scenarioAnchor += "2. Only reference objects that EXIST in this location. A taxi has a backseat, seatbelts, a partition, windows — but NO table, NO bed, NO couch. A cinema has seats, armrests, darkness — no bed. If there's no table, don't say 'unter dem Tisch'. Use what's actually there.\n";
       scenarioAnchor += "3. Stay in the physical position established above. If she sits in the back seat, she STAYS in the back seat. Never teleport to the front seat or next to the driver. Never change positions without narrating the movement step by step.\n";
       scenarioAnchor += "4. For [SEND_IMAGE], only describe what the user would actually see from their position in THIS specific location. The wardrobe and angle MUST match the setup answers.\n";
@@ -155,9 +155,16 @@ export default function Messages() {
       if (userPref.whatTheyWantToSee) ctx += `- Wants to see: ${userPref.whatTheyWantToSee}\n`;
       if (userPref.fantasyDescription) ctx += `- Fantasies: ${userPref.fantasyDescription}\n`;
     }
+    // ── KINK DISCOVERY (go deeper, build on what the user reveals) ──
+    ctx += "\n\nDISCOVER THE USER'S KINKS (important — go DEEP, don't stay on the surface):\n";
+    ctx += "- Gradually find out what really turns the user on. Don't ask once — dig deeper with follow-up questions and build on every answer.\n";
+    ctx += "- When they name a kink or a fantasy, make it the center of the scene and push it further in that direction. Show you're turned on by it.\n";
+    ctx += "- Reward honesty with warmth. Escalate only in the direction the user revealed — never force your own kinks onto them.\n";
+    if (Array.isArray(setupAnswers.fetish) && setupAnswers.fetish.length > 0) ctx += "- The user's kinks (focus on these): " + setupAnswers.fetish.join(", ") + ".\n";
+    if (setupAnswers.deepKink) ctx += "- The user's deepest fantasy: \"" + setupAnswers.deepKink + "\" — weave this into the roleplay and build on it.\n";
     // ── SCENARIO ANCHOR #3 (last thing the AI sees — triple-anchored) ──
     if (scenario) {
-      ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Stay in the established location and position. Do NOT teleport, do NOT change position, do NOT reference objects that don't exist in this scene. Only describe what's physically possible here.";
+      ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Respect the current location and position — do NOT teleport or jump around. If the user wants to change the location, follow their lead naturally and describe the move. Only reference objects that exist in the current scene.";
     }
     return ctx;
   };
@@ -440,6 +447,12 @@ export default function Messages() {
     setMessages(prev => ({ ...prev, [conv.id]: msgs }));
   };
 
+  const getOptions = (q) => {
+    if (!q?.optionsByGender) return q?.options || [];
+    const g = q.genderKey === "ai" ? (chatMode === "artanis" ? "Mann" : "Frau") : setupAnswers.userGender;
+    return q.optionsByGender[g] || q.options || [];
+  };
+
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>;
   }
@@ -545,8 +558,8 @@ export default function Messages() {
                 </div>
                 {viewMode === "ai" && <StatusBadge experienceType="AI_INTERACTIVE" className="flex-shrink-0" />}
                 {viewMode === "ai" && scenario && (
-                  <button onClick={() => { setScenario(null); setSetupStep(0); setSetupAnswers({}); }} className="text-xs text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full bg-elevated whitespace-nowrap flex items-center gap-1">
-                    {scenario.id === "free" ? "💬" : scenario.icon} {scenario.title}
+                  <button onClick={() => setScenario(null)} title="Szenario wechseln" className="text-xs text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full bg-elevated whitespace-nowrap flex items-center gap-1">
+                    {scenario.id === "free" ? "💬" : scenario.icon} {scenario.title} · wechseln
                   </button>
                 )}
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
@@ -555,13 +568,17 @@ export default function Messages() {
               </div>
 
               {viewMode === "ai" && !scenario ? (
-                <ScenarioSelection onSelect={(s) => { setScenario(s); setSetupStep(0); setSetupAnswers({}); }} />
+                <ScenarioSelection onSelect={(s) => {
+                  const hasAnswers = Object.keys(setupAnswers).length > 0;
+                  setScenario(s);
+                  setSetupStep(hasAnswers ? (s.setupQuestions?.length || 0) : 0);
+                }} />
               ) : viewMode === "ai" && (scenario.setupQuestions && setupStep < scenario.setupQuestions.length) ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
                   <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">{scenario.setupQuestions[setupStep].question}</p>
                   {scenario.setupQuestions[setupStep].type === "select" && (
                     <div className="flex flex-wrap gap-2 w-full max-w-lg justify-center mb-4">
-                      {scenario.setupQuestions[setupStep].options.map(opt => (
+                      {getOptions(scenario.setupQuestions[setupStep]).map(opt => (
                         <button key={opt} onClick={() => { const q = scenario.setupQuestions[setupStep]; setSetupAnswers(prev => ({ ...prev, [q.key]: opt })); setSetupInput(""); setSetupStep(prev => prev + 1); }} className="px-4 py-2 rounded-full bg-elevated border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">{opt}</button>
                       ))}
                     </div>
@@ -572,7 +589,7 @@ export default function Messages() {
                     return (
                       <div className="w-full max-w-lg mb-4">
                         <div className="flex flex-wrap gap-2 justify-center">
-                          {q.options.map(opt => {
+                          {getOptions(q).map(opt => {
                             const isSelected = Array.isArray(selected) && selected.includes(opt);
                             return (
                               <button key={opt} onClick={() => {
