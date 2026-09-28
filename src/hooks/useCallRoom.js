@@ -10,8 +10,6 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
   const [error, setError] = useState("");
   const [peers, setPeers] = useState([]);
   const [isHost, setIsHost] = useState(false);
-  const [allowCam, setAllowCam] = useState(true);
-  const [allowMic, setAllowMic] = useState(true);
   const [camOn, setCamOn] = useState(wantCam);
   const [micOn, setMicOn] = useState(wantMic);
   const [mySeat, setMySeat] = useState(null);
@@ -207,9 +205,6 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
             pendingPeersRef.current = null;
             applyPeers(list);
           }
-        } else if (msg.type === "flags") {
-          setAllowCam(msg.allowCam !== false);
-          setAllowMic(msg.allowMic !== false);
         } else if (msg.type === "peers") {
           const list = Array.isArray(msg.peers) ? msg.peers : [];
           if (mySeatRef.current == null) pendingPeersRef.current = list;
@@ -224,11 +219,6 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
           localStreamRef.current = null;
         } else if (msg.type === "mode") {
           setModeState(msg.mode || "OPEN");
-        } else if (msg.type === "denied") {
-          applyTrack(msg.what === "cam" ? "video" : "audio", false);
-          setError(msg.what === "cam"
-            ? "Der Gastgeber erlaubt gerade keine Kamera."
-            : "Der Gastgeber erlaubt gerade kein Mikrofon.");
         }
       });
 
@@ -289,7 +279,6 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
   }, []);
 
   const toggleMic = useCallback(async () => {
-    if (!isHost && !allowMic) { setError("Der Gastgeber hat Mikrofone gesperrt."); return; }
     setError("");
     const existing = localStreamRef.current?.getAudioTracks()[0];
     if (existing) {
@@ -307,10 +296,9 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
       setMicOn(true);
       roomRef.current?.send({ type: "media", cam: camRef.current, mic: true });
     }
-  }, [isHost, allowMic, ensureTrack]);
+  }, [ensureTrack]);
 
   const toggleCam = useCallback(async () => {
-    if (!isHost && !allowCam) { setError("Der Gastgeber hat Kameras gesperrt."); return; }
     setError("");
     const existing = localStreamRef.current?.getVideoTracks()[0];
     if (existing) {
@@ -328,15 +316,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
       setCamOn(true);
       roomRef.current?.send({ type: "media", cam: true, mic: micRef.current });
     }
-  }, [isHost, allowCam, ensureTrack]);
-
-  const setGuestCam = useCallback((value) => {
-    roomRef.current?.send({ type: "flags", allowCam: value, allowMic: allowMic });
-  }, [allowMic]);
-
-  const setGuestMic = useCallback((value) => {
-    roomRef.current?.send({ type: "flags", allowCam: allowCam, allowMic: value });
-  }, [allowCam]);
+  }, [ensureTrack]);
 
   // Nur der Gastgeber darf das — der Raum prüft es serverseitig nochmal.
   const setMode = useCallback((next) => {
@@ -393,8 +373,8 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
   }, [ensureTrack, stopShare]);
 
   return {
-    status, error, peers, isHost, allowCam, allowMic, camOn, micOn,
-    localVideoRef, toggleCam, toggleMic, setGuestCam, setGuestMic,
+    status, error, peers, isHost, camOn, micOn,
+    localVideoRef, toggleCam, toggleMic,
     messages, sendChat, sharing, toggleShare, mySeat,
     mode, setMode, watchers, closed,
   };

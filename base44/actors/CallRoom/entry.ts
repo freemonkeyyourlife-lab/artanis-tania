@@ -4,13 +4,9 @@ import { Actor } from 'base44:runtime/actors';
 // control, so it is minted client-side and shared as an invite link. The link is
 // stable — the host keeps the same room id until they deliberately mint a new one.
 // Any group size works over the same link — one person, a pair, or a whole circle.
-const MAX = 10;
-
 export default class CallRoom extends Actor {
   users = new Map(); // conn.id -> { seat, name, cam, mic, host }
   nextSeat = 1;
-  allowCam = true; // host setting, applies to everyone but the host
-  allowMic = true;
   // OPEN = everyone with the link joins. WATCH = new arrivals only watch silently.
   // PRIVATE = the room is closed, nobody new gets in.
   mode = 'OPEN';
@@ -18,11 +14,6 @@ export default class CallRoom extends Actor {
   async handleStart() {
     const saved = await this.storage.get('users');
     if (saved) this.users = new Map(saved);
-    const flags = await this.storage.get('flags');
-    if (flags) {
-      this.allowCam = flags.allowCam !== false;
-      this.allowMic = flags.allowMic !== false;
-    }
     const mode = await this.storage.get('mode');
     if (mode === 'OPEN' || mode === 'WATCH' || mode === 'PRIVATE') this.mode = mode;
     const live = new Set(this.getConnections().map((c) => c.id));
@@ -31,10 +22,6 @@ export default class CallRoom extends Actor {
   }
 
   async handleConnect(conn) {
-    if (!this.users.has(conn.id) && this.users.size >= MAX) {
-      conn.reject(4001, 'room full');
-      return;
-    }
     // Reconnects are routine — a returning id reclaims its seat, name and role.
     if (!this.users.has(conn.id)) {
       const host = await this.isHost(conn);
@@ -59,7 +46,6 @@ export default class CallRoom extends Actor {
     if (me.blocked) { conn.send({ type: 'closed' }); return; }
     conn.send({ type: 'you', seat: me.seat, host: me.host, watcher: !!me.watcher });
     conn.send({ type: 'mode', mode: this.mode });
-    conn.send({ type: 'flags', allowCam: this.allowCam, allowMic: this.allowMic });
     this.broadcastPeers();
   }
 
@@ -114,29 +100,9 @@ export default class CallRoom extends Actor {
       }
       const cam = msg.cam === true;
       const mic = msg.mic === true;
-      if (!me.host) {
-        if (cam && !this.allowCam) { conn.send({ type: 'denied', what: 'cam' }); return; }
-        if (mic && !this.allowMic) { conn.send({ type: 'denied', what: 'mic' }); return; }
-      }
       me.cam = cam;
       me.mic = mic;
       await this.save();
-      this.broadcastPeers();
-      return;
-    }
-
-    if (msg.type === 'flags') {
-      if (!me.host) return;
-      if (typeof msg.allowCam === 'boolean') this.allowCam = msg.allowCam;
-      if (typeof msg.allowMic === 'boolean') this.allowMic = msg.allowMic;
-      await this.storage.put('flags', { allowCam: this.allowCam, allowMic: this.allowMic });
-      for (const u of this.users.values()) {
-        if (u.host) continue;
-        if (!this.allowCam) u.cam = false;
-        if (!this.allowMic) u.mic = false;
-      }
-      await this.save();
-      this.broadcast({ type: 'flags', allowCam: this.allowCam, allowMic: this.allowMic });
       this.broadcastPeers();
       return;
     }

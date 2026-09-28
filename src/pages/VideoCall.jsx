@@ -31,8 +31,8 @@ export default function VideoCall() {
   }, []);
 
   const {
-    status, error, peers, isHost, allowCam, allowMic, camOn, micOn,
-    localVideoRef, toggleCam, toggleMic, setGuestCam, setGuestMic,
+    status, error, peers, isHost, camOn, micOn,
+    localVideoRef, toggleCam, toggleMic,
     messages, sendChat, sharing, toggleShare, mySeat,
     mode, setMode, watchers, closed,
   } = useCallRoom({ token, joined, wantCam, wantMic });
@@ -216,10 +216,6 @@ export default function VideoCall() {
         setMode={setMode}
         onEnd={() => navigate("/live")}
         isHost={isHost}
-        allowCam={allowCam}
-        allowMic={allowMic}
-        setGuestCam={setGuestCam}
-        setGuestMic={setGuestMic}
       />
     </div>
   );
