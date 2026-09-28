@@ -22,7 +22,7 @@ const TABS = [
   { id: "guide", label: "Anleitung" },
   { id: "characters", label: "Charaktere" },
   { id: "generator", label: "Generator" },
-  { id: "models", label: "Modelle" },
+  { id: "models", label: "Hugging Face" },
   { id: "stories", label: "Storys" },
   { id: "topics", label: "Themen" },
   { id: "content", label: "Preise & Content" },

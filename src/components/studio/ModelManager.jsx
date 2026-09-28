@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, Power, ExternalLink, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import HfModelSearch from "@/components/studio/HfModelSearch";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -20,6 +21,7 @@ export default function ModelManager() {
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ name: "", modelId: "", note: "" });
   const [source, setSource] = useState("HUGGING_FACE");
+  const [account, setAccount] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -68,6 +70,25 @@ export default function ModelManager() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="lg:col-span-2 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4">
+        <span className={cn("w-2 h-2 rounded-full", account ? "bg-emerald-400" : "bg-amber-400")} />
+        <p className="text-sm text-foreground">
+          Hugging Face: {account ? `verbunden als ${account}` : "Verbindung wird geprüft …"}
+        </p>
+        <a
+          href="https://huggingface.co/settings/billing"
+          target="_blank"
+          rel="noreferrer"
+          className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ExternalLink className="w-3.5 h-3.5" /> Guthaben verwalten
+        </a>
+      </div>
+
+      {source === "HUGGING_FACE" && (
+        <HfModelSearch existingIds={models.map((m) => m.modelId)} onAdded={load} onAccount={setAccount} />
+      )}
+
       <div className="rounded-2xl border border-border bg-card p-5">
         <h2 className="font-display text-xl text-foreground mb-1">Modell hinzufügen</h2>
         <p className="text-xs text-muted-foreground mb-5">
