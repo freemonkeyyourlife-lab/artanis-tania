@@ -4,6 +4,8 @@ import { Actor } from 'base44:runtime/actors';
 // control, so it is minted client-side and shared as an invite link. The link is
 // stable — the host keeps the same room id until they deliberately mint a new one.
 // Any group size works over the same link — one person, a pair, or a whole circle.
+const MAX = 100;
+
 export default class CallRoom extends Actor {
   users = new Map(); // conn.id -> { seat, name, cam, mic, host }
   nextSeat = 1;
@@ -22,6 +24,10 @@ export default class CallRoom extends Actor {
   }
 
   async handleConnect(conn) {
+    if (!this.users.has(conn.id) && this.users.size >= MAX) {
+      conn.reject(4001, 'room full');
+      return;
+    }
     // Reconnects are routine — a returning id reclaims its seat, name and role.
     if (!this.users.has(conn.id)) {
       const host = await this.isHost(conn);
