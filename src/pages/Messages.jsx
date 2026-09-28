@@ -21,6 +21,7 @@ import ChatTabs from "@/components/chat/ChatTabs";
 import ChatText from "@/components/chat/ChatText";
 import QuickPayButton from "@/components/pay/QuickPayButton";
 import { hasProAccess } from "@/lib/proAccess";
+import { publicName } from "@/lib/displayName";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
 // So lange darf der echte Charakter selbst antworten, bevor die KI übernimmt.
@@ -572,7 +573,7 @@ export default function Messages() {
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
     if (img) saveUserReference(img);
     const conv = await ensureConv(chatKey);
-    if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: currentUser?.full_name || currentUser?.email, senderType: "HUMAN", text: msgText, attachment: img || null }).catch(() => {});
+    if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: publicName(currentUser), senderType: "HUMAN", text: msgText, attachment: img || null }).catch(() => {});
     setInput("");
     setPendingImage(null);
     setSending(true);
@@ -732,7 +733,7 @@ export default function Messages() {
       const creator = creators.find((c) => c.id === creatorId);
       const conv = existing[0] || await base44.entities.Conversation.create({
         userId: me.id,
-        userName: me.full_name || me.email,
+        userName: publicName(me),
         creatorId,
         creatorName: creator?.stageName,
         conversationType: "AI",
@@ -858,7 +859,7 @@ export default function Messages() {
       if (existing.length > 0) {
         conv = existing[0];
       } else {
-        conv = await base44.entities.Conversation.create({ userId: me.id, userName: me.full_name || me.email, participantId: otherUser.id, participantName: otherUser.full_name || otherUser.email, conversationType: "HUMAN" });
+        conv = await base44.entities.Conversation.create({ userId: me.id, userName: publicName(me), participantId: otherUser.id, participantName: publicName(otherUser, otherUser.email), conversationType: "HUMAN" });
       }
       addTab({ id: conv.id, type: "dm", name: otherUser.full_name || otherUser.email, partnerId: otherUser.id });
       setActiveChat(conv.id);
@@ -888,7 +889,7 @@ export default function Messages() {
       const me = await base44.auth.me();
       const created = await base44.entities.Message.create({
         conversationId: chatKey,
-        sender: me.full_name || me.email,
+        sender: publicName(me),
         senderType: "HUMAN",
         text: msgText,
         attachment: pendingImage || null
@@ -986,7 +987,7 @@ export default function Messages() {
     const text = `Zahlungslink: ${link.amount.toFixed(2).replace(".", ",")} € — ${link.title}`;
     const created = await base44.entities.Message.create({
       conversationId: conv.id,
-      sender: viewMode === "dm" ? (currentUser?.full_name || currentUser?.email) : creators.find((c) => c.id === chatKey)?.stageName,
+      sender: viewMode === "dm" ? publicName(currentUser) : creators.find((c) => c.id === chatKey)?.stageName,
       senderType: viewMode === "dm" ? "HUMAN" : "AI",
       text,
       contentLink: `/pay/${link.token}`,

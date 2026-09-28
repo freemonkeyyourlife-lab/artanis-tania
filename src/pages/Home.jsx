@@ -6,10 +6,20 @@ import { MessageSquare, Sparkles, ArrowRight, Crown, Bot, Calendar, Link2 } from
 import StatusBadge from "@/components/StatusBadge";
 import PersonaCard from "@/components/PersonaCard";
 import ContentCard from "@/components/ContentCard";
+import HeroCloud from "@/components/HeroCloud";
 import RequestCard from "@/components/RequestCard";
 import { cn } from "@/lib/utils";
 
 const HERO_BG = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/36d23e21f_generated_image.png";
+
+// Die Wolke oben — das Paar in der Mitte, die anderen drumherum.
+const HERO_CLOUD = [
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/6549e1153_Screenshot2026-09-28053726.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/ce1725bdf_Screenshot2026-09-28050434.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/78af4f762_Screenshot2026-09-28034357.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dcbb95a47_Screenshot2026-09-28051650.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png",
+];
 
 const FEED_FILTERS = ["All", "Solo Artanis", "Solo Triania", "Couple", "Interactive Stories", "Topics"];
 
@@ -56,14 +66,16 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative h-[58vh] min-h-[400px] w-full overflow-hidden">
+      <section className="relative h-[68vh] min-h-[480px] w-full overflow-hidden">
         <div className="absolute inset-0">
           <Image src={HERO_BG} fittingType="fill" className="w-full h-full" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/40" />
           <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-transparent to-transparent" />
         </div>
 
-        <div className="relative h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex flex-col justify-center pt-10">
+        <HeroCloud images={HERO_CLOUD} />
+
+        <div className="relative z-30 h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex flex-col justify-center pt-10">
           {spotlight && (
             <div className="mb-6">
               <StatusBadge status={spotlight.onlineStatus} />

@@ -9,6 +9,7 @@ import CallControls from "@/components/call/CallControls";
 import CallChat from "@/components/call/CallChat";
 import CallInvite from "@/components/call/CallInvite";
 import { resetCallToken, normalizeCallCode } from "@/lib/callLink";
+import { publicName } from "@/lib/displayName";
 
 export default function VideoCall() {
   const { token: rawToken } = useParams();
@@ -25,7 +26,7 @@ export default function VideoCall() {
     (async () => {
       try {
         const me = await base44.auth.me();
-        if (alive) setMyName(me?.full_name || me?.email || "");
+        if (alive) setMyName(publicName(me, ""));
       } catch (e) { /* not logged in */ }
     })();
     return () => { alive = false; };

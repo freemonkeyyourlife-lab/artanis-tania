@@ -15,13 +15,13 @@ export default function ChatText({ text, className }) {
         const narration = line.match(/^\*{1,2}(.+?)\*{1,2}$/) || line.match(/^_(.+?)_$/) || line.match(/^<(.+?)>$/);
         if (narration) {
           return (
-            <p key={i} className="italic font-normal text-foreground/70 leading-relaxed">
+            <p key={i} className="italic font-medium text-foreground/75 leading-relaxed">
               {narration[1]}
             </p>
           );
         }
         return (
-          <p key={i} className="font-medium leading-relaxed text-foreground">
+          <p key={i} className="font-semibold leading-relaxed text-foreground">
             {line.replace(/^\*+|\*+$/g, "")}
           </p>
         );
