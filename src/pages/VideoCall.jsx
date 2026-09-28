@@ -7,11 +7,12 @@ import useCallRoom from "@/hooks/useCallRoom";
 import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
 import CallChat from "@/components/call/CallChat";
-import CallLink from "@/components/call/CallLink";
-import { resetCallToken } from "@/lib/callLink";
+import CallInvite from "@/components/call/CallInvite";
+import { resetCallToken, normalizeCallCode } from "@/lib/callLink";
 
 export default function VideoCall() {
-  const { token } = useParams();
+  const { token: rawToken } = useParams();
+  const token = normalizeCallCode(rawToken);
   const navigate = useNavigate();
   const [joined, setJoined] = useState(false);
   const [wantCam, setWantCam] = useState(true);
@@ -96,8 +97,8 @@ export default function VideoCall() {
           </button>
 
           <div className="mt-8 pt-6 border-t border-border text-left">
-            <p className="text-xs text-muted-foreground mb-2">Dein Link bleibt immer derselbe — teile ihn mit so vielen Leuten, wie du willst:</p>
-            <CallLink url={inviteLink} onNewLink={createNewLink} />
+            <p className="text-xs text-muted-foreground mb-3">Dein Link bleibt immer derselbe — teile ihn mit so vielen Leuten, wie du willst. Code, QR-Code und fertiger Text stecken mit drin:</p>
+            <CallInvite url={inviteLink} code={token} onNewLink={createNewLink} label="Einladung" className="w-full justify-center" />
           </div>
         </div>
       </div>
@@ -202,7 +203,7 @@ export default function VideoCall() {
       )}
 
       <div className="px-4 pb-3 flex justify-center">
-        <CallLink url={inviteLink} onNewLink={isHost ? createNewLink : null} />
+        <CallInvite url={inviteLink} code={token} onNewLink={isHost ? createNewLink : null} />
       </div>
 
       <CallControls

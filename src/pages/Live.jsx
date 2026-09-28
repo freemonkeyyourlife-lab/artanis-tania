@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import StatusBadge from "@/components/StatusBadge";
 import LiveStreamBanner from "@/components/LiveStreamBanner";
 import { Radio, Video as VideoIcon } from "lucide-react";
+import JoinByCode from "@/components/call/JoinByCode";
 
 export default function Live() {
   const [experiences, setExperiences] = useState([]);
@@ -52,9 +53,12 @@ export default function Live() {
             <h2 className="font-display text-xl text-foreground flex items-center gap-2">
               <VideoIcon className="w-5 h-5 text-primary" /> Privater Video-Call
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">Starte einen Video-Call und teile den Link, um jemanden einzuladen.</p>
+            <p className="text-sm text-muted-foreground mt-1">Starte einen Video-Call und teile Link, kurzen Code oder QR-Code. Wer nur den Code bekommen hat, gibt ihn hier ein.</p>
           </div>
-          <Link to="/call" className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap">Video-Call starten</Link>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            <Link to="/call" className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap text-center">Video-Call starten</Link>
+            <JoinByCode />
+          </div>
         </div>
       </section>
 
