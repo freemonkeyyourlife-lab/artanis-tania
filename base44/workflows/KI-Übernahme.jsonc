@@ -1,0 +1,44 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "ki_uebernahme",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "uebernahme": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "aiHandover"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Wartende Chats \u00fcbernehmen",
+            "description": "Die KI antwortet f\u00fcr den Gast"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Springt in wartenden Gast-Chats ein, wenn nach zwei Minuten niemand geantwortet hat \u2014 auch bei geschlossenem Tab.",
+  "name": "KI-\u00dcbernahme",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/5 * * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Berlin",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

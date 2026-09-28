@@ -766,6 +766,8 @@ export default function Messages() {
         if (await newestHumanLine(conv.id) !== baseline) return true;
       } catch (e) { /* kurz nicht erreichbar — weiter warten */ }
     }
+    // Die KI übernimmt jetzt selbst — der Warte-Status ist damit erledigt.
+    base44.entities.Conversation.update(conv.id, { waitingSince: null }).catch(() => {});
     return false;
   };
 
