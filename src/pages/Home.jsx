@@ -5,7 +5,6 @@ import { Image } from "@/components/ui/image";
 import { MessageSquare, Sparkles, ArrowRight, Crown, Bot, Calendar, Link2 } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import PersonaCard from "@/components/PersonaCard";
-import HeroCast from "@/components/HeroCast";
 import ContentCard from "@/components/ContentCard";
 import RequestCard from "@/components/RequestCard";
 import { cn } from "@/lib/utils";
@@ -54,28 +53,17 @@ export default function Home() {
   const spotlight = artanis || triania || creators[0];
   const latestContent = content.slice(0, 6);
 
-  // Alle, die mitspielen — er in der Mitte.
-  const heroCast = (() => {
-    const list = creators.filter((c) => c.active !== false && c.stageName !== "Testdummy" && c.avatar);
-    const me = creators.find((c) => c.stageName === "Artanis" && c.avatar);
-    const others = list.filter((c) => c.id !== me?.id);
-    const mid = Math.floor(others.length / 2);
-    return [...others.slice(0, mid), ...(me ? [me] : []), ...others.slice(mid)].slice(0, 11);
-  })();
-
   return (
     <div>
       {/* Hero */}
-      <section className="relative h-[85vh] min-h-[600px] w-full overflow-hidden">
+      <section className="relative h-[58vh] min-h-[400px] w-full overflow-hidden">
         <div className="absolute inset-0">
           <Image src={HERO_BG} fittingType="fill" className="w-full h-full" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/30" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-transparent to-transparent" />
         </div>
 
-        <HeroCast creators={heroCast} centerId={artanis?.id} />
-
-        <div className="relative h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex flex-col justify-end pb-12 lg:pb-16">
+        <div className="relative h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex flex-col justify-center pt-10">
           {spotlight && (
             <div className="mb-6">
               <StatusBadge status={spotlight.onlineStatus} />

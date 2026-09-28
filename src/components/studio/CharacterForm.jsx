@@ -67,6 +67,24 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
     finally { setUploading(false); e.target.value = ""; }
   };
 
+  // Mehrere Bilder auf einmal: das erste wird das Hauptbild, alle weiteren sind Referenzen.
+  const pickMany = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      const urls = [];
+      for (const f of files) urls.push(await uploadFile(f));
+      setForm((f) => {
+        const rest = [...urls];
+        let avatar = f.avatar;
+        if (!avatar && rest.length) avatar = rest.shift();
+        return { ...f, avatar, referenceImages: [...f.referenceImages, ...rest] };
+      });
+    } catch (err) { toast({ title: "Upload fehlgeschlagen", variant: "destructive" }); }
+    finally { setUploading(false); e.target.value = ""; }
+  };
+
   const pickRefs = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -191,15 +209,27 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         </div>
 
         {/* Images */}
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Avatar</label>
-          <div className="flex items-center gap-3">
-            <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Upload className="w-4 h-4" /> {uploading ? "Lädt …" : "Bild wählen"}
-              <input type="file" accept="image/*" onChange={pickSingle("avatar")} className="hidden" />
-            </label>
-            {form.avatar && <Image src={form.avatar} fittingType="fill" className="w-12 h-12 rounded-full" />}
-          </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs text-muted-foreground mb-1.5 block">Bilder — so viele du willst</label>
+          <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Upload className="w-4 h-4" /> {uploading ? "Lädt …" : "Bilder wählen (mehrere)"}
+            <input type="file" accept="image/*" multiple onChange={pickMany} className="hidden" />
+          </label>
+          <p className="text-xs text-muted-foreground mt-2">
+            Wähle 5–10 Bilder auf einmal: Das erste wird das Hauptbild, alle weiteren sind Referenzen, damit sie in jedem Chat-Bild gleich aussieht.
+          </p>
+          {form.avatar && (
+            <div className="flex items-center gap-3 mt-3">
+              <Image src={form.avatar} fittingType="fill" className="w-16 h-16 rounded-xl" />
+              <div>
+                <p className="text-sm text-foreground">Hauptbild</p>
+                <label className="cursor-pointer text-xs text-primary hover:underline">
+                  anderes wählen
+                  <input type="file" accept="image/*" onChange={pickSingle("avatar")} className="hidden" />
+                </label>
+              </div>
+            </div>
+          )}
         </div>
 
         <div>
@@ -214,7 +244,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         </div>
 
         <div className="sm:col-span-2">
-          <label className="text-xs text-muted-foreground mb-1.5 block">Referenzbilder (für konsistente Bilder im Chat)</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block">Weitere Referenzbilder ({form.referenceImages.length}) — mindestens 5, gern 10</label>
           <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
             <Upload className="w-4 h-4" /> {uploading ? "Lädt …" : "Bilder hinzufügen"}
             <input type="file" accept="image/*" multiple onChange={pickRefs} className="hidden" />

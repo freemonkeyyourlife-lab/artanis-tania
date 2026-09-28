@@ -18,6 +18,7 @@ import { coinsForPrice } from "@/lib/coins";
 import { CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { Link } from "react-router-dom";
 import ChatTabs from "@/components/chat/ChatTabs";
+import ChatText from "@/components/chat/ChatText";
 import QuickPayButton from "@/components/pay/QuickPayButton";
 import { hasProAccess } from "@/lib/proAccess";
 
@@ -30,6 +31,16 @@ const LANGUAGE_RULE =
   "Du antwortest IMMER auf Deutsch — jede Antwort, jede Frage, jede [SUGGEST: ...]-Option, jede [SEND_IMAGE: ...]- und [SEND_VIDEO: ...]-Beschreibung, jede [SEND_VOICE: ...]-Zeile und jedes [SEND_PPV: ...]-Label. Nie auf Englisch. Wechsle die Sprache niemals mitten im Chat — auch dann nicht, wenn der Nutzer englisch oder in einer anderen Sprache schreibt; antworte dann trotzdem auf Deutsch.\n" +
   "Schreib natürliches, lockeres Deutsch in der Du-Form, so wie ein echter Mensch textet. Kein Übersetzungs-Deutsch, keine englischen Wörter dazwischen (außer Namen und Dinge, die wirklich kein deutsches Wort haben).\n" +
   "═══ ENDE SPRACHE ═══\n\n";
+
+// Kurz, klar getrennt: was passiert in Kursiv, was gesagt wird normal.
+const FORMAT_RULE =
+  "═══ FORM & LÄNGE — WICHTIG ═══\n" +
+  "HALTE DICH KURZ: 2–4 kurze Sätze pro Nachricht, höchstens ein kurzer Absatz. Keine Monologe, keine Aufzählungen, keine Wiederholungen. Lieber knapp und öfter.\n" +
+  "TRENNE HANDLUNG UND REDE: Alles, was passiert und was man sieht (sie betritt den Raum, alle Blicke gehen auf sie), steht in *Sternchen und kursiv* — immer in einer EIGENEN Zeile. Gesprochenes steht in normaler Schrift, ohne Anführungszeichen. Beispiel:\n" +
+  "*Sie lehnt sich in die Tür, das Licht fällt auf ihre Schultern.*\n" +
+  "Na — hast du auf mich gewartet?\n" +
+  "Danach höchstens drei [SUGGEST: …]-Optionen in einer eigenen Zeile. Sonst nichts.\n" +
+  "═══ ENDE FORM ═══\n\n";
 
 // "Noch ein Bild" läuft der Reihe nach durch diese Aufnahmen — immer derselbe Look.
 const EXTRA_SHOTS = [
@@ -256,7 +267,7 @@ export default function Messages() {
       scenarioAnchor += "═══ END SCENARIO ═══\n\n";
     }
 
-    let ctx = scenarioAnchor + LANGUAGE_RULE + persona.prompt;
+    let ctx = scenarioAnchor + LANGUAGE_RULE + FORMAT_RULE + persona.prompt;
 
     // Override name/bio for custom characters (Lena, Mia, etc.)
     const activeCreator = creators.find(c => c.id === activeChat);
@@ -1277,7 +1288,7 @@ export default function Messages() {
                         </Link>
                       )
                     )}
-                    <div className={cn("max-w-[70%] px-4 py-3 rounded-2xl text-base leading-relaxed", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
+                    <div className={cn("max-w-[70%] px-4 py-3 rounded-2xl text-[15px] leading-relaxed", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
                       {(() => {
                         const items = msg.attachments?.length ? msg.attachments : (msg.attachment ? [{ type: "image", url: msg.attachment, locked: msg.isPPV, price: msg.ppvPrice }] : []);
                         const hasChoice = items.filter((i) => i.locked).length > 1;
@@ -1352,7 +1363,7 @@ export default function Messages() {
                           </>
                         );
                       })()}
-                      {msg.text}
+                      <ChatText text={msg.text} />
                       {msg.contentLink && (
                         <Link
                           to={msg.contentLink}
