@@ -24,7 +24,7 @@ export default async function (req) {
       pipeline_tag: 'text-to-image',
       sort: 'downloads',
       direction: '-1',
-      limit: '24',
+      limit: '40',
       'expand[]': 'inferenceProviderMapping',
     });
     if (query) params.set('search', query);
@@ -48,13 +48,17 @@ export default async function (req) {
         ? mapping
         : Object.entries(mapping || {}).map(([provider, value]) => ({ provider, ...value }));
 
-    const models = list.map((m) => ({
-      id: m.id,
-      downloads: m.downloads || 0,
-      providers: toList(m.inferenceProviderMapping)
-        .filter((v) => v && v.status === 'live')
-        .map((v) => v.provider),
-    }));
+    // Nur Modelle, die auch wirklich laufen — ohne aktiven Anbieter liefern sie kein Bild.
+    const models = list
+      .map((m) => ({
+        id: m.id,
+        downloads: m.downloads || 0,
+        providers: toList(m.inferenceProviderMapping)
+          .filter((v) => v && v.status === 'live')
+          .map((v) => v.provider),
+      }))
+      .filter((m) => m.providers.length > 0)
+      .slice(0, 24);
 
     return Response.json({ account, models });
   } catch (error) {

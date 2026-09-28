@@ -16,6 +16,7 @@ export default function HfModelSearch({ existingIds = [], onAdded, onAccount }) 
   const [results, setResults] = useState([]);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(null);
+  const [failed, setFailed] = useState({});
 
   const search = async (q = "") => {
     setBusy(true);
@@ -33,20 +34,29 @@ export default function HfModelSearch({ existingIds = [], onAdded, onAccount }) 
 
   useEffect(() => { search(""); }, []);
 
+  // Kurzer Probelauf: nur Modelle, die wirklich ein Bild liefern, werden übernommen.
   const add = async (m) => {
     setAdding(m.id);
+    setFailed((f) => ({ ...f, [m.id]: null }));
     try {
+      const res = await base44.functions.invoke("hfGenerate", {
+        modelId: m.id,
+        source: "HUGGING_FACE",
+        prompt: "portrait photo of a woman, soft natural light, plain background",
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+
       await base44.entities.ImageModel.create({
         name: m.id.split("/").pop(),
         modelId: m.id,
         source: "HUGGING_FACE",
-        note: m.providers.length ? `Läuft über ${m.providers.join(", ")}` : "Nur über Hugging-Face-Server",
+        note: `Läuft über ${m.providers.join(", ")}`,
         enabled: true,
       });
-      toast({ title: "Übernommen", description: "Im Generator ist es jetzt als Quelle wählbar." });
+      toast({ title: "Läuft — übernommen", description: "Im Generator ist es jetzt als Quelle wählbar." });
       onAdded?.();
     } catch (e) {
-      toast({ title: "Konnte nicht speichern", variant: "destructive" });
+      setFailed((f) => ({ ...f, [m.id]: e.message || "Hat kein Bild geliefert." }));
     } finally {
       setAdding(null);
     }
@@ -56,7 +66,7 @@ export default function HfModelSearch({ existingIds = [], onAdded, onAccount }) 
     <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5">
       <h2 className="font-display text-xl text-foreground mb-1">Bei Hugging Face suchen</h2>
       <p className="text-xs text-muted-foreground mb-4">
-        Bildmodelle nach Beliebtheit. Was du übernimmst, steht danach im Generator unter „Quelle“.
+        Nur Modelle mit aktivem Anbieter. Beim Übernehmen machen wir einen kurzen Probelauf — läuft es nicht, bleibt es draußen. Was drin ist, steht im Generator unter „Quelle“.
       </p>
 
       <div className="flex gap-2 mb-4">
@@ -83,26 +93,30 @@ export default function HfModelSearch({ existingIds = [], onAdded, onAccount }) 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {results.map((m) => {
           const have = existingIds.includes(m.id);
+          const error = failed[m.id];
           return (
-            <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-foreground truncate">{m.id}</p>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  {short(m.downloads)} Downloads
-                  {m.providers.length ? ` · über ${m.providers.slice(0, 2).join(", ")}` : " · nur Hugging-Face-Server"}
-                </p>
+            <div key={m.id} className="p-3 rounded-xl bg-elevated border border-border">
+              <div className="flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-foreground truncate">{m.id}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {short(m.downloads)} Downloads · über {m.providers.slice(0, 2).join(", ")}
+                  </p>
+                </div>
+                <button
+                  onClick={() => add(m)}
+                  disabled={have || adding === m.id}
+                  title={have ? "Ist schon drin" : "Kurz prüfen und übernehmen"}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors",
+                    have ? "bg-emerald-600/20 text-emerald-400" : "bg-primary text-primary-foreground disabled:opacity-50"
+                  )}
+                >
+                  {adding === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : have ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                  {adding === m.id ? "Probiert …" : have ? "Drin" : "Prüfen & übernehmen"}
+                </button>
               </div>
-              <button
-                onClick={() => add(m)}
-                disabled={have || adding === m.id}
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors",
-                  have ? "bg-emerald-600/20 text-emerald-400" : "bg-primary text-primary-foreground disabled:opacity-50"
-                )}
-              >
-                {adding === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : have ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-                {have ? "Drin" : "Übernehmen"}
-              </button>
+              {error && <p className="text-[11px] text-destructive mt-2">Läuft nicht: {error}</p>}
             </div>
           );
         })}
