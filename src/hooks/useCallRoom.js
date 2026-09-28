@@ -5,7 +5,7 @@ const ICE = [{ urls: "stun:stun.l.google.com:19302" }];
 
 // One room, many participants: every participant keeps one peer connection per
 // other participant (mesh) and the actor only relays targeted signals.
-export default function useCallRoom({ token, joined, wantCam, wantMic }) {
+export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   const [status, setStatus] = useState("connecting");
   const [error, setError] = useState("");
   const [peers, setPeers] = useState([]);
@@ -32,6 +32,8 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
   const camRef = useRef(wantCam);
   const micRef = useRef(wantMic);
   const screenRef = useRef(null); // laufender Bildschirm-Stream, falls geteilt wird
+  const nameRef = useRef(name);
+  nameRef.current = name;
 
   const syncPeers = useCallback(() => {
     // Zuschauer bleiben unsichtbar — sie tauchen in keiner Kachel auf.
@@ -224,9 +226,8 @@ export default function useCallRoom({ token, joined, wantCam, wantMic }) {
 
       room.send({ type: "media", cam: camRef.current, mic: micRef.current });
 
-      let name = "Gast";
-      try { const me = await base44.auth.me(); name = me?.full_name || me?.email || "Gast"; } catch (e) { /* not logged in */ }
-      room.send({ type: "hello", name });
+      // Wer keinen Namen einträgt, bleibt einfach "Gast" — anmelden muss sich niemand.
+      room.send({ type: "hello", name: String(nameRef.current || "").trim().slice(0, 40) || "Gast" });
     };
 
     start();

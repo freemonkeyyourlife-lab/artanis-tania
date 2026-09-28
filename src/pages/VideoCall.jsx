@@ -17,7 +17,7 @@ export default function VideoCall() {
   const [joined, setJoined] = useState(false);
   const [wantCam, setWantCam] = useState(true);
   const [wantMic, setWantMic] = useState(true);
-  const [myName, setMyName] = useState("Du");
+  const [myName, setMyName] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function VideoCall() {
     (async () => {
       try {
         const me = await base44.auth.me();
-        if (alive) setMyName(me?.full_name || me?.email || "Du");
+        if (alive) setMyName(me?.full_name || me?.email || "");
       } catch (e) { /* not logged in */ }
     })();
     return () => { alive = false; };
@@ -36,7 +36,7 @@ export default function VideoCall() {
     localVideoRef, toggleCam, toggleMic,
     messages, sendChat, sharing, toggleShare, mySeat,
     mode, setMode, watchers, closed,
-  } = useCallRoom({ token, joined, wantCam, wantMic });
+  } = useCallRoom({ token, joined, wantCam, wantMic, name: myName });
 
   const inviteLink = `${window.location.origin}/call/${token}`;
 
@@ -71,6 +71,17 @@ export default function VideoCall() {
               </button>
             </div>
           )}
+
+          <div className="mt-6 text-left">
+            <label className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Dein Name im Call</label>
+            <input
+              value={myName}
+              onChange={(e) => setMyName(e.target.value)}
+              placeholder="Wie sollen dich die anderen nennen?"
+              className="mt-2 w-full px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+            />
+            <p className="mt-2 text-xs text-muted-foreground">Ohne Konto, ohne Anmeldung — nur dein Name.</p>
+          </div>
 
           <div className="flex gap-3 justify-center mt-6">
             <button
@@ -172,7 +183,7 @@ export default function VideoCall() {
           localVideoRef={localVideoRef}
           camOn={camOn}
           micOn={micOn}
-          myName={myName}
+          myName={myName || "Du"}
           peers={peers}
         />
         {chatOpen && (
