@@ -1,10 +1,17 @@
-import React from "react";
-import { Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { Trash2, FileCheck2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PLAN_STATUSES, planTypeLabel } from "@/lib/contentPlan";
 
-// Ein Eintrag im Content-Plan — Status direkt hier weiterziehen.
-export default function PlanItemCard({ item, creatorName, onStatus, onRemove }) {
+// Ein Eintrag im Content-Plan — Status weiterziehen und direkt einen Post anlegen.
+export default function PlanItemCard({ item, creatorName, onStatus, onRemove, onMakePost }) {
+  const [busy, setBusy] = useState(false);
+  const makePost = async () => {
+    setBusy(true);
+    try { await onMakePost?.(item); }
+    finally { setBusy(false); }
+  };
+
   return (
     <div className="flex items-start gap-3 p-3 rounded-xl bg-elevated border border-border">
       <div className="min-w-0 flex-1">
@@ -15,6 +22,22 @@ export default function PlanItemCard({ item, creatorName, onStatus, onRemove }) 
           {item.requestId ? " · aus Community-Wunsch" : ""}
         </p>
         {item.description && <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{item.description}</p>}
+        <div className="flex items-center gap-2 mt-2">
+          {item.contentId ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
+              <FileCheck2 className="w-3 h-3" /> Post angelegt
+            </span>
+          ) : (
+            <button
+              onClick={makePost}
+              disabled={busy}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold hover:bg-primary/25 transition-colors disabled:opacity-50"
+            >
+              {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileCheck2 className="w-3 h-3" />}
+              Post anlegen
+            </button>
+          )}
+        </div>
       </div>
       <select
         value={item.status || "IDEA"}

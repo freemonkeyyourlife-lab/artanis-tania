@@ -50,3 +50,14 @@ const REQUEST_TO_PLAN = {
 };
 
 export const planTypeForRequest = (value) => REQUEST_TO_PLAN[value] || "CONTENT_IDEA";
+
+// Plan-Art → Content-Art: aus einem Plan-Eintrag wird ein echter Post.
+const PLAN_TO_CONTENT = {
+  CONTENT_IDEA: "PHOTO_SET",
+  VIDEO_PLAN: "VIDEO",
+  STORY_PLAN: "STORY",
+  LIVE_TOPIC: "LIVE_SESSION",
+  INTERACTIVE_EXPERIENCE: "INTERACTIVE_EXPERIENCE",
+};
+
+export const contentTypeForPlan = (value) => PLAN_TO_CONTENT[value] || "PHOTO_SET";

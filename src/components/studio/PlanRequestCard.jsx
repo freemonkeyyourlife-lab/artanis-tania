@@ -7,7 +7,7 @@ const inputCls =
   "w-full px-3 py-2 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
 
 // Ein Community-Wunsch — vorbelegt, damit ein Klick zum Plan-Eintrag reicht.
-export default function PlanRequestCard({ request, creators = [], onAdopt }) {
+export default function PlanRequestCard({ request, creators = [], selected, onToggleSelect, onMark, onAdopt }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [values, setValues] = useState({
@@ -27,9 +27,18 @@ export default function PlanRequestCard({ request, creators = [], onAdopt }) {
   return (
     <div className={cn("rounded-xl border bg-elevated p-4", open ? "border-primary/40" : "border-border")}>
       <div className="flex items-start gap-3">
+        <button
+          onClick={() => onToggleSelect?.(request.id)}
+          title={selected ? "Auswahl aufheben" : "Auswählen"}
+          className={cn(
+            "mt-1 w-4 h-4 rounded border flex-shrink-0 transition-colors",
+            selected ? "bg-primary border-primary" : "bg-background border-border"
+          )}
+        />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-foreground">{request.title}</p>
           <p className="text-[11px] text-muted-foreground truncate">
+            {request.status === "REVIEWED" && <span className="text-primary font-semibold">Gemerkt · </span>}
             {requestTypeLabel(request.type)}
             {request.userName ? ` · von ${request.userName}` : ""}
             {request.creatorName ? ` · für ${request.creatorName}` : ""}
@@ -73,6 +82,23 @@ export default function PlanRequestCard({ request, creators = [], onAdopt }) {
       )}
 
       <div className="flex items-center gap-2 mt-4">
+        <button
+          onClick={() => onMark?.(request, request.status === "REVIEWED" ? "NEW" : "REVIEWED")}
+          className={cn(
+            "px-3 py-2 rounded-full text-xs font-medium border transition-colors",
+            request.status === "REVIEWED"
+              ? "bg-primary/15 border-primary/40 text-primary"
+              : "bg-background border-border text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {request.status === "REVIEWED" ? "Gemerkt ✓" : "Merken"}
+        </button>
+        <button
+          onClick={() => onMark?.(request, "DECLINED")}
+          className="px-3 py-2 rounded-full bg-background border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Verwerfen
+        </button>
         <button
           onClick={() => setOpen((v) => !v)}
           className="px-4 py-2 rounded-full bg-background border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"

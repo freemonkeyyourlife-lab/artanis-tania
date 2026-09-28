@@ -45,6 +45,9 @@
     "scheduledAt": {
       "type": "string",
       "format": "date-time"
+    },
+    "contentId": {
+      "type": "string"
     }
   },
   "required": [
