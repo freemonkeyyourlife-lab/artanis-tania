@@ -12,13 +12,14 @@ import { cn } from "@/lib/utils";
 
 const HERO_BG = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/36d23e21f_generated_image.png";
 
-// Die Wolke oben — das Paar in der Mitte, die anderen drumherum.
+// Die Wolke oben — Artemis & Artemia als Banner in der Mitte, die anderen drumherum.
 const HERO_CLOUD = [
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/6549e1153_Screenshot2026-09-28053726.png",
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/ce1725bdf_Screenshot2026-09-28050434.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/021e28b6a_825292887_1624149129493507_2639521819362873359_n.webp",
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/78af4f762_Screenshot2026-09-28034357.png",
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dcbb95a47_Screenshot2026-09-28051650.png",
-  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png",
 ];
 
 const FEED_FILTERS = ["All", "Solo Artanis", "Solo Triania", "Couple", "Interactive Stories", "Topics"];

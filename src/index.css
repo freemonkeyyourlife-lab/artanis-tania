@@ -56,9 +56,19 @@
   body {
     @apply bg-background text-foreground font-body font-medium;
   }
+
+  h1, h2, h3, h4 {
+    @apply font-heading;
+    font-weight: 800;
+  }
 }
 
 @layer utilities {
+  /* Die Schriftart soll überall kräftig stehen — nichts sieht mehr dünn aus. */
+  .font-display {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
   .glass {
     background: rgba(19, 21, 28, 0.72);
     backdrop-filter: blur(20px) saturate(140%);
