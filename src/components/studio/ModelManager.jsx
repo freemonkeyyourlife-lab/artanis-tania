@@ -7,13 +7,19 @@ import { cn } from "@/lib/utils";
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
 
-// Modelle von Hugging Face, die im Generator als Quelle wählbar sind.
+const SOURCES = [
+  { value: "HUGGING_FACE", label: "Hugging Face", hint: "Dein Konto ist verbunden. Die großen Modelle brauchen dort Guthaben, kleine laufen sofort." },
+  { value: "POLLINATIONS", label: "Pollinations", hint: "Kostenlos, ohne Anmeldung und ohne Guthaben — dafür einfachere Qualität." },
+];
+
+// Bildmodelle, die im Generator als Quelle wählbar sind.
 export default function ModelManager() {
   const { toast } = useToast();
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ name: "", modelId: "", note: "" });
+  const [source, setSource] = useState("HUGGING_FACE");
 
   useEffect(() => { load(); }, []);
 
@@ -24,7 +30,7 @@ export default function ModelManager() {
   };
 
   const add = async () => {
-    if (!form.name.trim() || !form.modelId.trim()) {
+    if (!form.name.trim() || (!form.modelId.trim() && source !== "POLLINATIONS")) {
       toast({ title: "Name und Modell-ID fehlen", variant: "destructive" });
       return;
     }
@@ -32,9 +38,9 @@ export default function ModelManager() {
     try {
       await base44.entities.ImageModel.create({
         name: form.name.trim(),
-        modelId: form.modelId.trim(),
+        modelId: form.modelId.trim() || "default",
         note: form.note.trim(),
-        provider: "HUGGING_FACE",
+        source,
         enabled: true,
       });
       setForm({ name: "", modelId: "", note: "" });
@@ -65,8 +71,25 @@ export default function ModelManager() {
       <div className="rounded-2xl border border-border bg-card p-5">
         <h2 className="font-display text-xl text-foreground mb-1">Modell hinzufügen</h2>
         <p className="text-xs text-muted-foreground mb-5">
-          Jedes Bildmodell von Hugging Face, das dort über die Inference-Schnittstelle läuft. ID kopieren, hier einfügen, fertig.
+          Modell auswählen, ID einfügen, fertig. Im Generator ist es dann als Quelle wählbar.
         </p>
+
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Plattform</label>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {SOURCES.map((s) => (
+            <button
+              key={s.value}
+              onClick={() => setSource(s.value)}
+              className={cn(
+                "px-4 py-2 rounded-full text-xs font-semibold transition-colors",
+                source === s.value ? "bg-primary text-primary-foreground" : "bg-elevated border border-border text-muted-foreground"
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground mb-5">{SOURCES.find((s) => s.value === source)?.hint}</p>
 
         <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Anzeigename</label>
         <input
@@ -80,7 +103,7 @@ export default function ModelManager() {
         <input
           value={form.modelId}
           onChange={(e) => setForm({ ...form, modelId: e.target.value })}
-          placeholder="black-forest-labs/FLUX.1-schnell"
+          placeholder={source === "POLLINATIONS" ? "default (oder z. B. sana)" : "black-forest-labs/FLUX.1-schnell"}
           className={cn(inputCls, "mb-4")}
         />
 
@@ -100,14 +123,16 @@ export default function ModelManager() {
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Hinzufügen
           </button>
-          <a
-            href="https://huggingface.co/models?pipeline_tag=text-to-image"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ExternalLink className="w-3.5 h-3.5" /> Modelle durchsuchen
-          </a>
+          {source === "HUGGING_FACE" && (
+            <a
+              href="https://huggingface.co/models?pipeline_tag=text-to-image"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" /> Modelle durchsuchen
+            </a>
+          )}
         </div>
       </div>
 
@@ -126,7 +151,9 @@ export default function ModelManager() {
               <div key={m.id} className={cn("flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border", !m.enabled && "opacity-60")}>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{m.modelId}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {(SOURCES.find((s) => s.value === m.source) || SOURCES[0]).label} · {m.modelId}
+                  </p>
                   {m.note && <p className="text-[11px] text-muted-foreground truncate">{m.note}</p>}
                 </div>
                 <button

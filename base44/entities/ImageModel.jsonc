@@ -8,6 +8,14 @@
     "modelId": {
       "type": "string"
     },
+    "source": {
+      "type": "string",
+      "enum": [
+        "HUGGING_FACE",
+        "POLLINATIONS"
+      ],
+      "default": "HUGGING_FACE"
+    },
     "note": {
       "type": "string"
     },

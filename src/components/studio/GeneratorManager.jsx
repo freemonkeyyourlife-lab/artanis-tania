@@ -14,7 +14,7 @@ export default function GeneratorManager({ creators }) {
   const [animated, setAnimated] = useState(false);
   const [extraRefs, setExtraRefs] = useState([]);
   const [models, setModels] = useState([]);
-  const [modelId, setModelId] = useState("");
+  const [modelKey, setModelKey] = useState("");
   const [busy, setBusy] = useState(null);
   const [result, setResult] = useState(null);
   const { toast } = useToast();
@@ -27,6 +27,7 @@ export default function GeneratorManager({ creators }) {
   }, []);
 
   const creator = creators.find((c) => c.id === creatorId);
+  const model = models.find((m) => m.id === modelKey);
   const refs = [creator?.avatar, ...(creator?.referenceImages || []), ...extraRefs]
     .filter(Boolean)
     .filter((v, i, a) => a.indexOf(v) === i)
@@ -47,9 +48,13 @@ export default function GeneratorManager({ creators }) {
     setBusy("image");
     setResult(null);
     try {
-      if (modelId) {
-        // Über ein eigenes Modell auf Hugging Face
-        const res = await base44.functions.invoke("hfGenerate", { modelId, prompt: buildPrompt() });
+      if (model) {
+        // Über ein eigenes Modell aus dem Studio
+        const res = await base44.functions.invoke("hfGenerate", {
+          modelId: model.modelId,
+          source: model.source,
+          prompt: buildPrompt(),
+        });
         if (res.data?.error) throw new Error(res.data.error);
         setResult({ type: "image", url: res.data.imageUrl });
       } else {
@@ -150,13 +155,13 @@ export default function GeneratorManager({ creators }) {
 
         <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quelle</label>
         <select
-          value={modelId}
-          onChange={(e) => setModelId(e.target.value)}
+          value={modelKey}
+          onChange={(e) => setModelKey(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground mb-4"
         >
           <option value="">Standard-Generator</option>
           {models.map((m) => (
-            <option key={m.id} value={m.modelId}>{m.name}</option>
+            <option key={m.id} value={m.id}>{m.name}</option>
           ))}
         </select>
 
