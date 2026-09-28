@@ -24,6 +24,7 @@ import { hasProAccess } from "@/lib/proAccess";
 import { publicName } from "@/lib/displayName";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
+const TEXT_MODEL_KEY = "artanis_text_model";
 // So lange darf der echte Charakter selbst antworten, bevor die KI übernimmt.
 const HUMAN_WINDOW_MS = 120000;
 
@@ -81,6 +82,10 @@ export default function Messages() {
   const [dmParticipantName, setDmParticipantName] = useState("");
   const [dmPartnerId, setDmPartnerId] = useState(null);
   const [freeLeft, setFreeLeft] = useState(FREE_CREATIONS);
+  const [textModels, setTextModels] = useState([]);
+  const [activeModelId, setActiveModelId] = useState(() => {
+    try { return localStorage.getItem(TEXT_MODEL_KEY) || ""; } catch (e) { return ""; }
+  });
   const [extraCharacters, setExtraCharacters] = useState([]);
   const [takeover, setTakeover] = useState(false);
   const [spannerMode, setSpannerMode] = useState(false);
@@ -135,6 +140,9 @@ export default function Messages() {
         setFreeLeft(freeRemaining(user.id));
         const prefs = await base44.entities.UserPreference.filter({ userId: user.id });
         if (prefs.length > 0) setUserPref(prefs[0]);
+        const modelData = await base44.entities.TextModel.filter({ enabled: true });
+        setTextModels(modelData);
+        setActiveModelId((prev) => prev || modelData[0]?.modelId || "");
         const incoming = await base44.entities.Conversation.filter({ participantId: user.id, conversationType: "HUMAN" });
         setIncomingConversations(incoming);
         dmConvIdsRef.current = new Set(incoming.map(c => c.id));
@@ -589,10 +597,20 @@ export default function Messages() {
       const userTurn = img
         ? "\n\nThe user sent you a photo" + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see in the photo. This photo is now saved as a PERMANENT reference: whoever is in it keeps exactly that face, body, hair colour and skin in every future image — never change them again. Say out loud that you'll keep it. Then generate a response image that incorporates their photo (put yourself in the scene with what they showed you)."
         : "\n\nThe user said: \"" + userMsg.text + "\"";
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: buildContext() + (hist ? "\n\nCONVERSATION SO FAR:\n" + hist : "") + userTurn + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : ""),
-      });
-      const aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
+      const system = buildContext();
+      const userPrompt = (hist ? "CONVERSATION SO FAR:\n" + hist + "\n\n" : "") + userTurn + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : "");
+      // Läuft ein Text-Modell über Hugging Face, antwortet der Charakter damit — sonst mit der Standard-KI.
+      let aiText = "";
+      if (activeModelId) {
+        try {
+          const modelRes = await base44.functions.invoke("hfChat", { modelId: activeModelId, system, prompt: userPrompt });
+          aiText = modelRes.data?.text || "";
+        } catch (e) { aiText = ""; }
+      }
+      if (!aiText) {
+        const res = await base44.integrations.Core.InvokeLLM({ prompt: system + userPrompt });
+        aiText = typeof res === "string" ? res : (res.response || res.text || res.output || "I'll get back to you soon!");
+      }
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
       const { cleanText, attachments, suggestions, characters } = await parseAndGenerateMedia(aiText, img ? [img] : []);
@@ -1136,6 +1154,21 @@ export default function Messages() {
                   <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title={isAdmin ? "Admin — alles gratis, kein Freischalten" : proActive ? "Pro — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
                     {isAdmin ? "Admin · alles gratis" : proActive ? "Pro · alles gratis" : `${freeLeft} gratis`}
                   </span>
+                )}
+                {viewMode === "ai" && textModels.length > 0 && (
+                  <select
+                    value={activeModelId}
+                    onChange={(e) => {
+                      setActiveModelId(e.target.value);
+                      try { localStorage.setItem(TEXT_MODEL_KEY, e.target.value); } catch (err) { /* ignore */ }
+                    }}
+                    title="Modell für die Antworten"
+                    className="hidden md:block max-w-[160px] px-3 py-1.5 rounded-full bg-elevated border border-border text-[11px] font-semibold text-muted-foreground focus:outline-none focus:border-primary/50"
+                  >
+                    {textModels.map((m) => (
+                      <option key={m.id} value={m.modelId}>{m.name}</option>
+                    ))}
+                  </select>
                 )}
                 {viewMode === "ai" && (
                   <Dialog>

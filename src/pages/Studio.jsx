@@ -13,6 +13,7 @@ import MemberManager from "@/components/studio/MemberManager";
 import ContestManager from "@/components/studio/ContestManager";
 import GeneratorManager from "@/components/studio/GeneratorManager";
 import ModelManager from "@/components/studio/ModelManager";
+import TextModelManager from "@/components/studio/TextModelManager";
 import PlanManager from "@/components/studio/PlanManager";
 import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
@@ -25,6 +26,7 @@ const TABS = [
   { id: "characters", label: "Charaktere" },
   { id: "generator", label: "Generator" },
   { id: "models", label: "Hugging Face" },
+  { id: "textmodels", label: "Text-KI" },
   { id: "plan", label: "Content-Plan" },
   { id: "gallery", label: "Galerie" },
   { id: "stories", label: "Storys" },
@@ -94,6 +96,7 @@ export default function Studio() {
       {tab === "guide" && <GuideManager />}
       {tab === "generator" && <GeneratorManager creators={creators} />}
       {tab === "models" && <ModelManager />}
+      {tab === "textmodels" && <TextModelManager />}
       {tab === "plan" && <PlanManager creators={creators} />}
       {tab === "gallery" && <GalleryManager creators={creators} />}
       {tab === "stories" && <StoryManager creators={creators} />}
