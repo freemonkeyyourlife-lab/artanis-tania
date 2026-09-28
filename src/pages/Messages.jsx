@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Loader2 } from "lucide-react";
+import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Loader2, Banknote } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -18,7 +18,7 @@ import { coinsForPrice } from "@/lib/coins";
 import { CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { Link } from "react-router-dom";
 import ChatTabs from "@/components/chat/ChatTabs";
-import PaymentLinkDialog from "@/components/pay/PaymentLinkDialog";
+import QuickPayButton from "@/components/pay/QuickPayButton";
 import { hasProAccess } from "@/lib/proAccess";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
@@ -966,6 +966,23 @@ export default function Messages() {
     setMessages(prev => ({ ...prev, [conv.id]: msgs }));
   };
 
+  // Vereinbarter Betrag? Ein Klick — der Link steht sofort als Nachricht im Chat.
+  const sendPaymentLink = async (link) => {
+    const chatKey = activeChat;
+    if (!chatKey) return;
+    const conv = viewMode === "dm" ? { id: chatKey } : await ensureConv(chatKey);
+    if (!conv) return;
+    const text = `Zahlungslink: ${link.amount.toFixed(2).replace(".", ",")} € — ${link.title}`;
+    const created = await base44.entities.Message.create({
+      conversationId: conv.id,
+      sender: viewMode === "dm" ? (currentUser?.full_name || currentUser?.email) : creators.find((c) => c.id === chatKey)?.stageName,
+      senderType: viewMode === "dm" ? "HUMAN" : "AI",
+      text,
+      contentLink: `/pay/${link.token}`,
+    });
+    setMessages((prev) => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), created] }));
+  };
+
   const getOptions = (q) => {
     if (!q?.optionsByGender) return q?.options || [];
     const g = q.genderKey === "ai" ? (chatMode === "artanis" ? "Mann" : "Frau") : setupAnswers.userGender;
@@ -1159,7 +1176,7 @@ export default function Messages() {
                     {takeover ? "Übernommen ✓" : "Selbst schreiben"}
                   </button>
                 )}
-                <PaymentLinkDialog />
+                <QuickPayButton onSend={sendPaymentLink} disabled={sending} />
                 {viewMode === "ai" && (
                   <Link to={`/ai-call/${activeChat}`} title="Videochat starten" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-primary transition-colors">
                     <Video className="w-4 h-4" />
@@ -1336,6 +1353,14 @@ export default function Messages() {
                         );
                       })()}
                       {msg.text}
+                      {msg.contentLink && (
+                        <Link
+                          to={msg.contentLink}
+                          className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+                        >
+                          <Banknote className="w-3.5 h-3.5" /> Jetzt bezahlen
+                        </Link>
+                      )}
                       {viewMode === "ai" && msg.senderType === "AI" && msg.text && (
                         <div className="mt-1.5">
                           <ReadAloudButton text={msg.text} voice={creators.find((c) => c.id === activeChat)?.voice} />
