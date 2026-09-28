@@ -1,6 +1,7 @@
 import React from "react";
 import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, MonitorOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PaymentLinkDialog from "@/components/pay/PaymentLinkDialog";
 
 const ROOM_MODES = [
   { id: "OPEN", label: "Offen", hint: "Alle mit dem Link kommen rein" },
@@ -54,6 +55,7 @@ export default function CallControls({
         >
           {sharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
         </button>
+        <PaymentLinkDialog className="w-12 h-12" />
         <button
           onClick={onEnd}
           className="w-14 h-14 rounded-full bg-destructive text-white flex items-center justify-center"

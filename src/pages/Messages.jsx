@@ -18,6 +18,7 @@ import { coinsForPrice } from "@/lib/coins";
 import { CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { Link } from "react-router-dom";
 import ChatTabs from "@/components/chat/ChatTabs";
+import PaymentLinkDialog from "@/components/pay/PaymentLinkDialog";
 import { hasProAccess } from "@/lib/proAccess";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
@@ -1158,6 +1159,7 @@ export default function Messages() {
                     {takeover ? "Übernommen ✓" : "Selbst schreiben"}
                   </button>
                 )}
+                <PaymentLinkDialog />
                 {viewMode === "ai" && (
                   <Link to={`/ai-call/${activeChat}`} title="Videochat starten" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-primary transition-colors">
                     <Video className="w-4 h-4" />

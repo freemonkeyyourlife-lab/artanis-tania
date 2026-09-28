@@ -41,6 +41,8 @@ import ContestDetail from '@/pages/ContestDetail';
 import AiVideoCall from '@/pages/AiVideoCall';
 import Leitstand from '@/pages/Leitstand';
 import Therapy from '@/pages/Therapy';
+import PayLinks from '@/pages/PayLinks';
+import Pay from '@/pages/Pay';
 import TherapySession from '@/pages/TherapySession';
 import WaitingChatAlert from '@/components/WaitingChatAlert';
 
@@ -78,6 +80,7 @@ const AuthenticatedApp = () => {
       <Route path="/ai-call/:id" element={<AiVideoCall />} />
       <Route path="/call" element={<StartCall />} />
       <Route path="/call/:token" element={<VideoCall />} />
+      <Route path="/pay/:token" element={<Pay />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/artanis" element={<Artanis />} />
@@ -103,6 +106,7 @@ const AuthenticatedApp = () => {
         <Route path="/leitstand" element={<Leitstand />} />
         <Route path="/therapy" element={<Therapy />} />
         <Route path="/therapy/:id" element={<TherapySession />} />
+        <Route path="/paylinks" element={<PayLinks />} />
         <Route path="/creator/:id" element={<CreatorDetail />} />
         <Route path="/contests" element={<Contests />} />
         <Route path="/contests/:id" element={<ContestDetail />} />

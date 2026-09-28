@@ -1,0 +1,125 @@
+{
+  "name": "PaymentLink",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "LINK",
+        "TASK"
+      ],
+      "default": "LINK"
+    },
+    "creatorId": {
+      "type": "string"
+    },
+    "creatorName": {
+      "type": "string"
+    },
+    "targetUserId": {
+      "type": "string"
+    },
+    "targetName": {
+      "type": "string"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "PRIVATE",
+        "PUBLIC"
+      ],
+      "default": "PRIVATE"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "PAID",
+        "CANCELLED"
+      ],
+      "default": "OPEN"
+    },
+    "paidBy": {
+      "type": "string"
+    },
+    "paidByName": {
+      "type": "string"
+    },
+    "paidAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "transactionId": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "token",
+    "title",
+    "amount"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.visibility": "PUBLIC"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

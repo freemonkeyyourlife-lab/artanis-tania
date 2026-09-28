@@ -32,6 +32,18 @@ export default async function (req) {
         }
       }
 
+      // Zahlungslink oder Aufgabe: als bezahlt markieren.
+      if (meta.kind === 'payment_link' && meta.link_id) {
+        await base44.asServiceRole.entities.PaymentLink.update(meta.link_id, {
+          status: 'PAID',
+          paidBy: meta.payer_id || '',
+          paidByName: meta.payer_name || '',
+          paidAt: new Date().toISOString(),
+          transactionId: meta.transaction_id || '',
+          active: false,
+        });
+      }
+
       if (meta.transaction_id) {
         await base44.asServiceRole.entities.Transaction.update(meta.transaction_id, { status: 'PAID', providerId: session.id });
       }
