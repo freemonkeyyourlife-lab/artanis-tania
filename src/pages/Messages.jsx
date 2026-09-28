@@ -21,6 +21,8 @@ import ChatTabs from "@/components/chat/ChatTabs";
 import { hasProAccess } from "@/lib/proAccess";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
+// So lange darf der echte Charakter selbst antworten, bevor die KI übernimmt.
+const HUMAN_WINDOW_MS = 120000;
 
 const LANGUAGE_RULE =
   "═══ SPRACHE — NUR DEUTSCH ═══\n" +
@@ -195,6 +197,22 @@ export default function Messages() {
           return { ...prev, [activeChat]: [...existing, event.data] };
         });
       }
+    });
+    return unsubscribe;
+  }, [viewMode, activeChat]);
+
+  // Schreibt der echte Charakter selbst, kommt die Zeile sofort an — nicht erst nach dem Neuladen.
+  useEffect(() => {
+    if (viewMode !== "ai" || !activeChat) return;
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.type !== "create" || !event.data?.humanOverride) return;
+      const conv = aiConvsRef.current[activeChat];
+      if (!conv || event.data.conversationId !== conv.id) return;
+      setMessages((prev) => {
+        const existing = prev[activeChat] || [];
+        if (existing.some((m) => m.id === event.data.id)) return prev;
+        return { ...prev, [activeChat]: [...existing, event.data] };
+      });
     });
     return unsubscribe;
   }, [viewMode, activeChat]);
@@ -548,6 +566,8 @@ export default function Messages() {
     setSending(true);
 
     try {
+      // Hat der echte Charakter übernommen oder selbst geantwortet, bleibt die KI still.
+      if (await waitForHuman(conv)) return;
       const hist = (messages[chatKey] || []).slice(-12).map(m => {
         let t = m.text || "";
         if (m.attachment) t += t ? " [also sent a photo]" : "[sent a photo]";
@@ -567,7 +587,7 @@ export default function Messages() {
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
       if (conv) {
         base44.entities.Message.create({ conversationId: conv.id, sender: creators.find(c => c.id === chatKey)?.stageName, senderType: "AI", text: cleanText, attachments, suggestions, characters }).catch(() => {});
-        base44.entities.Conversation.update(conv.id, { lastMessageAt: new Date().toISOString() }).catch(() => {});
+        base44.entities.Conversation.update(conv.id, { lastMessageAt: new Date().toISOString(), waitingSince: null }).catch(() => {});
       }
       setFreeLeft(freeRemaining(currentUser?.id));
 
@@ -711,6 +731,42 @@ export default function Messages() {
       console.error(e);
       return null;
     }
+  };
+
+  // Die neueste Zeile, die der echte Charakter selbst geschrieben hat.
+  const newestHumanLine = async (convId) => {
+    const list = await base44.entities.Message.filter({ conversationId: convId, humanOverride: true }, "-created_date", 1);
+    return list[0]?.created_date || null;
+  };
+
+  // Erst der Mensch, dann die KI: zwei Minuten Vorsprung, dann übernimmt sie selbst.
+  const waitForHuman = async (conv) => {
+    if (!conv) return false;
+    // Der Admin ist selbst der Mensch — in seinen eigenen Chats wartet niemand.
+    if (currentUser?.role === "admin") return false;
+    const fresh = await base44.entities.Conversation.get(conv.id).catch(() => conv);
+    // Der Schalter steht auf "ich übernehme" — die KI bleibt in diesem Chat komplett raus.
+    if (fresh?.handledBy === "HUMAN") return true;
+
+    const baseline = await newestHumanLine(conv.id).catch(() => null);
+    const startedAt = new Date().toISOString();
+    await base44.entities.Conversation.update(conv.id, {
+      waitingSince: startedAt,
+      lastGuestMessageAt: startedAt,
+      lastMessageAt: startedAt,
+    }).catch(() => {});
+    base44.functions.invoke("notifyWaitingChat", { conversationId: conv.id }).catch(() => {});
+
+    const until = Date.now() + HUMAN_WINDOW_MS;
+    while (Date.now() < until) {
+      await new Promise((r) => setTimeout(r, 5000));
+      try {
+        const now = await base44.entities.Conversation.get(conv.id);
+        if (now?.handledBy === "HUMAN") return true;
+        if (await newestHumanLine(conv.id) !== baseline) return true;
+      } catch (e) { /* kurz nicht erreichbar — weiter warten */ }
+    }
+    return false;
   };
 
   const addTab = (tab) => {

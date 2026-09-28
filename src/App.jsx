@@ -39,6 +39,8 @@ import CreatorDetail from '@/pages/CreatorDetail';
 import Contests from '@/pages/Contests';
 import ContestDetail from '@/pages/ContestDetail';
 import AiVideoCall from '@/pages/AiVideoCall';
+import Leitstand from '@/pages/Leitstand';
+import WaitingChatAlert from '@/components/WaitingChatAlert';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -67,6 +69,7 @@ const AuthenticatedApp = () => {
   return (
     <>
       <InviteClaim />
+      <WaitingChatAlert />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
@@ -95,6 +98,7 @@ const AuthenticatedApp = () => {
         <Route path="/community" element={<Community />} />
         <Route path="/coins" element={<Coins />} />
         <Route path="/studio" element={<Studio />} />
+        <Route path="/leitstand" element={<Leitstand />} />
         <Route path="/creator/:id" element={<CreatorDetail />} />
         <Route path="/contests" element={<Contests />} />
         <Route path="/contests/:id" element={<ContestDetail />} />

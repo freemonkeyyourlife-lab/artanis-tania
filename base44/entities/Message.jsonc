@@ -46,6 +46,10 @@
     "read": {
       "type": "boolean",
       "default": false
+    },
+    "humanOverride": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

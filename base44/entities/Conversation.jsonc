@@ -41,6 +41,26 @@
     "unreadCount": {
       "type": "number",
       "default": 0
+    },
+    "handledBy": {
+      "type": "string",
+      "enum": [
+        "AI",
+        "HUMAN"
+      ],
+      "default": "AI"
+    },
+    "waitingSince": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lastGuestMessageAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notifiedAt": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

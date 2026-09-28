@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { label: "Profile", path: "/profile" },
   { label: "Admin", path: "/admin" },
   { label: "Studio", path: "/studio" },
+  { label: "Leitstand", path: "/leitstand" },
 ];
 
 const PERSONA_LINKS = [
@@ -58,6 +59,7 @@ export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [memberStatus, setMemberStatus] = useState(null);
   const [incomingCount, setIncomingCount] = useState(0);
+  const [waitingChats, setWaitingChats] = useState(0);
 
   useEffect(() => {
     base44.auth.me()
@@ -78,6 +80,12 @@ export default function Layout() {
             const convs = await base44.entities.Conversation.filter({ participantId: me.id, conversationType: "HUMAN" });
             setIncomingCount(convs.length);
           } catch (e) { /* kurz nicht erreichbar — nächster Versuch später */ }
+          if (me.role === "admin") {
+            try {
+              const chats = await base44.entities.Conversation.filter({ conversationType: "AI" }, "-lastMessageAt", 100);
+              setWaitingChats(chats.filter((c) => c.waitingSince).length);
+            } catch (e) { /* kurz nicht erreichbar — nächster Versuch später */ }
+          }
         };
         await load();
         // Ereignisse sammeln: höchstens eine Abfrage alle paar Sekunden.
@@ -182,6 +190,9 @@ export default function Layout() {
                 )}
               >
                 {link.label}
+                {link.path === "/leitstand" && waitingChats > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{waitingChats}</span>
+                )}
               </Link>
             ))}
           </nav>
@@ -239,6 +250,9 @@ export default function Layout() {
                   )}
                 >
                   {link.label}
+                  {link.path === "/leitstand" && waitingChats > 0 && (
+                    <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{waitingChats}</span>
+                  )}
                 </Link>
               ))}
               <InviteShareButton className="w-full justify-center py-3 text-sm my-1" />
