@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { ROLE_SETUPS, THERAPY_MODES, INTENSITIES } from "@/lib/therapyPrompts";
+import VoiceInput from "@/components/VoiceInput";
 
 const OptionRow = ({ options, value, onChange }) => (
   <div className="flex flex-wrap gap-2">
@@ -80,12 +81,21 @@ export default function SessionForm({ onCreated }) {
           placeholder="Schreib es hin, wie es in dir klingt. Kein schönes Deutsch nötig — genau so, wie du es denkst."
           className="w-full px-4 py-3 rounded-2xl bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none"
         />
-        <input
-          value={goal}
-          onChange={(e) => setGoal(e.target.value)}
-          placeholder="Und was erhoffst du dir davon? (optional)"
-          className="mt-2 w-full px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
-        />
+        <div className="flex items-center gap-2 mt-2">
+          <VoiceInput onResult={(t) => setTopic((prev) => (prev ? prev + " " + t : t))} />
+          <span className="text-xs text-muted-foreground">
+            Sprich es einfach aus — wird direkt in die Beschreibung übernommen.
+          </span>
+        </div>
+        <div className="flex gap-2 mt-2">
+          <input
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            placeholder="Und was erhoffst du dir davon? (optional)"
+            className="flex-1 min-w-0 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+          />
+          <VoiceInput onResult={(t) => setGoal((prev) => (prev ? prev + " " + t : t))} title="Erhofftes per Stimme sagen" />
+        </div>
       </div>
 
       <div>

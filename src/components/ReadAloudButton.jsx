@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Volume2, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,20 +11,14 @@ const VOICE_TUNING = {
   spark: { pitch: 1.3, rate: 1.2 },
 };
 
-export default function ReadAloudButton({ text, voice, className }) {
+export default function ReadAloudButton({ text, voice, className, autoPlay = false }) {
   const [speaking, setSpeaking] = useState(false);
   const supported = typeof window !== "undefined" && "speechSynthesis" in window;
 
-  useEffect(() => {
-    return () => { if (supported) window.speechSynthesis.cancel(); };
-  }, [supported]);
-
-  if (!supported || !text) return null;
-
-  const toggle = () => {
+  const speak = useCallback(() => {
+    if (!supported || !text) return;
     const synth = window.speechSynthesis;
     synth.cancel();
-    if (speaking) { setSpeaking(false); return; }
     const tune = VOICE_TUNING[voice] || VOICE_TUNING.river;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "de-DE";
@@ -36,6 +30,28 @@ export default function ReadAloudButton({ text, voice, className }) {
     utterance.onerror = () => setSpeaking(false);
     setSpeaking(true);
     synth.speak(utterance);
+  }, [text, voice, supported]);
+
+  // Freisprechen: jede neue Zeile wird von selbst vorgelesen.
+  useEffect(() => {
+    if (!autoPlay || !text) return;
+    speak();
+    return () => { if (supported) window.speechSynthesis.cancel(); };
+  }, [autoPlay, text, speak, supported]);
+
+  useEffect(() => {
+    return () => { if (supported) window.speechSynthesis.cancel(); };
+  }, [supported]);
+
+  if (!supported || !text) return null;
+
+  const toggle = () => {
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+    speak();
   };
 
   return (

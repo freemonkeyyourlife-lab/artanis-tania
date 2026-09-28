@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import TherapyThread from "@/components/therapy/TherapyThread";
 import { buildTherapyPrompt, THERAPY_MODES, INTENSITIES } from "@/lib/therapyPrompts";
 import { parseReply } from "@/lib/chatMedia";
+import VoiceInput from "@/components/VoiceInput";
+import ReadAloudButton from "@/components/ReadAloudButton";
 
 const CLIENT_LINES = [
   "Weiter fragen",
@@ -34,6 +36,7 @@ export default function TherapySession() {
   const [sending, setSending] = useState(false);
   const [guestNote, setGuestNote] = useState("");
   const [guestSending, setGuestSending] = useState(false);
+  const [handsFree, setHandsFree] = useState(false);
   const bottomRef = useRef(null);
   const openedRef = useRef(false);
   const messagesRef = useRef([]);
@@ -207,6 +210,17 @@ export default function TherapySession() {
           {session.status === "DONE" && (
             <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">beendet</span>
           )}
+          <button
+            onClick={() => setHandsFree((v) => !v)}
+            title="Triania liest ihre Sätze laut vor und deine Stimme wird direkt gesendet"
+            className={cn(
+              "px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-colors",
+              handsFree ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {handsFree ? "Freisprechen ✓" : "Freisprechen"}
+          </button>
+          <ReadAloudButton text={lastAi?.text} voice="honey" autoPlay={handsFree} className="px-2.5 py-1.5 rounded-full bg-elevated" />
           {isOwner && session.status !== "DONE" && (
             <button onClick={endSession} className="ml-auto text-xs text-muted-foreground hover:text-foreground">
               Sitzung beenden
@@ -272,6 +286,11 @@ export default function TherapySession() {
               placeholder="Sag es so, wie du es denkst — keine Ausflüchte."
               className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-[15px] text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
             />
+            <VoiceInput
+              onResult={(t) => (handsFree ? send(t) : setInput((prev) => (prev ? prev + " " + t : t)))}
+              disabled={sending}
+              title={handsFree ? "Sprechen — geht direkt raus" : "Sprechen statt tippen"}
+            />
             <button
               onClick={() => send()}
               disabled={!input.trim() || sending}
@@ -293,6 +312,11 @@ export default function TherapySession() {
               onKeyDown={(e) => e.key === "Enter" && sendGuestNote()}
               placeholder="Dein Gedanke dazu …"
               className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+            />
+            <VoiceInput
+              onResult={(t) => setGuestNote((prev) => (prev ? prev + " " + t : t))}
+              disabled={guestSending}
+              title="Gedanken einwerfen statt tippen"
             />
             <button
               onClick={sendGuestNote}
