@@ -1,0 +1,115 @@
+{
+  "name": "TherapySession",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "userName": {
+      "type": "string"
+    },
+    "anonymous": {
+      "type": "boolean",
+      "default": false
+    },
+    "roleSetup": {
+      "type": "string",
+      "enum": [
+        "TRIANIA_THERAPIST",
+        "USER_THERAPIST"
+      ],
+      "default": "TRIANIA_THERAPIST"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "GUIDED",
+        "OPEN",
+        "ROLEPLAY"
+      ],
+      "default": "GUIDED"
+    },
+    "topic": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "intensity": {
+      "type": "string",
+      "enum": [
+        "SANFT",
+        "TIEF",
+        "SCHONUNGSLOS"
+      ],
+      "default": "TIEF"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "DONE"
+      ],
+      "default": "OPEN"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "PRIVATE",
+        "PUBLIC"
+      ],
+      "default": "PUBLIC"
+    },
+    "lastMessageAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "topic"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.visibility": "PUBLIC"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

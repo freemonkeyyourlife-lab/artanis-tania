@@ -40,6 +40,8 @@ import Contests from '@/pages/Contests';
 import ContestDetail from '@/pages/ContestDetail';
 import AiVideoCall from '@/pages/AiVideoCall';
 import Leitstand from '@/pages/Leitstand';
+import Therapy from '@/pages/Therapy';
+import TherapySession from '@/pages/TherapySession';
 import WaitingChatAlert from '@/components/WaitingChatAlert';
 
 const AuthenticatedApp = () => {
@@ -99,6 +101,8 @@ const AuthenticatedApp = () => {
         <Route path="/coins" element={<Coins />} />
         <Route path="/studio" element={<Studio />} />
         <Route path="/leitstand" element={<Leitstand />} />
+        <Route path="/therapy" element={<Therapy />} />
+        <Route path="/therapy/:id" element={<TherapySession />} />
         <Route path="/creator/:id" element={<CreatorDetail />} />
         <Route path="/contests" element={<Contests />} />
         <Route path="/contests/:id" element={<ContestDetail />} />

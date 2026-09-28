@@ -24,6 +24,7 @@ const PERSONA_LINKS = [
 ];
 
 const MORE_LINKS = [
+  { label: "Sprechstunde", path: "/therapy" },
   { label: "Request", path: "/request" },
   { label: "Explore", path: "/explore" },
   { label: "Videos", path: "/videos" },
