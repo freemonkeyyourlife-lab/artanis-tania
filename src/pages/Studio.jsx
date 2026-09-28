@@ -12,6 +12,7 @@ import LiveManager from "@/components/studio/LiveManager";
 import MemberManager from "@/components/studio/MemberManager";
 import ContestManager from "@/components/studio/ContestManager";
 import GeneratorManager from "@/components/studio/GeneratorManager";
+import ModelManager from "@/components/studio/ModelManager";
 import GuideManager from "@/components/studio/GuideManager";
 
 const personaLabel = (t) =>
@@ -21,6 +22,7 @@ const TABS = [
   { id: "guide", label: "Anleitung" },
   { id: "characters", label: "Charaktere" },
   { id: "generator", label: "Generator" },
+  { id: "models", label: "Modelle" },
   { id: "stories", label: "Storys" },
   { id: "topics", label: "Themen" },
   { id: "content", label: "Preise & Content" },
@@ -87,6 +89,7 @@ export default function Studio() {
 
       {tab === "guide" && <GuideManager />}
       {tab === "generator" && <GeneratorManager creators={creators} />}
+      {tab === "models" && <ModelManager />}
       {tab === "stories" && <StoryManager creators={creators} />}
       {tab === "topics" && <TopicManager />}
       {tab === "content" && <ContentManager />}

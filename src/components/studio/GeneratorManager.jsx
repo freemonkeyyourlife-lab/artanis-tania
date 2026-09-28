@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Sparkles, Loader2, Video, Bookmark, Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
+import { uploadDataUrl } from "@/lib/mediaUpload";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
 export default function GeneratorManager({ creators }) {
@@ -12,9 +13,18 @@ export default function GeneratorManager({ creators }) {
   const [prompt, setPrompt] = useState("");
   const [animated, setAnimated] = useState(false);
   const [extraRefs, setExtraRefs] = useState([]);
+  const [models, setModels] = useState([]);
+  const [modelId, setModelId] = useState("");
   const [busy, setBusy] = useState(null);
   const [result, setResult] = useState(null);
   const { toast } = useToast();
+
+  // Zusätzliche Modelle, die im Studio unter "Modelle" freigeschaltet sind.
+  useEffect(() => {
+    base44.entities.ImageModel.filter({ enabled: true }, "created_date", 100)
+      .then(setModels)
+      .catch(() => setModels([]));
+  }, []);
 
   const creator = creators.find((c) => c.id === creatorId);
   const refs = [creator?.avatar, ...(creator?.referenceImages || []), ...extraRefs]
@@ -37,13 +47,20 @@ export default function GeneratorManager({ creators }) {
     setBusy("image");
     setResult(null);
     try {
-      const res = await base44.integrations.Core.GenerateImage({
-        prompt: buildPrompt(),
-        existing_image_urls: refs.length ? refs : undefined,
-      });
-      setResult({ type: "image", url: res.url });
+      if (modelId) {
+        // Über ein eigenes Modell auf Hugging Face
+        const res = await base44.functions.invoke("hfGenerate", { modelId, prompt: buildPrompt() });
+        if (res.data?.error) throw new Error(res.data.error);
+        setResult({ type: "image", url: res.data.imageUrl });
+      } else {
+        const res = await base44.integrations.Core.GenerateImage({
+          prompt: buildPrompt(),
+          existing_image_urls: refs.length ? refs : undefined,
+        });
+        setResult({ type: "image", url: res.url });
+      }
     } catch (e) {
-      toast({ title: "Hat nicht geklappt", description: "Versuch es mit einem anderen Prompt nochmal.", variant: "destructive" });
+      toast({ title: "Hat nicht geklappt", description: e.message || "Versuch es mit einem anderen Modell oder Prompt nochmal.", variant: "destructive" });
     } finally {
       setBusy(null);
     }
@@ -86,22 +103,24 @@ export default function GeneratorManager({ creators }) {
 
   const saveAsReference = async () => {
     if (!creator || !result) return;
+    const url = await uploadDataUrl(result.url, `${creator.stageName}.png`);
     await base44.entities.Creator.update(creator.id, {
-      referenceImages: [...(creator.referenceImages || []), result.url].filter((v, i, a) => a.indexOf(v) === i),
+      referenceImages: [...(creator.referenceImages || []), url].filter((v, i, a) => a.indexOf(v) === i),
     });
     toast({ title: "Gemerkt", description: `${creator.stageName} sieht ab jetzt so aus.` });
   };
 
   const saveAsContent = async () => {
     if (!creator || !result) return;
+    const url = await uploadDataUrl(result.url, `${creator.stageName}-${Date.now()}.png`);
     await base44.entities.Content.create({
       creatorId: creator.id,
       creatorName: creator.stageName,
       title: prompt.slice(0, 60) || creator.stageName,
       contentType: result.type === "video" ? "VIDEO" : "PHOTO",
-      thumbnail: result.type === "video" ? null : result.url,
-      previewAsset: result.url,
-      fullAsset: result.url,
+      thumbnail: result.type === "video" ? null : url,
+      previewAsset: url,
+      fullAsset: url,
       isFree: true,
       price: 0,
       visibility: "PUBLIC",
@@ -126,6 +145,18 @@ export default function GeneratorManager({ creators }) {
           <option value="">Ohne Person</option>
           {creators.map((c) => (
             <option key={c.id} value={c.id}>{c.stageName}</option>
+          ))}
+        </select>
+
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quelle</label>
+        <select
+          value={modelId}
+          onChange={(e) => setModelId(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground mb-4"
+        >
+          <option value="">Standard-Generator</option>
+          {models.map((m) => (
+            <option key={m.id} value={m.modelId}>{m.name}</option>
           ))}
         </select>
 
