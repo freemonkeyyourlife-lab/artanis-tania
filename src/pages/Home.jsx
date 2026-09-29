@@ -7,6 +7,7 @@ import StatusBadge from "@/components/StatusBadge";
 import PersonaCard from "@/components/PersonaCard";
 import ContentCard from "@/components/ContentCard";
 import HeroCloud from "@/components/HeroCloud";
+import HeroNews from "@/components/hero/HeroNews";
 import RequestCard from "@/components/RequestCard";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ export default function Home() {
   const [requests, setRequests] = useState([]);
   const [topics, setTopics] = useState([]);
   const [experiences, setExperiences] = useState([]);
+  const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
 
@@ -37,18 +39,20 @@ export default function Home() {
 
   const loadData = async () => {
     try {
-      const [creatorData, contentData, requestData, topicData, expData] = await Promise.all([
+      const [creatorData, contentData, requestData, topicData, expData, storyData] = await Promise.all([
         base44.entities.Creator.list(),
         base44.entities.Content.filter({ published: true }, "-created_date", 50),
         base44.entities.CommunityRequest.list("-votes", 10),
         base44.entities.Topic.list(),
         base44.entities.Experience.filter({ published: true }, "-created_date", 10),
+        base44.entities.Story.filter({ published: true }, "-created_date", 6),
       ]);
       setCreators(creatorData);
       setContent(contentData);
       setRequests(requestData);
       setTopics(topicData);
       setExperiences(expData);
+      setStories(storyData);
     } catch (e) {
       console.error(e);
     } finally {
@@ -64,10 +68,43 @@ export default function Home() {
   const spotlight = artanis || triania || creators[0];
   const latestContent = content.slice(0, 6);
 
+  // Was oben durchläuft: abwechselnd eine interaktive Szene und eine Story.
+  const news = [
+    ...experiences.slice(0, 3).map((e) => ({
+      id: `exp-${e.id}`,
+      image: e.cover || HERO_CLOUD[0],
+      kicker: "Interactive",
+      title: e.title,
+      hook: e.creatorName ? `Willst du sehen, wie ${e.creatorName} das gemacht hat?` : "Willst du mehr erfahren?",
+      text: e.description,
+      cta: "Szene spielen",
+      to: `/experience/${e.id}`,
+    })),
+    ...stories.slice(0, 3).map((s) => {
+      const c = creators.find((x) => x.stageName === s.creatorName);
+      return {
+        id: `story-${s.id}`,
+        image: c?.banner || c?.avatar || HERO_CLOUD[2],
+        kicker: "Story",
+        title: s.title,
+        hook: "Willst du mehr erfahren?",
+        text: s.preview,
+        cta: "Story öffnen",
+        to: "/stories",
+      };
+    }),
+  ];
+  const newsFallback = [
+    { id: "fb-1", image: HERO_CLOUD[1], kicker: "Interactive", title: "Spiel eine Szene durch", hook: "Willst du sehen, wie es läuft?", text: "Wähle deinen Weg und entscheide, was als Nächstes passiert.", cta: "Szene spielen", to: "/interactive" },
+    { id: "fb-2", image: HERO_CLOUD[3], kicker: "Story", title: "Neue Storys", hook: "Willst du mehr erfahren?", text: "Geschichten aus ihrer Welt — lang, ausführlich, nur für dich.", cta: "Story öffnen", to: "/stories" },
+    { id: "fb-3", image: HERO_CLOUD[4], kicker: "Chat", title: "Schreib ihr direkt", hook: "Willst du sie kennenlernen?", text: "Sie antwortet, schickt Bilder und geht auf dich ein.", cta: "Chat starten", to: "/messages" },
+  ];
+  const newsItems = news.length ? news : newsFallback;
+
   return (
     <div>
       {/* Hero */}
-      <section className="relative h-[68vh] min-h-[480px] w-full overflow-hidden">
+      <section className="relative min-h-[860px] w-full overflow-hidden">
         <div className="absolute inset-0">
           <Image src={HERO_BG} fittingType="fill" className="w-full h-full" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/40" />
@@ -75,8 +112,14 @@ export default function Home() {
         </div>
 
         <HeroCloud images={HERO_CLOUD} />
+        {/* Die Bilder lösen sich nach unten in den Hintergrund auf — keine harten Kanten. */}
+        <div className="absolute inset-x-0 top-0 h-[470px] z-20 pointer-events-none bg-gradient-to-b from-transparent via-background/25 to-background" />
 
-        <div className="relative z-30 h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex flex-col justify-center pt-10">
+        <div className="relative z-30 min-h-[860px] max-w-[1600px] mx-auto px-4 lg:px-8 flex flex-col justify-end pt-[260px] lg:pt-[320px] pb-20">
+          <div className="mb-10">
+            <HeroNews items={newsItems} />
+          </div>
+
           {spotlight && (
             <div className="mb-6">
               <StatusBadge status={spotlight.onlineStatus} />

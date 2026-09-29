@@ -104,4 +104,31 @@
   .snap-start {
     scroll-snap-align: start;
   }
+  /* Kommt langsam von rechts, stößt an den linken Rand und hüpft kurz auf. */
+  .animate-hero-slide {
+    animation: heroSlideIn 1.9s cubic-bezier(0.18, 0.9, 0.22, 1) both;
+  }
+  .animate-hero-pop {
+    animation: heroSlideIn 1.5s cubic-bezier(0.18, 0.9, 0.22, 1) both;
+  }
+}
+
+@keyframes heroSlideIn {
+  0% {
+    transform: translateX(74vw) scale(0.94);
+    opacity: 0;
+  }
+  58% {
+    transform: translateX(-18px) scale(1);
+    opacity: 1;
+  }
+  74% {
+    transform: translateX(8px);
+  }
+  88% {
+    transform: translateX(-3px);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
