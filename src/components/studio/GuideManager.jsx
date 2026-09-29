@@ -1,5 +1,5 @@
 import React from "react";
-import { UserPlus, Image as ImageIcon, Sparkles, MessageSquare, Video, Power, Palette } from "lucide-react";
+import { UserPlus, Image as ImageIcon, Sparkles, MessageSquare, Video, Power, Palette, Cpu, Wand2, Coins } from "lucide-react";
 
 const STEPS = [
   {
@@ -44,6 +44,29 @@ const STEPS = [
   },
 ];
 
+const KI_STEPS = [
+  {
+    icon: Cpu,
+    title: "1 · Text-KI einbinden — die Köpfe im Chat",
+    text: "Reiter „Text-KI“. Die Liste kommt live aus deinem Hugging-Face-Konto. Bei dem Modell, das du willst, auf „Prüfen & übernehmen“ drücken: Es wird kurz angetestet, und nur wenn es wirklich antwortet, wird es übernommen. Danach steht es im Chat oben im Modell-Menü zur Auswahl.",
+  },
+  {
+    icon: Wand2,
+    title: "2 · Bild-KI einbinden — die Bilder",
+    text: "Reiter „Hugging Face“. Plattform wählen (Hugging Face oder Pollinations), Anzeigename und Modell-ID eintragen, „Hinzufügen“. Im Reiter „Generator“ ist das Modell dann unter „Quelle“ wählbar — gilt sofort für alle Charaktere.",
+  },
+  {
+    icon: Coins,
+    title: "3 · Welche Modelle wirklich laufen",
+    text: "Pollinations läuft kostenlos, ohne Anmeldung und ohne Guthaben. Bei Hugging Face laufen die kleinen Modelle sofort; die großen (Flux, SDXL, Kolors, Qwen Image …) brauchen Guthaben im Hugging-Face-Konto — dafür ist der Link „Guthaben verwalten“ oben im Reiter da.",
+  },
+  {
+    icon: Power,
+    title: "4 · An- und ausschalten",
+    text: "Jeder Eintrag hat einen „An/Aus“-Schalter: Aus nimmt das Modell aus dem Chat-Menü bzw. aus dem Generator heraus, es bleibt aber gespeichert und ist mit einem Klick wieder da.",
+  },
+];
+
 export default function GuideManager() {
   return (
     <div className="max-w-[900px]">
@@ -57,6 +80,31 @@ export default function GuideManager() {
 
       <div className="space-y-3">
         {STEPS.map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.title} className="rounded-2xl border border-border bg-card p-5 flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Icon className="w-5 h-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground mb-1">{s.title}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.text}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-6 mt-8 mb-6">
+        <h2 className="font-display text-xl text-foreground mb-2">So bindest du KIs ein</h2>
+        <p className="text-sm text-muted-foreground">
+          Text-KIs antworten im Chat, Bild-KIs bauen die Bilder. Beide laufen über dein Hugging-Face-Konto und sind in
+          zwei Klicks drin.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {KI_STEPS.map((s) => {
           const Icon = s.icon;
           return (
             <div key={s.title} className="rounded-2xl border border-border bg-card p-5 flex gap-4">
