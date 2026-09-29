@@ -23,6 +23,13 @@ const HERO_CLOUD = [
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dcbb95a47_Screenshot2026-09-28051650.png",
 ];
 
+// Frische Motive für die Teaser oben — Bilder, die noch niemand gesehen hat.
+const TEASER_IMAGES = [
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/b80095c82_generated_image.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/4aa1b2f57_generated_image.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/0097a75a2_generated_image.png",
+];
+
 const FEED_FILTERS = ["All", "Solo Artanis", "Solo Triania", "Couple", "Interactive Stories", "Topics"];
 
 export default function Home() {
@@ -72,7 +79,7 @@ export default function Home() {
   const news = [
     ...experiences.slice(0, 3).map((e) => ({
       id: `exp-${e.id}`,
-      image: e.cover || HERO_CLOUD[0],
+      image: e.cover || TEASER_IMAGES[0],
       kicker: "Interactive",
       title: e.title,
       hook: e.creatorName ? `Willst du sehen, wie ${e.creatorName} das gemacht hat?` : "Willst du mehr erfahren?",
@@ -84,7 +91,7 @@ export default function Home() {
       const c = creators.find((x) => x.stageName === s.creatorName);
       return {
         id: `story-${s.id}`,
-        image: c?.banner || c?.avatar || HERO_CLOUD[2],
+        image: c?.banner || c?.avatar || TEASER_IMAGES[1],
         kicker: "Story",
         title: s.title,
         hook: "Willst du mehr erfahren?",
@@ -95,9 +102,9 @@ export default function Home() {
     }),
   ];
   const newsFallback = [
-    { id: "fb-1", image: HERO_CLOUD[1], kicker: "Interactive", title: "Spiel eine Szene durch", hook: "Willst du sehen, wie es läuft?", text: "Wähle deinen Weg und entscheide, was als Nächstes passiert.", cta: "Szene spielen", to: "/interactive" },
-    { id: "fb-2", image: HERO_CLOUD[3], kicker: "Story", title: "Neue Storys", hook: "Willst du mehr erfahren?", text: "Geschichten aus ihrer Welt — lang, ausführlich, nur für dich.", cta: "Story öffnen", to: "/stories" },
-    { id: "fb-3", image: HERO_CLOUD[4], kicker: "Chat", title: "Schreib ihr direkt", hook: "Willst du sie kennenlernen?", text: "Sie antwortet, schickt Bilder und geht auf dich ein.", cta: "Chat starten", to: "/messages" },
+    { id: "fb-1", image: TEASER_IMAGES[0], kicker: "Interactive", title: "Spiel eine Szene durch", hook: "Willst du sehen, wie es läuft?", text: "Wähle deinen Weg und entscheide, was als Nächstes passiert.", cta: "Szene spielen", to: "/interactive" },
+    { id: "fb-2", image: TEASER_IMAGES[1], kicker: "Story", title: "Neue Storys", hook: "Willst du mehr erfahren?", text: "Geschichten aus ihrer Welt — lang, ausführlich, nur für dich.", cta: "Story öffnen", to: "/stories" },
+    { id: "fb-3", image: TEASER_IMAGES[2], kicker: "Chat", title: "Schreib ihr direkt", hook: "Willst du sie kennenlernen?", text: "Sie antwortet, schickt Bilder und geht auf dich ein.", cta: "Chat starten", to: "/messages" },
   ];
   const newsItems = news.length ? news : newsFallback;
 
