@@ -21,7 +21,10 @@ export default function HeroNews({ items }) {
   const item = items[index % count];
 
   return (
-    <div className="max-w-2xl">
+    <div className="relative max-w-2xl">
+      {/* Nur ein weicher Schatten hinter dem Text — keine Kante, kein Rahmen. */}
+      <div className="absolute -inset-x-10 -inset-y-6 -z-10 pointer-events-none bg-[radial-gradient(65%_85%_at_32%_50%,hsl(var(--background)/0.85),transparent_72%)]" />
+
       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary mb-3">
         Was gibt's Neues
       </p>
@@ -29,11 +32,11 @@ export default function HeroNews({ items }) {
       <Link
         key={item.id}
         to={item.to}
-        className="animate-hero-slide group flex items-center gap-4 rounded-3xl border border-border/60 glass p-3 sm:p-4 hover:border-primary/40 transition-colors"
+        className="animate-hero-slide group flex items-center gap-4"
       >
         <div className="relative w-24 h-28 sm:w-28 sm:h-32 flex-shrink-0">
-          <Image src={item.image} fittingType="fill" className="w-full h-full rounded-2xl" />
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-background/75 via-transparent to-transparent" />
+          <Image src={item.image} fittingType="fill" className="w-full h-full rounded-xl" />
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-background/60 via-transparent to-transparent" />
         </div>
 
         <div className="min-w-0 flex-1">

@@ -8,11 +8,11 @@ const BANNER = { w: 400, h: 300 };
 
 // Jede Kante ein bisschen anders, damit nichts gleichmäßig abgeschnitten aussieht.
 const MIST = [
-  "radial-gradient(115% 100% at 50% 38%, #000 42%, transparent 78%)",
-  "radial-gradient(120% 104% at 52% 34%, #000 44%, transparent 80%)",
-  "radial-gradient(112% 108% at 49% 42%, #000 42%, transparent 78%)",
-  "radial-gradient(118% 102% at 47% 36%, #000 40%, transparent 76%)",
-  "radial-gradient(114% 100% at 53% 39%, #000 40%, transparent 76%)",
+  "radial-gradient(96% 88% at 50% 46%, #000 26%, transparent 68%)",
+  "radial-gradient(100% 92% at 52% 42%, #000 28%, transparent 70%)",
+  "radial-gradient(94% 96% at 49% 48%, #000 26%, transparent 68%)",
+  "radial-gradient(98% 90% at 47% 44%, #000 24%, transparent 66%)",
+  "radial-gradient(95% 88% at 53% 46%, #000 24%, transparent 66%)",
 ];
 
 const DROP = [24, 8, 0, 12, 28];
@@ -40,7 +40,7 @@ export default function HeroCloud({ images }) {
               zIndex: isBanner ? 24 : 20 - distance,
               // Je weiter außen, desto blasser — bis sie im Hintergrund verschwinden.
               opacity: 1 - distance * 0.14,
-              animationDelay: `${i * 0.14}s`,
+              animationDelay: `${i * 0.16}s`,
               WebkitMaskImage: mask,
               maskImage: mask,
             }}
@@ -49,7 +49,7 @@ export default function HeroCloud({ images }) {
               src={src}
               fittingType="fill"
               focalPointY={isBanner ? 0.45 : 0.25}
-              className="w-full h-full rounded-[28px]"
+              className="w-full h-full rounded-2xl"
             />
           </div>
         );

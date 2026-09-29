@@ -16,7 +16,7 @@ const HERO_BG = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f
 // Die Wolke oben — Artemis & Artemia als Banner in der Mitte, die anderen drumherum.
 const HERO_CLOUD = [
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/6549e1153_Screenshot2026-09-28053726.png",
-  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/ce1725bdf_Screenshot2026-09-28050434.png",
+  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/09e9be2ef_generated_image.png",
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png",
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/021e28b6a_825292887_1624149129493507_2639521819362873359_n.webp",
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/78af4f762_Screenshot2026-09-28034357.png",
@@ -112,8 +112,9 @@ export default function Home() {
         </div>
 
         <HeroCloud images={HERO_CLOUD} />
-        {/* Die Bilder lösen sich nach unten in den Hintergrund auf — keine harten Kanten. */}
-        <div className="absolute inset-x-0 top-0 h-[470px] z-20 pointer-events-none bg-gradient-to-b from-transparent via-background/25 to-background" />
+        {/* Die Bilder lösen sich nach oben und unten in den Hintergrund auf — keine harten Kanten. */}
+        <div className="absolute inset-x-0 top-0 h-[150px] z-20 pointer-events-none bg-gradient-to-b from-background to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[470px] z-20 pointer-events-none bg-gradient-to-b from-transparent via-background/20 to-background" />
 
         <div className="relative z-30 min-h-[860px] max-w-[1600px] mx-auto px-4 lg:px-8 flex flex-col justify-end pt-[260px] lg:pt-[320px] pb-20">
           <div className="mb-10">

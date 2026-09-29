@@ -104,29 +104,19 @@
   .snap-start {
     scroll-snap-align: start;
   }
-  /* Kommt langsam von rechts, stößt an den linken Rand und hüpft kurz auf. */
+  /* Gleitet ruhig von rechts herein und kommt weich zum Stehen — kein Stoßen, kein Hüpfen. */
   .animate-hero-slide {
-    animation: heroSlideIn 1.9s cubic-bezier(0.18, 0.9, 0.22, 1) both;
+    animation: heroSlideIn 3s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .animate-hero-pop {
-    animation: heroSlideIn 1.5s cubic-bezier(0.18, 0.9, 0.22, 1) both;
+    animation: heroSlideIn 2.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }
 
 @keyframes heroSlideIn {
   0% {
-    transform: translateX(74vw) scale(0.94);
+    transform: translateX(46vw);
     opacity: 0;
-  }
-  58% {
-    transform: translateX(-18px) scale(1);
-    opacity: 1;
-  }
-  74% {
-    transform: translateX(8px);
-  }
-  88% {
-    transform: translateX(-3px);
   }
   100% {
     transform: translateX(0);
