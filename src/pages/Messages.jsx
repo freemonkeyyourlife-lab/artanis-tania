@@ -20,7 +20,7 @@ import StoryExportButton from "@/components/chat/StoryExportButton";
 import ChatCastMenu from "@/components/chat/ChatCastMenu";
 import MoodQuickMenu from "@/components/chat/MoodQuickMenu";
 import { moodFor, setMoodFor, moodPrompt } from "@/lib/moodStyle";
-import { speechPrompt } from "@/lib/speechStyle";
+import { speechPrompt, styleFor, SPEECH_STYLES } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
 import { splitScene, playScene } from "@/lib/sceneVoice";
 import VoiceChatBar from "@/components/voice/VoiceChatBar";
@@ -410,6 +410,19 @@ export default function Messages() {
       current: playing.includes(role.current) ? role.current : playing[0] || null,
     });
   };
+
+  // Wer im Chat dabei ist — mit Rolle, Stimme und Wortwahl, so wie es der Export braucht.
+  const castForExport = () => roomIds.map((id) => {
+    const c = creators.find((x) => x.id === id);
+    const st = castState(id);
+    const style = SPEECH_STYLES.find((p) => p.id === styleFor(activeChat, id).preset);
+    return {
+      name: c?.stageName || "Figur",
+      role: st === "ME" ? "Ich spiele" : st === "MUTE" ? "Hört zu" : "Redet mit",
+      voice: voices.find((v) => v.id === c?.voiceProfileId)?.name || c?.voice || "",
+      style: style?.label || "",
+    };
+  });
 
   // Jede Figur spricht mit ihrer eigenen Stimme, die Erzählung mit einer ruhigen Erzählstimme.
   const voiceForName = (fallbackName) => (name) => {
@@ -1542,6 +1555,11 @@ export default function Messages() {
                   messages={messages[activeChat] || []}
                   title={viewMode === "dm" ? dmParticipantName || "Chat" : activeCreator?.stageName || "Story"}
                   meName={publicName(currentUser) || "Ich"}
+                  cast={viewMode === "ai" ? castForExport() : []}
+                  moods={viewMode === "ai" ? moods : []}
+                  playLevel={viewMode === "ai" ? playLevel : ""}
+                  scenario={scenario}
+                  setupAnswers={setupAnswers}
                 />
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <RotateCcw className="w-4 h-4" />
