@@ -1,5 +1,6 @@
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { Link } from "react-router-dom";
 import { GripVertical, Eye, EyeOff, Trash2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -58,11 +59,22 @@ export default function MenuEditor({ items, onChange }) {
                       />
                       <button
                         onClick={() => update(index, { hidden: !item.hidden })}
-                        title={item.hidden ? "Einblenden" : "Ausblenden"}
-                        className="w-9 h-9 rounded-full glass-btn flex items-center justify-center flex-shrink-0"
+                        title={item.hidden ? "Wieder einblenden" : "Ausblenden"}
+                        className={cn(
+                          "h-9 px-3 rounded-full glass-btn text-xs font-bold flex items-center justify-center gap-1.5 flex-shrink-0 whitespace-nowrap",
+                          item.hidden ? "text-destructive" : "text-emerald-400"
+                        )}
                       >
-                        {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {item.hidden ? <EyeOff className="w-3.5 h-3.5" /> : null}
+                        {item.hidden ? "Aus" : "Sichtbar"}
                       </button>
+                      <Link
+                        to={item.path || "/"}
+                        title="Anschauen"
+                        className="w-9 h-9 rounded-full glass-btn flex items-center justify-center text-muted-foreground hover:text-primary flex-shrink-0"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Link>
                       <button
                         onClick={() => remove(index)}
                         title="Entfernen"

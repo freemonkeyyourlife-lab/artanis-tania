@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
 import { hasProAccess, localProActive } from "@/lib/proAccess";
 import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
+import BackgroundSlideshow from "@/components/BackgroundSlideshow";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
@@ -113,6 +114,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-background">
+      <BackgroundSlideshow />
       <header className="fixed top-0 left-0 right-0 z-50 glass-milky border-b border-border/60" style={{ height: "72px" }}>
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -268,7 +270,7 @@ export default function Layout() {
         )}
       </header>
 
-      <main className="pt-[72px] pb-24 lg:pb-0">
+      <main className="relative z-10 pt-[72px] pb-24 lg:pb-0">
         <Outlet />
       </main>
 

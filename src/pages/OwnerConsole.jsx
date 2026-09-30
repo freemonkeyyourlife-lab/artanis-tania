@@ -1,24 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Save, Download, Upload, UserPlus } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
+import GuideBox from "@/components/owner/GuideBox";
+import LageRow from "@/components/owner/LageRow";
 import { DEFAULT_MENU, DEFAULT_FONT, loadLayout, saveLayout } from "@/lib/siteLayout";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { id: "menu", label: "Menü sortieren" },
-  { id: "font", label: "Schrift" },
-  { id: "access", label: "Zugang vergeben" },
-  { id: "data", label: "Import / Export" },
+  { id: "lage", label: "Lage", icon: LayoutGrid },
+  { id: "menu", label: "Menü", icon: LayoutGrid },
+  { id: "font", label: "Schrift", icon: Type },
+  { id: "access", label: "Zugang", icon: KeyRound },
+  { id: "data", label: "Sichern", icon: Database },
 ];
+
+// Grün heißt: steht schon, du musst nichts tun. Gelb: kann so bleiben, ist aber
+// noch leer. Rot: das fehlt dir wirklich.
+const mark = (count, { required = true } = {}) =>
+  count > 0 ? "done" : required ? "missing" : "open";
 
 export default function OwnerConsole() {
   const [me, setMe] = useState(undefined);
-  const [tab, setTab] = useState("menu");
+  const [tab, setTab] = useState("lage");
   const [record, setRecord] = useState(null);
   const [items, setItems] = useState(DEFAULT_MENU);
   const [font, setFont] = useState(DEFAULT_FONT);
+  const [counts, setCounts] = useState(null);
   const [saving, setSaving] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
@@ -42,6 +51,34 @@ export default function OwnerConsole() {
     });
   }, [me]);
 
+  useEffect(() => {
+    if (!me || me.role !== "admin") return;
+    (async () => {
+      try {
+        const [creators, voices, contents, stories, streams, contests, users] = await Promise.all([
+          base44.entities.Creator.list(),
+          base44.entities.Voice.list(),
+          base44.entities.Content.filter({ published: true }),
+          base44.entities.Story.filter({ published: true }),
+          base44.entities.LiveStream.list(),
+          base44.entities.Contest.list(),
+          base44.entities.User.list(),
+        ]);
+        setCounts({
+          creators: creators.filter((c) => c.active !== false && c.stageName !== "Testdummy").length,
+          voices: voices.length,
+          contents: contents.length,
+          stories: stories.length,
+          streams: streams.length,
+          contests: contests.length,
+          users: users.length,
+        });
+      } catch (e) {
+        setCounts({});
+      }
+    })();
+  }, [me]);
+
   const save = async () => {
     setSaving(true);
     setNotice("");
@@ -54,9 +91,9 @@ export default function OwnerConsole() {
         ownerName: record?.ownerName || me?.full_name || "",
       });
       setRecord(saved);
-      setNotice("Gespeichert.");
+      setNotice("Gespeichert — die Änderungen sind jetzt live.");
     } catch (e) {
-      setNotice("Speichern hat nicht geklappt.");
+      setNotice("Speichern hat nicht geklappt. Versuch es nochmal.");
     } finally {
       setSaving(false);
     }
@@ -87,9 +124,9 @@ export default function OwnerConsole() {
           weight: data.weight || DEFAULT_FONT.weight,
           gap: data.gap ?? DEFAULT_FONT.gap,
         });
-        setNotice("Datei geladen — jetzt speichern.");
+        setNotice("Datei geladen — jetzt unten auf Speichern drücken.");
       } catch (e) {
-        setNotice("Datei konnte nicht gelesen werden.");
+        setNotice("Die Datei konnte nicht gelesen werden.");
       }
     };
     reader.readAsText(file);
@@ -103,7 +140,7 @@ export default function OwnerConsole() {
       setNotice(`Einladung an ${inviteEmail.trim()} ist raus.`);
       setInviteEmail("");
     } catch (e) {
-      setNotice("Einladung hat nicht geklappt.");
+      setNotice("Die Einladung hat nicht geklappt.");
     }
   };
 
@@ -117,150 +154,324 @@ export default function OwnerConsole() {
 
   if (!me || me.role !== "admin") {
     return (
-      <div className="max-w-[900px] mx-auto px-4 lg:px-8 py-20 text-center">
+      <div className="w-full px-4 lg:px-10 py-20 text-center">
         <h1 className="font-display text-2xl text-foreground">Nur für den Besitzer</h1>
-        <p className="text-muted-foreground text-sm mt-2">Diese Konsole sieht nur der Admin.</p>
+        <p className="text-muted-foreground text-[15px] font-semibold mt-2">Diese Konsole sieht nur der Admin.</p>
       </div>
     );
   }
 
+  const c = counts || {};
+  const rows = [
+    {
+      key: "menu",
+      state: items.length > 0 ? "done" : "missing",
+      label: "Menü oben",
+      count: items.length,
+      hint: "Die Knöpfe in der Kopfzeile. Steht schon — du musst nur ran, wenn dich Reihenfolge oder ein Name stört.",
+      to: "/",
+      reset: () => setItems(DEFAULT_MENU),
+      resetTitle: "Menü auf Standard zurücksetzen",
+    },
+    {
+      key: "font",
+      state: record?.navFontSize ? "done" : "open",
+      label: "Schrift im Menü",
+      hint: `Größe ${font.size}px, Stärke ${font.weight}, Abstand ${font.gap}px. Steht schon — anfassen nur, wenn es dir zu klein oder zu dünn ist.`,
+      to: "/",
+      reset: () => setFont(DEFAULT_FONT),
+      resetTitle: "Schrift auf Standard zurücksetzen",
+    },
+    {
+      key: "users",
+      state: counts ? mark((c.users || 0) - 1, { required: false }) : "open",
+      label: "Zugang",
+      count: counts ? Math.max(0, (c.users || 0) - 1) : undefined,
+      hint: "So viele Leute sind außer dir drin. Noch niemand? Dann lade unten im Reiter Zugang jemanden ein.",
+      to: "/admin",
+    },
+    {
+      key: "creators",
+      state: counts ? mark(c.creators) : "open",
+      label: "Charaktere",
+      count: c.creators,
+      hint: "Deine Figuren. Ohne sie gibt es niemanden zu sehen — anlegen tust du sie im Studio.",
+      to: "/studio",
+    },
+    {
+      key: "voices",
+      state: counts ? mark(c.voices) : "open",
+      label: "Stimmen",
+      count: c.voices,
+      hint: "Die Stimmen aus der Stimmbank. Ohne sie klingt alles gleich — im Studio im Reiter Stimmbank.",
+      to: "/studio",
+    },
+    {
+      key: "contents",
+      state: counts ? mark(c.contents, { required: false }) : "open",
+      label: "Inhalte",
+      count: c.contents,
+      hint: "Was freigeschaltet ist und verkauft werden kann. Deine eigenen Sachen lädst du im Studio hoch.",
+      to: "/studio",
+    },
+    {
+      key: "stories",
+      state: counts ? mark(c.stories, { required: false }) : "open",
+      label: "Storys",
+      count: c.stories,
+      hint: "Geschichten zum Lesen. Darf leer bleiben, ist aber schöner mit.",
+      to: "/studio",
+    },
+    {
+      key: "streams",
+      state: counts ? mark(c.streams, { required: false }) : "open",
+      label: "Live-Streams",
+      count: c.streams,
+      hint: "Geplante oder laufende Übertragungen. Darf leer bleiben.",
+      to: "/studio",
+    },
+    {
+      key: "contests",
+      state: counts ? mark(c.contests, { required: false }) : "open",
+      label: "Wettbewerbe",
+      count: c.contests,
+      hint: "Laufende Wettbewerbe. Darf leer bleiben.",
+      to: "/studio",
+    },
+  ];
+
+  const missingCount = rows.filter((r) => r.state === "missing").length;
+
   return (
-    <div className="max-w-[1000px] mx-auto px-4 lg:px-8 py-8">
+    <div className="w-full px-4 lg:px-10 py-8">
       <div className="mb-6">
-        <h1 className="font-display text-3xl text-foreground">Besitzer-Konsole</h1>
-        <p className="text-muted-foreground text-sm">
-          Menü sortieren, Schrift einstellen, Zugang vergeben, Einstellungen sichern.
+        <h1 className="font-display text-4xl text-foreground text-gloss">Besitzer-Konsole</h1>
+        <p className="text-[15px] font-semibold text-muted-foreground mt-2 max-w-4xl leading-relaxed">
+          Hier siehst du auf einen Blick, was schon steht und was noch fehlt — und änderst nur das, was dich stört.
+          Alles ist erklärt, damit du nichts auswendig wissen musst.
         </p>
       </div>
 
-      <div className="flex gap-1 p-1 rounded-full bg-elevated border border-border w-fit mb-6 overflow-x-auto scrollbar-hide">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={cn(
-              "px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-              tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="glass flex flex-wrap gap-1 p-1.5 rounded-2xl border border-border w-fit mb-6">
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[15px] font-bold whitespace-nowrap transition-colors",
+                tab === t.id ? "glass-btn glass-btn-accent text-gloss" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="w-4 h-4" /> {t.label}
+            </button>
+          );
+        })}
       </div>
 
-      {notice && <p className="text-sm text-primary mb-4">{notice}</p>}
+      {notice && (
+        <p className="glass rounded-xl border border-border px-4 py-3 text-[15px] font-bold text-primary mb-5">{notice}</p>
+      )}
+
+      {tab === "lage" && (
+        <>
+          <GuideBox
+            title="So liest du das"
+            steps={[
+              "Grüner Haken — das steht schon. Du musst hier nichts tun.",
+              "Gelber Strich — das ist leer, aber es darf leer sein. Nur wenn du willst.",
+              "Rotes Kreuz — das fehlt dir wirklich. Das solltest du als Nächstes machen.",
+              "Das Auge rechts öffnet die Stelle, der Mülleimer setzt sie auf den Standard zurück.",
+            ]}
+          >
+            {missingCount > 0
+              ? `Es fehlt noch ${missingCount} ${missingCount === 1 ? "Sache" : "Sachen"} — rot markiert. Alles andere steht.`
+              : "Alles Wesentliche steht. Du kannst dich zurücklehnen."}
+          </GuideBox>
+
+          <div className="glass rounded-2xl border border-border p-5">
+            {rows.map((r) => (
+              <LageRow
+                key={r.key}
+                state={r.state}
+                label={r.label}
+                count={r.count}
+                hint={r.hint}
+                to={r.to}
+                onReset={r.reset}
+                resetTitle={r.resetTitle}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {tab === "menu" && (
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="text-sm text-muted-foreground mb-4">
-            Ziehen zum Sortieren, umbenennen, ausblenden. Ausgeblendete Punkte verschwinden aus dem Menü.
-          </p>
-          <MenuEditor items={items} onChange={setItems} />
-        </div>
+        <>
+          <GuideBox
+            title="Menü sortieren"
+            steps={[
+              "Am Griff links ziehen — so verschiebst du einen Eintrag nach oben oder unten.",
+              "Name und Adresse kannst du direkt im Feld überschreiben.",
+              "Das Auge öffnet die Seite, damit du siehst, wohin der Eintrag führt.",
+              "Der Mülleimer löscht den Eintrag. Unten auf Speichern drücken — sonst bleibt alles wie es war.",
+            ]}
+          >
+            Das ist die Leiste oben. Du musst hier nichts machen, außer dich stört etwas.
+          </GuideBox>
+          <div className="glass rounded-2xl border border-border p-5">
+            <MenuEditor items={items} onChange={setItems} />
+          </div>
+        </>
       )}
 
       {tab === "font" && (
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-6">
-          <div>
-            <label className="text-sm font-medium text-foreground">Schriftgröße: {font.size}px</label>
-            <input
-              type="range"
-              min={12}
-              max={24}
-              value={font.size}
-              onChange={(e) => setFont({ ...font, size: Number(e.target.value) })}
-              className="w-full mt-2"
-            />
+        <>
+          <GuideBox
+            title="Schrift im Menü"
+            steps={[
+              "Schriftgröße: wie groß die Knöpfe oben beschriftet sind.",
+              "Schriftstärke: wie fett die Schrift ist. Höher heißt kräftiger.",
+              "Abstand: wie viel Luft zwischen den Knöpfen ist.",
+              "Unten siehst du sofort eine Vorschau. Danach speichern.",
+            ]}
+          >
+            Damit es dir nicht in den Augen wehtut — stell es so ein, wie du es bequem findest.
+          </GuideBox>
+          <div className="glass rounded-2xl border border-border p-5 space-y-6">
+            <div>
+              <label className="text-[15px] font-bold text-foreground">Schriftgröße: {font.size}px</label>
+              <input
+                type="range"
+                min={12}
+                max={26}
+                value={font.size}
+                onChange={(e) => setFont({ ...font, size: Number(e.target.value) })}
+                className="w-full mt-2 accent-[hsl(var(--primary))]"
+              />
+            </div>
+            <div>
+              <label className="text-[15px] font-bold text-foreground">Schriftstärke: {font.weight}</label>
+              <input
+                type="range"
+                min={400}
+                max={900}
+                step={100}
+                value={font.weight}
+                onChange={(e) => setFont({ ...font, weight: Number(e.target.value) })}
+                className="w-full mt-2 accent-[hsl(var(--primary))]"
+              />
+            </div>
+            <div>
+              <label className="text-[15px] font-bold text-foreground">Abstand zwischen den Knöpfen: {font.gap}px</label>
+              <input
+                type="range"
+                min={0}
+                max={24}
+                value={font.gap}
+                onChange={(e) => setFont({ ...font, gap: Number(e.target.value) })}
+                className="w-full mt-2 accent-[hsl(var(--primary))]"
+              />
+            </div>
+            <div className="glass rounded-xl border border-border p-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Vorschau</p>
+              <span style={{ fontSize: font.size, fontWeight: font.weight }} className="text-foreground">
+                Entdecken · Videos · Storys · Live
+              </span>
+            </div>
           </div>
-          <div>
-            <label className="text-sm font-medium text-foreground">Schriftstärke: {font.weight}</label>
-            <input
-              type="range"
-              min={400}
-              max={900}
-              step={100}
-              value={font.weight}
-              onChange={(e) => setFont({ ...font, weight: Number(e.target.value) })}
-              className="w-full mt-2"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-foreground">Abstand zwischen den Knöpfen: {font.gap}px</label>
-            <input
-              type="range"
-              min={0}
-              max={24}
-              value={font.gap}
-              onChange={(e) => setFont({ ...font, gap: Number(e.target.value) })}
-              className="w-full mt-2"
-            />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Vorschau: <span style={{ fontSize: font.size, fontWeight: font.weight }} className="text-foreground">Entdecken · Videos · Storys</span>
-          </p>
-        </div>
+        </>
       )}
 
       {tab === "access" && (
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="text-sm text-muted-foreground mb-4">
-            Jemanden direkt freischalten — er bekommt eine Einladung per E-Mail.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Input
-              placeholder="E-Mail"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              className="flex-1 min-w-[220px]"
-            />
-            <select
-              value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value)}
-              className="h-10 rounded-md border border-input bg-transparent px-3 text-sm text-foreground"
-            >
-              <option value="user">Nutzer</option>
-              <option value="admin">Admin</option>
-            </select>
-            <button
-              onClick={invite}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-gloss"
-            >
-              <UserPlus className="w-4 h-4" /> Einladen
-            </button>
+        <>
+          <GuideBox
+            title="Zugang vergeben"
+            steps={[
+              "E-Mail-Adresse eintragen und Rolle wählen — Nutzer oder Admin.",
+              "Auf Einladen drücken. Die Person bekommt eine E-Mail und legt ihr Passwort selbst fest.",
+              "Nutzer sieht Inhalte und kann kaufen. Admin darf zusätzlich alles verwalten.",
+              "Ohne Einladung kommt niemand rein.",
+            ]}
+          >
+            Hier bestimmst du, wer die Plattform überhaupt betreten darf.
+          </GuideBox>
+          <div className="glass rounded-2xl border border-border p-5">
+            <div className="flex flex-wrap gap-2">
+              <Input
+                placeholder="E-Mail-Adresse"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                className="flex-1 min-w-[240px] h-11 text-[15px] font-semibold"
+              />
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+                className="h-11 rounded-xl border border-input bg-transparent px-3 text-[15px] font-semibold text-foreground"
+              >
+                <option value="user">Nutzer</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button
+                onClick={invite}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss"
+              >
+                <UserPlus className="w-4 h-4" /> Einladen
+              </button>
+            </div>
+            <p className="text-[13px] font-semibold text-muted-foreground mt-3">
+              Aktuell drin: {counts ? Math.max(0, (c.users || 0) - 1) : "…"} außer dir.
+            </p>
           </div>
-        </div>
+        </>
       )}
 
       {tab === "data" && (
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="text-sm text-muted-foreground mb-4">
-            Deine Einstellungen als Datei sichern und wieder einlesen.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={exportJson}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-sm font-semibold text-foreground"
-            >
-              <Download className="w-4 h-4" /> Exportieren
-            </button>
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-sm font-semibold text-foreground"
-            >
-              <Upload className="w-4 h-4" /> Importieren
-            </button>
-            <input ref={fileRef} type="file" accept="application/json" onChange={importJson} className="hidden" />
+        <>
+          <GuideBox
+            title="Sichern und zurückholen"
+            steps={[
+              "Exportieren lädt eine Datei mit deinem Menü und deinen Schrift-Einstellungen herunter.",
+              "Importieren liest so eine Datei wieder ein.",
+              "Nach dem Import unten auf Speichern drücken, sonst gilt die alte Fassung weiter.",
+            ]}
+          >
+            Damit du deine Einstellungen nie verlierst — oder sie auf einen Schlag zurückbekommst.
+          </GuideBox>
+          <div className="glass rounded-2xl border border-border p-5">
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={exportJson}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full glass-btn text-[15px] font-bold text-foreground"
+              >
+                <Download className="w-4 h-4" /> Exportieren
+              </button>
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full glass-btn text-[15px] font-bold text-foreground"
+              >
+                <Upload className="w-4 h-4" /> Importieren
+              </button>
+              <input ref={fileRef} type="file" accept="application/json" onChange={importJson} className="hidden" />
+            </div>
           </div>
-        </div>
+        </>
       )}
 
-      <button
-        onClick={save}
-        disabled={saving}
-        className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-gloss disabled:opacity-50"
-      >
-        <Save className="w-4 h-4" /> {saving ? "Speichert …" : "Speichern"}
-      </button>
+      <div className="glass sticky bottom-4 mt-6 rounded-2xl border border-border p-4 flex flex-wrap items-center gap-4">
+        <button
+          onClick={save}
+          disabled={saving}
+          className="inline-flex items-center gap-2 px-7 py-3 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss disabled:opacity-50"
+        >
+          {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saving ? "Speichert …" : "Speichern"}
+        </button>
+        <p className="text-[15px] font-semibold text-muted-foreground">
+          Änderungen gelten erst, wenn du hier drückst.
+        </p>
+      </div>
     </div>
   );
 }
