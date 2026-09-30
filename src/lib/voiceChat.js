@@ -12,8 +12,20 @@ function readAll() {
   return cache;
 }
 
-export function voiceNotesOn(creatorId) {
-  return !!creatorId && readAll()[creatorId] === true;
+// Hat der Nutzer den Schalter selbst angefasst?
+export function voiceDecided(creatorId) {
+  const v = creatorId ? readAll()[creatorId] : undefined;
+  return v === true || v === false;
+}
+
+// Automatisch an, sobald der Charakter eine Stimme hat — nur ein bewusstes
+// Ausschalten hält es aus.
+export function voiceNotesOn(creatorId, hasVoice = false) {
+  if (!creatorId) return false;
+  const v = readAll()[creatorId];
+  if (v === true) return true;
+  if (v === false) return false;
+  return !!hasVoice;
 }
 
 export function setVoiceNotesOn(creatorId, on) {

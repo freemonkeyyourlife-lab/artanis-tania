@@ -28,7 +28,8 @@ export const HELP = {
     steps: [
       "Direkt unter dem Namen des Charakters sitzt die Stimmen-Zeile: „Stimme: …“.",
       "Im Auswahlfeld daneben wählst du, welche Stimme dieser Charakter spricht. Die Liste kommt aus der Stimmbank — eine Stimme gehört immer nur einem Charakter.",
-      "Der Knopf „Sprachnachricht“: steht er an, bekommt jede Antwort zusätzlich eine Sprachnachricht in dieser Stimme. Nochmal drücken schaltet es wieder aus.",
+      "Es läuft von selbst: Sobald ein Charakter eine Stimme hat, bekommt jede Antwort automatisch eine Sprachnachricht in genau dieser Stimme.",
+      "Der Knopf „Sprachnachricht“ zeigt dir den Zustand — steht „✓“ dran, läuft es. Ein Druck darauf schaltet es aus, noch einer wieder ein.",
       "Der Knopf „Erklärung“ daneben führt dich jederzeit hierher zurück.",
       "Dieselbe Stimme spricht auch im Videochat (das Kamera-Symbol oben) — dort steht der Name der Stimme neben der Uhr.",
       "Für Telegram-Chats gilt dieselbe Auswahl im Leitstand: Chat öffnen, oben die Stimme wählen, Häkchen oder Mikrofon-Knopf.",

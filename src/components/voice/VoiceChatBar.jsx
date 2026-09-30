@@ -1,15 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { assignVoiceToCreator } from "@/lib/voiceAssign";
-import { voiceNotesOn, setVoiceNotesOn } from "@/lib/voiceChat";
+import { voiceNotesOn, voiceDecided, setVoiceNotesOn } from "@/lib/voiceChat";
 import HelpButton from "@/components/HelpButton";
 
 // Die eine Steuerung: welche Stimme spricht — und ob die Antworten zusätzlich
 // als Sprachnachricht rausgehen. Gilt für Chat, Videochat und Telegram.
 export default function VoiceChatBar({ creator, creators = [], voices = [], onChanged, className }) {
-  const [on, setOn] = useState(() => voiceNotesOn(creator?.id));
   const current = voices.find((v) => v.id === creator?.voiceProfileId) || null;
+  const [on, setOn] = useState(() => voiceNotesOn(creator?.id, !!current));
+
+  // Stimme neu zugewiesen und noch nichts entschieden? Dann läuft sie an.
+  useEffect(() => {
+    if (!voiceDecided(creator?.id)) setOn(voiceNotesOn(creator?.id, !!current));
+  }, [creator?.id, current?.id]);
 
   if (!creator?.id) return null;
 

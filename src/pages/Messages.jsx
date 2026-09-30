@@ -617,7 +617,7 @@ export default function Messages() {
 
     // Sprachnachricht: entweder die Figur schickt selbst eine, oder der Schalter
     // „Sprachnachricht" steht an — dann wird jede Antwort auch gesprochen.
-    const spoken = parsed.voice || (voiceNotesOn(activeChat) ? parsed.cleanText : "");
+    const spoken = parsed.voice || (voiceNotesOn(activeChat, !!voiceProfileFor(activeChat)) ? parsed.cleanText : "");
     if (spoken) {
       try {
         const url = await speakAsVoice(voiceProfileFor(activeChat), spoken);
