@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, RefreshCw, Check, AlertTriangle, UserCheck, Search } from "lucide-react";
+import { Send, RefreshCw, Check, AlertTriangle, UserCheck, Search, Power } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 // Automatisches Senden über Telegram. Der einzige der drei Kanäle, der von
@@ -72,6 +72,28 @@ export default function TelegramPanel({ setup, onSave, saving }) {
     }
   };
 
+  const toggleReceive = async () => {
+    setBusy("receive");
+    setNotice("");
+    try {
+      const data = await call({ action: status?.receiving ? "receive-off" : "receive-on" });
+      if (!data.ok) {
+        setNotice(data.error || "Das hat nicht geklappt.");
+      } else {
+        setNotice(
+          data.receiving
+            ? "Empfang ist an — schreib deinem Bot, die Nachricht landet im Leitstand."
+            : "Empfang ist aus."
+        );
+      }
+      setStatus(await call({ action: "status" }));
+    } catch (e) {
+      setNotice("Das hat nicht geklappt.");
+    } finally {
+      setBusy("");
+    }
+  };
+
   return (
     <div className="glass rounded-2xl border-2 border-border p-5">
       <p className="font-display text-xl text-foreground mb-1">Automatisch senden — Telegram</p>
@@ -109,7 +131,26 @@ export default function TelegramPanel({ setup, onSave, saving }) {
         <div className="space-y-4">
           <p className="flex items-center gap-2 text-[15px] font-bold text-emerald-400">
             <Check className="w-4 h-4" /> Verbunden mit @{status.bot?.username || "dein Bot"}
+            <span className={status.receiving ? "text-emerald-400" : "text-muted-foreground"}>
+              · Empfang {status.receiving ? "an" : "aus"}
+            </span>
           </p>
+
+          <div className="rounded-xl border border-border p-4">
+            <p className="text-[15px] font-bold text-foreground">Nachrichten empfangen</p>
+            <p className="text-[14px] font-semibold text-muted-foreground mt-1 mb-3">
+              Ist das an, landet jede Nachricht, die jemand deinem Bot schreibt, direkt im Leitstand — und was
+              du dort antwortest, geht von allein zurück nach Telegram.
+            </p>
+            <button
+              onClick={toggleReceive}
+              disabled={busy === "receive"}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss disabled:opacity-50"
+            >
+              {busy === "receive" ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
+              {status.receiving ? "Empfang ausschalten" : "Empfang einschalten"}
+            </button>
+          </div>
 
           <div>
             <label className="text-[15px] font-bold text-foreground">Name deines Bots</label>

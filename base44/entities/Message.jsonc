@@ -43,6 +43,9 @@
     "contentLink": {
       "type": "string"
     },
+    "channel": {
+      "type": "string"
+    },
     "read": {
       "type": "boolean",
       "default": false

@@ -1,0 +1,40 @@
+{
+  "name": "Telegram-Antwort",
+  "description": "Schickt Antworten aus der App zur\u00fcck nach Telegram",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "Message",
+      "events": [
+        "create"
+      ]
+    },
+    "condition": "${ .trigger.data.channel != \"TELEGRAM\" }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "telegram_antwort",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sende_nach_telegram": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "telegramForward",
+            "args": {
+              "messageId": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Nach Telegram senden",
+            "description": "Antwort aus der App"
+          }
+        }
+      }
+    ]
+  }
+}
