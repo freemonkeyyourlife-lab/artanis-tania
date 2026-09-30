@@ -23,6 +23,8 @@ export default function VideoCall() {
   const [wantCam, setWantCam] = useState(true);
   const [wantMic, setWantMic] = useState(true);
   const [myName, setMyName] = useState("");
+  // Einladen darf nur der Besitzer — für alle anderen bleibt es unsichtbar.
+  const [isOwner, setIsOwner] = useState(false);
   const [windows, setWindows] = useState(() => loadWindows());
   const [rooms, setRooms] = useState(() => getRooms());
 
@@ -48,7 +50,10 @@ export default function VideoCall() {
     (async () => {
       try {
         const me = await base44.auth.me();
-        if (alive) setMyName(publicName(me, ""));
+        if (alive) {
+          setMyName(publicName(me, ""));
+          setIsOwner(me?.role === "admin");
+        }
       } catch (e) { /* not logged in */ }
     })();
     return () => { alive = false; };
@@ -141,10 +146,12 @@ export default function VideoCall() {
             Jetzt beitreten
           </button>
 
-          <div className="mt-8 pt-6 border-t border-border text-left">
-            <p className="text-xs text-muted-foreground mb-3">Du bist in <span className="font-semibold text-foreground">Chatraum {roomNumber}</span>. Teile diesen Link mit so vielen Leuten, wie du willst — Code, QR-Code und fertiger Text stecken mit drin:</p>
-            <CallInvite url={inviteLink} code={token} label={`Chatraum ${roomNumber} einladen`} className="w-full justify-center" />
-          </div>
+          {isOwner && (
+            <div className="mt-8 pt-6 border-t border-border text-left">
+              <p className="text-xs text-muted-foreground mb-3">Du bist in <span className="font-semibold text-foreground">Chatraum {roomNumber}</span>. Teile diesen Link mit so vielen Leuten, wie du willst — Code, QR-Code und fertiger Text stecken mit drin:</p>
+              <CallInvite url={inviteLink} code={token} label={`Chatraum ${roomNumber} einladen`} className="w-full justify-center" />
+            </div>
+          )}
         </div>
       </div>
     );
@@ -218,13 +225,15 @@ export default function VideoCall() {
           >
             <Bot className="w-4 h-4" /> <span className="hidden sm:inline">Bot</span>
           </button>
-          <button
-            onClick={() => toggleWindow("share")}
-            title="Alles zum Weitergeben"
-            className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", windows.open.includes("share") ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
-          >
-            <Share2 className="w-4 h-4" /> <span className="hidden sm:inline">Teilen</span>
-          </button>
+          {isOwner && (
+            <button
+              onClick={() => toggleWindow("share")}
+              title="Alles zum Weitergeben"
+              className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", windows.open.includes("share") ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+            >
+              <Share2 className="w-4 h-4" /> <span className="hidden sm:inline">Teilen</span>
+            </button>
+          )}
           {isHost && <LiveToggle token={token} hostName={myName} />}
           {isHost && (
             <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold uppercase tracking-wider flex-shrink-0">

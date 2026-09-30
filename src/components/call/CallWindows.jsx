@@ -31,8 +31,11 @@ export default function CallWindows({ messages, mySeat, onSend, onSendVoice, tok
 
   useEffect(() => subscribeWindows(() => setCfg(loadWindows())), []);
 
-  const openIds = cfg.order.filter((id) => cfg.open.includes(id));
-  const closedIds = cfg.order.filter((id) => !cfg.open.includes(id));
+  // Einladen darf nur der Gastgeber — bei allen anderen bleibt das Teilen-Fenster
+  // deshalb gar nicht erst in der Liste.
+  const order = isHost ? cfg.order : cfg.order.filter((id) => id !== "share");
+  const openIds = order.filter((id) => cfg.open.includes(id));
+  const closedIds = order.filter((id) => !cfg.open.includes(id));
   const active = openIds.includes(tab) ? tab : openIds[0] || null;
 
   const content = (id) =>
@@ -41,7 +44,7 @@ export default function CallWindows({ messages, mySeat, onSend, onSendVoice, tok
     ) : id === "share" ? (
       <CallSharePanel token={token} roomNumber={roomNumber} rooms={rooms} isHost={isHost} onOpen={onOpen} onNewRoom={onNewRoom} />
     ) : (
-      <CallBotPanel />
+      <CallBotPanel token={token} roomNumber={roomNumber} isHost={isHost} />
     );
 
   const titleOf = (id) => WINDOW_DEFS.find((w) => w.id === id)?.title || id;

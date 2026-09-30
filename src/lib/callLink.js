@@ -45,6 +45,11 @@ export function callInviteUrl(token, roomNumber) {
   return `${base}/call/${token}${roomNumber ? `?r=${roomNumber}` : ""}`;
 }
 
+// Die Einladung als fertiger Text — gleich, ob sie per Link, Bot oder Teilen rausgeht.
+export function callInviteText(token, roomNumber) {
+  return `ARTANIS × TRIANIA — Chatraum ${roomNumber}.\nKomm rein: ${callInviteUrl(token, roomNumber)}`;
+}
+
 export function resetCallToken() {
   return store(newCallCode());
 }

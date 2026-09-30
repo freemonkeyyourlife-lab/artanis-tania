@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Copy, Check, Plus, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { callInviteUrl } from "@/lib/callLink";
+import { callInviteUrl, callInviteText } from "@/lib/callLink";
 import CallQr from "@/components/call/CallQr";
 import BotInviteList from "@/components/call/BotInviteList";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,7 +15,7 @@ export default function CallSharePanel({ token, roomNumber, rooms = [], isHost, 
   const { toast } = useToast();
   const [copied, setCopied] = useState("");
   const url = callInviteUrl(token, roomNumber);
-  const invitation = `ARTANIS × TRIANIA — Chatraum ${roomNumber}.\nKomm rein: ${url}`;
+  const invitation = callInviteText(token, roomNumber);
 
   const copy = async (text, what) => {
     try {

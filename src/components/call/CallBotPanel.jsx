@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Bot } from "lucide-react";
 import LeitstandChat from "@/components/leitstand/LeitstandChat";
+import BotInviteList from "@/components/call/BotInviteList";
+import { callInviteText } from "@/lib/callLink";
 
 const isTelegram = (conversation) => String(conversation?.participantId || "").startsWith("telegram:");
 
 // Der Bot im Call: schmal, damit du im Call bleibst und trotzdem parallel mit
 // deinen Telegram-Gästen schreibst.
-export default function CallBotPanel() {
+export default function CallBotPanel({ token, roomNumber, isHost }) {
   // Im Call sitzt dieser Chat in einem schmalen Fenster — dort darf alles
   // etwas größer sein, damit man beim Zuschauen gut mitlesen kann.
   const [guests, setGuests] = useState(null);
@@ -83,6 +85,16 @@ export default function CallBotPanel() {
         <Bot className="w-5 h-5 text-primary" />
         <p className="text-[15px] font-semibold text-foreground">Dein Bot</p>
       </div>
+
+      {isHost && (
+        <div className="rounded-2xl border border-border bg-elevated p-3.5">
+          <p className="text-[15px] font-semibold text-foreground">Direkt in den Call holen</p>
+          <p className="mt-1 mb-2.5 text-[12px] text-muted-foreground">
+            Die Einladung für Chatraum {roomNumber} kommt als Nachricht deines Bots an — nicht aus deinem privaten Telegram.
+          </p>
+          <BotInviteList text={callInviteText(token, roomNumber)} />
+        </div>
+      )}
 
       {guests === null ? (
         <p className="text-[13px] text-muted-foreground px-1">Chats werden geladen …</p>
