@@ -68,6 +68,13 @@ export default function Layout() {
     loadLayout().then(setLayout).catch(() => setLayout(null));
   }, []);
 
+  // Wird die Reihenfolge neu geordnet, holt die Kopfzeile sie sich sofort neu.
+  useEffect(() => {
+    const reload = () => loadLayout().then(setLayout).catch(() => {});
+    window.addEventListener("artanis:layout-changed", reload);
+    return () => window.removeEventListener("artanis:layout-changed", reload);
+  }, []);
+
   // Testansicht: du schaust dir die App gerade als ein anderer Nutzer an.
   useEffect(() => {
     setViewAsState(getViewAs());

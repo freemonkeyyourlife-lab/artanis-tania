@@ -4,6 +4,9 @@ import LeitstandList from "@/components/leitstand/LeitstandList";
 import LeitstandChat from "@/components/leitstand/LeitstandChat";
 import LeitstandEmpty from "@/components/leitstand/LeitstandEmpty";
 import CallInviteButton from "@/components/call/CallInviteButton";
+import OrganizePanel from "@/components/leitstand/OrganizePanel";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Wartende Chats stehen oben — die anderen nach der letzten Nachricht.
@@ -97,7 +100,19 @@ export default function Leitstand() {
           <h1 className="font-display text-3xl text-foreground mb-2">Leitstand</h1>
           <p className="text-sm text-muted-foreground">Alle Chats deiner Gäste. Du siehst sofort, wer wartet — und übernimmst jederzeit selbst.</p>
         </div>
-        <CallInviteButton label="Jemanden einladen" className="flex-shrink-0" />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-sm font-bold text-foreground">
+                <LayoutGrid className="w-4 h-4" /> Neu organisieren
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+              <OrganizePanel />
+            </DialogContent>
+          </Dialog>
+          <CallInviteButton label="Jemanden einladen" className="flex-shrink-0" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-260px)]">
