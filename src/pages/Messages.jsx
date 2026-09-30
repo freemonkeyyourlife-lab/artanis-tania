@@ -15,6 +15,8 @@ import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS, sanitizeImagePr
 import CharacterSuggestion from "@/components/CharacterSuggestion";
 import SceneReadButton from "@/components/chat/SceneReadButton";
 import RolePicker from "@/components/chat/RolePicker";
+import CharacterDirector from "@/components/chat/CharacterDirector";
+import { speechPrompt } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
 import { splitScene, playScene } from "@/lib/sceneVoice";
 import VoiceChatBar from "@/components/voice/VoiceChatBar";
@@ -519,6 +521,7 @@ export default function Messages() {
       ctx += `\n\n⚠️ ES SIND ${names.length} FRAUEN IM RAUM: ${names.join(", ")}. JEDE von ihnen MUSS in JEDER Antwort mindestens einen Satz sagen, immer mit ihrem Namen in eckigen Klammern davor — z.B. [${names[1] || names[0]}]: … Keine Antwort darf eine von ihnen stumm lassen. Alle sind im Bild zu sehen, und keine verlässt den Raum.`;
     }
     ctx += playPrompt(playLevel);
+    ctx += speechPrompt(activeChat, [activeCreator, ...extraCharacters]);
     ctx += "\n\n⚠️ SPRACHE: Antworte ausschließlich auf Deutsch (Du-Form) — auch wenn der Nutzer englisch schreibt. Kein Sprachwechsel.";
     return ctx;
   };
@@ -1544,12 +1547,18 @@ export default function Messages() {
               </Dialog>
 
               {viewMode === "ai" && (
-                <div className="px-4 py-2 border-b border-border">
+                <div className="px-4 py-2 border-b border-border flex flex-wrap items-center gap-2">
                   <VoiceChatBar
                     creator={creators.find((c) => c.id === activeChat)}
                     creators={creators}
                     voices={voices}
                     onChanged={load}
+                  />
+                  <CharacterDirector
+                    chatId={activeChat}
+                    people={[activeCreator, ...extraCharacters]}
+                    voices={voices}
+                    onVoiceSaved={(v) => setVoices((prev) => prev.map((x) => (x.id === v.id ? v : x)))}
                   />
                 </div>
               )}

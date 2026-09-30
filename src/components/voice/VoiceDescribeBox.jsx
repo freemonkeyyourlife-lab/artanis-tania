@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Loader2, Sparkles } from "lucide-react";
 import { MOODS } from "@/lib/voiceDj";
+import VoiceInput from "@/components/VoiceInput";
 
 // „So soll sie klingen" — aus einer Beschreibung in Worten werden die Regler.
 // Du sagst, wie es gemeint ist, und die Einstellung stellt sich darauf ein.
@@ -10,8 +11,8 @@ export default function VoiceDescribeBox({ voice, onApply }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
 
-  const apply = async () => {
-    const desc = text.trim();
+  const apply = async (spoken) => {
+    const desc = (typeof spoken === "string" ? spoken : text).trim();
     if (!desc) return;
     setBusy(true);
     setNote("");
@@ -68,9 +69,10 @@ export default function VoiceDescribeBox({ voice, onApply }) {
           placeholder="z. B. tief, rauchig, spricht langsam und verführerisch"
           className="flex-1 px-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
         />
+        <VoiceInput title="Einsprechen, wie sie klingen soll" onResult={(t) => { setText(t); apply(t); }} />
         <button
           type="button"
-          onClick={apply}
+          onClick={() => apply()}
           disabled={busy || !text.trim()}
           className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50 whitespace-nowrap"
         >
