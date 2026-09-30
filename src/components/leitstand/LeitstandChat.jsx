@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, Loader2, Mic } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Mic, Square, Volume2 } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 import TakeoverSwitch from "@/components/leitstand/TakeoverSwitch";
 import VoiceReplyBar from "@/components/leitstand/VoiceReplyBar";
+import useVoiceRecorder from "@/hooks/useVoiceRecorder";
+import { useToast } from "@/components/ui/use-toast";
 import CopyRoomLinkButton from "@/components/call/CopyRoomLinkButton";
 
 // Hier schreibst du als der Charakter — jede Zeile kommt beim Gast als Nachricht der Figur an.
@@ -12,6 +14,7 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const endRef = useRef(null);
+  const { toast } = useToast();
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => { setText(""); }, [conversation.id]);
@@ -20,6 +23,46 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
     await base44.entities.Conversation.update(conversation.id, { handledBy: value });
     onChanged?.();
   };
+
+  // Selbst sprechen statt tippen: die Aufnahme wird in die Stimme des
+  // Charakters umgewandelt und geht als Sprachnachricht beim Gast an.
+  const recorder = useVoiceRecorder(async (fileUri) => {
+    if (!conversation.voiceProfileId) {
+      toast({ title: "Erst eine Stimme wählen", description: "Im Streifen über der Eingabe legst du fest, wie der Charakter klingt.", variant: "destructive" });
+      return;
+    }
+    setSending(true);
+    try {
+      const profile = await base44.entities.Voice.get(conversation.voiceProfileId);
+      const res = await base44.functions.invoke("voiceConvert", {
+        fileUri,
+        voiceId: profile?.externalVoiceId || "",
+        baseVoice: profile?.baseVoice || "honey",
+        mood: profile?.mood,
+        intensity: profile?.intensity,
+        ending: profile?.ending,
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+      await base44.entities.Message.create({
+        conversationId: conversation.id,
+        sender: conversation.creatorName || "Charakter",
+        senderType: "AI",
+        text: "",
+        humanOverride: true,
+        voiceNote: true,
+        attachments: [{ type: "audio", url: res.data.url, file_uri: res.data.file_uri }],
+      });
+      await base44.entities.Conversation.update(conversation.id, {
+        waitingSince: null,
+        lastMessageAt: new Date().toISOString(),
+      });
+      onChanged?.();
+    } catch (e) {
+      toast({ title: "Umwandeln hat nicht geklappt", description: e.message || "Bitte noch einmal versuchen.", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  });
 
   // voiceOnly: diese Zeile geht als Sprachnachricht raus, ohne Text daneben.
   const send = async (voiceOnly = false) => {
@@ -52,6 +95,8 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
     return items.filter((it) => it.type === "image" && it.url);
   };
 
+  const audios = (msg) => (msg.attachments || []).filter((it) => it.type === "audio" && it.url);
+
   return (
     <>
       <div className="p-4 border-b border-border flex items-center gap-3">
@@ -73,6 +118,9 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
               {media(m).map((it, i) => (
                 <Image key={i} src={it.url} fittingType="fill" className="w-48 h-48 rounded-2xl mb-2" />
               ))}
+              {audios(m).map((it, i) => (
+                <audio key={i} controls src={it.url} className="w-56 max-w-full mb-2" />
+              ))}
               {m.text}
             </div>
           </div>
@@ -87,16 +135,24 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder={`Antworten als ${conversation.creatorName || "Charakter"} …`}
+          placeholder={recorder.recording ? "Aufnahme läuft — Mikrofon tippen zum Senden" : recorder.busy ? "Wird umgewandelt …" : `Antworten als ${conversation.creatorName || "Charakter"} …`}
           className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
         />
         <button
           onClick={() => send(true)}
           disabled={!text.trim() || sending || !conversation.voiceProfileId}
-          title={conversation.voiceProfileId ? "Nur als Sprachnachricht senden" : "Erst oben eine Stimme wählen"}
+          title={conversation.voiceProfileId ? "Diesen Text als Sprachnachricht sprechen" : "Erst oben eine Stimme wählen"}
           className="w-10 h-10 rounded-full bg-elevated border border-border text-primary flex items-center justify-center disabled:opacity-40 flex-shrink-0"
         >
-          <Mic className="w-4 h-4" />
+          <Volume2 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => recorder.toggle("meine-stimme.webm")}
+          disabled={sending || recorder.busy}
+          title={conversation.voiceProfileId ? "Selbst sprechen — geht mit der Stimme des Charakters beim Gast an" : "Erst oben eine Stimme wählen"}
+          className={cn("w-10 h-10 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-40", recorder.recording ? "bg-red-500 border-red-500 text-white animate-pulse" : "bg-elevated border-border text-primary")}
+        >
+          {recorder.busy ? <Loader2 className="w-4 h-4 animate-spin" /> : recorder.recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
         </button>
         <button
           onClick={() => send()}

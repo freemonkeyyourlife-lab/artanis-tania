@@ -64,7 +64,11 @@ export default async function (req: Request): Promise<Response> {
     if (!messageId) return Response.json({ ok: true, skipped: "keine Nachricht" });
 
     const msg = await base44.asServiceRole.entities.Message.get(messageId);
-    if (!msg || !msg.text) return Response.json({ ok: true, skipped: "leer" });
+    if (!msg) return Response.json({ ok: true, skipped: "leer" });
+    // Selbst eingesprochen und schon in die Charakter-Stimme umgewandelt: dann
+    // geht genau diese Aufnahme raus, statt den Text neu sprechen zu lassen.
+    const ownVoice = (msg.attachments || []).find((a: any) => a?.type === "audio" && (a.file_uri || a.url));
+    if (!msg.text && !ownVoice) return Response.json({ ok: true, skipped: "leer" });
     // Was selbst von Telegram kam, darf nicht zurückwandern.
     if (msg.channel === CHANNEL) return Response.json({ ok: true, skipped: "von Telegram" });
 
@@ -80,7 +84,31 @@ export default async function (req: Request): Promise<Response> {
     const voiceOnly = msg.voiceNote === true;
     const withVoice = voiceOnly || conv.voiceNotes === true;
 
-    if (!voiceOnly) {
+    // Deine eigene Aufnahme, schon umgewandelt — sie klingt wie der Charakter.
+    if (ownVoice) {
+      try {
+        let url = String(ownVoice.url || "");
+        if (ownVoice.file_uri) {
+          const signed = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri: ownVoice.file_uri, expires_in: 900 });
+          url = signed?.signed_url || url;
+        }
+        const res = await fetch(url);
+        if (res.ok) {
+          const bytes = new Uint8Array(await res.arrayBuffer());
+          const data = await sendVoice({ token, chatId, bytes });
+          if (data.ok) return Response.json({ ok: true, sentTo: handle, ownVoice: true });
+          console.error("telegramForward eigene Aufnahme: " + (data.description || "unbekannt"));
+          const fallback = await sendAudio({ token, chatId, bytes, title: conv?.creatorName || "Sprachnachricht" });
+          if (fallback.ok) return Response.json({ ok: true, sentTo: handle, ownVoice: true });
+          return Response.json({ ok: false, error: fallback.description || "Senden hat nicht geklappt." });
+        }
+        console.error("telegramForward eigene Aufnahme nicht lesbar");
+      } catch (error) {
+        console.error("telegramForward eigene Aufnahme: " + (error && error.message));
+      }
+    }
+
+    if (!voiceOnly && msg.text) {
       const res = await fetch(`${API}/bot${token}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

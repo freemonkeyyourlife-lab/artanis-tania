@@ -13,7 +13,7 @@ export default function CallWindowFrame({ id, title, hint, children, wide }) {
   const btn = "w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground bg-elevated flex-shrink-0";
 
   return (
-    <section className={cn("flex flex-col min-h-0 rounded-2xl border border-border bg-card overflow-hidden", minimized ? "flex-none" : "flex-1")}>
+    <section className={cn("flex flex-col min-h-0 rounded-2xl border border-border bg-card overflow-hidden", minimized ? "flex-none" : "flex-1 min-h-[340px]")}>
       <header className="flex items-center gap-1 px-2 py-1.5 border-b border-border bg-elevated/60 flex-shrink-0">
         <span className="text-[12px] font-bold text-foreground truncate">{title}</span>
         {hint && <span className="text-[10px] text-muted-foreground truncate hidden xl:inline">{hint}</span>}
