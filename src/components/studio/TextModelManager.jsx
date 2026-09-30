@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, Loader2, Plus, Check, Power, Trash2 } from "lucide-react";
+import { Search, Loader2, Plus, Check, Power, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,8 @@ export default function TextModelManager() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(null);
+  const [editingDesc, setEditingDesc] = useState(null);
+  const [descDraft, setDescDraft] = useState("");
 
   useEffect(() => { load(); search(); }, []);
 
@@ -46,10 +48,21 @@ export default function TextModelManager() {
       const test = await base44.functions.invoke("hfChat", { modelId: m.id, prompt: "Antworte mit genau einem Wort: Bereit." });
       if (test.data?.error) throw new Error(test.data.error);
       if (!test.data?.text) throw new Error("Keine Antwort erhalten.");
+
+      // Damit du weißt, ob sich das Modell lohnt — kurz erklärt, wofür es taugt.
+      let description = "";
+      try {
+        const info = await base44.integrations.Core.InvokeLLM({
+          prompt: `Beschreibe in höchstens zwei kurzen deutschen Sätzen, wofür sich das Sprachmodell "${m.id}" eignet, welche Stärken es hat und für welche Aufgaben es sich lohnt. Nur die Beschreibung, kein Vorwort, keine Aufzählung.`,
+        });
+        description = typeof info === "string" ? info.trim() : "";
+      } catch (e) { /* dann bleibt die Beschreibung erst mal leer */ }
+
       await base44.entities.TextModel.create({
         name: m.id.split("/").pop(),
         modelId: m.id,
         note: m.provider ? `Läuft über ${m.provider}` : "",
+        description,
         enabled: true,
       });
       await load();
@@ -69,6 +82,12 @@ export default function TextModelManager() {
   const remove = async (m) => {
     if (!window.confirm(`"${m.name}" entfernen?`)) return;
     await base44.entities.TextModel.delete(m.id);
+    load();
+  };
+
+  const saveDescription = async (m) => {
+    await base44.entities.TextModel.update(m.id, { description: descDraft.trim() });
+    setEditingDesc(null);
     load();
   };
 
@@ -150,8 +169,39 @@ export default function TextModelManager() {
                 <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{m.modelId}{m.note ? ` · ${m.note}` : ""}</p>
+                  {editingDesc === m.id ? (
+                    <div className="flex gap-2 mt-1">
+                      <input
+                        value={descDraft}
+                        onChange={(e) => setDescDraft(e.target.value)}
+                        placeholder="Wofür lohnt sich dieses Modell?"
+                        className={inputCls}
+                      />
+                      <button
+                        onClick={() => saveDescription(m)}
+                        className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold whitespace-nowrap"
+                      >
+                        Speichern
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[11px] text-muted-foreground truncate">{m.modelId}{m.note ? ` · ${m.note}` : ""}</p>
+                      <p className={cn("text-[12px] mt-0.5", m.description ? "text-foreground/80" : "text-muted-foreground italic")}>
+                        {m.description || "Noch keine Beschreibung — trag selbst ein, wofür es sich lohnt."}
+                      </p>
+                    </>
+                  )}
                 </div>
+                {editingDesc !== m.id && (
+                  <button
+                    onClick={() => { setEditingDesc(m.id); setDescDraft(m.description || ""); }}
+                    title="Beschreibung bearbeiten"
+                    className="w-8 h-8 rounded-full bg-background border border-border text-muted-foreground flex items-center justify-center hover:text-foreground transition-colors flex-shrink-0"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <button
                   onClick={() => toggle(m)}
                   title={m.enabled ? "Im Chat ausblenden" : "Im Chat anzeigen"}
