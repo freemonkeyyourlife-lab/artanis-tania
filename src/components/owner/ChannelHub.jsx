@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { UserPlus } from "lucide-react";
 import GuideBox from "@/components/owner/GuideBox";
 import ChannelSetupPanel from "@/components/owner/ChannelSetupPanel";
+import TelegramPanel from "@/components/owner/TelegramPanel";
 import ChannelContactForm from "@/components/owner/ChannelContactForm";
 import ChannelContactList from "@/components/owner/ChannelContactList";
 import ChannelExport from "@/components/owner/ChannelExport";
@@ -39,22 +40,27 @@ export default function ChannelHub() {
     })();
   }, []);
 
-  const saveSetup = async () => {
+  const saveSetupValues = async (values) => {
     setSavingSetup(true);
     setNotice("");
+    const next = { ...setup, ...values };
     try {
       const saved = setupRecord
-        ? await base44.entities.ChannelSetup.update(setupRecord.id, setup)
-        : await base44.entities.ChannelSetup.create(setup);
+        ? await base44.entities.ChannelSetup.update(setupRecord.id, next)
+        : await base44.entities.ChannelSetup.create(next);
       setSetupRecord(saved);
       setSetup(saved);
       setNotice("Deine Kanäle sind gespeichert.");
+      return true;
     } catch (e) {
       setNotice("Speichern hat nicht geklappt. Versuch es nochmal.");
+      return false;
     } finally {
       setSavingSetup(false);
     }
   };
+
+  const saveSetup = () => saveSetupValues({});
 
   const saveContact = async (data) => {
     setSavingContact(true);
@@ -131,6 +137,8 @@ export default function ChannelHub() {
         onSave={saveSetup}
         saving={savingSetup}
       />
+
+      <TelegramPanel setup={setup} onSave={saveSetupValues} saving={savingSetup} />
 
       {formOpen && (
         <ChannelContactForm
