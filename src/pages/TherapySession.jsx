@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, Loader2, Eye, EyeOff, Download, Radio } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Eye, EyeOff, Download, Radio, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import TherapyConfigMask from "@/components/therapy/TherapyConfigMask";
 import TherapyThread from "@/components/therapy/TherapyThread";
 import { buildTherapyPrompt, THERAPY_MODES, INTENSITIES, ROLE_SETUPS, FREILAUF_PROMPT, roleLabel, therapistName } from "@/lib/therapyPrompts";
 import SessionControls from "@/components/therapy/SessionControls";
@@ -42,6 +44,9 @@ export default function TherapySession() {
   const [sending, setSending] = useState(false);
   const [guestNote, setGuestNote] = useState("");
   const [guestSending, setGuestSending] = useState(false);
+  const [creators, setCreators] = useState([]);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [configSaving, setConfigSaving] = useState(false);
   const [handsFree, setHandsFree] = useState(false);
   const [running, setRunning] = useState(false);
   const [runCount, setRunCount] = useState(0);
@@ -64,6 +69,8 @@ export default function TherapySession() {
         setMe(user);
         const loaded = await base44.entities.TherapySession.get(id);
         setSession(loaded);
+        const list = await base44.entities.Creator.filter({ active: { $ne: false } }, "stageName", 300).catch(() => []);
+        setCreators(list);
         const msgs = await base44.entities.TherapyMessage.filter({ sessionId: id }, "created_date", 300);
         setMessages(msgs);
       } catch (e) {
@@ -237,6 +244,31 @@ export default function TherapySession() {
     setSession(updated);
   };
 
+  // Die Konfigurations-Maske übernehmen: Besetzung, Thema und ihre
+  // Reaktionsweise — gilt ab der nächsten Antwort.
+  const saveConfig = async (patch) => {
+    if (!session) return;
+    setConfigSaving(true);
+    try {
+      const { roleSetup, ...rest } = patch;
+      const updated = await base44.entities.TherapySession.update(session.id, rest);
+      setSession(updated);
+      if (roleSetup && roleSetup !== session.roleSetup) await switchRole(roleSetup);
+      const present = (patch.cast || []).filter((c) => c.mode === "PRESENT");
+      const note = await base44.entities.TherapyMessage.create({
+        sessionId: session.id,
+        senderType: "SYSTEM",
+        text: `Neu konfiguriert — Thema, Besetzung${present.length ? ` (${present.map((c) => c.name).join(", ")} im Raum)` : ""} und ihre Reaktionsweise. Gilt ab jetzt.`,
+      });
+      setMessages((prev) => (prev.some((m) => m.id === note.id) ? prev : [...prev, note]));
+      setConfigOpen(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setConfigSaving(false);
+    }
+  };
+
   // Solange der Freilauf läuft, antwortet Triania von selbst weiter.
   useEffect(() => {
     if (!running || sending || loading || !canWrite) return;
@@ -318,6 +350,16 @@ export default function TherapySession() {
             </Link>
           )}
 
+          {isOwner && (
+            <button
+              onClick={() => setConfigOpen(true)}
+              title="Besetzung, Thema und ihre Reaktionsweise festlegen"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated text-muted-foreground text-[11px] font-semibold hover:text-foreground transition-colors"
+            >
+              <Settings2 className="w-3.5 h-3.5" /> Konfigurieren
+            </button>
+          )}
+
           <button
             onClick={() => downloadSession(session, messages)}
             title="Die ganze Sitzung als Datei — Plan, Besetzung und Verlauf"
@@ -351,6 +393,22 @@ export default function TherapySession() {
           {session.anonymous ? "Anonym" : session.userName || "Unbekannt"}
         </p>
       </div>
+
+      <Dialog open={configOpen} onOpenChange={setConfigOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <h3 className="font-display text-lg text-foreground mb-1">Sitzung konfigurieren</h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Wer dabei ist, worum es geht und wie {name} auf das reagiert, was du sagst.
+          </p>
+          <TherapyConfigMask
+            session={session}
+            creators={creators}
+            onSave={saveConfig}
+            onCancel={() => setConfigOpen(false)}
+            saving={configSaving}
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="rounded-2xl border border-border bg-card p-4 lg:p-6 mb-4">
         {messages.length === 0 && !sending ? (
