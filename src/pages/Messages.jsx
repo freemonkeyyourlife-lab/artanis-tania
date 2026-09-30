@@ -18,6 +18,8 @@ import RolePicker from "@/components/chat/RolePicker";
 import CharacterDirector from "@/components/chat/CharacterDirector";
 import StoryExportButton from "@/components/chat/StoryExportButton";
 import ChatCastMenu from "@/components/chat/ChatCastMenu";
+import MoodQuickMenu from "@/components/chat/MoodQuickMenu";
+import { moodFor, setMoodFor, moodPrompt } from "@/lib/moodStyle";
 import { speechPrompt } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
 import { splitScene, playScene } from "@/lib/sceneVoice";
@@ -126,6 +128,8 @@ export default function Messages() {
   const spannerMode = role.mode === "DIRECTOR";
   // Wie viel Gas die Szene hat — pro Gespräch gemerkt.
   const [playLevel, setPlayLevel] = useState("NORMAL");
+  // Die Stimmung der Szene — Schlagworte, die die Tonlage sofort umstellen.
+  const [moods, setMoods] = useState([]);
   const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -303,6 +307,7 @@ export default function Messages() {
     setExtraCharacters([]);
     setPendingFiles([]);
     setPlayLevel(playLevelFor(activeChat));
+    setMoods(moodFor(activeChat));
     const savedRole = roleFor(activeChat);
     setRole(savedRole || DEFAULT_ROLE);
     setRoleReady(!!savedRole);
@@ -553,6 +558,7 @@ export default function Messages() {
       ctx += `\n\n⚠️ ES SIND ${names.length} FRAUEN IM RAUM: ${names.join(", ")}. JEDE von ihnen MUSS in JEDER Antwort mindestens einen Satz sagen, immer mit ihrem Namen in eckigen Klammern davor — z.B. [${names[1] || names[0]}]: … Keine Antwort darf eine von ihnen stumm lassen. Alle sind im Bild zu sehen, und keine verlässt den Raum.`;
     }
     ctx += playPrompt(playLevel);
+    ctx += moodPrompt(moods);
     ctx += speechPrompt(activeChat, [activeCreator, ...extraCharacters]);
     ctx += "\n\n⚠️ SPRACHE: Antworte ausschließlich auf Deutsch (Du-Form) — auch wenn der Nutzer englisch schreibt. Kein Sprachwechsel.";
     return ctx;
@@ -1494,6 +1500,12 @@ export default function Messages() {
                       <option key={m.id} value={m.modelId}>{m.name}</option>
                     ))}
                   </select>
+                )}
+                {viewMode === "ai" && (
+                  <MoodQuickMenu
+                    value={moods}
+                    onChange={(next) => { setMoods(next); setMoodFor(activeChat, next); }}
+                  />
                 )}
                 {viewMode === "ai" && (
                   <ChatCastMenu
