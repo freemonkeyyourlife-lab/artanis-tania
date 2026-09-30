@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Copy, Check, Plus, Send, Share2 } from "lucide-react";
+import { Copy, Check, Plus, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { callInviteUrl } from "@/lib/callLink";
-import { telegramShareUrl } from "@/lib/share";
 import CallQr from "@/components/call/CallQr";
+import BotInviteList from "@/components/call/BotInviteList";
 import { useToast } from "@/components/ui/use-toast";
 
 const pretty = (t) => `${t.slice(0, 4)}-${t.slice(4)}`;
@@ -51,17 +51,19 @@ export default function CallSharePanel({ token, roomNumber, rooms = [], isHost, 
           {copied === "link" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} Link kopieren
         </button>
         <button
-          onClick={() => window.open(telegramShareUrl(url, invitation), "_blank", "noopener")}
-          className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground hover:border-primary/50 transition-colors"
-        >
-          <Send className="w-4 h-4" /> Per Telegram senden
-        </button>
-        <button
           onClick={share}
           className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground hover:border-primary/50 transition-colors"
         >
           <Share2 className="w-4 h-4" /> {copied === "text" ? "Text kopiert ✓" : "Einladung teilen"}
         </button>
+
+        <div className="mt-3 pt-3 border-t border-border">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Über den Bot einladen</p>
+          <p className="mt-1 mb-2 text-[11px] text-muted-foreground">
+            Die Einladung kommt als Nachricht deines Bots an — nicht aus deinem privaten Telegram.
+          </p>
+          <BotInviteList text={invitation} />
+        </div>
       </div>
 
       {isHost && (

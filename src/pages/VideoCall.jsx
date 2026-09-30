@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
-import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSquare, X, Lock, Eye, Share2 } from "lucide-react";
+import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSquare, X, Lock, Eye, Share2, Bot } from "lucide-react";
 import useCallRoom from "@/hooks/useCallRoom";
 import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
 import CallChat from "@/components/call/CallChat";
 import CallInvite from "@/components/call/CallInvite";
 import CallSharePanel from "@/components/call/CallSharePanel";
+import CallBotPanel from "@/components/call/CallBotPanel";
 import LiveToggle from "@/components/call/LiveToggle";
 import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
 import { getRooms, addRoom } from "@/lib/callRooms";
@@ -191,6 +192,13 @@ export default function VideoCall() {
             )}
           </button>
           <button
+            onClick={() => setSidePanel((v) => (v === "bot" ? null : "bot"))}
+            title="Parallel mit deinem Bot schreiben"
+            className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", sidePanel === "bot" ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+          >
+            <Bot className="w-4 h-4" /> <span className="hidden sm:inline">Bot</span>
+          </button>
+          <button
             onClick={() => setSidePanel((v) => (v === "share" ? null : "share"))}
             title="Alles zum Weitergeben öffnet sich rechts"
             className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", sidePanel === "share" ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
@@ -229,13 +237,19 @@ export default function VideoCall() {
               >
                 Teilen
               </button>
+              <button
+                onClick={() => setSidePanel("bot")}
+                className={cn("px-3 py-1.5 rounded-full text-xs font-semibold transition-colors", sidePanel === "bot" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+              >
+                Bot
+              </button>
               <button onClick={() => setSidePanel(null)} className="ml-auto w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground" title="Seitenleiste schließen">
                 <X className="w-4 h-4" />
               </button>
             </div>
             {sidePanel === "chat" ? (
               <CallChat messages={messages} mySeat={mySeat} onSend={sendChat} />
-            ) : (
+            ) : sidePanel === "share" ? (
               <CallSharePanel
                 token={token}
                 roomNumber={roomNumber}
@@ -244,6 +258,8 @@ export default function VideoCall() {
                 onOpen={openRoom}
                 onNewRoom={newRoom}
               />
+            ) : (
+              <CallBotPanel />
             )}
           </aside>
         )}
