@@ -8,6 +8,7 @@ import { copyText, inviteUrl, makeCode, makeToken } from "@/lib/invites";
 
 const GOLD_LABEL = "Goldmut-Zugang";
 const STANDARD_LABEL = "Standard-Zugang";
+const OWNER_LABEL = "Besitzer-Link";
 
 const input =
   "w-full px-4 py-3 rounded-xl bg-background border border-border text-[15px] font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -26,7 +27,7 @@ export default function GoldmutAccess() {
   const load = async () => {
     try {
       const all = await base44.entities.InviteLink.list("-created_date", 100);
-      setLinks(all.filter((l) => l.label === GOLD_LABEL || l.label === STANDARD_LABEL));
+      setLinks(all.filter((l) => [GOLD_LABEL, STANDARD_LABEL, OWNER_LABEL].includes(l.label)));
     } catch (e) {
       console.error(e);
     } finally {
@@ -36,6 +37,7 @@ export default function GoldmutAccess() {
 
   const gold = links.find((l) => l.label === GOLD_LABEL && l.active !== false);
   const standard = links.find((l) => l.label === STANDARD_LABEL && l.active !== false);
+  const owner = links.find((l) => l.label === OWNER_LABEL && l.active !== false);
   const ready = Boolean(gold && standard);
 
   const create = async () => {
@@ -58,6 +60,7 @@ export default function GoldmutAccess() {
       const created = await base44.entities.InviteLink.bulkCreate([
         { ...base, token: makeToken(), code: makeCode(), label: GOLD_LABEL, grantStatus: "GOLD" },
         { ...base, token: makeToken(), code: makeCode(), label: STANDARD_LABEL, grantStatus: "STANDARD" },
+        { ...base, token: makeToken(), code: makeCode(), label: OWNER_LABEL, grantStatus: "GOLD", maxUses: 1 },
       ]);
       setLinks((prev) => [...(Array.isArray(created) ? created : []), ...prev]);
       toast({ title: "Zugänge stehen", description: "Goldmut-Link, Standard-Link und der Code sind fertig." });
@@ -138,6 +141,25 @@ export default function GoldmutAccess() {
               Bisher {standard.useCount || 0} Mal eingelöst{standard.maxUses ? ` von ${standard.maxUses}` : ""}.
             </p>
           </div>
+
+          {owner && (
+            <div className="rounded-2xl border-2 border-primary/60 bg-primary/10 p-4">
+              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary mb-2">
+                <Crown className="w-3.5 h-3.5" /> Dein Besitzer-Link — God Mode
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="flex-1 min-w-[220px] px-4 py-3 rounded-xl bg-background border border-border text-[13px] font-semibold text-foreground truncate">
+                  {inviteUrl(owner.token)}
+                </code>
+                <button onClick={() => copy(inviteUrl(owner.token), "Besitzer-Link kopiert")} className="inline-flex items-center gap-2 px-4 py-3 rounded-full glass-btn text-[13px] font-bold text-foreground">
+                  <Copy className="w-4 h-4" /> Kopieren
+                </button>
+              </div>
+              <p className="text-[13px] font-semibold text-muted-foreground mt-2">
+                Für dich allein gedacht — einmal einlösbar. Danach bist du auf jedem Gerät der Besitzer.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-wrap items-start gap-5">
             <div className="flex-1 min-w-[220px]">

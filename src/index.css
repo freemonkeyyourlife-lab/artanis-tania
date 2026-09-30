@@ -54,19 +54,19 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body font-semibold;
+    @apply bg-background text-foreground font-body font-bold;
   }
 
   h1, h2, h3, h4 {
     @apply font-heading;
-    font-weight: 800;
+    font-weight: 900;
   }
 }
 
 @layer utilities {
   /* Die Schriftart soll überall kräftig stehen — nichts sieht mehr dünn aus. */
   .font-display {
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: -0.01em;
   }
   .glass {

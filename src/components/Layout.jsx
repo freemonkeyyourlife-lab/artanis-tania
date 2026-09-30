@@ -62,7 +62,7 @@ export default function Layout() {
     base44.auth.me()
       .then((user) => {
         setMe(user);
-        setMemberStatus(hasProAccess(user) ? "GOLD" : (user?.memberStatus || "STANDARD"));
+        setMemberStatus(user?.role === "admin" ? "OWNER" : hasProAccess(user) ? "GOLD" : (user?.memberStatus || "STANDARD"));
       })
       .catch(() => setMemberStatus(localProActive() ? "GOLD" : "STANDARD"));
   }, []);
@@ -164,7 +164,9 @@ export default function Layout() {
                   {viewAs?.name || me?.full_name || me?.email || "Mein Konto"}
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                  {(viewAs ? viewAs.memberStatus : memberStatus) === "GOLD" ? "Gold · alles frei" : "Standard"}
+                  {viewAs
+                    ? (viewAs.memberStatus === "GOLD" ? "Gold · alles frei" : "Standard")
+                    : memberStatus === "OWNER" ? "Besitzer · God Mode" : memberStatus === "GOLD" ? "Gold · alles frei" : "Standard"}
                 </span>
               </span>
             </Link>

@@ -1096,7 +1096,7 @@ export default function Messages() {
       <div className="flex gap-2 h-[calc(100vh-136px)]">
         <div
           style={{ "--list-w": `${listWidth}px` }}
-          className={cn("w-full lg:w-[var(--list-w)] lg:flex-shrink-0 rounded-2xl border border-border bg-card overflow-hidden flex-col", activeChat ? "hidden lg:flex" : "flex")}
+          className={cn("w-full lg:w-[var(--list-w)] lg:flex-shrink-0 rounded-3xl border-2 border-border bg-card overflow-hidden flex-col", activeChat ? "hidden lg:flex" : "flex")}
         >
           <div className="flex gap-1 p-2 border-b border-border">
             <button onClick={() => { setViewMode("ai"); setActiveChat(null); setDmParticipantName(""); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "ai" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Chats</button>
@@ -1109,7 +1109,7 @@ export default function Messages() {
               {creators.filter(c => c.creatorCategory === "REAL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
-                    <Image src={c.avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-10 h-10 rounded-full flex-shrink-0" />
+                    <Image src={c.avatar} fittingType="fit" className="w-14 h-14 rounded-full flex-shrink-0 bg-elevated" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                   )}
@@ -1128,7 +1128,7 @@ export default function Messages() {
               {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
-                    <Image src={c.avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-10 h-10 rounded-full flex-shrink-0" />
+                    <Image src={c.avatar} fittingType="fit" className="w-14 h-14 rounded-full flex-shrink-0 bg-elevated" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                   )}
@@ -1183,17 +1183,17 @@ export default function Messages() {
         <div
           onMouseDown={startResize}
           title="Ziehen: Breite der Liste"
-          className="hidden lg:block w-1.5 rounded-full bg-border hover:bg-primary/60 cursor-col-resize flex-shrink-0"
+          className="hidden lg:block w-2 rounded-full bg-border hover:bg-primary/60 cursor-col-resize flex-shrink-0"
         />
 
         <div
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragging(false); }}
           onDrop={onDropFiles}
-          className={cn("relative flex-1 min-w-0 rounded-2xl border border-border bg-card flex flex-col", !activeChat && "hidden lg:flex")}
+          className={cn("relative flex-1 min-w-0 rounded-3xl border-2 border-border bg-card flex flex-col", !activeChat && "hidden lg:flex")}
         >
           {dragging && (
-            <div className="absolute inset-0 z-20 rounded-2xl bg-background/85 backdrop-blur flex items-center justify-center pointer-events-none border-2 border-dashed border-primary">
+            <div className="absolute inset-0 z-20 rounded-3xl bg-background/85 backdrop-blur flex items-center justify-center pointer-events-none border-2 border-dashed border-primary">
               <p className="font-display text-xl text-primary">Loslassen — ich häng es an</p>
             </div>
           )}
@@ -1207,7 +1207,7 @@ export default function Messages() {
                 ) : (
                   <Link to={`/creator/${activeChat}`} title="Profil ansehen" className="flex-shrink-0">
                     {creators.find(c => c.id === activeChat)?.avatar ? (
-                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" className="w-10 h-10 rounded-full transition-opacity hover:opacity-80" />
+                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fit" className="w-14 h-14 rounded-full bg-elevated transition-opacity hover:opacity-80" />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary">{creators.find(c => c.id === activeChat)?.stageName[0]}</div>
                     )}
@@ -1239,7 +1239,7 @@ export default function Messages() {
                 )}
                 {viewMode === "ai" && (
                   <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title={isAdmin ? "Admin — alles gratis, kein Freischalten" : proActive ? "Pro — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
-                    {isAdmin ? "Admin · alles gratis" : proActive ? "Pro · alles gratis" : `${freeLeft} gratis`}
+                    {isAdmin ? "Besitzer · God Mode" : proActive ? "Pro · alles gratis" : `${freeLeft} gratis`}
                   </span>
                 )}
                 {viewMode === "ai" && textModels.length > 0 && (
@@ -1274,7 +1274,7 @@ export default function Messages() {
                           return (
                             <button key={c.id} onClick={() => toggleExtra(c)} className={cn("w-full p-3 flex items-center gap-3 rounded-xl border text-left transition-colors", added ? "border-primary bg-primary/10" : "border-border hover:bg-elevated")}>
                               {c.avatar ? (
-                                <Image src={c.avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-9 h-9 rounded-full flex-shrink-0" />
+                                <Image src={c.avatar} fittingType="fit" className="w-12 h-12 rounded-full flex-shrink-0 bg-elevated" />
                               ) : (
                                 <div className="w-9 h-9 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                               )}
@@ -1402,14 +1402,14 @@ export default function Messages() {
                       ) : (
                         <Link to={`/creator/${activeChat}`} title="Profil ansehen" className="flex-shrink-0">
                           {creators.find(c => c.id === activeChat)?.avatar ? (
-                            <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-8 h-8 rounded-full transition-opacity hover:opacity-80" />
+                            <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fit" className="w-10 h-10 rounded-full bg-elevated transition-opacity hover:opacity-80" />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
                           )}
                         </Link>
                       )
                     )}
-                    <div className={cn("max-w-[70%] px-4 py-3 rounded-2xl text-[15px] leading-relaxed", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
+                    <div className={cn("max-w-[86%] px-5 py-4 rounded-3xl text-[15px] font-bold leading-relaxed", (viewMode === "dm" ? msg.created_by_id === currentUser?.id : msg.senderType === "HUMAN") ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}>
                       {(() => {
                         const items = msg.attachments?.length ? msg.attachments : (msg.attachment ? [{ type: "image", url: msg.attachment, locked: msg.isPPV, price: msg.ppvPrice }] : []);
                         const hasChoice = items.filter((i) => i.locked).length > 1;
@@ -1422,7 +1422,7 @@ export default function Messages() {
                               {items.map((it, ii) => (
                                 <div key={ii} className="mb-1">
                                   {it.locked ? (
-                                    <div className="relative w-44 h-44 rounded-lg overflow-hidden">
+                                    <div className="relative w-64 h-64 sm:w-[22rem] sm:h-[22rem] rounded-2xl overflow-hidden">
                                       {it.type === "image" ? (
                                         <Image src={it.url} fittingType="fill" className="w-full h-full blur-2xl scale-110" />
                                       ) : (
@@ -1438,15 +1438,15 @@ export default function Messages() {
                                     </div>
                                   ) : it.type === "video" ? (
                                     <div>
-                                      <video src={it.url} controls playsInline className="w-56 rounded-lg" />
+                                      <video src={it.url} controls playsInline className="w-72 sm:w-[22rem] rounded-2xl" />
                                       <div className="mt-1.5">
                                         <DownloadButton url={it.url} filename="video.mp4" />
                                       </div>
                                     </div>
                                   ) : it.type === "audio" ? (
-                                    <audio src={it.url} controls className="w-56" />
+                                    <audio src={it.url} controls className="w-72 sm:w-[22rem]" />
                                   ) : it.type === "reshoot" ? (
-                                    <div className="w-56 rounded-xl border border-primary/40 bg-background/60 p-3">
+                                    <div className="w-72 sm:w-[22rem] rounded-2xl border-2 border-primary/40 bg-background/60 p-4">
                                       <p className="text-xs font-semibold text-foreground mb-1">Das kann die KI so nicht zeigen</p>
                                       <p className="text-[11px] text-muted-foreground mb-2">Soll {creators.find((c) => c.id === activeChat)?.stageName} das für dich nachdrehen?</p>
                                       <Link
@@ -1460,7 +1460,7 @@ export default function Messages() {
                                     <div className="relative">
                                       <Dialog>
                                         <DialogTrigger asChild>
-                                          <button className="block"><Image src={it.url} fittingType="fill" className="w-48 h-48 rounded-lg transition-opacity hover:opacity-80" /></button>
+                                          <button className="block"><Image src={it.url} fittingType="fill" className="w-64 h-64 sm:w-[22rem] sm:h-[22rem] rounded-2xl transition-opacity hover:opacity-80" /></button>
                                         </DialogTrigger>
                                         <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-background/95 overflow-hidden">
                                           <img src={it.url} alt="" className="w-full h-full object-contain max-h-[85vh] rounded-lg" />
@@ -1536,7 +1536,7 @@ export default function Messages() {
                 {sending && (
                   <div className="flex gap-2 justify-start">
                     {creators.find(c => c.id === activeChat)?.avatar ? (
-                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fill" focalPointX={0.5} focalPointY={0.1} className="w-8 h-8 rounded-full flex-shrink-0" />
+                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fit" className="w-11 h-11 rounded-full flex-shrink-0 bg-elevated" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
                     )}
