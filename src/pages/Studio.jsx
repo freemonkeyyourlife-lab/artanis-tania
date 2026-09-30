@@ -21,6 +21,7 @@ import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
 import DockManager from "@/components/studio/DockManager";
 import VoiceManager from "@/components/studio/VoiceManager";
+import VoiceTuner from "@/components/studio/VoiceTuner";
 import CharacterTransfer from "@/components/studio/CharacterTransfer";
 
 const personaLabel = (t) =>
@@ -64,6 +65,7 @@ const TAB_GROUPS = [
 export default function Studio() {
   const [tab, setTab] = useState("guide");
   const [creators, setCreators] = useState([]);
+  const [voices, setVoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | "new" | creator
   const [soundFor, setSoundFor] = useState(null); // Charakter, dessen Klang gerade offen ist
@@ -71,8 +73,12 @@ export default function Studio() {
   useEffect(() => { load(); }, []);
   const load = async () => {
     try {
-      const data = await base44.entities.Creator.list("-created_date");
+      const [data, v] = await Promise.all([
+        base44.entities.Creator.list("-created_date"),
+        base44.entities.Voice.list("-created_date"),
+      ]);
       setCreators(data.sort((a, b) => (a.active === false ? 1 : 0) - (b.active === false ? 1 : 0)));
+      setVoices(v);
     }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -207,6 +213,13 @@ export default function Studio() {
             </button>
           </div>
           <CharacterVoiceBox value={soundFor.voiceProfileId || ""} onChange={(id) => assignVoice(soundFor, id)} />
+          {(() => {
+            const v = voices.find((x) => x.id === soundFor.voiceProfileId);
+            if (!v) {
+              return <p className="mt-3 text-xs text-muted-foreground">Erst eine Stimme wählen — danach kannst du Tonlage und Intensität hier direkt drehen.</p>;
+            }
+            return <VoiceTuner key={v.updated_date} voice={v} onSaved={load} />;
+          })()}
         </div>
       )}
 
