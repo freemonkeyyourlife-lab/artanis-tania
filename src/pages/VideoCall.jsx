@@ -9,7 +9,7 @@ import CallControls from "@/components/call/CallControls";
 import CallInvite from "@/components/call/CallInvite";
 import CallWindows from "@/components/call/CallWindows";
 import LiveToggle from "@/components/call/LiveToggle";
-import { loadWindows, subscribeWindows, toggleWindow, openWindow, closeWindow, setDock, setTextSize } from "@/lib/callWindows";
+import { loadWindows, subscribeWindows, toggleWindow, openWindow, closeWindow, setDock, setTextSize, setStageSplit } from "@/lib/callWindows";
 import { onUiCommand, takePendingUiCommand, clearUiCommand } from "@/lib/ownerUi";
 import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
 import { getRooms, addRoom } from "@/lib/callRooms";
@@ -63,7 +63,7 @@ export default function VideoCall() {
     status, error, peers, isHost, camOn, micOn,
     attachLocal, toggleCam, toggleMic,
     messages, sendChat, sendChatVoice, sharing, toggleShare, switchShare, mySeat,
-    getLocalVideo,
+    getLocalVideo, myScreen,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
     stage, stageLines, openStage, closeStage, sayOnStage,
@@ -283,6 +283,9 @@ export default function VideoCall() {
           myName={myName || "Du"}
           peers={peers}
           getVideo={getLocalVideo}
+          myScreen={myScreen}
+          split={windows.stageSplit}
+          onSplit={setStageSplit}
         />
         {dockRight && windowsOpen && (
           <aside className="absolute inset-x-0 bottom-0 h-[88%] z-30 rounded-t-3xl border-t border-border shadow-2xl flex flex-col lg:static lg:inset-auto lg:h-auto lg:rounded-none lg:shadow-none lg:border-t-0 lg:border-l lg:border-border lg:w-[560px] lg:max-w-[58%] lg:flex-shrink-0">

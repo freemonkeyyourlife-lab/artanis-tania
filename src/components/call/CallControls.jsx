@@ -51,7 +51,7 @@ export default function CallControls({
         <button
           onClick={onToggleShare}
           className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-colors", sharing ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}
-          title={sharing ? "Bildschirm-Teilen beenden" : "Bildschirm teilen — alle angeschlossenen Bildschirme stehen zur Auswahl"}
+          title={sharing ? "Bildschirm-Teilen beenden" : "Bildschirm teilen — dein Kamerabild bleibt dabei sichtbar"}
         >
           {sharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
         </button>

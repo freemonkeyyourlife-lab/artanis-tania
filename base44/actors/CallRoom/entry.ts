@@ -63,6 +63,9 @@ export default class CallRoom extends Actor {
         seat: this.nextSeat++, name: '', host, watcher, blocked: waiting,
         cam: watcher ? false : null,
         mic: watcher ? false : null,
+        // Der geteilte Bildschirm läuft neben der Kamera — er verdrängt sie nicht.
+        share: false,
+        screenId: '',
       });
       await this.save();
     }
@@ -143,14 +146,20 @@ export default class CallRoom extends Actor {
       if (me.watcher) {
         me.cam = false;
         me.mic = false;
+        me.share = false;
+        me.screenId = '';
         await this.save();
         this.broadcastPeers();
         return;
       }
-      const cam = msg.cam === true;
-      const mic = msg.mic === true;
-      me.cam = cam;
-      me.mic = mic;
+      me.cam = msg.cam === true;
+      me.mic = msg.mic === true;
+      // Nur wer den Bildschirm ausdrücklich meldet, ändert etwas daran. Ein
+      // reines Kamera- oder Mikrofon-Update lässt das Teilen unberührt.
+      if (typeof msg.share === 'boolean') {
+        me.share = msg.share;
+        me.screenId = msg.share && typeof msg.screenId === 'string' ? msg.screenId.slice(0, 80) : '';
+      }
       await this.save();
       this.broadcastPeers();
       return;
@@ -246,7 +255,7 @@ export default class CallRoom extends Actor {
       // Zurück auf offen: wer bisher nur zugeschaut hat, darf wieder mitmachen.
       if (next === 'OPEN') {
         for (const u of this.users.values()) {
-          if (u.watcher) { u.watcher = false; u.cam = false; u.mic = false; }
+          if (u.watcher) { u.watcher = false; u.cam = false; u.mic = false; u.share = false; u.screenId = ''; }
         }
         await this.save();
         this.broadcastPeers();
@@ -312,7 +321,10 @@ export default class CallRoom extends Actor {
       type: 'peers',
       peers: [...this.users.values()]
         .filter((u) => !u.blocked)
-        .map((u) => ({ seat: u.seat, name: u.name, cam: u.cam, mic: u.mic, host: u.host, watcher: !!u.watcher })),
+        .map((u) => ({
+          seat: u.seat, name: u.name, cam: u.cam, mic: u.mic, host: u.host, watcher: !!u.watcher,
+          share: !!u.share, screenId: u.screenId || '',
+        })),
     });
   }
 }

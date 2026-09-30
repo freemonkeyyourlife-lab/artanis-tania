@@ -13,6 +13,13 @@ export const WINDOW_DEFS = [
   { id: "share", title: "Teilen", hint: "Links und Einladungen" },
 ];
 
+// Wie viel Platz die Gesichter bekommen, wenn jemand seinen Bildschirm zeigt.
+export const STAGE_SPLITS = [
+  { id: "small", label: "Klein", value: 18 },
+  { id: "half", label: "Halb", value: 38 },
+  { id: "large", label: "Groß", value: 62 },
+];
+
 export const MIN_TEXT = 11;
 export const MAX_TEXT = 17;
 
@@ -22,6 +29,7 @@ const DEFAULTS = {
   minimized: [],
   dock: "right",
   textSize: 13,
+  stageSplit: "half",
 };
 
 let cache = null;
@@ -43,6 +51,7 @@ function read() {
     minimized: Array.isArray(stored?.minimized) ? stored.minimized.filter((id) => ids.includes(id)) : [],
     dock: stored?.dock === "left" ? "left" : "right",
     textSize: Number(stored?.textSize) || DEFAULTS.textSize,
+    stageSplit: STAGE_SPLITS.some((s) => s.id === stored?.stageSplit) ? stored.stageSplit : DEFAULTS.stageSplit,
   };
   return cache;
 }
@@ -94,6 +103,13 @@ export const setDock = (dock) => write({ ...read(), dock: dock === "left" ? "lef
 export const setTextSize = (size) => {
   const next = Math.min(MAX_TEXT, Math.max(MIN_TEXT, Number(size) || DEFAULTS.textSize));
   return write({ ...read(), textSize: next });
+};
+
+// Jede Person stellt für sich ein, wie groß die Gesichter neben dem geteilten
+// Bildschirm stehen — das gilt nur für die eigene Ansicht.
+export const setStageSplit = (id) => {
+  const next = STAGE_SPLITS.some((s) => s.id === id) ? id : DEFAULTS.stageSplit;
+  return write({ ...read(), stageSplit: next });
 };
 
 export const resetWindows = () => write({ ...DEFAULTS, order: [...DEFAULTS.order], open: [...DEFAULTS.open], minimized: [] });

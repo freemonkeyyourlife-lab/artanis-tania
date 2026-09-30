@@ -17,6 +17,8 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   const [mySeat, setMySeat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [sharing, setSharing] = useState(false);
+  // Der eigene geteilte Bildschirm — er läuft neben dem eigenen Kamerabild.
+  const [myScreen, setMyScreen] = useState(null);
   const [mode, setModeState] = useState("OPEN");
   const [watchers, setWatchers] = useState(0);
   const [closed, setClosed] = useState(false);
@@ -31,7 +33,8 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   const previewRef = useRef(null);
   const roomRef = useRef(null);
   const pcsRef = useRef(new Map()); // seat -> RTCPeerConnection
-  const streamsRef = useRef(new Map()); // seat -> MediaStream
+  // Pro Person können zwei Bilder laufen — Kamera und geteilter Bildschirm.
+  const streamsRef = useRef(new Map()); // seat -> Map<streamId, MediaStream>
   const infoRef = useRef(new Map()); // seat -> { seat, name, cam, mic, host }
   const pendingIceRef = useRef(new Map()); // seat -> [candidate]
   const remoteSetRef = useRef(new Set()); // seats whose remote description is set
@@ -39,7 +42,9 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   const mySeatRef = useRef(null);
   const camRef = useRef(wantCam);
   const micRef = useRef(wantMic);
-  const screenRef = useRef(null); // laufender Bildschirm-Stream, falls geteilt wird
+  const screenRef = useRef(null); // laufende Bildschirm-Spur, falls geteilt wird
+  // Der Bildschirm reist als eigener Strom — die Kamera bleibt daneben bestehen.
+  const screenStreamRef = useRef(null);
   // Was im Call in den laufenden Plattform-Chat geschrieben wird, trägt der
   // Gastgeber in die echte Unterhaltung ein.
   const stageWriteRef = useRef(null);
@@ -62,7 +67,14 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   const syncPeers = useCallback(() => {
     // Zuschauer bleiben unsichtbar — sie tauchen in keiner Kachel auf.
     const all = [...infoRef.current.entries()]
-      .map(([seat, info]) => ({ seat, ...info, stream: streamsRef.current.get(seat) || null }));
+      .map(([seat, info]) => {
+        const byId = streamsRef.current.get(seat) || new Map();
+        // Der geteilte Bildschirm hat seine eigene Kennung — so bleibt das
+        // Gesicht daneben sichtbar, statt vom Bildschirm verdrängt zu werden.
+        const screen = info.screenId ? byId.get(info.screenId) || null : null;
+        const cam = [...byId.values()].find((s) => s !== screen && s.getVideoTracks().length > 0) || null;
+        return { seat, ...info, stream: cam, screen, sharing: !!info.share && !!screen };
+      });
     setWatchers(all.filter((p) => p.watcher).length);
     setPeers(all.filter((p) => !p.watcher).sort((a, b) => a.seat - b.seat));
   }, []);
@@ -107,7 +119,11 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
       if (stream.getVideoTracks().length === 0) pc.addTransceiver("video", { direction: "recvonly" });
       if (stream.getAudioTracks().length === 0) pc.addTransceiver("audio", { direction: "recvonly" });
       pc.ontrack = (e) => {
-        streamsRef.current.set(seat, e.streams[0]);
+        const incoming = e.streams[0];
+        if (!incoming) return;
+        const byId = streamsRef.current.get(seat) || new Map();
+        byId.set(incoming.id, incoming);
+        streamsRef.current.set(seat, byId);
         syncPeers();
       };
       pc.onicecandidate = (e) => {
@@ -289,8 +305,10 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
       connectedRef.clear();
       pendingPeersRef.current = null;
       mySeatRef.current = null;
-      screenRef.current?.getTracks().forEach((t) => t.stop());
+      screenRef.current?.stop();
       screenRef.current = null;
+      screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current = null;
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
       previewRef.current = null;
@@ -391,6 +409,18 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     return onStageRequest(apply);
   }, [joined, token]);
 
+  // Ein neuer Track braucht eine frische Aushandlung mit jeder Gegenseite.
+  const negotiate = useCallback(async (seat, pc) => {
+    if (!pc || pc.signalingState !== "stable") return;
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      roomRef.current?.send({ type: "signal", to: seat, data: { sdp: pc.localDescription } });
+    } catch (e) {
+      // Beim nächsten Signal klappt es — der Call läuft weiter.
+    }
+  }, []);
+
   const ensureTrack = useCallback(async (kind) => {
     const existing = kind === "video"
       ? localStreamRef.current?.getVideoTracks()[0]
@@ -404,12 +434,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
       localStreamRef.current.addTrack(t);
       for (const [seat, pc] of pcsRef.current.entries()) {
         pc.addTrack(t, localStreamRef.current);
-        pc.onnegotiationneeded = async () => {
-          if (pc.signalingState !== "stable") return;
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          roomRef.current?.send({ type: "signal", to: seat, data: { sdp: pc.localDescription } });
-        };
+        negotiate(seat, pc);
       }
       if (kind === "video") setPreview(localStreamRef.current);
       return t;
@@ -417,7 +442,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
       setError("Zugriff auf Kamera/Mikrofon nicht möglich.");
       return null;
     }
-  }, [setPreview]);
+  }, [setPreview, negotiate]);
 
   const toggleMic = useCallback(async () => {
     setError("");
@@ -490,19 +515,23 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
 
   // Bildschirm statt Kamera senden — alle sehen ihn sofort, ohne neu zu verbinden.
   const stopShare = useCallback(() => {
-    const screen = screenRef.current;
-    if (!screen) return;
+    const track = screenRef.current;
+    if (!track && !screenStreamRef.current) return;
     screenRef.current = null;
-    screen.onended = null;
-    screen.getTracks().forEach((t) => t.stop());
-    const cam = localStreamRef.current?.getVideoTracks()[0] || null;
-    for (const pc of pcsRef.current.values()) {
-      const sender = pc.getSenders().find((s) => s.track && s.track.kind === "video");
-      if (sender && cam) sender.replaceTrack(cam).catch(() => {});
+    if (track) track.onended = null;
+    // Nur der Bildschirm geht — die Kamera lief die ganze Zeit weiter.
+    for (const [seat, pc] of pcsRef.current.entries()) {
+      const sender = pc.getSenders().find((s) => s.track === track);
+      if (!sender) continue;
+      try { pc.removeTrack(sender); } catch (e) { /* schon weg */ }
+      negotiate(seat, pc);
     }
-    setPreview(localStreamRef.current);
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current = null;
+    setMyScreen(null);
     setSharing(false);
-  }, [setPreview]);
+    roomRef.current?.send({ type: "media", cam: camRef.current, mic: micRef.current, share: false, screenId: "" });
+  }, [negotiate]);
 
   // Das Auswahlfenster des Browsers listet alle angeschlossenen Bildschirme auf.
   // „monitor" gibt den ganzen Bildschirm den Vorrang, surfaceSwitching lässt dich
@@ -520,24 +549,29 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
 
   const applyScreen = useCallback((display) => {
     const track = display.getVideoTracks()[0];
+    const stream = new MediaStream([track]);
     screenRef.current = track;
-    for (const pc of pcsRef.current.values()) {
-      const sender = pc.getSenders().find((s) => s.track && s.track.kind === "video");
-      if (sender) sender.replaceTrack(track).catch(() => {});
+    screenStreamRef.current = stream;
+    // Der Bildschirm kommt als zweites Bild dazu — die Kamera bleibt unberührt
+    // und läuft weiter, damit man sich beim Zeigen trotzdem sieht.
+    for (const [seat, pc] of pcsRef.current.entries()) {
+      pc.addTrack(track, stream);
+      negotiate(seat, pc);
     }
-    setPreview(display);
     track.onended = () => stopShare();
+    setMyScreen(stream);
     setSharing(true);
-  }, [setPreview, stopShare]);
+    roomRef.current?.send({ type: "media", cam: camRef.current, mic: micRef.current, share: true, screenId: stream.id });
+  }, [negotiate, stopShare]);
 
   const toggleShare = useCallback(async () => {
     if (screenRef.current) { stopShare(); return; }
     setError("");
     try {
-      if (!localStreamRef.current?.getVideoTracks()[0]) {
-        const t = await ensureTrack("video");
-        if (!t) return;
-      }
+      // Wer zeigt, will auch gesehen werden — die Kamera läuft dabei mit.
+      const cam = localStreamRef.current?.getVideoTracks()[0] || (await ensureTrack("video"));
+      if (!cam) return;
+      if (!cam.enabled) { cam.enabled = true; camRef.current = true; setCamOn(true); }
       applyScreen(await pickScreen());
     } catch (e) {
       console.error("Bildschirm teilen nicht möglich:", e);
@@ -550,18 +584,30 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   // Mehrere Monitore: hier wählst du direkt einen anderen Bildschirm — das Teilen
   // läuft dabei ohne Unterbrechung weiter.
   const switchShare = useCallback(async () => {
-    if (!screenRef.current) return;
+    const old = screenRef.current;
+    if (!old) return;
     setError("");
     try {
       const display = await pickScreen();
-      const old = screenRef.current;
+      const track = display.getVideoTracks()[0];
       old.onended = null;
-      applyScreen(display);
-      old.getTracks().forEach((t) => t.stop());
+      // Derselbe Platz, nur ein anderer Bildschirm — die Kamera daneben bleibt.
+      for (const [seat, pc] of pcsRef.current.entries()) {
+        const sender = pc.getSenders().find((s) => s.track === old);
+        if (sender) sender.replaceTrack(track).catch(() => {});
+        else { pc.addTrack(track, screenStreamRef.current); negotiate(seat, pc); }
+      }
+      if (screenStreamRef.current) {
+        screenStreamRef.current.removeTrack(old);
+        screenStreamRef.current.addTrack(track);
+      }
+      screenRef.current = track;
+      track.onended = () => stopShare();
+      old.stop();
     } catch (e) {
       // Abgebrochen — der bisherige Bildschirm bleibt einfach stehen.
     }
-  }, [applyScreen]);
+  }, [negotiate, stopShare]);
 
   const getLocalVideo = useCallback(() => localVideoRef.current, []);
 
@@ -569,7 +615,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     status, error, peers, isHost, camOn, micOn,
     attachLocal, toggleCam, toggleMic,
     messages, sendChat, sendChatVoice, sharing, toggleShare, switchShare, mySeat,
-    getLocalVideo,
+    getLocalVideo, myScreen,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
     stage, stageLines, openStage, closeStage, sayOnStage,
