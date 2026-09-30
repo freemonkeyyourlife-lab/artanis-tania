@@ -39,9 +39,10 @@ export function getCallToken() {
 // die Vorschau — ein Link daraus führt Gäste woanders hin als in deinen Raum.
 const PUBLISHED = "https://artanis-triania-live.base44.app";
 
-export function callInviteUrl(token) {
+export function callInviteUrl(token, roomNumber) {
   const base = window.self !== window.top ? PUBLISHED : window.location.origin;
-  return `${base}/call/${token}`;
+  // Die Raumnummer reist im Link mit — beide Seiten sehen dieselbe.
+  return `${base}/call/${token}${roomNumber ? `?r=${roomNumber}` : ""}`;
 }
 
 export function resetCallToken() {

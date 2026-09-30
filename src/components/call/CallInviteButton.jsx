@@ -6,6 +6,7 @@ import CallInvite from "@/components/call/CallInvite";
 // und fertiger Text stecken im Fenster dahinter.
 export default function CallInviteButton({ label = "Jemanden einladen", className }) {
   const code = useMemo(() => getCallToken(), []);
-  const url = useMemo(() => callInviteUrl(code), [code]);
+  // Chatraum 1 ist der feste Raum — derselbe Code wie im Video-Call.
+  const url = useMemo(() => callInviteUrl(code, 1), [code]);
   return <CallInvite url={url} code={code} label={label} className={className} />;
 }

@@ -2,14 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
-import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSquare, X, Lock, Eye } from "lucide-react";
+import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSquare, X, Lock, Eye, Share2 } from "lucide-react";
 import useCallRoom from "@/hooks/useCallRoom";
 import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
 import CallChat from "@/components/call/CallChat";
 import CallInvite from "@/components/call/CallInvite";
+import CallSharePanel from "@/components/call/CallSharePanel";
 import LiveToggle from "@/components/call/LiveToggle";
-import { resetCallToken, normalizeCallCode, callInviteUrl } from "@/lib/callLink";
+import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
+import { getRooms, addRoom } from "@/lib/callRooms";
 import { publicName } from "@/lib/displayName";
 
 export default function VideoCall() {
@@ -20,7 +22,8 @@ export default function VideoCall() {
   const [wantCam, setWantCam] = useState(true);
   const [wantMic, setWantMic] = useState(true);
   const [myName, setMyName] = useState("");
-  const [chatOpen, setChatOpen] = useState(false);
+  const [sidePanel, setSidePanel] = useState(null);
+  const [rooms, setRooms] = useState(() => getRooms());
 
   useEffect(() => {
     let alive = true;
@@ -40,14 +43,18 @@ export default function VideoCall() {
     mode, setMode, watchers, closed,
   } = useCallRoom({ token, joined, wantCam, wantMic, name: myName });
 
-  const inviteLink = callInviteUrl(token);
+  // Die Raumnummer steht im Link — so wissen beide Seiten, welcher Raum gemeint ist.
+  const urlRoom = Number(new URLSearchParams(window.location.search).get("r")) || 0;
+  const roomNumber = urlRoom || rooms.find((r) => r.token === token)?.number || 1;
+  const inviteLink = callInviteUrl(token, roomNumber);
   // Derselbe Code = derselbe Raum. Sichtbar für alle, damit das sofort prüfbar ist.
   const prettyCode = `${token.slice(0, 4)}-${token.slice(4)}`;
 
-  // Der Link bleibt gleich — ein neuer entsteht nur auf ausdrücklichen Wunsch.
-  const createNewLink = () => {
-    if (!window.confirm("Neuen Link erstellen? Der bisherige Link funktioniert danach nicht mehr.")) return;
-    navigate(`/call/${resetCallToken()}`);
+  const openRoom = (room) => navigate(`/call/${room.token}?r=${room.number}`);
+  const newRoom = () => {
+    const room = addRoom();
+    setRooms(getRooms());
+    openRoom(room);
   };
 
   if (!joined) {
@@ -63,7 +70,8 @@ export default function VideoCall() {
         <div className="w-full max-w-md text-center py-8">
           <h1 className="font-display text-2xl text-foreground">Video-Call beitreten</h1>
           <p className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground">
-            Raum <span className="font-mono tracking-[0.25em] text-foreground">{prettyCode}</span>
+            <span className="font-semibold text-foreground">Chatraum {roomNumber}</span>
+            <span className="font-mono tracking-[0.25em] text-foreground">{prettyCode}</span>
           </p>
           <p className="text-sm text-muted-foreground mt-3">
             Du entscheidest selbst, was du teilst. Kamera und Mikrofon kannst du jederzeit wieder ausschalten.
@@ -116,8 +124,8 @@ export default function VideoCall() {
           </button>
 
           <div className="mt-8 pt-6 border-t border-border text-left">
-            <p className="text-xs text-muted-foreground mb-3">Dein Link bleibt immer derselbe — teile ihn mit so vielen Leuten, wie du willst. Code, QR-Code und fertiger Text stecken mit drin:</p>
-            <CallInvite url={inviteLink} code={token} onNewLink={createNewLink} label="Einladung" className="w-full justify-center" />
+            <p className="text-xs text-muted-foreground mb-3">Du bist in <span className="font-semibold text-foreground">Chatraum {roomNumber}</span>. Teile diesen Link mit so vielen Leuten, wie du willst — Code, QR-Code und fertiger Text stecken mit drin:</p>
+            <CallInvite url={inviteLink} code={token} label={`Chatraum ${roomNumber} einladen`} className="w-full justify-center" />
           </div>
         </div>
       </div>
@@ -161,8 +169,9 @@ export default function VideoCall() {
           </button>
           <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", status === "live" ? "bg-emerald-500" : status === "error" ? "bg-destructive" : "bg-amber-500 animate-pulse")} />
           <span className="text-sm text-foreground font-medium truncate">{statusLabel}</span>
-          <span className="px-2.5 py-1 rounded-full bg-elevated border border-border font-mono text-[11px] tracking-[0.2em] text-muted-foreground flex-shrink-0">
-            {prettyCode}
+          <span className="px-2.5 py-1 rounded-full bg-elevated border border-border text-[11px] text-muted-foreground flex-shrink-0">
+            <span className="font-semibold text-foreground">Chatraum {roomNumber}</span>
+            <span className="font-mono tracking-[0.2em] ml-2">{prettyCode}</span>
           </span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -172,14 +181,21 @@ export default function VideoCall() {
             </span>
           )}
           <button
-            onClick={() => setChatOpen((v) => !v)}
+            onClick={() => setSidePanel((v) => (v === "chat" ? null : "chat"))}
             title="Chat im Call"
-            className={cn("relative w-9 h-9 rounded-full flex items-center justify-center transition-colors", chatOpen ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+            className={cn("relative w-9 h-9 rounded-full flex items-center justify-center transition-colors", sidePanel === "chat" ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
           >
             <MessageSquare className="w-4 h-4" />
-            {!chatOpen && messages.length > 0 && (
+            {sidePanel !== "chat" && messages.length > 0 && (
               <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{messages.length}</span>
             )}
+          </button>
+          <button
+            onClick={() => setSidePanel((v) => (v === "share" ? null : "share"))}
+            title="Alles zum Weitergeben öffnet sich rechts"
+            className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", sidePanel === "share" ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+          >
+            <Share2 className="w-4 h-4" /> <span className="hidden sm:inline">Teilen</span>
           </button>
           {isHost && <LiveToggle token={token} hostName={myName} />}
           {isHost && (
@@ -198,15 +214,37 @@ export default function VideoCall() {
           myName={myName || "Du"}
           peers={peers}
         />
-        {chatOpen && (
-          <aside className="absolute inset-0 z-20 sm:static sm:inset-auto sm:z-auto w-full sm:w-80 border-l border-border bg-card flex flex-col">
-            <div className="px-3 py-2 border-b border-border flex items-center justify-between flex-shrink-0">
-              <span className="text-sm font-medium text-foreground">Chat im Call</span>
-              <button onClick={() => setChatOpen(false)} className="text-muted-foreground hover:text-foreground" title="Chat schließen">
+        {sidePanel && (
+          <aside className="absolute inset-0 z-20 sm:static sm:inset-auto sm:z-auto w-full sm:w-96 border-l border-border bg-card flex flex-col">
+            <div className="px-2 py-2 border-b border-border flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => setSidePanel("chat")}
+                className={cn("px-3 py-1.5 rounded-full text-xs font-semibold transition-colors", sidePanel === "chat" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+              >
+                Chat
+              </button>
+              <button
+                onClick={() => setSidePanel("share")}
+                className={cn("px-3 py-1.5 rounded-full text-xs font-semibold transition-colors", sidePanel === "share" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+              >
+                Teilen
+              </button>
+              <button onClick={() => setSidePanel(null)} className="ml-auto w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground" title="Seitenleiste schließen">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <CallChat messages={messages} mySeat={mySeat} onSend={sendChat} />
+            {sidePanel === "chat" ? (
+              <CallChat messages={messages} mySeat={mySeat} onSend={sendChat} />
+            ) : (
+              <CallSharePanel
+                token={token}
+                roomNumber={roomNumber}
+                rooms={rooms}
+                isHost={isHost}
+                onOpen={openRoom}
+                onNewRoom={newRoom}
+              />
+            )}
           </aside>
         )}
       </div>
@@ -224,10 +262,6 @@ export default function VideoCall() {
           )}
         </div>
       )}
-
-      <div className="px-4 pb-3 flex justify-center">
-        <CallInvite url={inviteLink} code={token} onNewLink={isHost ? createNewLink : null} />
-      </div>
 
       <CallControls
         micOn={micOn}
