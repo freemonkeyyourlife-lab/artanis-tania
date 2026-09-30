@@ -37,7 +37,12 @@ export default function useVoicePlayer(profile, fallbackVoice) {
       if (cloudVoice) {
         setLoading(true);
         try {
-          const res = await base44.functions.invoke("elevenLabs", { voiceId: cloudVoice, text });
+          const res = await base44.functions.invoke("elevenLabs", {
+            voiceId: cloudVoice,
+            text,
+            speed: profile?.speed,
+            mood: profile?.mood,
+          });
           if (res.data?.error) throw new Error(res.data.error);
           const audio = new Audio(res.data.url);
           audio.onended = () => setSpeaking(false);

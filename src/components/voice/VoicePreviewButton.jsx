@@ -30,7 +30,12 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
         url = res?.signed_url;
         rate = 1;
       } else if (profile?.provider === "ELEVENLABS" && profile?.externalVoiceId) {
-        const res = await base44.functions.invoke("elevenLabs", { voiceId: profile.externalVoiceId, text });
+        const res = await base44.functions.invoke("elevenLabs", {
+          voiceId: profile.externalVoiceId,
+          text,
+          speed: profile?.speed,
+          mood: profile?.mood,
+        });
         if (res.data?.error) throw new Error(res.data.error);
         url = res.data.url;
         rate = 1;

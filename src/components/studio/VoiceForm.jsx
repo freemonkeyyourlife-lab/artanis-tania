@@ -139,8 +139,12 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      if (initial?.id) await base44.entities.Voice.update(initial.id, form);
-      else await base44.entities.Voice.create(form);
+      // Wurde am Klang gedreht, muss die alte Hörprobe weg — sonst klingt sie noch wie vorher.
+      const retuned = initial?.id && form.provider === "ELEVENLABS" &&
+        (initial.speed !== form.speed || initial.mood !== form.mood || initial.depth !== form.depth);
+      const payload = retuned ? { ...form, sampleFile: "" } : form;
+      if (initial?.id) await base44.entities.Voice.update(initial.id, payload);
+      else await base44.entities.Voice.create(payload);
       onSaved();
     } catch (e) {
       console.error(e);
@@ -221,8 +225,12 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
         </div>
       </div>
 
+      <p className="text-[11px] text-muted-foreground -mt-2">
+        Tempo und Stimmung wirken auch bei ElevenLabs-Stimmen — im Chat, in der Sprechprobe und im Video-Call.
+      </p>
+
       <div className="flex flex-wrap items-center gap-3">
-        <VoicePreviewButton profile={form} />
+        <VoicePreviewButton profile={form} useSample={form.provider !== "ELEVENLABS"} />
         <button
           type="button"
           onClick={toggleRecord}
