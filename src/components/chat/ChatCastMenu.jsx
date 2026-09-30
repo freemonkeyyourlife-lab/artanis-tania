@@ -4,11 +4,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { Image } from "@/components/ui/image";
 
-// Die drei Zustände, die du je Figur per Klick wählst.
+// Ein Klick je Figur: redet mit, du spielst sie, sie hört nur zu, oder sie ist pausiert.
 const STATES = [
-  { id: "AI", label: "Spielt mit", hint: "Ist in der Szene und redet — die KI spielt sie." },
+  { id: "AI", label: "Redet mit", hint: "Ist in der Szene und redet — die KI spielt sie." },
   { id: "ME", label: "Ich spiele", hint: "Du übernimmst diese Figur selbst." },
-  { id: "MUTE", label: "Nur zuhören", hint: "Ist dabei, sagt aber nichts." },
+  { id: "MUTE", label: "Hört zu", hint: "Ist dabei, sagt aber nichts." },
+  { id: "OFF", label: "Pausiert", hint: "Ist gerade nicht in der Szene." },
 ];
 
 // Ein Klick je Figur: spielt mit, du spielst sie, oder sie hört nur zu.
@@ -30,7 +31,7 @@ export default function ChatCastMenu({ creators, mainId, stateOf, onChange, coun
         <div className="p-3 border-b border-border">
           <p className="text-sm font-bold text-foreground">Wer spielt mit</p>
           <p className="text-[11px] text-muted-foreground leading-snug">
-            Tippe je Figur einen Zustand an. Nochmal tippen nimmt sie ganz aus der Szene.
+            Tippe je Figur an, was sie gerade macht: mitreden, du spielst sie, nur zuhören oder pausiert.
           </p>
         </div>
         <div className="max-h-[60vh] overflow-y-auto p-2 space-y-1.5">
@@ -52,7 +53,7 @@ export default function ChatCastMenu({ creators, mainId, stateOf, onChange, coun
                     {STATES.map((s) => (
                       <button
                         key={s.id}
-                        onClick={() => onChange(c.id, st === s.id ? "OFF" : s.id)}
+                        onClick={() => onChange(c.id, s.id)}
                         title={s.hint}
                         className={cn(
                           "px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors",
