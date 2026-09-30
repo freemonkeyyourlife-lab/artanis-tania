@@ -5,6 +5,7 @@ import { Image } from "@/components/ui/image";
 import { Upload, X, Save, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
+import CharacterVoiceBox from "@/components/studio/CharacterVoiceBox";
 
 const PERSONA_TYPES = [
   { value: "SOLO_FEMALE", label: "Frau (solo)" },
@@ -44,6 +45,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
     tags: (initial?.tags || []).join(", "),
     onlineStatus: initial?.onlineStatus || "AI_AVAILABLE",
     voice: initial?.voice || "river",
+    voiceProfileId: initial?.voiceProfileId || "",
     featured: initial?.featured || false,
     active: initial ? initial.active !== false : true,
     avatar: initial?.avatar || "",
@@ -116,6 +118,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
         onlineStatus: form.onlineStatus,
         voice: form.voice,
+        voiceProfileId: form.voiceProfileId,
         featured: form.featured,
         active: form.active,
         avatar: form.avatar,
@@ -183,6 +186,8 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
             {VOICES.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}
           </select>
         </div>
+
+        <CharacterVoiceBox value={form.voiceProfileId} onChange={(id) => set("voiceProfileId", id)} />
 
         <div className="sm:col-span-2">
           <label className="text-xs text-muted-foreground mb-1.5 block">Tagline</label>
