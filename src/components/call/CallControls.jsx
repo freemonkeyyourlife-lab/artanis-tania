@@ -6,7 +6,7 @@ import PaymentLinkDialog from "@/components/pay/PaymentLinkDialog";
 const ROOM_MODES = [
   { id: "OPEN", label: "Offen", hint: "Alle mit dem Link kommen rein" },
   { id: "WATCH", label: "Zuschauer", hint: "Neue schauen nur heimlich zu" },
-  { id: "PRIVATE", label: "Privat", hint: "Raum geschlossen — niemand Neues kommt rein" },
+  { id: "PRIVATE", label: "Privat", hint: "Raum geschlossen — herein kommt nur, wer einen persönlichen Einladungslink hat" },
 ];
 
 export default function CallControls({

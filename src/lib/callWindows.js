@@ -6,6 +6,7 @@ const EVENT = "artanis:call-windows";
 
 export const WINDOW_DEFS = [
   { id: "chat", title: "Raum-Chat", hint: "Alle im Call" },
+  { id: "guests", title: "Gäste", hint: "Persönliche Einladungslinks" },
   { id: "bot", title: "Bot 1", hint: "Ein Telegram-Gast" },
   { id: "bot2", title: "Bot 2", hint: "Ein zweiter Gast" },
   { id: "share", title: "Teilen", hint: "Links und Einladungen" },

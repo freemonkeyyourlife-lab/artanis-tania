@@ -18,6 +18,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   const [mode, setModeState] = useState("OPEN");
   const [watchers, setWatchers] = useState(0);
   const [closed, setClosed] = useState(false);
+  const [invites, setInvites] = useState([]);
 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -162,6 +163,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     };
 
     const start = async () => {
+      setInvites([]);
       try {
         const constraints = {};
         if (wantCam) constraints.video = true;
@@ -221,13 +223,21 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
           localStreamRef.current = null;
         } else if (msg.type === "mode") {
           setModeState(msg.mode || "OPEN");
+        } else if (msg.type === "invites") {
+          // Nur der Gastgeber bekommt diese Liste — sie kommt direkt vom Raum.
+          setInvites(Array.isArray(msg.invites) ? msg.invites : []);
         }
       });
 
       room.send({ type: "media", cam: camRef.current, mic: micRef.current });
 
       // Wer keinen Namen einträgt, bleibt einfach "Gast" — anmelden muss sich niemand.
-      room.send({ type: "hello", name: String(nameRef.current || "").trim().slice(0, 40) || "Gast" });
+      // Der persönliche Gäste-Link reist im hello mit — nur er öffnet einen geschlossenen Raum.
+      room.send({
+        type: "hello",
+        name: String(nameRef.current || "").trim().slice(0, 40) || "Gast",
+        guest: new URLSearchParams(window.location.search).get("g") || "",
+      });
     };
 
     start();
@@ -324,6 +334,15 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     roomRef.current?.send({ type: "mode", mode: next });
   }, []);
 
+  // Persönliche Gäste-Links anlegen und sperren — die Liste führt der Raum.
+  const createInvite = useCallback((name) => {
+    roomRef.current?.send({ type: "invite_create", name: String(name || "").slice(0, 40) });
+  }, []);
+
+  const revokeInvite = useCallback((token) => {
+    roomRef.current?.send({ type: "invite_revoke", token: String(token || "") });
+  }, []);
+
   // Nachricht an alle im Call — geht denselben Weg wie die Video-Signale.
   const sendChat = useCallback((text) => {
     const t = String(text || "").trim();
@@ -385,5 +404,6 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     localVideoRef, toggleCam, toggleMic,
     messages, sendChat, sendChatVoice, sharing, toggleShare, mySeat,
     mode, setMode, watchers, closed,
+    invites, createInvite, revokeInvite,
   };
 }

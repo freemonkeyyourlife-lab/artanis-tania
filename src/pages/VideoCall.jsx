@@ -64,6 +64,7 @@ export default function VideoCall() {
     localVideoRef, toggleCam, toggleMic,
     messages, sendChat, sendChatVoice, sharing, toggleShare, mySeat,
     mode, setMode, watchers, closed,
+    invites, createInvite, revokeInvite,
   } = useCallRoom({ token, joined, wantCam, wantMic, name: myName });
 
   // Die Raumnummer steht im Link — so wissen beide Seiten, welcher Raum gemeint ist.
@@ -170,7 +171,7 @@ export default function VideoCall() {
         <Lock className="w-10 h-10 text-muted-foreground mb-4" />
         <h1 className="font-display text-2xl text-foreground mb-2">Dieser Raum ist geschlossen</h1>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Der Gastgeber lässt gerade niemanden Neues herein. Frag ihn, ob er den Raum wieder öffnet.
+          Der Gastgeber lässt gerade niemanden Neues herein. Öffne den persönlichen Einladungslink, den du bekommen hast — der öffnet die Tür.
         </p>
       </div>
     );
@@ -257,6 +258,9 @@ export default function VideoCall() {
               isHost={isHost}
               onOpen={openRoom}
               onNewRoom={newRoom}
+              invites={invites}
+              onCreateInvite={createInvite}
+              onRevokeInvite={revokeInvite}
             />
           </aside>
         )}
@@ -280,6 +284,9 @@ export default function VideoCall() {
               isHost={isHost}
               onOpen={openRoom}
               onNewRoom={newRoom}
+              invites={invites}
+              onCreateInvite={createInvite}
+              onRevokeInvite={revokeInvite}
             />
           </aside>
         )}

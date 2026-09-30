@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import CallChat from "@/components/call/CallChat";
 import CallBotPanel from "@/components/call/CallBotPanel";
 import CallSharePanel from "@/components/call/CallSharePanel";
+import CallGuestInvites from "@/components/call/CallGuestInvites";
 import CallWindowFrame from "@/components/call/CallWindowFrame";
 import {
   WINDOW_DEFS, MIN_TEXT, MAX_TEXT, loadWindows, openWindow, closeWindow,
@@ -24,16 +25,16 @@ function useWide() {
   return wide;
 }
 
-export default function CallWindows({ messages, mySeat, onSend, onSendVoice, token, roomNumber, rooms, isHost, onOpen, onNewRoom }) {
+export default function CallWindows({ messages, mySeat, onSend, onSendVoice, token, roomNumber, rooms, isHost, onOpen, onNewRoom, invites, onCreateInvite, onRevokeInvite }) {
   const [cfg, setCfg] = useState(() => loadWindows());
   const [tab, setTab] = useState(() => loadWindows().open[0] || "chat");
   const wide = useWide();
 
   useEffect(() => subscribeWindows(() => setCfg(loadWindows())), []);
 
-  // Einladen darf nur der Gastgeber — bei allen anderen bleibt das Teilen-Fenster
-  // deshalb gar nicht erst in der Liste.
-  const order = isHost ? cfg.order : cfg.order.filter((id) => id !== "share");
+  // Einladen darf nur der Gastgeber — bei allen anderen bleiben die Fenster zum
+  // Teilen und zu den Gäste-Links deshalb gar nicht erst in der Liste.
+  const order = isHost ? cfg.order : cfg.order.filter((id) => id !== "share" && id !== "guests");
   const openIds = order.filter((id) => cfg.open.includes(id));
   const closedIds = order.filter((id) => !cfg.open.includes(id));
   const active = openIds.includes(tab) ? tab : openIds[0] || null;
@@ -41,6 +42,8 @@ export default function CallWindows({ messages, mySeat, onSend, onSendVoice, tok
   const content = (id) =>
     id === "chat" ? (
       <CallChat messages={messages} mySeat={mySeat} onSend={onSend} onSendVoice={onSendVoice} />
+    ) : id === "guests" ? (
+      <CallGuestInvites token={token} roomNumber={roomNumber} invites={invites} onCreate={onCreateInvite} onRevoke={onRevokeInvite} />
     ) : id === "share" ? (
       <CallSharePanel token={token} roomNumber={roomNumber} rooms={rooms} isHost={isHost} onOpen={onOpen} onNewRoom={onNewRoom} />
     ) : (

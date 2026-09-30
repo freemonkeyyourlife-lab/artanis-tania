@@ -45,6 +45,13 @@ export function callInviteUrl(token, roomNumber) {
   return `${base}/call/${token}${roomNumber ? `?r=${roomNumber}` : ""}`;
 }
 
+// Der persönliche Gäste-Link: derselbe Raum, aber mit der eigenen Eintrittskarte.
+// Nur er öffnet einen geschlossenen Raum — und nur für den, der ihn bekommt.
+export function callGuestUrl(token, roomNumber, guestToken) {
+  const url = callInviteUrl(token, roomNumber);
+  return `${url}${url.includes("?") ? "&" : "?"}g=${guestToken}`;
+}
+
 // Die Einladung als fertiger Text — gleich, ob sie per Link, Bot oder Teilen rausgeht.
 export function callInviteText(token, roomNumber) {
   return `ARTANIS × TRIANIA — Chatraum ${roomNumber}.\nKomm rein: ${callInviteUrl(token, roomNumber)}`;

@@ -1,14 +1,26 @@
 import { Actor } from 'base44:runtime/actors';
 
-// One room = one private video call. The room id (token) is the only admission
-// control, so it is minted client-side and shared as an invite link. The link is
-// stable — the host keeps the same room id until they deliberately mint a new one.
-// Any group size works over the same link — one person, a pair, or a whole circle.
+// One room = one private video call. The room id (token) is minted client-side and
+// shared as an invite link. The host keeps the same room id until they deliberately
+// mint a new one. Any group size works over the same link — one person, a pair, or a
+// whole circle. A closed room opens only for a guest who brings the personal link the
+// host made for them: those links live here, and only the host can take them back.
 const MAX = 100;
+
+// Ohne 0/O und 1/I — sonst verliest man sich beim Abtippen.
+const INVITE_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
+
+function newInviteToken() {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => INVITE_ALPHABET[b % INVITE_ALPHABET.length]).join('');
+}
 
 export default class CallRoom extends Actor {
   users = new Map(); // conn.id -> { seat, name, cam, mic, host }
   nextSeat = 1;
+  // token -> { token, name, usedBy, usedAt, created } — die persönlichen Gäste-Links.
+  invites = new Map();
   // OPEN = everyone with the link joins. WATCH = new arrivals only watch silently.
   // PRIVATE = the room is closed, nobody new gets in.
   mode = 'OPEN';
@@ -16,6 +28,8 @@ export default class CallRoom extends Actor {
   async handleStart() {
     const saved = await this.storage.get('users');
     if (saved) this.users = new Map(saved);
+    const invites = await this.storage.get('invites');
+    if (invites) this.invites = new Map(invites);
     const mode = await this.storage.get('mode');
     if (mode === 'OPEN' || mode === 'WATCH' || mode === 'PRIVATE') this.mode = mode;
     const live = new Set(this.getConnections().map((c) => c.id));
@@ -31,27 +45,25 @@ export default class CallRoom extends Actor {
     // Reconnects are routine — a returning id reclaims its seat, name and role.
     if (!this.users.has(conn.id)) {
       const host = await this.isHost(conn);
-      // A closed room takes nobody new — only the host keeps a way back in.
-      if (this.mode === 'PRIVATE' && !host) {
-        this.users.set(conn.id, { seat: this.nextSeat++, name: '', cam: false, mic: false, host: false, watcher: false, blocked: true });
-        await this.save();
-        conn.send({ type: 'closed' });
-        return;
-      }
       // cam/mic stay null until the client reports its real state, so nobody
       // gets a wrong "camera off" pushed onto them right after joining.
       const watcher = this.mode === 'WATCH' && !host;
+      // A closed room takes nobody new — unless a guest link opens the door.
+      // Ob der Link gültig ist, zeigt sich beim ersten Lebenszeichen.
+      const waiting = this.mode === 'PRIVATE' && !host;
       this.users.set(conn.id, {
-        seat: this.nextSeat++, name: '', host, watcher, blocked: false,
+        seat: this.nextSeat++, name: '', host, watcher, blocked: waiting,
         cam: watcher ? false : null,
         mic: watcher ? false : null,
       });
       await this.save();
     }
     const me = this.users.get(conn.id);
-    if (me.blocked) { conn.send({ type: 'closed' }); return; }
+    // Noch nicht hereingelassen — das entscheidet der Gäste-Link beim hello.
+    if (me.blocked) return;
     conn.send({ type: 'you', seat: me.seat, host: me.host, watcher: !!me.watcher });
     conn.send({ type: 'mode', mode: this.mode });
+    if (me.host) this.sendInvites();
     this.broadcastPeers();
   }
 
@@ -75,6 +87,21 @@ export default class CallRoom extends Actor {
 
     if (msg.type === 'hello') {
       me.name = String(msg.name ?? '').slice(0, 40);
+      // Der persönliche Gäste-Link ist die Eintrittskarte: er öffnet auch einen
+      // geschlossenen Raum und wird beim Gastgeber als benutzt vermerkt.
+      const invite = this.findInvite(msg.guest);
+      if (invite) {
+        invite.usedBy = me.name || 'Gast';
+        invite.usedAt = new Date().toISOString();
+        await this.storage.put('invites', [...this.invites.entries()]);
+        this.sendInvites();
+      }
+      if (me.blocked) {
+        if (!invite) { conn.send({ type: 'closed' }); return; }
+        me.blocked = false;
+        conn.send({ type: 'you', seat: me.seat, host: me.host, watcher: !!me.watcher });
+        conn.send({ type: 'mode', mode: this.mode });
+      }
       await this.save();
       this.broadcastPeers();
       return;
@@ -116,6 +143,27 @@ export default class CallRoom extends Actor {
       return;
     }
 
+    // Nur der Gastgeber verteilt Einladungen — und nur er nimmt sie zurück.
+    if (msg.type === 'invite_create') {
+      if (!me.host) return;
+      const name = String(msg.name ?? '').trim().slice(0, 40);
+      const token = newInviteToken();
+      this.invites.set(token, { token, name: name || 'Gast', active: true, usedBy: '', usedAt: '', created: new Date().toISOString() });
+      await this.storage.put('invites', [...this.invites.entries()]);
+      this.sendInvites();
+      return;
+    }
+
+    if (msg.type === 'invite_revoke') {
+      if (!me.host) return;
+      const token = String(msg.token ?? '');
+      if (!this.invites.has(token)) return;
+      this.invites.delete(token);
+      await this.storage.put('invites', [...this.invites.entries()]);
+      this.sendInvites();
+      return;
+    }
+
     // Der Gastgeber bestimmt, wer überhaupt herein darf.
     if (msg.type === 'mode') {
       if (!me.host) return;
@@ -147,6 +195,24 @@ export default class CallRoom extends Actor {
       if (u && u.seat === seat) return c;
     }
     return null;
+  }
+
+  // Ein Link gilt, bis der Gastgeber ihn sperrt.
+  findInvite(token) {
+    const key = String(token ?? '').trim();
+    if (!key) return null;
+    const invite = this.invites.get(key);
+    return invite && invite.active ? invite : null;
+  }
+
+  // Die Einladungen gehören nur dem Gastgeber — niemand sonst sieht sie.
+  sendInvites() {
+    const invites = [...this.invites.values()].map((i) => ({
+      token: i.token, name: i.name, usedBy: i.usedBy || '', usedAt: i.usedAt || '',
+    }));
+    for (const c of this.getConnections()) {
+      if (this.users.get(c.id)?.host) c.send({ type: 'invites', invites });
+    }
   }
 
   save() {
