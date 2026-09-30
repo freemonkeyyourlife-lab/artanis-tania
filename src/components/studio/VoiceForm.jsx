@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { BASE_VOICES, MOODS } from "@/lib/voiceDj";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
+import HelpButton from "@/components/HelpButton";
 
 const input = "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
 

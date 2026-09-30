@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Loader2, Download, Plus, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import HelpButton from "@/components/HelpButton";
 
 // Stimmen, die im ElevenLabs-Konto liegen, mit einem Klick in die Stimmbank holen.
 export default function ElevenLabsImport({ existingIds = [], onImported }) {
