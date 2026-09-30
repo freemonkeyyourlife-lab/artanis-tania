@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Loader2, Banknote } from "lucide-react";
+import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Loader2, Banknote, Cast } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -23,6 +23,9 @@ import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
 import { CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useCallSession } from "@/lib/CallContext";
+import { requestStage } from "@/lib/callStage";
 import ChatTabs from "@/components/chat/ChatTabs";
 import ChatText from "@/components/chat/ChatText";
 import QuickPayButton from "@/components/pay/QuickPayButton";
@@ -104,6 +107,9 @@ export default function Messages() {
   const [spannerMode, setSpannerMode] = useState(false);
   const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { session, joined } = useCallSession();
+  const callRunning = joined && !!session;
   const messagesEndRef = useRef(null);
   const chatScrollRef = useRef(null);
   const extraShotRef = useRef(0);
@@ -977,6 +983,15 @@ export default function Messages() {
     } catch (e) { console.error(e); }
   };
 
+  // Denselben Chat in den laufenden Video-Call holen — alle sehen mit.
+  const bringIntoCall = async () => {
+    if (!callRunning || !activeChat || viewMode !== "ai") return;
+    const conv = await ensureConv(activeChat);
+    if (!conv) return;
+    requestStage({ id: conv.id, title: creators.find((c) => c.id === activeChat)?.stageName || "Chat" });
+    navigate(`/call/${session.token}?r=${session.roomNumber || 1}`);
+  };
+
   // Keeps the scenario + setup of the running chat, so you resume where you left off.
   useEffect(() => {
     if (viewMode !== "ai" || !activeChat) return;
@@ -1399,6 +1414,19 @@ export default function Messages() {
                   <Link to={`/ai-call/${activeChat}`} title="Videochat starten" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-primary transition-colors">
                     <Video className="w-4 h-4" />
                   </Link>
+                )}
+                {viewMode === "ai" && (
+                  <button
+                    onClick={bringIntoCall}
+                    disabled={!callRunning}
+                    title={callRunning ? "Diesen Chat in den laufenden Video-Call holen — alle sehen mit" : "Starte zuerst einen Video-Call — der Knopf oben rechts führt dich hin"}
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors",
+                      callRunning ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground opacity-50"
+                    )}
+                  >
+                    <Cast className="w-4 h-4" />
+                  </button>
                 )}
                 <button onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })} title="Zur letzten Nachricht springen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <ArrowDown className="w-4 h-4" />

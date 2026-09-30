@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut } from "lucide-react";
+import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import HeaderNav, { buildNavGroups } from "@/components/nav/HeaderNav";
 import { base44 } from "@/api/base44Client";
@@ -11,6 +11,7 @@ import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import WishButton from "@/components/wish/WishButton";
+import { useCallSession } from "@/lib/CallContext";
 
 const MORE_LINKS = [
   { label: "Dockingstation", path: "/dock" },
@@ -48,6 +49,11 @@ export default function Layout() {
   const [incomingCount, setIncomingCount] = useState(0);
   const [waitingChats, setWaitingChats] = useState(0);
   const [layout, setLayout] = useState(null);
+  // Der Call ist von jeder Seite aus erreichbar — und läuft weiter, wenn du
+  // weiterklickst.
+  const { session, joined } = useCallSession();
+  const callRunning = joined && !!session;
+  const openCall = () => navigate(callRunning ? `/call/${session.token}?r=${session.roomNumber || 1}` : "/call");
 
   // Der Besitzer legt Reihenfolge, Schrift und ausgeblendete Punkte fest.
   useEffect(() => {
@@ -145,6 +151,14 @@ export default function Layout() {
             )}
             <WishButton />
             <InfoModeToggle />
+            <button
+              onClick={openCall}
+              title={callRunning ? "Zurück in den laufenden Video-Call" : "Video-Call starten"}
+              className={cn("relative w-9 h-9 rounded-full glass-btn flex items-center justify-center transition-colors", callRunning ? "text-primary" : "hover:text-primary")}
+            >
+              <Video className="w-4 h-4" />
+              {callRunning && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+            </button>
             <InviteShareButton className="hidden sm:flex" />
             <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass-btn flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
               <Search className="w-4 h-4" />

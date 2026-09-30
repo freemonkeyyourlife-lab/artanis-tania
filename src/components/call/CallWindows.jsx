@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Plus, Minus, RotateCcw, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CallChat from "@/components/call/CallChat";
+import CallStagePanel from "@/components/call/CallStagePanel";
 import CallBotPanel from "@/components/call/CallBotPanel";
 import CallSharePanel from "@/components/call/CallSharePanel";
 import CallGuestInvites from "@/components/call/CallGuestInvites";
@@ -25,7 +26,7 @@ function useWide() {
   return wide;
 }
 
-export default function CallWindows({ messages, mySeat, onSend, onSendVoice, token, roomNumber, rooms, isHost, onOpen, onNewRoom, invites, onCreateInvite, onRevokeInvite }) {
+export default function CallWindows({ messages, mySeat, onSend, onSendVoice, token, roomNumber, rooms, isHost, onOpen, onNewRoom, invites, onCreateInvite, onRevokeInvite, stage, stageLines, onOpenStage, onCloseStage, onSayStage }) {
   const [cfg, setCfg] = useState(() => loadWindows());
   const [tab, setTab] = useState(() => loadWindows().open[0] || "chat");
   const wide = useWide();
@@ -42,6 +43,16 @@ export default function CallWindows({ messages, mySeat, onSend, onSendVoice, tok
   const content = (id) =>
     id === "chat" ? (
       <CallChat messages={messages} mySeat={mySeat} onSend={onSend} onSendVoice={onSendVoice} />
+    ) : id === "stage" ? (
+      <CallStagePanel
+        stage={stage}
+        stageLines={stageLines}
+        mySeat={mySeat}
+        isHost={isHost}
+        onOpen={onOpenStage}
+        onClose={onCloseStage}
+        onSay={onSayStage}
+      />
     ) : id === "guests" ? (
       <CallGuestInvites token={token} roomNumber={roomNumber} invites={invites} onCreate={onCreateInvite} onRevoke={onRevokeInvite} />
     ) : id === "share" ? (

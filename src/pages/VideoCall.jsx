@@ -66,6 +66,7 @@ export default function VideoCall() {
     getLocalVideo,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
+    stage, stageLines, openStage, closeStage, sayOnStage,
   } = call;
 
   // Läuft hier wirklich dieser Raum? Sonst zeigst du den Beitritt.
@@ -267,6 +268,11 @@ export default function VideoCall() {
               invites={invites}
               onCreateInvite={createInvite}
               onRevokeInvite={revokeInvite}
+              stage={stage}
+              stageLines={stageLines}
+              onOpenStage={openStage}
+              onCloseStage={closeStage}
+              onSayStage={sayOnStage}
             />
           </aside>
         )}
@@ -294,6 +300,11 @@ export default function VideoCall() {
               invites={invites}
               onCreateInvite={createInvite}
               onRevokeInvite={revokeInvite}
+              stage={stage}
+              stageLines={stageLines}
+              onOpenStage={openStage}
+              onCloseStage={closeStage}
+              onSayStage={sayOnStage}
             />
           </aside>
         )}

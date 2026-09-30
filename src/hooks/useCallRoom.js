@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { lineFromMessage, generateStageReply } from "@/lib/stageChat";
+import { takePendingStage, onStageRequest } from "@/lib/callStage";
 
 const ICE = [{ urls: "stun:stun.l.google.com:19302" }];
 
@@ -19,6 +21,9 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   const [watchers, setWatchers] = useState(0);
   const [closed, setClosed] = useState(false);
   const [invites, setInvites] = useState([]);
+  // Die Bühne: der Plattform-Chat, den gerade alle im Call zusammen lesen.
+  const [stage, setStage] = useState(null);
+  const [stageLines, setStageLines] = useState([]);
 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -35,6 +40,10 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   const camRef = useRef(wantCam);
   const micRef = useRef(wantMic);
   const screenRef = useRef(null); // laufender Bildschirm-Stream, falls geteilt wird
+  // Was im Call in den laufenden Plattform-Chat geschrieben wird, trägt der
+  // Gastgeber in die echte Unterhaltung ein.
+  const stageWriteRef = useRef(null);
+  const writtenRef = useRef(new Set());
   const nameRef = useRef(name);
   nameRef.current = name;
 
@@ -242,6 +251,16 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
         } else if (msg.type === "invites") {
           // Nur der Gastgeber bekommt diese Liste — sie kommt direkt vom Raum.
           setInvites(Array.isArray(msg.invites) ? msg.invites : []);
+        } else if (msg.type === "stage") {
+          setStage(msg.stage || null);
+          if (!msg.stage) setStageLines([]);
+        } else if (msg.type === "stage_lines") {
+          setStageLines(Array.isArray(msg.lines) ? msg.lines : []);
+        } else if (msg.type === "stage_line") {
+          const line = msg.line;
+          if (line) setStageLines((prev) => (prev.some((l) => l.id === line.id) ? prev : [...prev.slice(-119), line]));
+          // Nur was im Call geschrieben wurde, muss noch in die echte Unterhaltung.
+          if (line?.seat) stageWriteRef.current?.(line);
         }
       });
 
@@ -277,6 +296,100 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
       previewRef.current = null;
     };
   }, [token, joined, wantCam, wantMic, syncPeers, setPreview]);
+
+  // Der Gastgeber ist die Brücke: er liest die echte Unterhaltung und trägt ein,
+  // was im Call geschrieben wird. Alle anderen sehen einfach mit.
+  useEffect(() => {
+    if (!isHost || !stage?.id) { stageWriteRef.current = null; return; }
+    let alive = true;
+    let unsubscribe;
+
+    (async () => {
+      let conversation = null;
+      let creator = null;
+      let history = [];
+      try {
+        const messages = await base44.entities.Message.filter({ conversationId: stage.id }, "created_date", 120);
+        history = messages.map(lineFromMessage).filter((l) => l.text);
+        conversation = await base44.entities.Conversation.get(stage.id);
+        if (conversation?.creatorId) {
+          const found = await base44.entities.Creator.filter({ id: conversation.creatorId });
+          creator = found[0] || null;
+        }
+      } catch (e) {
+        // Ohne Vorgeschichte geht es trotzdem los.
+      }
+      if (!alive) return;
+      roomRef.current?.send({ type: "stage_seed", lines: history });
+
+      // Neue Zeilen der echten Unterhaltung gehen sofort an alle im Call.
+      unsubscribe = base44.entities.Message.subscribe((event) => {
+        if (event.type !== "create" || event.data?.conversationId !== stage.id) return;
+        if (writtenRef.current.has(event.data.id)) { writtenRef.current.delete(event.data.id); return; }
+        const line = lineFromMessage(event.data);
+        if (!line.text) return;
+        history = [...history, line].slice(-120);
+        roomRef.current?.send({ type: "stage_line", line });
+      });
+
+      stageWriteRef.current = async (line) => {
+        try {
+          const created = await base44.entities.Message.create({
+            conversationId: stage.id,
+            sender: line.sender || "Gast",
+            senderType: "HUMAN",
+            text: line.text,
+          });
+          writtenRef.current.add(created.id);
+          history = [...history, { id: created.id, sender: line.sender, senderType: "HUMAN", text: line.text }].slice(-120);
+          const reply = await generateStageReply({ conversation, creator, history });
+          if (!reply || !alive) return;
+          const aiMsg = await base44.entities.Message.create({
+            conversationId: stage.id,
+            sender: creator?.stageName || conversation?.creatorName || "Charakter",
+            senderType: "AI",
+            text: reply,
+          });
+          history = [...history, { id: aiMsg.id, sender: aiMsg.sender, senderType: "AI", text: reply }].slice(-120);
+        } catch (e) {
+          // Der Call läuft weiter — nur diese Zeile kam nicht durch.
+        }
+      };
+    })();
+
+    return () => {
+      alive = false;
+      unsubscribe?.();
+      stageWriteRef.current = null;
+    };
+  }, [isHost, stage?.id]);
+
+  // Der Gastgeber legt fest, welcher Plattform-Chat im Call läuft.
+  const openStage = useCallback((conversation) => {
+    if (!conversation?.id) return;
+    roomRef.current?.send({ type: "stage_open", id: conversation.id, title: conversation.title || "" });
+  }, []);
+
+  const closeStage = useCallback(() => {
+    roomRef.current?.send({ type: "stage_close" });
+  }, []);
+
+  const sayOnStage = useCallback((text) => {
+    const t = String(text || "").trim();
+    if (!t) return;
+    roomRef.current?.send({ type: "stage_say", text: t.slice(0, 2000) });
+  }, []);
+
+  // Aus der Chat-Seite heraus: derselbe Chat, nur eben im Call.
+  useEffect(() => {
+    if (!joined) return;
+    const apply = (req) => {
+      if (!req?.id) return;
+      roomRef.current?.send({ type: "stage_open", id: req.id, title: req.title || "" });
+    };
+    apply(takePendingStage());
+    return onStageRequest(apply);
+  }, [joined, token]);
 
   const ensureTrack = useCallback(async (kind) => {
     const existing = kind === "video"
@@ -459,5 +572,6 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     getLocalVideo,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
+    stage, stageLines, openStage, closeStage, sayOnStage,
   };
 }

@@ -24,6 +24,10 @@ export default class CallRoom extends Actor {
   // OPEN = everyone with the link joins. WATCH = new arrivals only watch silently.
   // PRIVATE = the room is closed, nobody new gets in.
   mode = 'OPEN';
+  // Die Bühne: welche Unterhaltung der Plattform gerade im Call läuft. Alle im
+  // Raum sehen genau diesen Chat — der Gastgeber legt ihn auf.
+  stage = null; // { id, title }
+  stageLines = []; // die letzten Zeilen, damit Spätkommende mitlesen können
 
   async handleStart() {
     const saved = await this.storage.get('users');
@@ -32,6 +36,10 @@ export default class CallRoom extends Actor {
     if (invites) this.invites = new Map(invites);
     const mode = await this.storage.get('mode');
     if (mode === 'OPEN' || mode === 'WATCH' || mode === 'PRIVATE') this.mode = mode;
+    const stage = await this.storage.get('stage');
+    if (stage && typeof stage.id === 'string') this.stage = { id: stage.id, title: String(stage.title ?? '').slice(0, 80) };
+    const lines = await this.storage.get('stageLines');
+    if (Array.isArray(lines)) this.stageLines = lines;
     const live = new Set(this.getConnections().map((c) => c.id));
     for (const id of this.users.keys()) if (!live.has(id)) this.users.delete(id);
     this.nextSeat = Math.max(0, ...[...this.users.values()].map((u) => u.seat)) + 1;
@@ -64,6 +72,11 @@ export default class CallRoom extends Actor {
     conn.send({ type: 'you', seat: me.seat, host: me.host, watcher: !!me.watcher });
     conn.send({ type: 'mode', mode: this.mode });
     if (me.host) this.sendInvites();
+    // Wer später dazukommt, steigt mitten in den laufenden Chat ein.
+    if (this.stage) {
+      conn.send({ type: 'stage', stage: this.stage });
+      conn.send({ type: 'stage_lines', lines: this.stageLines });
+    }
     this.broadcastPeers();
   }
 
@@ -143,6 +156,61 @@ export default class CallRoom extends Actor {
       return;
     }
 
+    // Der Gastgeber legt fest, welcher Plattform-Chat im Call läuft.
+    if (msg.type === 'stage_open') {
+      if (!me.host) return;
+      const id = String(msg.id ?? '').slice(0, 64);
+      if (!id) return;
+      this.stage = { id, title: String(msg.title ?? '').slice(0, 80) };
+      this.stageLines = [];
+      await this.storage.put('stage', this.stage);
+      await this.storage.put('stageLines', []);
+      this.broadcast({ type: 'stage', stage: this.stage });
+      return;
+    }
+
+    if (msg.type === 'stage_close') {
+      if (!me.host) return;
+      this.stage = null;
+      this.stageLines = [];
+      await this.storage.put('stage', null);
+      await this.storage.put('stageLines', []);
+      this.broadcast({ type: 'stage', stage: null });
+      return;
+    }
+
+    // Die Brücke (der Gastgeber) schickt die echten Zeilen der Unterhaltung herein.
+    if (msg.type === 'stage_seed' || msg.type === 'stage_line') {
+      if (!me.host || !this.stage) return;
+      const fresh = (msg.type === 'stage_seed' && Array.isArray(msg.lines) ? msg.lines : [msg.line])
+        .map((l) => this.cleanLine(l))
+        .filter(Boolean);
+      if (!fresh.length) return;
+      this.stageLines = msg.type === 'stage_seed'
+        ? fresh.slice(-120)
+        : [...this.stageLines, ...fresh].slice(-120);
+      await this.storage.put('stageLines', this.stageLines);
+      if (msg.type === 'stage_seed') {
+        this.broadcast({ type: 'stage_lines', lines: this.stageLines });
+      } else {
+        this.broadcast({ type: 'stage_line', line: fresh[fresh.length - 1] });
+      }
+      return;
+    }
+
+    // Jeder im Call darf in den laufenden Chat schreiben — der Gastgeber trägt es
+    // dann in die echte Unterhaltung ein.
+    if (msg.type === 'stage_say') {
+      if (!this.stage || me.watcher) return;
+      const text = String(msg.text ?? '').trim().slice(0, 2000);
+      if (!text) return;
+      const line = { id: `r${me.seat}-${Date.now()}`, sender: me.name || 'Gast', senderType: 'HUMAN', text, seat: me.seat };
+      this.stageLines = [...this.stageLines, line].slice(-120);
+      await this.storage.put('stageLines', this.stageLines);
+      this.broadcast({ type: 'stage_line', line });
+      return;
+    }
+
     // Nur der Gastgeber verteilt Einladungen — und nur er nimmt sie zurück.
     if (msg.type === 'invite_create') {
       if (!me.host) return;
@@ -192,6 +260,20 @@ export default class CallRoom extends Actor {
     this.users.delete(conn.id);
     await this.save();
     this.broadcastPeers();
+  }
+
+  // Eine Zeile der Bühne — nur die öffentliche Form verlässt den Raum.
+  cleanLine(line) {
+    if (!line || typeof line !== 'object') return null;
+    const text = String(line.text ?? '').slice(0, 4000);
+    if (!text) return null;
+    const kind = line.senderType === 'AI' ? 'AI' : line.senderType === 'SYSTEM' ? 'SYSTEM' : 'HUMAN';
+    return {
+      id: String(line.id ?? '').slice(0, 64) || `l${Date.now()}`,
+      sender: String(line.sender ?? '').slice(0, 40),
+      senderType: kind,
+      text,
+    };
   }
 
   connForSeat(seat) {
