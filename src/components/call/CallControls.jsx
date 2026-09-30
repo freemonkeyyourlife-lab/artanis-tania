@@ -33,7 +33,7 @@ export default function CallControls({
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-3 py-4">
+      <div className="flex flex-wrap items-center justify-center gap-3 px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <button
           onClick={toggleMic}
           className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-colors", micOn ? "bg-elevated text-foreground" : "bg-destructive text-white")}

@@ -5,6 +5,7 @@ import { Image } from "@/components/ui/image";
 import { MessageSquare, Sparkles, ArrowRight, Crown, Bot, Calendar, Link2 } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import PersonaCard from "@/components/PersonaCard";
+import CharacterStoryCard from "@/components/CharacterStoryCard";
 import ContentCard from "@/components/ContentCard";
 import HeroCloud from "@/components/HeroCloud";
 import HeroNews from "@/components/hero/HeroNews";
@@ -200,20 +201,12 @@ export default function Home() {
                   <h2 className="font-display text-2xl text-foreground">KI-Charaktere</h2>
                   <span className="px-2 py-0.5 rounded-full bg-violet-600/90 text-white text-[10px] font-semibold uppercase">KI-Modelle</span>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">KI-Modelle auf Basis echter Charaktere — schreibe eigene Szenarien oder spiele welche durch</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Jeder Charakter mit seiner Geschichte — lies die Kurzfassung und klapp die ganze auf, wenn du mehr wissen willst.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {aiCharacters.map(c => (
-                    <Link key={c.id} to="/messages" className="group">
-                      <div className="relative overflow-hidden rounded-2xl border border-border bg-card aspect-[3/4]">
-                        {c.avatar ? <Image src={c.avatar} fittingType="fill" className="w-full h-full group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full bg-elevated" />}
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-                        <div className="absolute top-2 right-2"><span className="px-2 py-0.5 rounded-full bg-violet-600/90 text-white text-[10px] font-semibold tracking-wider uppercase">KI</span></div>
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <p className="font-display text-sm text-foreground">{c.stageName}</p>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{c.tagline}</p>
-                        </div>
-                      </div>
-                    </Link>
+                    <CharacterStoryCard key={c.id} creator={c} to="/messages" />
                   ))}
                 </div>
               </div>

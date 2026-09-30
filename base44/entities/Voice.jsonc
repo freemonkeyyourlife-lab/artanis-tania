@@ -65,6 +65,16 @@
       "type": "boolean",
       "default": false
     },
+    "emotionSamples": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "builtFromEmotions": {
+      "type": "boolean",
+      "default": false
+    },
     "source": {
       "type": "string",
       "enum": [

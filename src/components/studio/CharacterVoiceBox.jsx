@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Mic, Square } from "lucide-react";
+import { cn } from "@/lib/utils";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
+import useVoiceRecorder from "@/hooks/useVoiceRecorder";
 
 const TEST_TEXT = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
 const inputCls = "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:border-primary/50";
@@ -17,14 +19,45 @@ function Slider({ label, value, min, max, step, onChange, left, right }) {
 }
 
 // Stimme und Klang direkt am Charakter einstellen — ohne Umweg über ein anderes Werkzeug.
-export default function CharacterVoiceBox({ value, onChange }) {
+export default function CharacterVoiceBox({ value, onChange, characterName = "" }) {
   const [voices, setVoices] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [depth, setDepth] = useState(0);
   const [intensity, setIntensity] = useState(50);
   const [speed, setSpeed] = useState(1);
 
   useEffect(() => { base44.entities.Voice.list("-created_date").then(setVoices).catch(() => {}); }, []);
+
+  // Eigene Stimme direkt hier einsprechen: sie wird gebaut, abgelegt und
+  // dem Charakter zugeordnet — ohne Umweg über die Stimmbank.
+  const record = useVoiceRecorder(async (fileUri) => {
+    setCreating(true);
+    try {
+      const name = characterName.trim() || "Neue Stimme";
+      const clone = await base44.functions.invoke("elevenLabsClone", {
+        fileUri,
+        name,
+        description: `Direkt am Charakter „${name}“ eingesprochen`,
+      });
+      if (clone.data?.error) throw new Error(clone.data.error);
+      const created = await base44.entities.Voice.create({
+        name,
+        description: "Direkt am Charakter eingesprochen",
+        provider: "ELEVENLABS",
+        externalVoiceId: clone.data.voiceId,
+        sampleFile: fileUri,
+        source: "EINGESPROCHEN",
+        originNote: "Am Charakter aufgenommen",
+      });
+      setVoices((list) => [created, ...list]);
+      onChange(created.id);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCreating(false);
+    }
+  });
 
   const voice = voices.find((v) => v.id === value) || null;
 
@@ -56,6 +89,24 @@ export default function CharacterVoiceBox({ value, onChange }) {
             <option key={v.id} value={v.id}>{v.name}</option>
           ))}
         </select>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => record.toggle(`${(characterName || "stimme").toLowerCase().replace(/\s+/g, "-")}.webm`)}
+          disabled={record.busy || creating}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-colors disabled:opacity-50",
+            record.recording ? "bg-red-500 text-white animate-pulse" : "bg-primary text-primary-foreground"
+          )}
+        >
+          {record.busy || creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : record.recording ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+          {creating ? "Baut Stimme …" : record.busy ? "Lädt …" : record.recording ? "Stopp" : "Neue Stimme einsprechen"}
+        </button>
+        <span className="text-[11px] text-muted-foreground">
+          Sprich etwa 30 Sekunden frei — daraus wird die Stimme dieses Charakters und sie ist sofort ausgewählt.
+        </span>
       </div>
 
       {voice ? (

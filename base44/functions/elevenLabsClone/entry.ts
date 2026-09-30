@@ -1,7 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { secrets } from 'base44:runtime';
 
-// Aus einer hochgeladenen Aufnahme eine eigene Stimme machen, die jeden Text sprechen kann.
+// Aus einer oder mehreren Aufnahmen eine eigene Stimme machen, die jeden Text sprechen kann.
+// Mehrere Aufnahmen (z. B. eine pro Stimmung) ergeben eine vollständigere Stimme.
 
 const API = 'https://api.elevenlabs.io/v1';
 
@@ -28,25 +29,37 @@ export default async function (req) {
     if (!key) return Response.json({ error: 'Kein ElevenLabs-Schlüssel hinterlegt.' }, { status: 400 });
 
     const body = await req.json();
-    const fileUri = (body.fileUri || '').trim();
     const name = (body.name || '').trim();
-    if (!fileUri || !name) return Response.json({ error: 'Aufnahme oder Name fehlt.' }, { status: 400 });
+    const fileUris: string[] = (Array.isArray(body.fileUris) ? body.fileUris : [body.fileUri])
+      .map((u) => String(u || '').trim())
+      .filter(Boolean);
 
-    const signed = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
-      file_uri: fileUri,
-      expires_in: 600,
-    });
-    if (!signed?.signed_url) return Response.json({ error: 'Aufnahme nicht gefunden.' }, { status: 400 });
+    if (!fileUris.length || !name) return Response.json({ error: 'Aufnahme oder Name fehlt.' }, { status: 400 });
 
-    const audioRes = await fetch(signed.signed_url);
-    if (!audioRes.ok) return Response.json({ error: 'Aufnahme konnte nicht geladen werden.' }, { status: 502 });
-    const bytes = new Uint8Array(await audioRes.arrayBuffer());
-
-    const ext = ((fileUri.split('.').pop() || 'mp3').split('?')[0] || 'mp3').toLowerCase();
     const form = new FormData();
     form.append('name', name.slice(0, 100));
     if (body.description) form.append('description', String(body.description).slice(0, 300));
-    form.append('files', new File([bytes], `stimme.${ext}`, { type: TYPES[ext] || 'audio/mpeg' }));
+
+    for (let i = 0; i < fileUris.length; i++) {
+      const fileUri = fileUris[i];
+      let signed;
+      try {
+        signed = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
+          file_uri: fileUri,
+          expires_in: 600,
+        });
+      } catch (e) {
+        return Response.json({ error: `Aufnahme ${i + 1} nicht gefunden.` }, { status: 400 });
+      }
+      if (!signed?.signed_url) return Response.json({ error: `Aufnahme ${i + 1} nicht gefunden.` }, { status: 400 });
+
+      const audioRes = await fetch(signed.signed_url);
+      if (!audioRes.ok) return Response.json({ error: `Aufnahme ${i + 1} konnte nicht geladen werden.` }, { status: 502 });
+      const bytes = new Uint8Array(await audioRes.arrayBuffer());
+
+      const ext = ((fileUri.split('.').pop() || 'mp3').split('?')[0] || 'mp3').toLowerCase();
+      form.append('files', new File([bytes], `stimme-${i + 1}.${ext}`, { type: TYPES[ext] || 'audio/mpeg' }));
+    }
 
     const res = await fetch(`${API}/voices/add`, {
       method: 'POST',
@@ -60,7 +73,7 @@ export default async function (req) {
       return Response.json({ error: data?.detail?.message || `ElevenLabs (${res.status})` }, { status: 502 });
     }
 
-    return Response.json({ voiceId: data.voice_id });
+    return Response.json({ voiceId: data.voice_id, usedSamples: fileUris.length });
   } catch (error) {
     console.log('elevenLabsClone failed', error.message);
     return Response.json({ error: error.message }, { status: 500 });

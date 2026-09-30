@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Mic, Pencil, Plus, Trash2, Star, Search, Download, SlidersHorizontal, Users } from "lucide-react";
+import { Mic, Pencil, Plus, Trash2, Star, Search, Download, SlidersHorizontal, Users, Sparkles } from "lucide-react";
 import VoiceTuner from "@/components/studio/VoiceTuner";
 import { cn } from "@/lib/utils";
 import { resolveVoice } from "@/lib/voiceDj";
 import VoiceForm from "@/components/studio/VoiceForm";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
 import ElevenLabsImport from "@/components/studio/ElevenLabsImport";
+import EmotionVoiceBuilder from "@/components/studio/EmotionVoiceBuilder";
 import VoiceSayBox from "@/components/studio/VoiceSayBox";
 import HelpButton from "@/components/HelpButton";
 import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
@@ -34,6 +35,7 @@ export default function VoiceManager() {
   const [sort, setSort] = useState("favorite");
   const [tagFilter, setTagFilter] = useState("");
   const [showImport, setShowImport] = useState(false);
+  const [showBuilder, setShowBuilder] = useState(false);
   const [tuning, setTuning] = useState(null);
   const [byCharacter, setByCharacter] = useState(false);
 
@@ -150,6 +152,15 @@ export default function VoiceManager() {
           <Download className="w-4 h-4" /> Aus ElevenLabs
         </button>
         <button
+          onClick={() => setShowBuilder((s) => !s)}
+          className={cn(
+            "inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-semibold whitespace-nowrap transition-colors",
+            showBuilder ? "bg-primary text-primary-foreground border-primary" : "bg-elevated border-border text-foreground hover:border-primary/50"
+          )}
+        >
+          <Sparkles className="w-4 h-4" /> Eigene Stimme bauen
+        </button>
+        <button
           onClick={() => setEditing("new")}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold whitespace-nowrap"
         >
@@ -171,6 +182,8 @@ export default function VoiceManager() {
           />
         </div>
       )}
+
+      {showBuilder && <EmotionVoiceBuilder onCreated={load} />}
 
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">

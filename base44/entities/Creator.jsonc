@@ -41,6 +41,9 @@
     "bio": {
       "type": "string"
     },
+    "shortStory": {
+      "type": "string"
+    },
     "tagline": {
       "type": "string"
     },

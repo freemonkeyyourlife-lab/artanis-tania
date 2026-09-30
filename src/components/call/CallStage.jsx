@@ -43,8 +43,8 @@ export default function CallStage({ localVideoRef, camOn, micOn, myName, peers }
     : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
   return (
-    <div className={cn("flex-1 overflow-y-auto p-3 sm:p-4", peers.length === 0 && "flex items-center justify-center")}>
-      <div className={cn("grid gap-3 w-full", peers.length === 0 ? "max-w-xl" : layout)}>
+    <div className={cn("flex-1 min-w-0 min-h-0 overflow-y-auto p-3 sm:p-4", peers.length === 0 && "flex items-center justify-center")}>
+      <div className={cn("grid gap-3 w-full content-start", peers.length === 0 ? "max-w-xl" : layout)}>
         {peers.map((peer) => (
           <PeerTile key={peer.seat} peer={peer} />
         ))}
