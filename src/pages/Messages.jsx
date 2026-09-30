@@ -39,7 +39,8 @@ const TEXT_MODEL_KEY = "artanis_text_model";
 // Wie breit die Liste links steht — den Balken daneben ziehst du dir selbst zurecht.
 const LIST_W_KEY = "artanis_chat_list_w";
 // So lange darf der echte Charakter selbst antworten, bevor die KI übernimmt.
-const HUMAN_WINDOW_MS = 120000;
+// Nur kurz Vorsprung für die echte Person — lange Pausen lassen den Chat tot wirken.
+const HUMAN_WINDOW_MS = 15000;
 
 const LANGUAGE_RULE =
   "═══ SPRACHE — NUR DEUTSCH ═══\n" +
@@ -229,7 +230,6 @@ export default function Messages() {
         if (prefs.length > 0) setUserPref(prefs[0]);
         const modelData = await base44.entities.TextModel.filter({ enabled: true });
         setTextModels(modelData);
-        setActiveModelId((prev) => prev || modelData[0]?.modelId || "");
         const incoming = await base44.entities.Conversation.filter({ participantId: user.id, conversationType: "HUMAN" });
         setIncomingConversations(incoming);
         dmConvIdsRef.current = new Set(incoming.map(c => c.id));
@@ -933,10 +933,17 @@ export default function Messages() {
     // Der Admin ist selbst der Mensch — in seinen eigenen Chats wartet niemand.
     if (currentUser?.role === "admin") return false;
     const fresh = await base44.entities.Conversation.get(conv.id).catch(() => conv);
-    // Der Schalter steht auf "ich übernehme" — die KI bleibt in diesem Chat komplett raus.
-    if (fresh?.handledBy === "HUMAN") return true;
-
     const baseline = await newestHumanLine(conv.id).catch(() => null);
+
+    // "Ich übernehme" gilt nur, solange die echte Person auch wirklich schreibt.
+    // Ist sie weg, übernimmt die KI wieder — sonst bliebe der Chat für immer stumm.
+    if (fresh?.handledBy === "HUMAN") {
+      const lastHuman = baseline ? new Date(baseline).getTime() : 0;
+      if (lastHuman && Date.now() - lastHuman < HUMAN_WINDOW_MS) return true;
+      await base44.entities.Conversation.update(conv.id, { handledBy: "AI", waitingSince: null }).catch(() => {});
+      return false;
+    }
+
     const startedAt = new Date().toISOString();
     await base44.entities.Conversation.update(conv.id, {
       waitingSince: startedAt,
@@ -947,7 +954,7 @@ export default function Messages() {
 
     const until = Date.now() + HUMAN_WINDOW_MS;
     while (Date.now() < until) {
-      await new Promise((r) => setTimeout(r, 5000));
+      await new Promise((r) => setTimeout(r, 2500));
       try {
         const now = await base44.entities.Conversation.get(conv.id);
         if (now?.handledBy === "HUMAN") return true;
@@ -1377,13 +1384,18 @@ export default function Messages() {
                   <select
                     value={activeModelId}
                     onChange={(e) => {
-                      setActiveModelId(e.target.value);
-                      setModelPicked(true);
-                      try { localStorage.setItem(TEXT_MODEL_KEY, e.target.value); } catch (err) { /* ignore */ }
+                      const picked = e.target.value;
+                      setActiveModelId(picked);
+                      setModelPicked(!!picked);
+                      try {
+                        if (picked) localStorage.setItem(TEXT_MODEL_KEY, picked);
+                        else localStorage.removeItem(TEXT_MODEL_KEY);
+                      } catch (err) { /* ignore */ }
                     }}
-                    title="Modell für die Antworten"
-                    className="hidden md:block max-w-[160px] px-3 py-1.5 rounded-full bg-elevated border border-border text-[11px] font-semibold text-muted-foreground focus:outline-none focus:border-primary/50"
+                    title="Womit die Figuren antworten — Standard ist die eingebaute KI"
+                    className="hidden md:block max-w-[180px] px-3 py-1.5 rounded-full bg-elevated border border-border text-[11px] font-semibold text-muted-foreground focus:outline-none focus:border-primary/50"
                   >
+                    <option value="">Standard (eingebaute KI)</option>
                     {textModels.map((m) => (
                       <option key={m.id} value={m.modelId}>{m.name}</option>
                     ))}
