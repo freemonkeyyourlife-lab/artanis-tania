@@ -25,7 +25,8 @@ export default async function (req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const key = secrets.get('ELEVENLABS_API_KEY');
+    // Beim Einfügen schleichen sich leicht Leerzeichen ein — die lehnt ElevenLabs ab.
+    const key = (secrets.get('ELEVENLABS_API_KEY') || '').trim();
     if (!key) return Response.json({ error: 'Kein ElevenLabs-Schlüssel hinterlegt.' }, { status: 400 });
     const headers = { 'xi-api-key': key };
 
