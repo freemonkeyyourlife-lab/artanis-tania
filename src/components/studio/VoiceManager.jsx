@@ -7,6 +7,7 @@ import VoiceForm from "@/components/studio/VoiceForm";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
 import ElevenLabsImport from "@/components/studio/ElevenLabsImport";
 import VoiceSayBox from "@/components/studio/VoiceSayBox";
+import HelpButton from "@/components/HelpButton";
 
 const SORTS = [
   { id: "favorite", label: "Favoriten zuerst" },
@@ -125,6 +126,8 @@ export default function VoiceManager() {
         >
           {SORTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
         </select>
+        <HelpButton topic="stimmbank" />
+        <HelpButton topic="elevenlabsKey" label="Schlüssel" />
         <button
           onClick={() => setShowImport((s) => !s)}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-elevated border border-border text-sm font-semibold text-foreground whitespace-nowrap hover:border-primary/50 transition-colors"

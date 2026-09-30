@@ -79,6 +79,7 @@ export default function ElevenLabsImport({ existingIds = [], onImported }) {
         >
           <Download className="w-4 h-4" /> {open ? "Zuklappen" : "Stimmen anzeigen"}
         </button>
+        <HelpButton topic="elevenlabsImport" />
       </div>
 
       {open && (

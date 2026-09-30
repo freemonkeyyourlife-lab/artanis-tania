@@ -155,6 +155,10 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 space-y-5">
+      <div className="flex flex-wrap gap-2">
+        <HelpButton topic="stimmeBearbeiten" label="So stellst du ein" />
+        <HelpButton topic="stimmeKlonen" label="So klonst du" />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Name der Stimme</label>
