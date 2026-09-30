@@ -102,6 +102,11 @@ export default function Messages() {
   const [activeModelId, setActiveModelId] = useState(() => {
     try { return localStorage.getItem(TEXT_MODEL_KEY) || ""; } catch (e) { return ""; }
   });
+  // Nur ein selbst gewähltes Modell wird vorgeschaltet — das automatisch
+  // vorbelegte antwortet nicht und würde jede Antwort nur verzögern.
+  const [modelPicked, setModelPicked] = useState(() => {
+    try { return !!localStorage.getItem(TEXT_MODEL_KEY); } catch (e) { return false; }
+  });
   const [extraCharacters, setExtraCharacters] = useState([]);
   const [takeover, setTakeover] = useState(false);
   const [spannerMode, setSpannerMode] = useState(false);
@@ -734,7 +739,7 @@ export default function Messages() {
       const userPrompt = (hist ? "CONVERSATION SO FAR:\n" + hist + "\n\n" : "") + userTurn + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : "");
       // Läuft ein Text-Modell über Hugging Face, antwortet der Charakter damit — sonst mit der Standard-KI.
       let aiText = "";
-      if (activeModelId) {
+      if (activeModelId && modelPicked) {
         try {
           const modelRes = await base44.functions.invoke("hfChat", { modelId: activeModelId, system, prompt: userPrompt });
           aiText = modelRes.data?.text || "";
@@ -1363,6 +1368,7 @@ export default function Messages() {
                     value={activeModelId}
                     onChange={(e) => {
                       setActiveModelId(e.target.value);
+                      setModelPicked(true);
                       try { localStorage.setItem(TEXT_MODEL_KEY, e.target.value); } catch (err) { /* ignore */ }
                     }}
                     title="Modell für die Antworten"
