@@ -9,6 +9,7 @@ import { hasProAccess, localProActive } from "@/lib/proAccess";
 import { getViewAs, setViewAs, subscribeViewAs } from "@/lib/viewAs";
 import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
+import InfoModeToggle from "@/components/InfoModeToggle";
 
 const MORE_LINKS = [
   { label: "Dockingstation", path: "/dock" },
@@ -141,6 +142,7 @@ export default function Layout() {
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
+            <InfoModeToggle />
             <InviteShareButton className="hidden sm:flex" />
             <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass-btn flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
               <Search className="w-4 h-4" />

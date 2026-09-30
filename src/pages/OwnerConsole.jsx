@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -10,12 +10,16 @@ import InviteList from "@/components/owner/InviteList";
 import GoldmutAccess from "@/components/owner/GoldmutAccess";
 import UserSwitcher from "@/components/owner/UserSwitcher";
 import { DEFAULT_MENU, DEFAULT_FONT, loadLayout, saveLayout } from "@/lib/siteLayout";
+import { DEFAULT_STRUCTURE, DEFAULT_INTRO_STEPS, DEFAULT_INTERESTS, DEFAULT_INFO, clearStructureCache, loadStructure } from "@/lib/onboarding";
+import StructureEditor from "@/components/owner/StructureEditor";
+import InfoTextEditor from "@/components/owner/InfoTextEditor";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { id: "lage", label: "Lage", icon: LayoutGrid },
   { id: "menu", label: "Menü", icon: LayoutGrid },
   { id: "font", label: "Schrift", icon: Type },
+  { id: "structure", label: "Struktur", icon: SlidersHorizontal },
   { id: "access", label: "Zugang", icon: KeyRound },
   { id: "data", label: "Sichern", icon: Database },
 ];
@@ -31,6 +35,7 @@ export default function OwnerConsole() {
   const [record, setRecord] = useState(null);
   const [items, setItems] = useState(DEFAULT_MENU);
   const [font, setFont] = useState(DEFAULT_FONT);
+  const [structure, setStructure] = useState(DEFAULT_STRUCTURE);
   const [counts, setCounts] = useState(null);
   const [saving, setSaving] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -52,6 +57,13 @@ export default function OwnerConsole() {
         size: row?.navFontSize || DEFAULT_FONT.size,
         weight: row?.navFontWeight || DEFAULT_FONT.weight,
         gap: row?.navGap ?? DEFAULT_FONT.gap,
+      });
+      setStructure({
+        introEnabled: row?.introEnabled !== false,
+        infoEnabled: row?.infoEnabled !== false,
+        introSteps: Array.isArray(row?.introSteps) && row.introSteps.length ? row.introSteps : DEFAULT_INTRO_STEPS,
+        interestOptions: Array.isArray(row?.interestOptions) && row.interestOptions.length ? row.interestOptions : DEFAULT_INTERESTS,
+        infoTexts: { ...DEFAULT_INFO, ...(row?.infoTexts || {}) },
       });
     });
   }, [me]);
@@ -94,8 +106,11 @@ export default function OwnerConsole() {
         navFontWeight: font.weight,
         navGap: font.gap,
         ownerName: record?.ownerName || me?.full_name || "",
+        ...structure,
       });
       setRecord(saved);
+      clearStructureCache();
+      await loadStructure();
       setNotice("Gespeichert — die Änderungen sind jetzt live.");
     } catch (e) {
       setNotice("Speichern hat nicht geklappt. Versuch es nochmal.");
@@ -385,6 +400,26 @@ export default function OwnerConsole() {
                 Entdecken · Videos · Storys · Live
               </span>
             </div>
+          </div>
+        </>
+      )}
+
+      {tab === "structure" && (
+        <>
+          <GuideBox
+            title="Was die Besucher sehen"
+            steps={[
+              "Begrüßung: die Erklärung, die jeder Neue am Anfang bekommt. Aus heißt: er landet direkt in der App.",
+              "Info-Knöpfe: das kleine i an den Bereichen. Aus heißt: nirgends mehr zu sehen.",
+              "Die Texte darunter kannst du frei überschreiben — jeder Block ist eine Seite der Begrüßung.",
+              "Danach unten auf Speichern. Es gilt sofort für alle.",
+            ]}
+          >
+            Hier drehst du die Schalter für die Begrüßung und die Erklärungen — und schreibst die Texte selbst.
+          </GuideBox>
+          <StructureEditor value={structure} onChange={setStructure} />
+          <div className="mt-5">
+            <InfoTextEditor value={structure} onChange={setStructure} />
           </div>
         </>
       )}

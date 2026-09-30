@@ -48,6 +48,7 @@ import OwnerConsole from '@/pages/OwnerConsole';
 import Dock from '@/pages/Dock';
 import WaitingChatAlert from '@/components/WaitingChatAlert';
 import HostLiveAlert from '@/components/HostLiveAlert';
+import OnboardingIntro from '@/components/onboarding/OnboardingIntro';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -78,6 +79,7 @@ const AuthenticatedApp = () => {
       <InviteClaim />
       <WaitingChatAlert />
       <HostLiveAlert />
+      <OnboardingIntro />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />

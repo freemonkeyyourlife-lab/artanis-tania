@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
 import ScenarioSelection from "@/components/ScenarioSelection";
 import VoiceInput from "@/components/VoiceInput";
+import InfoDot from "@/components/InfoDot";
 import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS, sanitizeImagePrompt } from "@/lib/chatMedia";
 import CharacterSuggestion from "@/components/CharacterSuggestion";
@@ -1099,8 +1100,8 @@ export default function Messages() {
           className={cn("w-full lg:w-[var(--list-w)] lg:flex-shrink-0 rounded-3xl border-2 border-border bg-card overflow-hidden flex-col", activeChat ? "hidden lg:flex" : "flex")}
         >
           <div className="flex gap-1 p-2 border-b border-border">
-            <button onClick={() => { setViewMode("ai"); setActiveChat(null); setDmParticipantName(""); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "ai" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Chats</button>
-            <button onClick={() => { setViewMode("dm"); setActiveChat(null); loadDmUsers(); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center justify-center gap-1.5", viewMode === "dm" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Direct Messages{incomingConversations.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">{incomingConversations.length}</span>}</button>
+            <button onClick={() => { setViewMode("ai"); setActiveChat(null); setDmParticipantName(""); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-bold transition-colors", viewMode === "ai" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Chats</button>
+            <button onClick={() => { setViewMode("dm"); setActiveChat(null); loadDmUsers(); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center justify-center gap-1.5", viewMode === "dm" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Direct Messages{incomingConversations.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">{incomingConversations.length}</span>}</button>
           </div>
           <div className="overflow-y-auto flex-1">
             {viewMode === "ai" ? (
@@ -1114,7 +1115,7 @@ export default function Messages() {
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-medium text-foreground truncate">{c.stageName}</p>
+                    <p className="text-[15px] font-bold text-foreground truncate">{c.stageName}</p>
                     <p className="text-xs text-muted-foreground">Real · AI persona</p>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">Real</span>
@@ -1133,7 +1134,7 @@ export default function Messages() {
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-medium text-foreground truncate">{c.stageName}</p>
+                    <p className="text-[15px] font-bold text-foreground truncate">{c.stageName}</p>
                     <p className="text-xs text-muted-foreground">KI-Modell</p>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-violet-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">KI</span>
@@ -1152,7 +1153,7 @@ export default function Messages() {
                     <button key={conv.id} onClick={() => openIncomingDm(conv)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === conv.id ? "bg-primary/10" : "hover:bg-elevated")}>
                       <div className="w-10 h-10 rounded-full bg-emerald-600/20 flex items-center justify-center font-display text-emerald-400 flex-shrink-0">{(name || "?")[0]}</div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                        <p className="text-sm font-bold text-foreground truncate">{name}</p>
                         <p className="text-xs text-primary">Will mit dir chatten — klicken zum Öffnen</p>
                       </div>
                       <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold uppercase flex-shrink-0">Neu</span>
@@ -1169,7 +1170,7 @@ export default function Messages() {
                   <button key={u.id} onClick={() => startDm(u)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors hover:bg-elevated")}>
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{(u.full_name || u.email || "?")[0]}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{u.full_name || u.email}</p>
+                      <p className="text-sm font-bold text-foreground truncate">{u.full_name || u.email}</p>
                       <p className="text-xs text-muted-foreground">Direct message</p>
                     </div>
                   </button>
@@ -1214,7 +1215,10 @@ export default function Messages() {
                   </Link>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{viewMode === "dm" ? dmParticipantName : creators.find(c => c.id === activeChat)?.stageName}</p>
+                  <p className="flex items-center gap-2 text-sm font-bold text-foreground">
+                    {viewMode === "dm" ? dmParticipantName : creators.find(c => c.id === activeChat)?.stageName}
+                    <InfoDot topic="messages" size="sm" />
+                  </p>
                   <p className="text-xs text-muted-foreground">{viewMode === "dm" ? "Direct message — real person" : (creators.find(c => c.id === activeChat)?.creatorCategory === "REAL" ? "Real · AI persona" : "KI-Modell · AI chat")}</p>
                 </div>
                 {viewMode === "ai" && <StatusBadge experienceType="AI_INTERACTIVE" className="flex-shrink-0" />}
@@ -1233,12 +1237,12 @@ export default function Messages() {
                   </button>
                 )}
                 {viewMode === "ai" && extraCharacters.length > 0 && (
-                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0">
+                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold whitespace-nowrap flex-shrink-0">
                     +{extraCharacters.map((c) => c.stageName).join(", ")}
                   </span>
                 )}
                 {viewMode === "ai" && (
-                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium whitespace-nowrap flex-shrink-0" title={isAdmin ? "Admin — alles gratis, kein Freischalten" : proActive ? "Pro — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
+                  <span className="hidden sm:inline px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold whitespace-nowrap flex-shrink-0" title={isAdmin ? "Admin — alles gratis, kein Freischalten" : proActive ? "Pro — alles gratis" : "Kostenlose Creationen (Bilder/Videos)"}>
                     {isAdmin ? "Besitzer · God Mode" : proActive ? "Pro · alles gratis" : `${freeLeft} gratis`}
                   </span>
                 )}
@@ -1282,7 +1286,7 @@ export default function Messages() {
                                 <p className="text-sm text-foreground truncate">{c.stageName}</p>
                                 <p className="text-xs text-muted-foreground">{c.personaType === "SOLO_MALE" ? "Mann" : c.personaType === "COUPLE" ? "Paar" : c.personaType === "GROUP" ? "Gruppe" : "Frau"}</p>
                               </div>
-                              <span className="text-xs text-primary font-medium flex-shrink-0">{added ? "Drin" : "Hinzufügen"}</span>
+                              <span className="text-xs text-primary font-bold flex-shrink-0">{added ? "Drin" : "Hinzufügen"}</span>
                             </button>
                           );
                         })}
@@ -1368,7 +1372,7 @@ export default function Messages() {
                           <VoiceInput onResult={(t) => addCustomOption(q, t)} />
                         </div>
                         <div className="flex justify-center mt-3">
-                          <button onClick={advanceSetup} className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
+                          <button onClick={advanceSetup} className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">Weiter</button>
                         </div>
                       </div>
                     );
@@ -1377,7 +1381,7 @@ export default function Messages() {
                   <div className="flex gap-2 w-full max-w-md">
                     <input type="text" value={setupInput} onChange={(e) => setSetupInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") advanceSetup(); }} placeholder="Eigene Antwort — tippen oder sprechen..." className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none" autoFocus />
                     <VoiceInput onResult={(t) => { setSetupAnswers(prev => ({ ...prev, [scenario.setupQuestions[setupStep].key]: t })); setSetupInput(""); setSetupStep(p => p + 1); }} />
-                    <button onClick={advanceSetup} className="px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">Weiter</button>
+                    <button onClick={advanceSetup} className="px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">Weiter</button>
                   </div>
                   )}
                   <div className="flex gap-4 mt-3">
@@ -1432,8 +1436,8 @@ export default function Messages() {
                                         <Lock className="w-5 h-5 text-primary" />
                                         {it.label && <span className="text-[11px] font-semibold uppercase tracking-wide text-primary leading-tight">{it.label}</span>}
                                         <span className="text-sm text-foreground font-semibold">{it.price} €</span>
-                                        <button onClick={() => requestUnlock(it)} className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">Freischalten</button>
-                                        <button onClick={() => unlockWithCoins(msg, it)} className="px-3 py-1 rounded-full bg-elevated border border-primary/40 text-primary text-[11px] font-medium hover:border-primary">{coinsForPrice(it.price)} Coins</button>
+                                        <button onClick={() => requestUnlock(it)} className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold hover:opacity-90">Freischalten</button>
+                                        <button onClick={() => unlockWithCoins(msg, it)} className="px-3 py-1 rounded-full bg-elevated border border-primary/40 text-primary text-[11px] font-bold hover:border-primary">{coinsForPrice(it.price)} Coins</button>
                                       </div>
                                     </div>
                                   ) : it.type === "video" ? (
@@ -1451,7 +1455,7 @@ export default function Messages() {
                                       <p className="text-[11px] text-muted-foreground mb-2">Soll {creators.find((c) => c.id === activeChat)?.stageName} das für dich nachdrehen?</p>
                                       <Link
                                         to={`/request?type=CUSTOM_REQUEST&creator=${encodeURIComponent(creators.find((c) => c.id === activeChat)?.stageName || "")}&title=${encodeURIComponent("Nachdrehen: " + (it.note || ""))}`}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold"
                                       >
                                         Nachdrehen lassen
                                       </Link>

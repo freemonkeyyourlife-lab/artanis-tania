@@ -22,6 +22,29 @@
     },
     "ownerName": {
       "type": "string"
+    },
+    "introEnabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "infoEnabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "introSteps": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "interestOptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "infoTexts": {
+      "type": "object"
     }
   },
   "rls": {
@@ -41,5 +64,6 @@
         "role": "admin"
       }
     }
-  }
+  },
+  "required": []
 }

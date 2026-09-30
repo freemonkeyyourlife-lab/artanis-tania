@@ -1,8 +1,7 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import React, { useEffect, useState } from "react";
+import NavGroup from "@/components/nav/NavGroup";
+import { getStructure, subscribeStructure, loadStructure } from "@/lib/onboarding";
+import { getInfoMode, subscribeInfoMode } from "@/lib/infoMode";
 
 // Die Kopfzeile hat vier Bereiche statt acht einzelner Knöpfe.
 // „Erleben" ist der Menüpunkt-Block, den du in der Besitzer-Konsole sortierst.
@@ -62,43 +61,39 @@ export function buildNavGroups(menuItems = []) {
     .filter((group) => group.items.length > 0);
 }
 
+const GROUP_KEY = {
+  "Charaktere": "characters",
+  "Selbst erstellen": "create",
+  "Erleben": "explore",
+  "Verwaltung": "admin",
+};
+
 export default function HeaderNav({ groups, font, waitingChats = 0 }) {
-  const location = useLocation();
+  const [structure, setStructure] = useState(getStructure());
+  const [infoOn, setInfoOn] = useState(getInfoMode());
+
+  useEffect(() => subscribeStructure(setStructure), []);
+  useEffect(() => subscribeInfoMode(setInfoOn), []);
+  useEffect(() => {
+    loadStructure();
+  }, []);
+
+  const showInfo = structure.infoEnabled !== false && infoOn;
 
   return (
     <nav
       className="hidden lg:flex items-center"
       style={{ gap: `${font.gap}px`, fontSize: `${font.fontSize}px`, fontWeight: font.fontWeight }}
     >
-      {groups.map((group) => {
-        const active = group.items.some((l) => l.path === location.pathname);
-        return (
-          <DropdownMenu key={group.label}>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  "px-4 py-2 rounded-full whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
-                  active ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
-                )}
-              >
-                {group.label} <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="glass-strong border-border max-h-[70vh] overflow-y-auto">
-              {group.items.map((l) => (
-                <DropdownMenuItem key={l.path} asChild>
-                  <Link to={l.path} className="text-sm font-semibold cursor-pointer">
-                    {l.label}
-                    {l.path === "/leitstand" && waitingChats > 0 && (
-                      <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{waitingChats}</span>
-                    )}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      })}
+      {groups.map((group) => (
+        <NavGroup
+          key={group.label}
+          group={group}
+          waitingChats={waitingChats}
+          showInfo={showInfo}
+          info={structure.infoTexts?.[`group_${GROUP_KEY[group.label] || ""}`] || ""}
+        />
+      ))}
     </nav>
   );
 }
