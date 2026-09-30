@@ -38,7 +38,11 @@ export default function HostLiveAlert() {
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md">
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl glass-strong border border-red-500/40 accent-glow-strong">
+      {/* Die ganze Meldung ist der Weg hinein — kein Umweg über die Navigation. */}
+      <Link
+        to={`/call/${room.token}`}
+        className="flex items-center gap-3 px-4 py-3 rounded-2xl glass-strong border border-red-500/40 accent-glow-strong hover:border-red-500/70 transition-colors"
+      >
         <span className="relative flex w-2.5 h-2.5 flex-shrink-0">
           <span className="absolute inline-flex w-full h-full rounded-full bg-red-500 opacity-75 animate-ping" />
           <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-red-500" />
@@ -47,18 +51,19 @@ export default function HostLiveAlert() {
           <p className="text-sm font-semibold text-foreground truncate">
             {room.hostName || "Der Gastgeber"} ist jetzt live
           </p>
-          <p className="text-xs text-muted-foreground">Kamera läuft — schau rein oder mach mit.</p>
+          <p className="text-xs text-muted-foreground">Kamera läuft — antippen und direkt dabei sein.</p>
         </div>
-        <Link
-          to={`/call/${room.token}`}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-red-500 text-white text-xs font-semibold flex-shrink-0"
-        >
+        <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-red-500 text-white text-xs font-semibold flex-shrink-0">
           <Radio className="w-3.5 h-3.5" /> Rein
-        </Link>
-        <button onClick={dismiss} title="Ausblenden" className="text-muted-foreground hover:text-foreground flex-shrink-0">
+        </span>
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); dismiss(); }}
+          title="Ausblenden"
+          className="text-muted-foreground hover:text-foreground flex-shrink-0"
+        >
           <X className="w-4 h-4" />
         </button>
-      </div>
+      </Link>
     </div>
   );
 }

@@ -62,7 +62,7 @@ export default function VideoCall() {
   const {
     status, error, peers, isHost, camOn, micOn,
     attachLocal, toggleCam, toggleMic,
-    messages, sendChat, sendChatVoice, sharing, toggleShare, switchShare, mySeat,
+    messages, sendChat, sendChatVoice, sharing, toggleShare, addScreen, removeScreen, screens, mySeat,
     getLocalVideo, myScreen,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
@@ -334,7 +334,9 @@ export default function VideoCall() {
         toggleCam={toggleCam}
         sharing={sharing}
         onToggleShare={toggleShare}
-        onSwitchShare={switchShare}
+        onAddScreen={addScreen}
+        onRemoveScreen={removeScreen}
+        screens={screens}
         mode={mode}
         setMode={setMode}
         onEnd={() => { call.leave(); navigate("/live"); }}

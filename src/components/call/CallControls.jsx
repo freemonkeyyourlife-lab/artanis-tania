@@ -1,5 +1,5 @@
 import React from "react";
-import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, MonitorOff, MonitorUp } from "lucide-react";
+import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, MonitorOff, MonitorUp, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PaymentLinkDialog from "@/components/pay/PaymentLinkDialog";
 
@@ -11,7 +11,7 @@ const ROOM_MODES = [
 
 export default function CallControls({
   micOn, camOn, toggleMic, toggleCam, onEnd,
-  isHost, sharing, onToggleShare, onSwitchShare, mode, setMode,
+  isHost, sharing, onToggleShare, onAddScreen, onRemoveScreen, screens, mode, setMode,
 }) {
   return (
     <div className="border-t border-border">
@@ -33,6 +33,31 @@ export default function CallControls({
         </div>
       )}
 
+      {sharing && screens?.length > 0 && (
+        <div className="px-4 py-3 border-b border-border flex flex-wrap items-center justify-center gap-2">
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Geteilte Bildschirme</span>
+          {screens.map((s) => (
+            <span key={s.id} className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-full bg-elevated border border-border text-xs font-semibold text-foreground">
+              {s.label}
+              <button
+                onClick={() => onRemoveScreen?.(s.id)}
+                title={`${s.label} nicht mehr zeigen`}
+                className="w-5 h-5 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+          <button
+            onClick={onAddScreen}
+            title="Weiteren Bildschirm dazunehmen — alle werden zusammen gezeigt"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+          >
+            <Plus className="w-3.5 h-3.5" /> Bildschirm
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-center gap-3 px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <button
           onClick={toggleMic}
@@ -51,15 +76,15 @@ export default function CallControls({
         <button
           onClick={onToggleShare}
           className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-colors", sharing ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}
-          title={sharing ? "Bildschirm-Teilen beenden" : "Bildschirm teilen — dein Kamerabild bleibt dabei sichtbar"}
+          title={sharing ? "Bildschirm-Teilen beenden" : "Bildschirm teilen — mehrere Bildschirme gleichzeitig, dein Kamerabild bleibt sichtbar"}
         >
           {sharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
         </button>
-        {sharing && onSwitchShare && (
+        {sharing && onAddScreen && (
           <button
-            onClick={onSwitchShare}
+            onClick={onAddScreen}
             className="w-12 h-12 rounded-full flex items-center justify-center bg-elevated text-foreground transition-colors"
-            title="Anderen Bildschirm zeigen — das Teilen läuft dabei weiter"
+            title="Weiteren Bildschirm dazunehmen — alle werden zusammen gezeigt"
           >
             <MonitorUp className="w-5 h-5" />
           </button>
