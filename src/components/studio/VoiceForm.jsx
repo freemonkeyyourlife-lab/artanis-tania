@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { BASE_VOICES, MOODS } from "@/lib/voiceDj";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
+import VoiceDescribeBox from "@/components/voice/VoiceDescribeBox";
 import HelpButton from "@/components/HelpButton";
 
 const input = "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -46,6 +47,9 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
   const applyMood = (mood) => setForm((prev) => ({ ...prev, mood: mood.id, speed: mood.speed, depth: mood.depth }));
+
+  // Aus einer Beschreibung in Worten werden die Regler — hören kannst du es direkt danach.
+  const applyDescription = (next) => setForm((prev) => ({ ...prev, ...next }));
 
   const uploadSample = async (blob) => {
     setBusy(true);
@@ -246,8 +250,10 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
         Tempo und Stimmung wirken auch bei ElevenLabs-Stimmen — im Chat, in der Sprechprobe und im Video-Call.
       </p>
 
+      <VoiceDescribeBox voice={form} onApply={applyDescription} />
+
       <div className="flex flex-wrap items-center gap-3">
-        <VoicePreviewButton profile={form} useSample={form.provider !== "ELEVENLABS"} />
+        <VoicePreviewButton profile={form} live />
         <button
           type="button"
           onClick={toggleRecord}

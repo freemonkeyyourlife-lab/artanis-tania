@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { resolveVoice, cloudTuning } from "@/lib/voiceDj";
+import { speakAsVoice } from "@/lib/voiceChat";
 
 // Tonlage und Tempo je Grundstimme — damit sich die Charaktere beim Vorlesen unterscheiden.
 export const VOICE_TUNING = {
@@ -11,82 +11,60 @@ export const VOICE_TUNING = {
   spark: { pitch: 1.3, rate: 1.2 },
 };
 
-// Spricht Text mit einer Stimme aus der Stimmbank.
-// Ist die Stimme bei ElevenLabs hinterlegt, kommt der Ton von dort — sonst spricht der Browser.
+// Spricht Text mit der Stimme aus der Stimmbank — genau so, wie sie eingestellt
+// ist. Die Roboterstimme des Browsers kommt hier nie zum Einsatz.
 export default function useVoicePlayer(profile, fallbackVoice) {
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
   const audioRef = useRef(null);
-  const supported = typeof window !== "undefined" && "speechSynthesis" in window;
-  const cloudVoice = profile?.provider === "ELEVENLABS" ? profile.externalVoiceId : "";
 
   const halt = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
-    if (supported) window.speechSynthesis.cancel();
     setSpeaking(false);
-  }, [supported]);
+  }, []);
 
   const speak = useCallback(
     async (text) => {
       if (!text) return;
       halt();
-
-      if (cloudVoice) {
-        setLoading(true);
-        try {
-          const tune = cloudTuning(profile);
-          const res = await base44.functions.invoke("elevenLabs", {
-            voiceId: cloudVoice,
-            text,
-            speed: tune.apiSpeed,
-            mood: profile?.mood,
-            intensity: tune.intensity,
-            ending: profile?.ending,
-          });
-          if (res.data?.error) throw new Error(res.data.error);
-          const audio = new Audio(res.data.url);
-          audio.preservesPitch = false;
-          audio.webkitPreservesPitch = false;
-          audio.playbackRate = tune.pitch;
-          audio.onended = () => setSpeaking(false);
-          audio.onerror = () => setSpeaking(false);
-          audioRef.current = audio;
-          setSpeaking(true);
-          await audio.play();
-        } catch (e) {
-          console.error(e);
-          setSpeaking(false);
-        } finally {
-          setLoading(false);
-        }
-        return;
+      setLoading(true);
+      try {
+        // Ohne zugeordnete Stimme spricht wenigstens die Grundstimme des Charakters.
+        const target = profile || (fallbackVoice ? { baseVoice: fallbackVoice } : null);
+        const url = await speakAsVoice(target, text);
+        if (!url) throw new Error("Keine Stimme erhalten");
+        const rate = profile?.provider === "ELEVENLABS"
+          ? cloudTuning(profile).pitch
+          : profile
+            ? resolveVoice(profile).audioRate
+            : VOICE_TUNING[fallbackVoice]?.rate ?? 1;
+        const audio = new Audio(url);
+        audio.preservesPitch = false;
+        audio.webkitPreservesPitch = false;
+        audio.playbackRate = Math.max(0.5, Math.min(2, rate));
+        audio.onended = () => setSpeaking(false);
+        audio.onerror = () => setSpeaking(false);
+        audioRef.current = audio;
+        setSpeaking(true);
+        await audio.play();
+      } catch (e) {
+        console.error(e);
+        setSpeaking(false);
+      } finally {
+        setLoading(false);
       }
-
-      if (!supported) return;
-      const tune = profile ? resolveVoice(profile) : VOICE_TUNING[fallbackVoice] || VOICE_TUNING.river;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "de-DE";
-      utterance.pitch = tune.pitch;
-      utterance.rate = tune.rate;
-      const german = window.speechSynthesis.getVoices().find((v) => (v.lang || "").toLowerCase().startsWith("de"));
-      if (german) utterance.voice = german;
-      utterance.onend = () => setSpeaking(false);
-      utterance.onerror = () => setSpeaking(false);
-      setSpeaking(true);
-      window.speechSynthesis.speak(utterance);
     },
-    [cloudVoice, profile, fallbackVoice, supported, halt]
+    [profile, fallbackVoice, halt]
   );
 
   useEffect(() => {
     return () => {
       if (audioRef.current) audioRef.current.pause();
-      if (supported) window.speechSynthesis.cancel();
     };
-  }, [supported]);
+  }, []);
 
-  return { speak, halt, speaking, loading, canSpeak: Boolean(cloudVoice) || supported };
+  return { speak, halt, speaking, loading, canSpeak: true };
 }

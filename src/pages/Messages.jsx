@@ -1368,7 +1368,9 @@ export default function Messages() {
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <h3 className="font-display text-lg text-foreground mb-1">Person hinzufügen</h3>
-                      <p className="text-xs text-muted-foreground mb-4">Hol jemanden in diesen Chat — sie spielt dann mit.</p>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Die KI spielt alle, die hier drin sind — auch mehrere gleichzeitig. Du selbst bleibst du und musst niemanden spielen. Willst du doch eine Rolle übernehmen, nimm oben „Selbst schreiben".
+                      </p>
                       <div className="max-h-[60vh] overflow-y-auto space-y-2">
                         {creators.filter((c) => c.id !== activeChat && c.active !== false).map((c) => {
                           const added = extraCharacters.some((x) => x.id === c.id);
