@@ -11,7 +11,16 @@ export const ROLE_SETUPS = [
     label: "Du bist der Therapeut",
     hint: "Triania ist die Probandin und packt aus. Du führst.",
   },
+  {
+    value: "BOTH_PROBANDS",
+    label: "Wir beide sind Probanden",
+    hint: "Keiner führt. Ihr sitzt nebeneinander und bringt beide etwas mit.",
+  },
 ];
+
+// Wird angehängt, wenn der Nutzer „laufen lassen“ gesagt hat.
+export const FREILAUF_PROMPT =
+  "\n\nFREILAUF: Der Nutzer hat „laufen lassen“ gesagt. Mach von selbst weiter — nächster Schritt, nächste Frage. Keine Rückfrage, ob du weitermachen sollst.";
 
 export const THERAPY_MODES = [
   {
@@ -52,11 +61,14 @@ export function therapistName(session) {
 }
 
 export function roleLabel(session) {
-  return session?.roleSetup === "USER_THERAPIST" ? "Du führst" : "Triania führt";
+  const found = ROLE_SETUPS.find((r) => r.value === (session?.roleSetup || "TRIANIA_THERAPIST"));
+  return found ? found.label : "Triania ist die Therapeutin";
 }
 
-export function buildTherapyPrompt(session, history, guestThoughts) {
-  const trianiaLeads = session.roleSetup !== "USER_THERAPIST";
+export function buildTherapyPrompt(session, history, guestThoughts, direction) {
+  const role = session.roleSetup || "TRIANIA_THERAPIST";
+  const trianiaLeads = role === "TRIANIA_THERAPIST";
+  const bothProbands = role === "BOTH_PROBANDS";
   const clientName = session.anonymous ? "der Klient" : (session.userName || "der Klient");
   const mode = session.mode || "GUIDED";
   const intensity = session.intensity || "TIEF";
@@ -69,6 +81,9 @@ export function buildTherapyPrompt(session, history, guestThoughts) {
   if (trianiaLeads) {
     ctx += "\nDEINE ROLLE: Du bist Triania, Ende 30, Sexualtherapeutin mit eigener Praxis. Warm, ruhig, aufmerksam, selbstbewusst — sexy auf eine natürliche Art, ohne es zu betonen. Du hast schon alles gehört und erschrickst über nichts. DU führst die Sitzung.\n";
     ctx += `DER KLIENT: ${clientName}. Er hat sich hierher gesetzt, weil er etwas loswerden muss.\n`;
+  } else if (bothProbands) {
+    ctx += "\nDEINE ROLLE: Du bist Triania, Ende 30, und sitzt hier als Probandin — genau wie er. Keiner von euch führt. Ihr seid zwei Erwachsene auf Augenhöhe, die beide etwas mitbringen und es sich gegenseitig erzählen. Du fragst genauso, wie du antwortest, und gehst mit deinem eigenen Zeug genauso raus wie er.\n";
+    ctx += `DER ANDERE PROBAND: ${clientName}. Er sitzt neben dir, nicht gegenüber. Kein Behandlungsverhältnis — ein Gespräch unter zwei, die beide wollen.\n`;
   } else {
     ctx += "\nDEINE ROLLE: Du bist Triania, Ende 30, und sitzt als Probandin auf der Couch. Du trägst etwas mit dir herum, das du hier zum ersten Mal aussprechen willst. Du bist ehrlich, verletzlich, manchmal ausweichend und dann wieder erschreckend offen. Du gibst nichts von selbst preis — aber wenn nachgehakt wird, dann richtig.\n";
     ctx += "DER THERAPEUT: Der Nutzer führt die Sitzung. Er fragt, du antwortest. Lass dich führen, aber weiche nicht aus, wenn er wirklich nachbohrt.\n";
@@ -141,7 +156,13 @@ FORMAT:
   ctx += "\n" + GUARDRAILS;
 
   if (history) ctx += "\n\nBISHERIGE SITZUNG:\n" + history;
-  ctx += `\n\n⚠️ Bleib in der Rolle${trianiaLeads ? " der Therapeutin" : " der Probandin"}, halt dich an das Thema "${session.topic}", und antworte auf Deutsch.`;
+
+  if (direction) {
+    ctx += `\n\nREGIE-ANWEISUNG (der Nutzer gibt die Richtung vor — setz sie ab jetzt um, ohne sie zu wiederholen oder zu kommentieren): "${direction}"`;
+  }
+
+  const roleWord = trianiaLeads ? " der Therapeutin" : bothProbands ? " als zweiter Proband" : " der Probandin";
+  ctx += `\n\n⚠️ Bleib in der Rolle${roleWord}, halt dich an das Thema "${session.topic}", und antworte auf Deutsch.`;
 
   return ctx;
 }

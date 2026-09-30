@@ -4,7 +4,8 @@ import { base44 } from "@/api/base44Client";
 import { Send, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TherapyThread from "@/components/therapy/TherapyThread";
-import { buildTherapyPrompt, THERAPY_MODES, INTENSITIES } from "@/lib/therapyPrompts";
+import { buildTherapyPrompt, THERAPY_MODES, INTENSITIES, ROLE_SETUPS, FREILAUF_PROMPT, roleLabel } from "@/lib/therapyPrompts";
+import SessionControls from "@/components/therapy/SessionControls";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import ReadAloudButton from "@/components/ReadAloudButton";
@@ -37,6 +38,10 @@ export default function TherapySession() {
   const [guestNote, setGuestNote] = useState("");
   const [guestSending, setGuestSending] = useState(false);
   const [handsFree, setHandsFree] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [runCount, setRunCount] = useState(0);
+  const [regie, setRegie] = useState(false);
+  const [direction, setDirection] = useState("");
   const bottomRef = useRef(null);
   const openedRef = useRef(false);
   const messagesRef = useRef([]);
@@ -76,6 +81,13 @@ export default function TherapySession() {
 
   const isOwner = !!me && !!session && (session.userId === me.id || session.created_by_id === me.id);
   const canWrite = isOwner && session?.status !== "DONE";
+
+  const buildHistory = (list) => list
+    .filter((m) => m.senderType !== "GUEST")
+    .map((m) => `${m.senderType === "AI" ? "Triania" : "Klient"}: ${m.text}`)
+    .join("\n");
+
+  const buildGuests = (list) => list.filter((m) => m.senderType === "GUEST").slice(-5).map((m) => m.text);
 
   const speak = async (prompt) => {
     const res = await base44.integrations.Core.InvokeLLM({ prompt });
@@ -126,13 +138,8 @@ export default function TherapySession() {
       setInput("");
 
       const all = [...messagesRef.current, mine];
-      const history = all
-        .filter((m) => m.senderType !== "GUEST")
-        .map((m) => `${m.senderType === "AI" ? "Triania" : "Klient"}: ${m.text}`)
-        .join("\n");
-      const guests = all.filter((m) => m.senderType === "GUEST").slice(-5).map((m) => m.text);
 
-      await speak(buildTherapyPrompt(session, history, guests));
+      await speak(buildTherapyPrompt(session, buildHistory(all), buildGuests(all)));
       await base44.entities.TherapySession.update(session.id, { lastMessageAt: new Date().toISOString() });
     } catch (e) {
       console.error(e);
@@ -161,11 +168,65 @@ export default function TherapySession() {
     }
   };
 
+  // Richtung vorgeben: geht als Anweisung raus, nicht als eigene Zeile.
+  const steer = async () => {
+    const text = direction.trim();
+    if (!text || sending || !session || !canWrite) return;
+    setSending(true);
+    try {
+      const all = messagesRef.current;
+      await speak(buildTherapyPrompt(session, buildHistory(all), buildGuests(all), text));
+      setDirection("");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Freilauf: Triania macht von selbst weiter, bis Stopp gedrückt wird.
+  const continueRun = async () => {
+    if (sending || !session || !canWrite) return;
+    setSending(true);
+    try {
+      const all = messagesRef.current;
+      await speak(buildTherapyPrompt(session, buildHistory(all), buildGuests(all)) + FREILAUF_PROMPT);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Rollenwechsel mitten in der Sitzung — hin und her, so oft du willst.
+  const switchRole = async (value) => {
+    if (!session || session.roleSetup === value) return;
+    const updated = await base44.entities.TherapySession.update(session.id, { roleSetup: value });
+    setSession(updated);
+    const label = ROLE_SETUPS.find((r) => r.value === value)?.label || value;
+    const note = await base44.entities.TherapyMessage.create({
+      sessionId: session.id,
+      senderType: "SYSTEM",
+      text: `Rollenwechsel: ${label}.`,
+    });
+    setMessages((prev) => (prev.some((m) => m.id === note.id) ? prev : [...prev, note]));
+  };
+
   const endSession = async () => {
     if (!session) return;
     const updated = await base44.entities.TherapySession.update(session.id, { status: "DONE" });
     setSession(updated);
   };
+
+  // Solange der Freilauf läuft, antwortet Triania von selbst weiter.
+  useEffect(() => {
+    if (!running || sending || loading || !canWrite) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.senderType !== "AI") return;
+    if (runCount >= 10) { setRunning(false); return; }
+    const t = setTimeout(() => { setRunCount((n) => n + 1); continueRun(); }, 3000);
+    return () => clearTimeout(t);
+  }, [running, sending, messages, loading, canWrite, runCount]);
 
   if (loading) {
     return (
@@ -199,7 +260,7 @@ export default function TherapySession() {
       <div className="rounded-2xl border border-border bg-card p-4 mb-4">
         <div className="flex items-center gap-2 flex-wrap mb-2">
           <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold">
-            {session.roleSetup === "USER_THERAPIST" ? "Du führst" : "Triania führt"}
+            {roleLabel(session)}
           </span>
           {mode && <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">{mode.label}</span>}
           {intensity && <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">{intensity.label}</span>}
@@ -227,7 +288,20 @@ export default function TherapySession() {
             </button>
           )}
         </div>
-        <p className="text-[15px] text-foreground leading-snug">{session.topic}</p>
+        {isOwner && session.status !== "DONE" && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <SessionControls
+              roleSetup={session.roleSetup || "TRIANIA_THERAPIST"}
+              onRole={switchRole}
+              running={running}
+              onRunning={(v) => { setRunCount(0); setRunning(v); }}
+              regie={regie}
+              onRegie={setRegie}
+              disabled={sending}
+            />
+          </div>
+        )}
+        <p className="text-[15px] text-foreground leading-snug mt-3">{session.topic}</p>
         {session.goal && <p className="text-xs text-muted-foreground mt-1">Erhofft sich: {session.goal}</p>}
         <p className="text-xs text-muted-foreground mt-1">
           {session.anonymous ? "Anonym" : session.userName || "Unbekannt"}
@@ -266,6 +340,25 @@ export default function TherapySession() {
 
       {canWrite ? (
         <div className="rounded-2xl border border-border bg-card p-3">
+          {regie ? (
+            <div className="flex gap-2">
+              <input
+                value={direction}
+                onChange={(e) => setDirection(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && steer()}
+                placeholder="Regie: wohin soll es gehen? Zum Beispiel „geh mehr auf die Kindheit ein“"
+                className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-[15px] text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+              />
+              <button
+                onClick={steer}
+                disabled={!direction.trim() || sending}
+                className="px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 flex-shrink-0"
+              >
+                Richtung
+              </button>
+            </div>
+          ) : (
+          <>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {quickLines.map((line) => (
               <button
@@ -299,6 +392,8 @@ export default function TherapySession() {
               <Send className="w-4 h-4" />
             </button>
           </div>
+          </>
+          )}
         </div>
       ) : session.visibility === "PUBLIC" ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-3">
