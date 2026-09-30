@@ -19,11 +19,11 @@ export default function ChatCastMenu({ creators, mainId, stateOf, onChange, coun
       <PopoverTrigger asChild>
         <button
           title="Wer spielt mit, wen spielst du, wer hört nur zu"
-          className="h-8 px-2.5 rounded-full bg-elevated text-muted-foreground flex items-center gap-1.5 flex-shrink-0 hover:text-foreground transition-colors"
+          className="h-8 px-2.5 rounded-full bg-primary/15 border border-primary/40 text-primary flex items-center gap-1.5 flex-shrink-0 hover:bg-primary/25 transition-colors"
         >
           <Users className="w-4 h-4" />
-          <span className="hidden sm:inline text-[11px] font-semibold">Rollen</span>
-          {count > 0 && <span className="text-[10px] font-bold text-primary">{count}</span>}
+          <span className="text-[11px] font-bold">Rollen</span>
+          {count > 0 && <span className="text-[10px] font-bold">{count}</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[22rem] p-0">
