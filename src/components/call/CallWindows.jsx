@@ -24,7 +24,7 @@ function useWide() {
   return wide;
 }
 
-export default function CallWindows({ messages, mySeat, onSend, token, roomNumber, rooms, isHost, onOpen, onNewRoom }) {
+export default function CallWindows({ messages, mySeat, onSend, onSendVoice, token, roomNumber, rooms, isHost, onOpen, onNewRoom }) {
   const [cfg, setCfg] = useState(() => loadWindows());
   const [tab, setTab] = useState(() => loadWindows().open[0] || "chat");
   const wide = useWide();
@@ -37,7 +37,7 @@ export default function CallWindows({ messages, mySeat, onSend, token, roomNumbe
 
   const content = (id) =>
     id === "chat" ? (
-      <CallChat messages={messages} mySeat={mySeat} onSend={onSend} />
+      <CallChat messages={messages} mySeat={mySeat} onSend={onSend} onSendVoice={onSendVoice} />
     ) : id === "share" ? (
       <CallSharePanel token={token} roomNumber={roomNumber} rooms={rooms} isHost={isHost} onOpen={onOpen} onNewRoom={onNewRoom} />
     ) : (

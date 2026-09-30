@@ -88,10 +88,13 @@ export default class CallRoom extends Actor {
     }
 
     // Text chat runs alongside the video — everyone in the room sees it, live.
+    // Sprachnachrichten gehen denselben Weg: durch den Raum wandert nur die
+    // fertige Ablage-Adresse, nie die Aufnahme selbst.
     if (msg.type === 'chat') {
       const text = String(msg.text ?? '').trim().slice(0, 2000);
-      if (!text) return;
-      this.broadcast({ type: 'chat', seat: me.seat, name: me.name || 'Gast', text });
+      const audio = typeof msg.audio === 'string' && /^https?:\/\//.test(msg.audio) ? msg.audio.slice(0, 500) : '';
+      if (!text && !audio) return;
+      this.broadcast({ type: 'chat', seat: me.seat, name: me.name || 'Gast', text, audio });
       return;
     }
 

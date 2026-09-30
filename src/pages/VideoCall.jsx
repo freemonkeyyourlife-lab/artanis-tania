@@ -57,7 +57,7 @@ export default function VideoCall() {
   const {
     status, error, peers, isHost, camOn, micOn,
     localVideoRef, toggleCam, toggleMic,
-    messages, sendChat, sharing, toggleShare, mySeat,
+    messages, sendChat, sendChatVoice, sharing, toggleShare, mySeat,
     mode, setMode, watchers, closed,
   } = useCallRoom({ token, joined, wantCam, wantMic, name: myName });
 
@@ -241,6 +241,7 @@ export default function VideoCall() {
               messages={messages}
               mySeat={mySeat}
               onSend={sendChat}
+              onSendVoice={sendChatVoice}
               token={token}
               roomNumber={roomNumber}
               rooms={rooms}
@@ -263,6 +264,7 @@ export default function VideoCall() {
               messages={messages}
               mySeat={mySeat}
               onSend={sendChat}
+              onSendVoice={sendChatVoice}
               token={token}
               roomNumber={roomNumber}
               rooms={rooms}

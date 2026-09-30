@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Send, Volume2, VolumeX } from "lucide-react";
+import { Send, Volume2, VolumeX, Mic, Square, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import useVoicePlayer from "@/hooks/useVoicePlayer";
+import useVoiceRecorder from "@/hooks/useVoiceRecorder";
 
-export default function CallChat({ messages, mySeat, onSend }) {
+export default function CallChat({ messages, mySeat, onSend, onSendVoice }) {
   const [text, setText] = useState("");
   const [voices, setVoices] = useState([]);
   const [voiceId, setVoiceId] = useState(() => localStorage.getItem("callReadAloudVoice") || "");
   const [readAloud, setReadAloud] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
   const endRef = useRef(null);
   const spokenRef = useRef(0);
 
@@ -51,6 +54,33 @@ export default function CallChat({ messages, mySeat, onSend }) {
     onSend(text);
     setText("");
   };
+
+  // Selbst sprechen: die Aufnahme wird in die oben gewählte Stimme umgewandelt
+  // und geht als Sprachnachricht an alle im Call.
+  const recorder = useVoiceRecorder(async (fileUri) => {
+    if (!voice) {
+      setVoiceError("Wähle zuerst oben eine Stimme aus.");
+      return;
+    }
+    setConverting(true);
+    setVoiceError("");
+    try {
+      const res = await base44.functions.invoke("voiceConvert", {
+        fileUri,
+        voiceId: voice.externalVoiceId || "",
+        baseVoice: voice.baseVoice || "honey",
+        mood: voice.mood,
+        intensity: voice.intensity,
+        ending: voice.ending,
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+      onSendVoice?.(res.data.url);
+    } catch (e) {
+      setVoiceError(e.message || "Umwandeln hat nicht geklappt.");
+    } finally {
+      setConverting(false);
+    }
+  });
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -96,6 +126,7 @@ export default function CallChat({ messages, mySeat, onSend }) {
               )}
             >
               {!mine && <p className="text-[11px] font-semibold opacity-70 mb-0.5">{m.name || "Gast"}</p>}
+              {m.audio && <audio controls src={m.audio} className="w-52 max-w-full mb-1" />}
               {m.text}
             </div>
           );
@@ -103,15 +134,28 @@ export default function CallChat({ messages, mySeat, onSend }) {
         <div ref={endRef} />
       </div>
 
+      {voiceError && <p className="px-3 pb-1 text-[11px] font-semibold text-destructive flex-shrink-0">{voiceError}</p>}
+
       <div className="p-3 border-t border-border flex gap-2 flex-shrink-0">
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Nachricht an alle…"
+          placeholder={recorder.recording ? "Aufnahme läuft — Mikrofon tippen zum Senden" : converting ? "Wird umgewandelt …" : "Nachricht an alle…"}
           className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none"
         />
+        <button
+          onClick={() => recorder.toggle("meine-stimme.webm")}
+          disabled={converting || recorder.busy}
+          title={voice ? `Aufnehmen — geht mit der Stimme von ${voice.name} raus` : "Erst oben eine Stimme wählen"}
+          className={cn(
+            "w-10 h-10 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50",
+            recorder.recording ? "bg-red-500 border-red-500 text-white animate-pulse" : "bg-elevated border-border text-primary"
+          )}
+        >
+          {converting || recorder.busy ? <Loader2 className="w-4 h-4 animate-spin" /> : recorder.recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+        </button>
         <button
           onClick={submit}
           disabled={!text.trim()}

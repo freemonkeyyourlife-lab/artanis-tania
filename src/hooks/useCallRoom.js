@@ -214,7 +214,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
         } else if (msg.type === "signal") {
           handleSignal(msg.from, msg.data);
         } else if (msg.type === "chat") {
-          setMessages((prev) => [...prev.slice(-199), { seat: msg.seat, name: msg.name, text: msg.text }]);
+          setMessages((prev) => [...prev.slice(-199), { seat: msg.seat, name: msg.name, text: msg.text, audio: msg.audio || "" }]);
         } else if (msg.type === "closed") {
           setClosed(true);
           localStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -331,6 +331,13 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     roomRef.current?.send({ type: "chat", text: t.slice(0, 2000) });
   }, []);
 
+  // Sprachnachricht an alle im Call — schon in die gewählte Stimme umgewandelt.
+  const sendChatVoice = useCallback((audio) => {
+    const url = String(audio || "").trim();
+    if (!url) return;
+    roomRef.current?.send({ type: "chat", audio: url });
+  }, []);
+
   // Bildschirm statt Kamera senden — alle sehen ihn sofort, ohne neu zu verbinden.
   const stopShare = useCallback(() => {
     const screen = screenRef.current;
@@ -376,7 +383,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   return {
     status, error, peers, isHost, camOn, micOn,
     localVideoRef, toggleCam, toggleMic,
-    messages, sendChat, sharing, toggleShare, mySeat,
+    messages, sendChat, sendChatVoice, sharing, toggleShare, mySeat,
     mode, setMode, watchers, closed,
   };
 }
