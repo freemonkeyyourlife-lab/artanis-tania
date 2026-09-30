@@ -1515,7 +1515,7 @@ export default function Messages() {
                           ))}
                         </div>
                       )}
-                      {msg.suggestions && msg.suggestions.length > 0 && isLastAi && (
+                      {msg.suggestions && msg.suggestions.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {msg.suggestions.map((s, si) => (
                             <button key={si} onClick={() => sendMessage(s)} className="px-3 py-1.5 rounded-full bg-background border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">{s}</button>

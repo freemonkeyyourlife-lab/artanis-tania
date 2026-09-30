@@ -43,6 +43,18 @@
     "sampleFile": {
       "type": "string"
     },
+    "source": {
+      "type": "string",
+      "enum": [
+        "EINGESPROCHEN",
+        "HOCHGELADEN",
+        "GRUNDSTIMME"
+      ],
+      "default": "EINGESPROCHEN"
+    },
+    "originNote": {
+      "type": "string"
+    },
     "tags": {
       "type": "array",
       "items": {
@@ -59,6 +71,10 @@
     "public": {
       "type": "boolean",
       "default": true
+    },
+    "favorite": {
+      "type": "boolean",
+      "default": false
     },
     "priceCoins": {
       "type": "number",

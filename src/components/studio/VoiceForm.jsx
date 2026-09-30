@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Loader2, Mic, Square, Trash2 } from "lucide-react";
+import { Loader2, Mic, Square, Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BASE_VOICES, MOODS } from "@/lib/voiceDj";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
@@ -23,11 +23,15 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
     public: initial?.public !== false,
     priceCoins: initial?.priceCoins ?? 0,
     sampleFile: initial?.sampleFile || "",
+    source: initial?.source || "EINGESPROCHEN",
+    originNote: initial?.originNote || "",
+    favorite: initial?.favorite === true,
   });
   const [tagInput, setTagInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
+  const fileRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
 
@@ -40,10 +44,28 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
       const file = new File([blob], "stimme.webm", { type: "audio/webm" });
       const up = await base44.integrations.Core.UploadPrivateFile({ file });
       set("sampleFile", up.file_uri);
+      set("source", "EINGESPROCHEN");
     } catch (e) {
       console.error(e);
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Eine fertige Aufnahme mitbringen — deine eigene oder eine, die dir jemand gibt.
+  const uploadFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      const up = await base44.integrations.Core.UploadPrivateFile({ file });
+      set("sampleFile", up.file_uri);
+      set("source", "HOCHGELADEN");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+      event.target.value = "";
     }
   };
 
@@ -116,6 +138,11 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
       </div>
 
       <div>
+        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Woher hast du sie?</label>
+        <input value={form.originNote} onChange={(e) => set("originNote", e.target.value)} placeholder="z. B. selbst eingesprochen, von Kollegin X bekommen, gekauft bei …" className={input} />
+      </div>
+
+      <div>
         <p className="text-xs font-semibold text-muted-foreground mb-2">Grundstimme</p>
         <div className="flex flex-wrap gap-2">
           {BASE_VOICES.map((v) => (
@@ -178,6 +205,15 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : recording ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
           {busy ? "Lädt …" : recording ? "Aufnahme stoppen" : "Stimme einsprechen"}
         </button>
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+        >
+          <Upload className="w-3.5 h-3.5" /> Datei hochladen
+        </button>
+        <input ref={fileRef} type="file" accept="audio/*" onChange={uploadFile} className="hidden" />
         {form.sampleFile && (
           <>
             <button type="button" onClick={playSample} className="text-xs text-primary hover:underline">Aufnahme anhören</button>

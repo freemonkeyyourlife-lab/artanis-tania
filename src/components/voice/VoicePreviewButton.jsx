@@ -22,13 +22,22 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
     const v = resolveVoice(profile);
     setState("loading");
     try {
-      const res = await base44.integrations.Core.GenerateSpeech({ text, voice: v.baseVoice });
-      const url = res?.url;
+      // Liegt eine eigene Aufnahme vor, hörst du genau die — sonst die Grundstimme.
+      let url;
+      let rate = v.audioRate;
+      if (profile?.sampleFile) {
+        const res = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: profile.sampleFile, expires_in: 600 });
+        url = res?.signed_url;
+        rate = 1;
+      } else {
+        const res = await base44.integrations.Core.GenerateSpeech({ text, voice: v.baseVoice });
+        url = res?.url;
+      }
       if (!url) throw new Error("Keine Stimme erhalten");
       const audio = new Audio(url);
       audio.preservesPitch = false;
       audio.webkitPreservesPitch = false;
-      audio.playbackRate = v.audioRate;
+      audio.playbackRate = rate;
       audio.onended = () => setState("idle");
       audio.onerror = () => setState("idle");
       audioRef.current = audio;
