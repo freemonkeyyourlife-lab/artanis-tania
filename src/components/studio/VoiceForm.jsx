@@ -33,6 +33,7 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
   const [tagInput, setTagInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [cloning, setCloning] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -58,8 +59,7 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
   };
 
   // Eine fertige Aufnahme mitbringen — deine eigene oder eine, die dir jemand gibt.
-  const uploadFile = async (event) => {
-    const file = event.target.files?.[0];
+  const uploadFile = async (file) => {
     if (!file) return;
     setBusy(true);
     try {
@@ -70,8 +70,13 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
       console.error(e);
     } finally {
       setBusy(false);
-      event.target.value = "";
     }
+  };
+
+  const onDrop = (event) => {
+    event.preventDefault();
+    setDragOver(false);
+    uploadFile(event.dataTransfer?.files?.[0]);
   };
 
   const toggleRecord = async () => {
@@ -230,15 +235,13 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : recording ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
           {busy ? "Lädt …" : recording ? "Aufnahme stoppen" : "Stimme einsprechen"}
         </button>
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-        >
-          <Upload className="w-3.5 h-3.5" /> Datei hochladen
-        </button>
-        <input ref={fileRef} type="file" accept="audio/*" onChange={uploadFile} className="hidden" />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="audio/*"
+          onChange={(e) => { uploadFile(e.target.files?.[0]); e.target.value = ""; }}
+          className="hidden"
+        />
         {form.sampleFile && (
           <>
             <button type="button" onClick={playSample} className="text-xs text-primary hover:underline">Aufnahme anhören</button>
@@ -247,6 +250,26 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
             </button>
           </>
         )}
+      </div>
+
+      {/* Datei einfach hierher ziehen — oder anklicken und aussuchen. */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        onClick={() => fileRef.current?.click()}
+        className={cn(
+          "rounded-2xl border-2 border-dashed px-5 py-6 text-center cursor-pointer transition-colors",
+          dragOver ? "border-primary bg-primary/10" : "border-border bg-elevated hover:border-primary/40"
+        )}
+      >
+        <Upload className={cn("w-5 h-5 mx-auto", dragOver ? "text-primary" : "text-muted-foreground")} />
+        <p className="text-sm text-foreground mt-2">
+          {busy ? "Lädt hoch …" : dragOver ? "Loslassen — dann ist sie drin" : "Aufnahme hierher ziehen"}
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-1">
+          oder anklicken und aussuchen · mp3, wav, m4a · am besten mindestens 30 Sekunden
+        </p>
       </div>
 
       {form.sampleFile && (

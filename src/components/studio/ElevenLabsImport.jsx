@@ -11,15 +11,17 @@ export default function ElevenLabsImport({ existingIds = [], onImported }) {
   const [list, setList] = useState([]);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(null);
+  const [error, setError] = useState("");
 
   const load = async () => {
     setBusy(true);
+    setError("");
     try {
       const res = await base44.functions.invoke("elevenLabs", { action: "voices" });
       if (res.data?.error) throw new Error(res.data.error);
       setList(res.data.voices || []);
     } catch (e) {
-      toast({ title: "Stimmen kamen nicht an", description: e.message, variant: "destructive" });
+      setError(e.message);
     } finally {
       setBusy(false);
     }
@@ -83,6 +85,20 @@ export default function ElevenLabsImport({ existingIds = [], onImported }) {
         <div className="mt-4">
           {busy ? (
             <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+          ) : error ? (
+            <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4">
+              <p className="text-sm font-semibold text-foreground">ElevenLabs gibt die Stimmen nicht heraus.</p>
+              <p className="text-[11px] text-muted-foreground mt-1 break-words">{error}</p>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Meist fehlt dem Schlüssel die Erlaubnis „Voices: Read". Bei ElevenLabs den Schlüssel bearbeiten, die Erlaubnis setzen — dann hier neu laden.
+              </p>
+              <button
+                onClick={load}
+                className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+              >
+                <Download className="w-3.5 h-3.5" /> Neu laden
+              </button>
+            </div>
           ) : list.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">
               Keine Stimmen gemeldet. Leg bei ElevenLabs eine an oder lade eine hoch, dann hier neu laden.

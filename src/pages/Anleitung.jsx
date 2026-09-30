@@ -66,7 +66,7 @@ const SECTIONS = [
   {
     icon: Mic,
     title: "Stimmen — holen, klonen, freigeben",
-    intro: "Der ElevenLabs-Schlüssel liegt schon in der App. Du musst nichts mehr eintragen und fürs Benutzen auch nicht mehr zu ElevenLabs.",
+    intro: "Der ElevenLabs-Schlüssel liegt schon in der App. Du musst nichts mehr eintragen und fürs Benutzen auch nicht mehr zu ElevenLabs. Wichtig: der Schlüssel braucht dort die Erlaubnis „Voices“ (lesen und anlegen) und „Text to Speech“ — sonst gibt ElevenLabs die Stimmen nicht heraus.",
     steps: [
       "Holen: App → Studio → Stimmbank → Knopf „Aus ElevenLabs“. Dort stehen alle Stimmen aus deinem ElevenLabs-Konto — eigene, geklonte und fertige.",
       "„Alle noch fehlenden übernehmen“ holt sie in einem Zug herüber. Danach sind sie hier ganz normal nutzbar: Sprechprobe, Chat, Video-Call.",
