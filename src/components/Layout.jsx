@@ -10,6 +10,7 @@ import { getViewAs, setViewAs, subscribeViewAs } from "@/lib/viewAs";
 import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
 import InfoModeToggle from "@/components/InfoModeToggle";
+import WishButton from "@/components/wish/WishButton";
 
 const MORE_LINKS = [
   { label: "Dockingstation", path: "/dock" },
@@ -142,6 +143,7 @@ export default function Layout() {
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
+            <WishButton />
             <InfoModeToggle />
             <InviteShareButton className="hidden sm:flex" />
             <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass-btn flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
@@ -210,6 +212,7 @@ export default function Layout() {
                   )}
                 </Link>
               ))}
+              <WishButton className="w-full justify-center py-3 text-[15px] my-1" />
               <InviteShareButton className="w-full justify-center py-3 text-sm my-1" />
               <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
                 Account

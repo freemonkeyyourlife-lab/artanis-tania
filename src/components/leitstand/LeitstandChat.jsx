@@ -65,7 +65,7 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
           <div key={m.id} className={cn("flex", m.senderType === "HUMAN" ? "justify-start" : "justify-end")}>
             <div className={cn("max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed", m.senderType === "HUMAN" ? "bg-elevated text-foreground" : "bg-primary text-primary-foreground")}>
               {media(m).map((it, i) => (
-                <Image key={i} src={it.url} fittingType="fill" className="w-32 h-32 rounded-lg mb-2" />
+                <Image key={i} src={it.url} fittingType="fill" className="w-48 h-48 rounded-2xl mb-2" />
               ))}
               {m.text}
             </div>

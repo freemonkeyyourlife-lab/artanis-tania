@@ -175,7 +175,7 @@ export default function Profile() {
             <div className="flex flex-wrap gap-2 mt-3">
               {userImages.map((url) => (
                 <div key={url} className="relative">
-                  <Image src={url} fittingType="fill" className="w-20 h-20 rounded-xl" />
+                  <Image src={url} fittingType="fill" className="w-32 h-32 rounded-2xl" />
                   <button onClick={() => removeImage(url)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center">
                     <X className="w-3 h-3" />
                   </button>

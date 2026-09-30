@@ -114,7 +114,7 @@ export default function ContentUploadForm({ creators = [], onCreated }) {
         <input value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Kurze Beschreibung" className={input} />
         <select value={form.creatorId} onChange={(e) => set("creatorId", e.target.value)} className={input}>
           <option value="">Keinem Charakter zuordnen</option>
-          {creators.filter((c) => c.stageName !== "Testdummy").map((c) => (
+          {creators.map((c) => (
             <option key={c.id} value={c.id}>{c.stageName}</option>
           ))}
         </select>
@@ -131,7 +131,7 @@ export default function ContentUploadForm({ creators = [], onCreated }) {
         <input ref={fileRef} type="file" accept="image/*,video/*,audio/*" onChange={pickFile} className="hidden" />
         {file && (
           <span className="inline-flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
-            {preview ? <Image src={preview} fittingType="fill" className="w-10 h-10 rounded-lg" /> : null}
+            {preview ? <Image src={preview} fittingType="fill" className="w-24 h-24 rounded-2xl" /> : null}
             {file.name}
           </span>
         )}

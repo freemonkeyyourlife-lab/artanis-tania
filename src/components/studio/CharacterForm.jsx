@@ -220,7 +220,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
           </p>
           {form.avatar && (
             <div className="flex items-center gap-3 mt-3">
-              <Image src={form.avatar} fittingType="fill" className="w-16 h-16 rounded-xl" />
+              <Image src={form.avatar} fittingType="fill" className="w-32 h-32 rounded-2xl" />
               <div>
                 <p className="text-sm text-foreground">Hauptbild</p>
                 <label className="cursor-pointer text-xs text-primary hover:underline">
@@ -239,7 +239,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
               <Upload className="w-4 h-4" /> {uploading ? "Lädt …" : "Bild wählen"}
               <input type="file" accept="image/*" onChange={pickSingle("banner")} className="hidden" />
             </label>
-            {form.banner && <Image src={form.banner} fittingType="fill" className="w-16 h-12 rounded-lg" />}
+            {form.banner && <Image src={form.banner} fittingType="fill" className="w-40 h-24 rounded-2xl" />}
           </div>
         </div>
 
@@ -253,7 +253,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
             <div className="flex flex-wrap gap-2 mt-3">
               {form.referenceImages.map((url) => (
                 <div key={url} className="relative">
-                  <Image src={url} fittingType="fill" className="w-16 h-16 rounded-lg" />
+                  <Image src={url} fittingType="fill" className="w-24 h-24 rounded-2xl" />
                   <button onClick={() => removeRef(url)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-xs leading-none">
                     <X className="w-3 h-3" />
                   </button>

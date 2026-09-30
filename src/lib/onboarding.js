@@ -51,6 +51,7 @@ export const DEFAULT_INFO = {
     "Dein Chat. Links die Gespräche, rechts das Gespräch selbst. Den Balken dazwischen ziehst du dir breiter oder schmaler. Dateien kannst du einfach ins Fenster ziehen.",
   studio:
     "Deine Werkbank. Hier legst du Figuren, Stimmen, Inhalte, Storys, Themen, Live-Streams und Wettbewerbe an.",
+  wish: "Sag frei heraus, was du willst — reden oder sprechen. Du bekommst fertige Angebote dafür, vom reinen Zuschauen bis zum eigenen Content.",
   dock: "Hier baust du aus einer Beschreibung eine ganz neue Figur — mit eigener Persönlichkeit.",
   therapy: "Die Sprechstunde. Ein geschützter Rahmen für Gespräche, die woanders keinen Platz haben.",
   contests: "Wettbewerbe mit Beiträgen und Abstimmung. Du legst Regeln, Preis und Laufzeit fest.",

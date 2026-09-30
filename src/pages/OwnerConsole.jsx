@@ -82,7 +82,7 @@ export default function OwnerConsole() {
           base44.entities.User.list(),
         ]);
         setCounts({
-          creators: creators.filter((c) => c.active !== false && c.stageName !== "Testdummy").length,
+          creators: creators.filter((c) => c.active !== false).length,
           voices: voices.length,
           contents: contents.length,
           stories: stories.length,

@@ -112,6 +112,19 @@ export default function Messages() {
 
   // Jedes offene Gespräch behält seinen eigenen Entwurf.
   const input = activeChat ? (drafts[activeChat] || "") : "";
+
+  // Ein Wunsch aus dem "Sag was du willst"-Knopf landet direkt im Eingabefeld.
+  useEffect(() => {
+    if (!activeChat) return;
+    let wish = "";
+    try {
+      wish = localStorage.getItem("artanis_wish_pick") || "";
+      if (wish) localStorage.removeItem("artanis_wish_pick");
+    } catch (e) {
+      return;
+    }
+    if (wish) setDrafts((prev) => ({ ...prev, [activeChat]: prev[activeChat] || wish }));
+  }, [activeChat]);
   const setInput = (value) => {
     if (!activeChat) return;
     setDrafts((prev) => ({
@@ -403,7 +416,7 @@ export default function Messages() {
     ctx += "WHEN A PHOTO CANNOT SHOW IT: if he wants something a teasing photo cannot deliver, say it out loud — that you and your girlfriend can shoot that for real — and offer it as a custom photo set or clip he can order. The app puts a button under your message for that.\n";
     ctx += "APPEARANCE CONSISTENCY (critical): the person must look identical in every image — same face, same hair COLOUR and length, same skin tone, same body. NEVER change her hair colour.\n";
     ctx += "\n" + CONSISTENCY_RULES + "\n";
-    const roster = creators.filter((c) => c.id !== activeChat && c.stageName !== "Testdummy" && c.active !== false);
+    const roster = creators.filter((c) => c.id !== activeChat && c.active !== false);
     if (roster.length > 0) {
       ctx += "\n\nTHE CAST YOU CAN BRING IN (other characters that already exist on the platform):\n";
       ctx += roster.map((c) => `- ${c.stageName}${c.tagline ? ` — ${c.tagline}` : ""}`).join("\n");
@@ -499,7 +512,7 @@ export default function Messages() {
   const generateWithFallback = async (prompt, refImages, personaMode) => {
     // YOU are in every image — always together with the character.
     const maleLead = creators.find((c) => c.stageName === "Artanis")
-      || creators.find((c) => c.personaType === "SOLO_MALE" && c.stageName !== "Testdummy");
+      || creators.find((c) => c.personaType === "SOLO_MALE");
     // In Spanner mode he watches — the women are in frame with each other, not with him.
     const showMale = !(spannerMode && extraCharacters.length > 0);
     const maleRefs = showMale ? [maleLead?.avatar, ...(maleLead?.referenceImages || [])].filter(Boolean) : [];
@@ -1107,7 +1120,7 @@ export default function Messages() {
             {viewMode === "ai" ? (
               <>
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Real</p>
-              {creators.filter(c => c.creatorCategory === "REAL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
+              {creators.filter(c => c.creatorCategory === "REAL" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fit" className="w-14 h-14 rounded-full flex-shrink-0 bg-elevated" />
@@ -1126,7 +1139,7 @@ export default function Messages() {
                 <p className="text-[11px] text-muted-foreground">Leg ihn an der Dockingstation rein — er läuft dann mit unserer Persönlichkeit.</p>
               </Link>
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">KI-Modelle</p>
-              {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
+              {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>
                   {c.avatar ? (
                     <Image src={c.avatar} fittingType="fit" className="w-14 h-14 rounded-full flex-shrink-0 bg-elevated" />
@@ -1273,12 +1286,12 @@ export default function Messages() {
                       <h3 className="font-display text-lg text-foreground mb-1">Person hinzufügen</h3>
                       <p className="text-xs text-muted-foreground mb-4">Hol jemanden in diesen Chat — sie spielt dann mit.</p>
                       <div className="max-h-[60vh] overflow-y-auto space-y-2">
-                        {creators.filter((c) => c.id !== activeChat && c.stageName !== "Testdummy" && c.active !== false).map((c) => {
+                        {creators.filter((c) => c.id !== activeChat && c.active !== false).map((c) => {
                           const added = extraCharacters.some((x) => x.id === c.id);
                           return (
                             <button key={c.id} onClick={() => toggleExtra(c)} className={cn("w-full p-3 flex items-center gap-3 rounded-xl border text-left transition-colors", added ? "border-primary bg-primary/10" : "border-border hover:bg-elevated")}>
                               {c.avatar ? (
-                                <Image src={c.avatar} fittingType="fit" className="w-12 h-12 rounded-full flex-shrink-0 bg-elevated" />
+                                <Image src={c.avatar} fittingType="fit" className="w-16 h-16 rounded-full flex-shrink-0 bg-elevated" />
                               ) : (
                                 <div className="w-9 h-9 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
                               )}
@@ -1406,7 +1419,7 @@ export default function Messages() {
                       ) : (
                         <Link to={`/creator/${activeChat}`} title="Profil ansehen" className="flex-shrink-0">
                           {creators.find(c => c.id === activeChat)?.avatar ? (
-                            <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fit" className="w-10 h-10 rounded-full bg-elevated transition-opacity hover:opacity-80" />
+                            <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fit" className="w-16 h-16 rounded-full bg-elevated transition-opacity hover:opacity-80" />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
                           )}
@@ -1540,7 +1553,7 @@ export default function Messages() {
                 {sending && (
                   <div className="flex gap-2 justify-start">
                     {creators.find(c => c.id === activeChat)?.avatar ? (
-                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fit" className="w-11 h-11 rounded-full flex-shrink-0 bg-elevated" />
+                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fit" className="w-16 h-16 rounded-full flex-shrink-0 bg-elevated" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center flex-shrink-0"><span className="text-xs font-display text-violet-400">{creators.find(c => c.id === activeChat)?.stageName[0]}</span></div>
                     )}
@@ -1559,7 +1572,7 @@ export default function Messages() {
                   {pendingFiles.map((f, i) => (
                     <div key={`${f.url}-${i}`} className="relative flex-shrink-0">
                       {f.type === "image" ? (
-                        <Image src={f.url} fittingType="fill" className="w-16 h-16 rounded-lg" />
+                        <Image src={f.url} fittingType="fill" className="w-24 h-24 rounded-2xl" />
                       ) : (
                         <div className="w-16 h-16 rounded-lg bg-elevated flex items-center justify-center text-[11px] font-bold text-muted-foreground uppercase">{f.type}</div>
                       )}
@@ -1607,7 +1620,7 @@ export default function Messages() {
                         <div className="flex flex-wrap gap-2 mt-4">
                           {userPref.userReferenceImages.map((url) => (
                             <div key={url} className="relative">
-                              <Image src={url} fittingType="fill" className="w-20 h-20 rounded-xl" />
+                              <Image src={url} fittingType="fill" className="w-28 h-28 rounded-2xl" />
                               <button onClick={() => removeUserPhoto(url)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center">
                                 <X className="w-3 h-3" />
                               </button>

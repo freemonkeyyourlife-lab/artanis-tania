@@ -266,7 +266,7 @@ export default function ContestForm({ initial, onSaved, onCancel }) {
             </label>
             {form.coverImage && (
               <div className="relative">
-                <Image src={form.coverImage} fittingType="fill" className="w-20 h-12 rounded-lg" />
+                <Image src={form.coverImage} fittingType="fill" className="w-40 h-24 rounded-2xl" />
                 <button onClick={() => set("coverImage", "")} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white text-xs leading-none">×</button>
               </div>
             )}

@@ -181,7 +181,7 @@ export default function DockForm({ onDone }) {
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Bild (optional)</p>
           <div className="flex items-center gap-2">
-            {avatar && <Image src={avatar} fittingType="fill" className="w-10 h-10 rounded-xl" />}
+            {avatar && <Image src={avatar} fittingType="fill" className="w-20 h-20 rounded-2xl" />}
             <input ref={avatarRef} type="file" accept="image/*" onChange={uploadAvatar} className="hidden" />
             <button onClick={() => avatarRef.current?.click()} className="px-4 py-2.5 rounded-full bg-elevated border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
               Bild wählen

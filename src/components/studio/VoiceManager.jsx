@@ -216,7 +216,7 @@ export default function VoiceManager() {
                     className="px-3 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground focus:outline-none focus:border-primary/50"
                   >
                     <option value="">Keinem Charakter zugeordnet</option>
-                    {creators.filter((c) => c.stageName !== "Testdummy").map((c) => (
+                    {creators.map((c) => (
                       <option key={c.id} value={c.id}>{c.stageName}</option>
                     ))}
                   </select>

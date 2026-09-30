@@ -104,7 +104,7 @@ export default function ContestEntryForm({ contest, user, onSaved }) {
               <ImagePlus className="w-4 h-4" /> {uploading ? "Lädt …" : "Datei wählen"}
               <input type="file" accept={accept} onChange={upload} className="hidden" />
             </label>
-            {mediaUrl && mediaType === "IMAGE" && <Image src={mediaUrl} fittingType="fill" className="w-16 h-16 rounded-lg" />}
+            {mediaUrl && mediaType === "IMAGE" && <Image src={mediaUrl} fittingType="fill" className="w-24 h-24 rounded-2xl" />}
             {mediaUrl && mediaType === "VIDEO" && <video src={mediaUrl} className="w-24 rounded-lg" muted />}
           </div>
         )}

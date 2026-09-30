@@ -187,7 +187,7 @@ export default function GeneratorManager({ creators }) {
           </label>
           {extraRefs.map((url) => (
             <div key={url} className="relative">
-              <Image src={url} fittingType="fill" className="w-10 h-10 rounded-lg" />
+              <Image src={url} fittingType="fill" className="w-20 h-20 rounded-2xl" />
               <button onClick={() => setExtraRefs((prev) => prev.filter((u) => u !== url))} className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-white text-[10px] leading-none">×</button>
             </div>
           ))}
@@ -196,7 +196,7 @@ export default function GeneratorManager({ creators }) {
         {refs.length > 0 && (
           <div className="flex gap-2 flex-wrap mb-5">
             {refs.map((r) => (
-              <Image key={r} src={r} fittingType="fill" className="w-12 h-12 rounded-lg" />
+              <Image key={r} src={r} fittingType="fill" className="w-20 h-20 rounded-2xl" />
             ))}
           </div>
         )}

@@ -11,7 +11,7 @@ export default function CharacterSuggestion({ name, reason, creator, onOpen }) {
       className="flex items-center gap-3 w-full max-w-xs p-2.5 rounded-xl bg-background border border-primary/40 text-left hover:border-primary transition-colors"
     >
       {creator.avatar ? (
-        <Image src={creator.avatar} fittingType="fill" className="w-10 h-10 rounded-full flex-shrink-0" />
+        <Image src={creator.avatar} fittingType="fill" className="w-14 h-14 rounded-full flex-shrink-0" />
       ) : (
         <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{name?.[0]}</div>
       )}
