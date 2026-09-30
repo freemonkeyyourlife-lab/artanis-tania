@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import LeitstandList from "@/components/leitstand/LeitstandList";
 import LeitstandChat from "@/components/leitstand/LeitstandChat";
+import LeitstandEmpty from "@/components/leitstand/LeitstandEmpty";
 import { cn } from "@/lib/utils";
 
 // Wartende Chats stehen oben — die anderen nach der letzten Nachricht.
@@ -111,6 +112,8 @@ export default function Leitstand() {
             ) : (
               <LeitstandChat conversation={active} messages={messages} onChanged={refresh} onBack={() => setActiveId(null)} />
             )
+          ) : conversations.length === 0 ? (
+            <LeitstandEmpty onReload={refresh} />
           ) : (
             <div className="flex-1 flex items-center justify-center"><p className="text-sm text-muted-foreground">Chat links auswählen</p></div>
           )}
