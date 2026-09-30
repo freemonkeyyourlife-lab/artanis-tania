@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSquare, X, Lock, Eye, Share2, Bot } from "lucide-react";
-import useCallRoom from "@/hooks/useCallRoom";
+import { useCallSession } from "@/lib/CallContext";
 import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
 import CallInvite from "@/components/call/CallInvite";
@@ -19,9 +19,9 @@ export default function VideoCall() {
   const { token: rawToken } = useParams();
   const token = normalizeCallCode(rawToken);
   const navigate = useNavigate();
-  const [joined, setJoined] = useState(false);
-  const [wantCam, setWantCam] = useState(true);
-  const [wantMic, setWantMic] = useState(true);
+  // Der Call selbst liegt eine Ebene höher — deshalb läuft er weiter, wenn du
+  // zwischendurch im Dashboard etwas zeigst.
+  const call = useCallSession();
   const [myName, setMyName] = useState("");
   // Einladen darf nur der Besitzer — für alle anderen bleibt es unsichtbar.
   const [isOwner, setIsOwner] = useState(false);
@@ -61,11 +61,16 @@ export default function VideoCall() {
 
   const {
     status, error, peers, isHost, camOn, micOn,
-    localVideoRef, toggleCam, toggleMic,
+    attachLocal, toggleCam, toggleMic,
     messages, sendChat, sendChatVoice, sharing, toggleShare, mySeat,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
-  } = useCallRoom({ token, joined, wantCam, wantMic, name: myName });
+  } = call;
+
+  // Läuft hier wirklich dieser Raum? Sonst zeigst du den Beitritt.
+  const joined = call.joined && call.session?.token === token;
+  const wantCam = call.wantCam;
+  const wantMic = call.wantMic;
 
   // Die Raumnummer steht im Link — so wissen beide Seiten, welcher Raum gemeint ist.
   const urlRoom = Number(new URLSearchParams(window.location.search).get("r")) || 0;
@@ -125,14 +130,14 @@ export default function VideoCall() {
 
           <div className="flex gap-3 justify-center mt-6">
             <button
-              onClick={() => setWantCam((v) => !v)}
+              onClick={() => call.setWantCam((v) => !v)}
               className={cn("inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-colors", wantCam ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground")}
             >
               {wantCam ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
               Kamera {wantCam ? "an" : "aus"}
             </button>
             <button
-              onClick={() => setWantMic((v) => !v)}
+              onClick={() => call.setWantMic((v) => !v)}
               className={cn("inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-colors", wantMic ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground")}
             >
               {wantMic ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
@@ -141,7 +146,7 @@ export default function VideoCall() {
           </div>
 
           <button
-            onClick={() => setJoined(true)}
+            onClick={() => call.start({ token, roomNumber, name: myName })}
             className="w-full mt-6 px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold"
           >
             Jetzt beitreten
@@ -163,7 +168,7 @@ export default function VideoCall() {
     return (
       <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-6 text-center">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => { call.leave(); navigate("/"); }}
           className="fixed top-4 left-4 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-border text-sm text-foreground hover:text-primary transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Zurück
@@ -265,7 +270,7 @@ export default function VideoCall() {
           </aside>
         )}
         <CallStage
-          localVideoRef={localVideoRef}
+          localVideoRef={attachLocal}
           camOn={camOn}
           micOn={micOn}
           myName={myName || "Du"}
@@ -315,7 +320,7 @@ export default function VideoCall() {
         onToggleShare={toggleShare}
         mode={mode}
         setMode={setMode}
-        onEnd={() => navigate("/live")}
+        onEnd={() => { call.leave(); navigate("/live"); }}
         isHost={isHost}
       />
     </div>

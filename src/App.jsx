@@ -55,6 +55,8 @@ import Baukasten from '@/pages/Baukasten';
 import Anleitung from '@/pages/Anleitung';
 import VoiceStudio from '@/pages/VoiceStudio';
 import HelpAssistant from '@/components/help/HelpAssistant';
+import { CallProvider } from '@/lib/CallContext';
+import FloatingCall from '@/components/call/FloatingCall';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -88,6 +90,7 @@ const AuthenticatedApp = () => {
       <OnboardingIntro />
       <TutorialPlayer />
       <HelpAssistant />
+      <FloatingCall />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
@@ -145,9 +148,11 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <ScrollToTop />
-          <AgeGate />
-          <LustGate />
-          <AuthenticatedApp />
+          <CallProvider>
+            <AgeGate />
+            <LustGate />
+            <AuthenticatedApp />
+          </CallProvider>
         </Router>
         <Toaster />
       </QueryClientProvider>
