@@ -45,6 +45,7 @@ import PayLinks from '@/pages/PayLinks';
 import Pay from '@/pages/Pay';
 import TherapySession from '@/pages/TherapySession';
 import WaitingChatAlert from '@/components/WaitingChatAlert';
+import HostLiveAlert from '@/components/HostLiveAlert';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
     <>
       <InviteClaim />
       <WaitingChatAlert />
+      <HostLiveAlert />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />

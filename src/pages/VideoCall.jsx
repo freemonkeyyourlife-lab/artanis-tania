@@ -8,6 +8,7 @@ import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
 import CallChat from "@/components/call/CallChat";
 import CallInvite from "@/components/call/CallInvite";
+import LiveToggle from "@/components/call/LiveToggle";
 import { resetCallToken, normalizeCallCode } from "@/lib/callLink";
 import { publicName } from "@/lib/displayName";
 
@@ -171,6 +172,7 @@ export default function VideoCall() {
               <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{messages.length}</span>
             )}
           </button>
+          {isHost && <LiveToggle token={token} hostName={myName} />}
           {isHost && (
             <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold uppercase tracking-wider flex-shrink-0">
               Gastgeber

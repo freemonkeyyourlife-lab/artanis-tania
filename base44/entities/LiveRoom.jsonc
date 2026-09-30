@@ -1,0 +1,53 @@
+{
+  "name": "LiveRoom",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "hostName": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "isLive": {
+      "type": "boolean",
+      "default": false
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "WATCH",
+        "PRIVATE"
+      ],
+      "default": "OPEN"
+    }
+  },
+  "required": [
+    "token"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
