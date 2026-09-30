@@ -1,0 +1,48 @@
+import { base44 } from "@/api/base44Client";
+import { resolveVoice, cloudTuning } from "@/lib/voiceDj";
+
+// „Antworten als Sprachnachricht" — pro Charakter gemerkt. Liegt auch ohne
+// Browserspeicher fest, damit der Schalter innerhalb der Sitzung hält.
+const KEY = "artanis_voice_chat";
+let cache = null;
+
+function readAll() {
+  if (cache) return cache;
+  try { cache = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { cache = {}; }
+  return cache;
+}
+
+export function voiceNotesOn(creatorId) {
+  return !!creatorId && readAll()[creatorId] === true;
+}
+
+export function setVoiceNotesOn(creatorId, on) {
+  if (!creatorId) return;
+  const all = { ...readAll(), [creatorId]: !!on };
+  cache = all;
+  try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) { /* ignore */ }
+}
+
+// Text mit der Stimme des Charakters sprechen. Eine ElevenLabs-Stimme klingt
+// genau wie in der Stimmbank eingestellt, eine Grundstimme läuft über die
+// eingebaute Sprachausgabe.
+export async function speakAsVoice(profile, text) {
+  const t = String(text || "").trim().slice(0, 2500);
+  if (!t) return null;
+
+  if (profile?.provider === "ELEVENLABS" && profile?.externalVoiceId) {
+    const tune = cloudTuning(profile);
+    const res = await base44.functions.invoke("elevenLabs", {
+      voiceId: profile.externalVoiceId,
+      text: t,
+      speed: tune.apiSpeed,
+      mood: profile?.mood,
+      intensity: tune.intensity,
+    });
+    if (res.data?.error) throw new Error(res.data.error);
+    return res.data?.url || null;
+  }
+
+  const res = await base44.integrations.Core.GenerateSpeech({ text: t, voice: resolveVoice(profile).baseVoice });
+  return res?.url || null;
+}

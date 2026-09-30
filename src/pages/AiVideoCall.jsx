@@ -6,6 +6,7 @@ import { Mic, Square, PhoneOff, Loader2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasProAccess } from "@/lib/proAccess";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
+import { speakAsVoice } from "@/lib/voiceChat";
 
 const LANGUAGE_RULE =
   "Du bist in einem VIDEOCHAT und sprichst laut. Antworte deshalb IMMER auf Deutsch, in der Du-Form, kurz und gesprochen — 1 bis 3 Sätze, wie ein echter Mensch am Telefon. Keine Aufzählungen, keine Regieanweisungen, kein Sternchen-Text, keine Emojis. Nur das, was du wirklich sagen würdest.";
@@ -38,6 +39,7 @@ export default function AiVideoCall() {
   const [seconds, setSeconds] = useState(0);
   const [history, setHistory] = useState([]);
   const [camReady, setCamReady] = useState(false);
+  const [voice, setVoice] = useState(null);
 
   const selfRef = useRef(null);
   const streamRef = useRef(null);
@@ -54,6 +56,9 @@ export default function AiVideoCall() {
       const c = await base44.entities.Creator.get(id);
       setCreator(c);
       setFrame(c.avatar || c.referenceImages?.[0] || null);
+      if (c.voiceProfileId) {
+        try { setVoice(await base44.entities.Voice.get(c.voiceProfileId)); } catch (e) { /* Stimme gibt es nicht mehr */ }
+      }
       try { setUser(await base44.auth.me()); } catch (e) { /* Besucher ohne Konto */ }
     } catch (e) {
       console.error(e);
@@ -106,6 +111,20 @@ export default function AiVideoCall() {
     }
   };
 
+  // Sie spricht mit ihrer Stimme — im Videochat hörst du sie wirklich.
+  const playLine = (t) => {
+    if (!voice || !t) return;
+    speakAsVoice(voice, t)
+      .then((url) => {
+        if (!url) return;
+        audioRef.current?.pause();
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.play().catch(() => {});
+      })
+      .catch((e) => console.error("Sprachausgabe fehlgeschlagen:", e));
+  };
+
   const reply = async (userText) => {
     setBusy(true);
     try {
@@ -120,6 +139,7 @@ export default function AiVideoCall() {
       const said = typeof res === "string" ? res : (res.response || res.text || res.output || "");
       const clean = said.replace(/[*_#`]/g, "").trim();
       setLine(clean);
+      playLine(clean);
       setHistory((h) => [...h, ...(userText ? [{ role: "user", text: userText }] : []), { role: "ai", text: clean }]);
       newFrame(clean.slice(0, 160));
     } catch (e) {
@@ -211,7 +231,7 @@ export default function AiVideoCall() {
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           <span className="text-sm font-medium">{creator?.stageName}</span>
         </div>
-        <span className="text-xs text-white/60">{clock}</span>
+        <span className="text-xs text-white/60">{voice?.name ? `${voice.name} · ` : ""}{clock}</span>
       </div>
 
       <div className="relative flex-1 overflow-hidden">

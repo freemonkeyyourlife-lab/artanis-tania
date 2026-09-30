@@ -14,6 +14,8 @@ import QuickActions from "@/components/QuickActions";
 import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS, sanitizeImagePrompt } from "@/lib/chatMedia";
 import CharacterSuggestion from "@/components/CharacterSuggestion";
 import ReadAloudButton from "@/components/ReadAloudButton";
+import VoiceChatBar from "@/components/voice/VoiceChatBar";
+import { speakAsVoice, voiceNotesOn } from "@/lib/voiceChat";
 import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
 import { CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
@@ -613,11 +615,13 @@ export default function Messages() {
       attachments.push({ type: "video", url, locked: !isFree, price: isFree ? null : 9.99 });
     }
 
-    // Optional voice note
-    if (parsed.voice) {
+    // Sprachnachricht: entweder die Figur schickt selbst eine, oder der Schalter
+    // „Sprachnachricht" steht an — dann wird jede Antwort auch gesprochen.
+    const spoken = parsed.voice || (voiceNotesOn(activeChat) ? parsed.cleanText : "");
+    if (spoken) {
       try {
-        const res = await base44.integrations.Core.GenerateSpeech({ text: parsed.voice, voice: voiceProfileFor(activeChat)?.baseVoice || creator?.voice || undefined });
-        if (res?.url) attachments.push({ type: "audio", url: res.url, locked: false, price: null });
+        const url = await speakAsVoice(voiceProfileFor(activeChat), spoken);
+        if (url) attachments.push({ type: "audio", url, locked: false, price: null });
       } catch (e) {
         console.error("Voice generation failed:", e);
       }
@@ -1338,6 +1342,17 @@ export default function Messages() {
                   <RotateCcw className="w-4 h-4" />
                 </button>
               </div>
+
+              {viewMode === "ai" && (
+                <div className="px-4 py-2 border-b border-border">
+                  <VoiceChatBar
+                    creator={creators.find((c) => c.id === activeChat)}
+                    creators={creators}
+                    voices={voices}
+                    onChanged={load}
+                  />
+                </div>
+              )}
 
               {viewMode === "ai" && !scenario ? (
                 <ScenarioSelection onSelect={(s) => {

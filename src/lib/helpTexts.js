@@ -23,6 +23,19 @@ export const HELP = {
       "Den Schlüssel niemals in Chats oder Nachrichten schicken — wer ihn hat, verbraucht dein Guthaben.",
     ],
   },
+  chatstimme: {
+    title: "Die Stimme im Chat",
+    steps: [
+      "Direkt unter dem Namen des Charakters sitzt die Stimmen-Zeile: „Stimme: …“.",
+      "Im Auswahlfeld daneben wählst du, welche Stimme dieser Charakter spricht. Die Liste kommt aus der Stimmbank — eine Stimme gehört immer nur einem Charakter.",
+      "Der Knopf „Sprachnachricht“: steht er an, bekommt jede Antwort zusätzlich eine Sprachnachricht in dieser Stimme. Nochmal drücken schaltet es wieder aus.",
+      "Der Knopf „Erklärung“ daneben führt dich jederzeit hierher zurück.",
+      "Dieselbe Stimme spricht auch im Videochat (das Kamera-Symbol oben) — dort steht der Name der Stimme neben der Uhr.",
+      "Für Telegram-Chats gilt dieselbe Auswahl im Leitstand: Chat öffnen, oben die Stimme wählen, Häkchen oder Mikrofon-Knopf.",
+      "Ist die Liste leer, liegt noch keine Stimme in der Stimmbank: Studio → Stimmbank → „Aus ElevenLabs“ oder „Neue Stimme“.",
+      "Jede Sprachnachricht verbraucht ElevenLabs-Guthaben — den Knopf also nur anlassen, wo du es wirklich willst.",
+    ],
+  },
   sprachnachrichten: {
     title: "Sprachnachrichten im Chat",
     steps: [

@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import LeitstandList from "@/components/leitstand/LeitstandList";
 import LeitstandChat from "@/components/leitstand/LeitstandChat";
 import LeitstandEmpty from "@/components/leitstand/LeitstandEmpty";
+import CallInviteButton from "@/components/call/CallInviteButton";
 import { cn } from "@/lib/utils";
 
 // Wartende Chats stehen oben — die anderen nach der letzten Nachricht.
@@ -91,8 +92,13 @@ export default function Leitstand() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
-      <h1 className="font-display text-3xl text-foreground mb-2">Leitstand</h1>
-      <p className="text-sm text-muted-foreground mb-6">Alle Chats deiner Gäste. Du siehst sofort, wer wartet — und übernimmst jederzeit selbst.</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="font-display text-3xl text-foreground mb-2">Leitstand</h1>
+          <p className="text-sm text-muted-foreground">Alle Chats deiner Gäste. Du siehst sofort, wer wartet — und übernimmst jederzeit selbst.</p>
+        </div>
+        <CallInviteButton label="Jemanden einladen" className="flex-shrink-0" />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-260px)]">
         <div className={cn("rounded-2xl border border-border bg-card overflow-hidden flex flex-col", active && "hidden lg:flex")}>
