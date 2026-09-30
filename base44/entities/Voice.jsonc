@@ -58,6 +58,10 @@
       "type": "number",
       "default": 50
     },
+    "volume": {
+      "type": "number",
+      "default": 100
+    },
     "sampleFile": {
       "type": "string"
     },

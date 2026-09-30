@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { resolveVoice, cloudTuning } from "@/lib/voiceDj";
+import { resolveVoice, cloudTuning, playVolume } from "@/lib/voiceDj";
 import { speakAsVoice } from "@/lib/voiceChat";
 
 // Tonlage und Tempo je Grundstimme — damit sich die Charaktere beim Vorlesen unterscheiden.
@@ -45,6 +45,7 @@ export default function useVoicePlayer(profile, fallbackVoice) {
         audio.preservesPitch = false;
         audio.webkitPreservesPitch = false;
         audio.playbackRate = Math.max(0.5, Math.min(2, rate));
+        audio.volume = playVolume(profile);
         audio.onended = () => setSpeaking(false);
         audio.onerror = () => setSpeaking(false);
         audioRef.current = audio;

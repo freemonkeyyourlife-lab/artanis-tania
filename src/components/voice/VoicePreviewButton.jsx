@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Loader2, Play, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { resolveVoice, cloudTuning } from "@/lib/voiceDj";
+import { resolveVoice, cloudTuning, playVolume } from "@/lib/voiceDj";
 
 const SAMPLE_TEXT = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
 
@@ -74,6 +74,7 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
       audio.preservesPitch = false;
       audio.webkitPreservesPitch = false;
       audio.playbackRate = rate;
+      audio.volume = playVolume(p);
       audio.onended = () => setState("idle");
       audio.onerror = () => setState("idle");
       audioRef.current = audio;
@@ -101,6 +102,22 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
     }
     audio.playbackRate = liveRate(profileRef.current);
   }, [tuneKey, live, isCloud]);
+
+  // Lautstärke greift sofort auf den laufenden Ton — ohne ihn neu zu erzeugen.
+  const volumeKey = live ? Number(profile?.volume ?? 100) : 0;
+  useEffect(() => {
+    if (!live || !audioRef.current) return;
+    audioRef.current.volume = playVolume(profileRef.current);
+  }, [volumeKey, live]);
+
+  // Andere Wortwahl: der Satz wird neu gesprochen, sobald du aufhörst zu tippen.
+  const textReady = useRef(false);
+  useEffect(() => {
+    if (!live) return;
+    if (!textReady.current) { textReady.current = true; return; }
+    const t = setTimeout(() => { play(); }, 1200);
+    return () => clearTimeout(t);
+  }, [text, live]);
 
   useEffect(() => () => { if (audioRef.current) audioRef.current.pause(); }, []);
 

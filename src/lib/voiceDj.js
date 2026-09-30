@@ -37,6 +37,12 @@ export function cloudTuning(profile) {
   };
 }
 
+// Lautstärke aus der Stimmbank (0–100) in den Reglerwert fürs Abspielen (0–1).
+export function playVolume(profile) {
+  const v = Number(profile?.volume);
+  return Math.max(0, Math.min(1, (Number.isFinite(v) ? v : 100) / 100));
+}
+
 // Aus einem Stimmbank-Profil die fertigen Werte fürs Vorlesen machen.
 export function resolveVoice(profile) {
   const base = BASE_VOICES.find((v) => v.id === profile?.baseVoice) || BASE_VOICES[0];

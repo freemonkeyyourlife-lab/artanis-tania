@@ -27,9 +27,10 @@ export default function VoiceTuner({ voice, onSaved }) {
   const [intensity, setIntensity] = useState(voice.intensity ?? 50);
   const [ending, setEnding] = useState(voice.ending ?? 50);
   const [speed, setSpeed] = useState(voice.speed ?? 1);
+  const [volume, setVolume] = useState(voice.volume ?? 100);
   const [testText, setTestText] = useState(TEST_TEXT);
   const [saving, setSaving] = useState(false);
-  const draft = { ...voice, mood, depth, intensity, ending, speed, sampleFile: "" };
+  const draft = { ...voice, mood, depth, intensity, ending, speed, volume, sampleFile: "" };
   const isCloud = voice.provider === "ELEVENLABS" && voice.externalVoiceId;
 
   // Aus einer Beschreibung werden die Regler — hören kannst du es direkt danach.
@@ -45,7 +46,7 @@ export default function VoiceTuner({ voice, onSaved }) {
     setSaving(true);
     // Eine automatisch abgelegte Hörprobe passt nach dem Drehen nicht mehr — die fliegt raus.
     const reset = voice.sampleCached ? { sampleFile: "", sampleCached: false } : {};
-    await base44.entities.Voice.update(voice.id, { mood, depth, intensity, ending, speed, ...reset });
+    await base44.entities.Voice.update(voice.id, { mood, depth, intensity, ending, speed, volume, ...reset });
     setSaving(false);
     onSaved();
   };
@@ -73,15 +74,18 @@ export default function VoiceTuner({ voice, onSaved }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <Slider label={`Lautstärke — ${volume} %`} value={volume} min={0} max={100} step={5} onChange={setVolume} left="leise" right="laut" />
         <Slider label={`Tonlage — ${depth > 0 ? "+" : ""}${depth}`} value={depth} min={-25} max={25} step={1} onChange={setDepth} left="tiefer" right="höher" />
         <Slider label={`Intensität — ${intensity}`} value={intensity} min={0} max={100} step={5} onChange={setIntensity} left="ruhig" right="leidenschaftlich" />
         <Slider label={`Ausklang am Satzende — ${ending}`} value={ending} min={0} max={100} step={5} onChange={setEnding} left="abgehackt" right="kommt runter" />
         <Slider label={`Tempo — ${speed.toFixed(2)}×`} value={speed} min={0.7} max={1.3} step={0.02} onChange={setSpeed} left="langsam" right="schnell" />
       </div>
       <p className="text-[11px] text-muted-foreground">
-        Drück auf Anhören und dreh dabei an den Reglern — du hörst jede Änderung sofort.
-        {!isCloud && " Tonlage und Tempo wirken bei allen Stimmen, Intensität und Ausklang bei ElevenLabs-Stimmen."}
+        Drück auf Anhören und dreh dabei an den Reglern — Lautstärke greift sofort, Tonlage, Intensität,
+        Ausklang und Tempo kommen kurz darauf nach. Tippst oder sprichst du unten einen anderen Satz ein,
+        wird er gleich neu gesprochen.
+        {!isCloud && " Intensität und Ausklang wirken nur bei ElevenLabs-Stimmen."}
       </p>
       <div className="flex items-center gap-2">
         <input
