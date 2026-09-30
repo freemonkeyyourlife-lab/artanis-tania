@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Blocks, Mic, Github, Plug, KeyRound, ShieldAlert, Sparkles, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { Archive, Blocks, Mic, Github, Plug, KeyRound, ShieldAlert, Sparkles, Image as ImageIcon, MessageSquare } from "lucide-react";
 
 // Zum Nachschlagen: wie alles zusammenhängt — Schritt für Schritt, mit den
 // genauen Stellen in der App. Nur für den Besitzer.
@@ -42,9 +42,26 @@ const SECTIONS = [
       "Fertig: Hugging Face ist verbunden. Bildmodelle und Textmodelle holst du im Studio mit einem Klick.",
       "Fertig: der kostenlose Weg ohne Konto heißt Pollinations — im Studio unter Bild-KI als Plattform wählbar, wenn du mal kein Guthaben ausgeben willst.",
       "Fertig: Zahlen über Stripe (Testmodus), Coins, Telegram-Benachrichtigungen, Videochat.",
+      "Fertig: Stimmen klonen — Aufnahme hochladen, klonen lassen, danach spricht die Stimme jeden Text. Studio → Stimmbank → Bearbeiten.",
+      "Fertig: Links per Telegram verschicken — in jedem Einladen-Fenster auf „Per Telegram senden“.",
       "Offen: GitHub — noch nicht verbunden. Sag welchen Weg du willst.",
       "Offen: weitere Verbindungen wie Google, Slack, Notion — die gibt es, sind aber noch nicht eingerichtet.",
     ],
+  },
+  {
+    icon: Archive,
+    title: "Die Archive — wo alles wiederzufinden ist",
+    intro: "Nichts geht verloren. Texte, Stimmen, Interessen, Chatverläufe und erstellte Bilder liegen jeweils an einer festen Stelle.",
+    items: [
+      "Texte: App → Studio → Reiter Inhalte. Dort stehen alle Beiträge und Storys. Was du mit dem Herz markierst, sammelt sich zusätzlich in App → Bibliothek.",
+      "Stimmen: App → Studio → Reiter Stimmbank. Jede Stimme bleibt mit Aufnahme, Schlagworten und Notiz liegen — oben in der Sprechprobe hörst du sie sofort.",
+      "Interessen: App → Besitzer-Konsole → Struktur. Das ist die Liste, aus der die Nutzer beim Start auswählen.",
+      "Chatverläufe: App → Nachrichten für die Chats der Nutzer, App → Leitstand für alles, was über Telegram hereinkommt.",
+      "Erstellte Bilder: App → Studio → Reiter Galerie. Jedes erzeugte Bild bleibt dort und lässt sich einem Charakter zuordnen.",
+      "Faustregel: Alles, was du erstellst, landet im Studio. Alles, was du markierst, landet in der Bibliothek. Von allein gelöscht wird nichts.",
+    ],
+    to: "/studio",
+    toLabel: "Direkt ins Studio",
   },
   {
     icon: Plug,
@@ -72,6 +89,11 @@ const SECTIONS = [
 ];
 
 const FIND_SPOTS = [
+  "App → Studio → Galerie: alle erstellten Bilder.",
+  "App → Studio → Stimmbank: alle Stimmen samt Aufnahme.",
+  "App → Studio → Inhalte: alle Texte, Storys und Beiträge.",
+  "App → Besitzer-Konsole → Struktur: die Liste der Interessen.",
+  "App → Nachrichten und App → Leitstand: alle Chatverläufe.",
   "Dashboard → Secrets: Schlüssel für Dienste, die keine fertige Verbindung haben.",
   "Dashboard → Integrations: Verbindungen zu fremden Diensten.",
   "Dashboard → API: die Schlüssel, die andere für deine App brauchen.",

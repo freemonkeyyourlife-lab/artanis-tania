@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { UserPlus, Copy, Check, Share2 } from "lucide-react";
+import { UserPlus, Copy, Check, Share2, Send } from "lucide-react";
+import { telegramShareUrl } from "@/lib/share";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,12 @@ export default function CallInvite({ url, code, className, label = "Einladen", o
           className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground hover:border-primary/50 transition-colors"
         >
           {copied === "text" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} Einladungstext kopieren
+        </button>
+        <button
+          onClick={() => window.open(telegramShareUrl(url, invitation), "_blank", "noopener")}
+          className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground hover:border-primary/50 transition-colors"
+        >
+          <Send className="w-4 h-4" /> Per Telegram senden
         </button>
       </DialogContent>
     </Dialog>
