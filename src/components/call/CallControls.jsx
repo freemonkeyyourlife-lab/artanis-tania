@@ -35,7 +35,9 @@ export default function CallControls({
 
       {sharing && screens?.length > 0 && (
         <div className="px-4 py-3 border-b border-border flex flex-wrap items-center justify-center gap-2">
-          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Geteilte Bildschirme</span>
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            {screens.length === 1 ? "Bildschirm geteilt — weitere möglich" : `${screens.length} Bildschirme geteilt`}
+          </span>
           {screens.map((s) => (
             <span key={s.id} className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-full bg-elevated border border-border text-xs font-semibold text-foreground">
               {s.label}
@@ -53,7 +55,7 @@ export default function CallControls({
             title="Weiteren Bildschirm dazunehmen — alle werden zusammen gezeigt"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
           >
-            <Plus className="w-3.5 h-3.5" /> Bildschirm
+            <Plus className="w-3.5 h-3.5" /> Weiterer Bildschirm
           </button>
         </div>
       )}
