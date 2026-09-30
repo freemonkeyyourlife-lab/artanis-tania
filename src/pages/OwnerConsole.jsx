@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -25,6 +25,7 @@ const TABS = [
   { id: "access", label: "Zugang", icon: KeyRound },
   { id: "channels", label: "Kanäle", icon: Link2 },
   { id: "baukasten", label: "Baukasten", icon: Blocks },
+  { id: "programmierer", label: "Programmierer", icon: BookOpen },
   { id: "data", label: "Sichern", icon: Database },
 ];
 
@@ -511,6 +512,29 @@ export default function OwnerConsole() {
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss"
             >
               <Blocks className="w-4 h-4" /> Baukasten öffnen
+            </Link>
+          </div>
+        </>
+      )}
+
+      {tab === "programmierer" && (
+        <>
+          <GuideBox
+            title="Programmierer"
+            steps={[
+              "Hier steht, wie alles zusammenhängt — zum Nachschlagen, ohne mich jedes Mal zu fragen.",
+              "Es steht auch drin, was hier geht und was nicht — damit du keine Zeit mit Sachen verbringst, die technisch nicht möglich sind.",
+              "Öffne die Seite, sobald du etwas anbauen willst.",
+            ]}
+          >
+            Alles, was du zum Weiterbauen wissen musst, an einer Stelle.
+          </GuideBox>
+          <div className="glass rounded-2xl border border-border p-5">
+            <Link
+              to="/anleitung"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss"
+            >
+              <BookOpen className="w-4 h-4" /> Anleitung öffnen
             </Link>
           </div>
         </>

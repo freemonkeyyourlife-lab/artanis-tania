@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Upload, X, Plus, Save, Loader2 } from "lucide-react";
+import { Upload, X, Plus, Save, Loader2, Mic } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Image } from "@/components/ui/image";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import PhrasePicker from "@/components/baukasten/PhrasePicker";
 import { cn } from "@/lib/utils";
 import {
   BLOCK_KINDS, SITUATION_PRESETS, VARIANT_PRESETS, MEDIA_LABEL, uploadMedia, blockMedia,
@@ -10,7 +12,7 @@ import {
 
 // Ein Baustein entsteht: Situation, Datei oder Szene — je nachdem, was du
 // daraus machen willst. Alles lässt sich später wieder ändern.
-export default function BlockForm({ initial, onSaved, onCancel }) {
+export default function BlockForm({ initial, voices = [], onSaved, onCancel }) {
   const [form, setForm] = useState({
     title: initial?.title || "",
     blockKind: initial?.blockKind || "SITUATION",
@@ -21,6 +23,7 @@ export default function BlockForm({ initial, onSaved, onCancel }) {
     mediaType: initial?.mediaType || "IMAGE",
     mediaItems: blockMedia(initial || {}),
     voiceLine: initial?.voiceLine || "",
+    voiceProfileId: initial?.voiceProfileId || "",
     tags: initial?.tags || [],
     note: initial?.note || "",
   });
@@ -253,14 +256,43 @@ export default function BlockForm({ initial, onSaved, onCancel }) {
       </div>
 
       <div>
-        <label className="text-[14px] font-bold text-foreground">Was soll die Stimme sagen?</label>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="text-[14px] font-bold text-foreground">Was soll die Stimme sagen?</label>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-elevated border-2 border-border text-[13px] font-bold text-muted-foreground hover:text-foreground transition-colors">
+                <Mic className="w-3.5 h-3.5" /> Aus der Sprechzeilen-Bank
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <PhrasePicker
+                onPick={(p) => set({ voiceLine: form.voiceLine ? form.voiceLine + " " + p.text : p.text })}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
         <textarea
           value={form.voiceLine}
           onChange={(e) => set({ voiceLine: e.target.value })}
           rows={2}
-          placeholder="Genau der Satz, den sie in dieser Situation sagt."
+          placeholder="Genau der Satz, den sie in dieser Situation sagt — oder hol dir ein Grundgerüst aus der Bank."
           className="mt-1.5 w-full rounded-2xl border-2 border-input bg-transparent px-4 py-3 text-[15px] font-semibold text-foreground resize-none focus:outline-none focus:border-primary"
         />
+        {voices.length > 0 && (
+          <div className="mt-3 max-w-md">
+            <label className="text-[13px] font-bold text-muted-foreground">Grundstimme aus der Stimmbank</label>
+            <select
+              value={form.voiceProfileId}
+              onChange={(e) => set({ voiceProfileId: e.target.value })}
+              className="mt-1.5 w-full h-11 rounded-xl border-2 border-input bg-transparent px-3 text-[15px] font-semibold text-foreground"
+            >
+              <option value="">Charakter-Stimme (Standard)</option>
+              {voices.map((v) => (
+                <option key={v.id} value={v.id}>{v.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div>

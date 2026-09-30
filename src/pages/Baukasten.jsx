@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Blocks, Package, Copy, Search, Upload } from "lucide-react";
+import { Plus, Blocks, Package, Copy, Search, Upload, Mic } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import BlockForm from "@/components/baukasten/BlockForm";
 import BlockCard from "@/components/baukasten/BlockCard";
 import KitBuilder from "@/components/baukasten/KitBuilder";
 import KitCard from "@/components/baukasten/KitCard";
+import PhraseBank from "@/components/baukasten/PhraseBank";
 import { exportKit, readKitFile, cloneKit, BLOCK_KINDS } from "@/lib/baukasten";
 
 const TABS = [
   { id: "blocks", label: "Bausteine", icon: Blocks },
   { id: "kits", label: "Meine Baukästen", icon: Package },
   { id: "clone", label: "Nachbauen", icon: Copy },
+  { id: "phrases", label: "Sprechzeilen", icon: Mic },
 ];
 
 // Der Baukasten: Bausteine anlegen, zu Paketen zusammensetzen, andere
@@ -22,6 +24,8 @@ export default function Baukasten() {
   const [me, setMe] = useState(null);
   const [blocks, setBlocks] = useState([]);
   const [kits, setKits] = useState([]);
+  const [phrases, setPhrases] = useState([]);
+  const [voices, setVoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
@@ -38,14 +42,18 @@ export default function Baukasten() {
 
   const load = async () => {
     try {
-      const [user, blockData, kitData] = await Promise.all([
+      const [user, blockData, kitData, phraseData, voiceData] = await Promise.all([
         base44.auth.me().catch(() => null),
         base44.entities.BuildBlock.list("-created_date", 300),
         base44.entities.BuildKit.list("-created_date", 200),
+        base44.entities.VoicePhrase.list("-created_date", 300),
+        base44.entities.Voice.list(),
       ]);
       setMe(user);
       setBlocks(blockData);
       setKits(kitData);
+      setPhrases(phraseData);
+      setVoices(voiceData);
       const params = new URLSearchParams(window.location.search);
       if (params.get("kit")) setTab("clone");
     } catch (e) {
@@ -151,7 +159,10 @@ export default function Baukasten() {
       <div className="glass flex flex-wrap gap-1 p-1.5 rounded-2xl border border-border w-fit mb-6">
         {TABS.map((t) => {
           const Icon = t.icon;
-          const count = t.id === "blocks" ? myBlocks.length : t.id === "kits" ? myKits.length : sharedKits.length;
+          const count = t.id === "blocks" ? myBlocks.length
+            : t.id === "kits" ? myKits.length
+            : t.id === "phrases" ? phrases.length
+            : sharedKits.length;
           return (
             <button
               key={t.id}
@@ -205,6 +216,7 @@ export default function Baukasten() {
           {blockForm && (
             <div className="mb-6">
               <BlockForm
+                voices={voices}
                 initial={blockForm.id ? blockForm : null}
                 onSaved={() => { setBlockForm(null); setNotice("Baustein gespeichert."); load(); }}
                 onCancel={() => setBlockForm(null)}
@@ -282,6 +294,10 @@ export default function Baukasten() {
             </div>
           )}
         </>
+      )}
+
+      {tab === "phrases" && (
+        <PhraseBank phrases={phrases} voices={voices} onChange={load} />
       )}
 
       {tab === "clone" && (

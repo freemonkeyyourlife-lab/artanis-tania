@@ -1,0 +1,77 @@
+{
+  "name": "VoicePhrase",
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string"
+    },
+    "situation": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "ANKOMMEN",
+        "SMALLTALK",
+        "ANMACHE",
+        "HEISS",
+        "ESKALATION",
+        "ABSCHLUSS"
+      ],
+      "default": "ANKOMMEN"
+    },
+    "voice": {
+      "type": "string",
+      "enum": [
+        "river",
+        "honey",
+        "sunny",
+        "storm",
+        "spark"
+      ],
+      "default": "honey"
+    },
+    "voiceProfileId": {
+      "type": "string"
+    },
+    "audioUrl": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "favorite": {
+      "type": "boolean",
+      "default": false
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "text",
+    "stage"
+  ],
+  "rls": {
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

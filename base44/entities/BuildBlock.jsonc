@@ -53,6 +53,9 @@
     "voiceLine": {
       "type": "string"
     },
+    "voiceProfileId": {
+      "type": "string"
+    },
     "tags": {
       "type": "array",
       "items": {
