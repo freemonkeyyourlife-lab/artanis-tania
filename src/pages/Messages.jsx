@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Play, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Loader2, Banknote, Cast } from "lucide-react";
+import { Send, Play, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Phone, Loader2, Banknote, Cast } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -1533,6 +1533,11 @@ export default function Messages() {
                 {viewMode === "ai" && (
                   <Link to={`/ai-call/${activeChat}`} title="Videochat starten" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-primary transition-colors">
                     <Video className="w-4 h-4" />
+                  </Link>
+                )}
+                {viewMode === "ai" && (
+                  <Link to={`/ai-call/${activeChat}?audio=1`} title="Sprachanruf starten — nur Ton, zurück in den Chat mit dem Hörer" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-primary transition-colors">
+                    <Phone className="w-4 h-4" />
                   </Link>
                 )}
                 {viewMode === "ai" && (

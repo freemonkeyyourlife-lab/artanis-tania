@@ -75,6 +75,7 @@ export default function AiVideoCall() {
 
   // Eigene Kamera als kleines Fenster — sie sieht dich.
   useEffect(() => {
+    if (audioOnly) return;
     let cancelled = false;
     (async () => {
       try {
@@ -136,9 +137,9 @@ export default function AiVideoCall() {
     try {
       const hist = history.slice(-8).map((h) => `${h.role === "user" ? "Er" : "Du"}: ${h.text}`).join("\n");
       const prompt =
-        LANGUAGE_RULE +
+        LANGUAGE_RULE(audioOnly) +
         `\n\nDu bist ${creator?.stageName}. ${creator?.bio || ""}` +
-        `\n\nDas hier ist ein Videochat — du siehst ihn vor dir. Sei präsent, frag nach, halte das Gespräch am Laufen, werde langsam deutlicher und direkter.` +
+        `\n\nDas hier ist ${audioOnly ? "ein Telefonat — du hörst ihn, siehst ihn aber nicht" : "ein Videochat — du siehst ihn vor dir"}. Sei präsent, frag nach, halte das Gespräch am Laufen, werde langsam deutlicher und direkter.` +
         (hist ? `\n\nBISHER:\n${hist}` : "") +
         (userText ? `\n\nEr sagt gerade: "${userText}"` : "\n\nDu hebst gerade ab — begrüße ihn kurz und persönlich.");
       const res = await base44.integrations.Core.InvokeLLM({ prompt });
@@ -147,7 +148,7 @@ export default function AiVideoCall() {
       setLine(clean);
       playLine(clean);
       setHistory((h) => [...h, ...(userText ? [{ role: "user", text: userText }] : []), { role: "ai", text: clean }]);
-      newFrame(clean.slice(0, 160));
+      if (!audioOnly) newFrame(clean.slice(0, 160));
     } catch (e) {
       console.error(e);
     } finally {
@@ -163,7 +164,7 @@ export default function AiVideoCall() {
 
   // Das Bild lebt: alle paar Sekunden eine neue Aufnahme aus einer anderen Position.
   useEffect(() => {
-    if (!creator) return;
+    if (!creator || audioOnly) return;
     const t = setInterval(() => newFrame(""), 12000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,8 +224,8 @@ export default function AiVideoCall() {
       <div className="fixed inset-0 bg-background flex items-center justify-center p-6">
         <div className="max-w-sm text-center">
           <Lock className="w-10 h-10 text-primary mx-auto mb-4" />
-          <h1 className="font-display text-2xl text-foreground mb-2">Videochat</h1>
-          <p className="text-sm text-muted-foreground">Videochat ist ein Pro-Feature. Mit Pro-Zugang ist es für dich frei.</p>
+          <h1 className="font-display text-2xl text-foreground mb-2">{audioOnly ? "Sprachanruf" : "Videochat"}</h1>
+          <p className="text-sm text-muted-foreground">{audioOnly ? "Sprachanruf" : "Videochat"} ist ein Pro-Feature. Mit Pro-Zugang ist es für dich frei.</p>
         </div>
       </div>
     );
@@ -236,22 +237,39 @@ export default function AiVideoCall() {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           <span className="text-sm font-medium">{creator?.stageName}</span>
+          <span className="text-[11px] text-white/50">{audioOnly ? "Sprachanruf" : "Videochat"}</span>
         </div>
         <span className="text-xs text-white/60">{voice?.name ? `${voice.name} · ` : ""}{clock}</span>
       </div>
 
       <div className="relative flex-1 overflow-hidden">
-        {frame ? (
+        {audioOnly && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative">
+              <span className="absolute inset-0 rounded-full bg-primary/25 animate-ping" />
+              {creator?.avatar ? (
+                <Image src={creator.avatar} fittingType="fit" className="relative w-40 h-40 sm:w-60 sm:h-60 rounded-full border-2 border-white/20" />
+              ) : (
+                <div className="relative w-40 h-40 sm:w-60 sm:h-60 rounded-full bg-elevated border-2 border-white/20 flex items-center justify-center font-display text-5xl text-primary">
+                  {creator?.stageName?.[0]}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {!audioOnly && (frame ? (
           <Image src={frame} fittingType="fit" className="absolute inset-0 w-full h-full" />
         ) : (
           <div className="absolute inset-0 bg-elevated" />
-        )}
+        ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
 
-        <div className="absolute top-4 right-4 w-28 h-40 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border border-white/20 bg-black/60">
-          <video ref={selfRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-          {!camReady && <div className="absolute inset-0 flex items-center justify-center text-[10px] text-white/50 text-center px-2">Kamera aus</div>}
-        </div>
+        {!audioOnly && (
+          <div className="absolute top-4 right-4 w-28 h-40 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border border-white/20 bg-black/60">
+            <video ref={selfRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+            {!camReady && <div className="absolute inset-0 flex items-center justify-center text-[10px] text-white/50 text-center px-2">Kamera aus</div>}
+          </div>
+        )}
 
         {(busy || transcribing) && (
           <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 text-white text-xs">
