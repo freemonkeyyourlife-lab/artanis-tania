@@ -1,11 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Lock, Users } from "lucide-react";
-import { THERAPY_MODES, INTENSITIES } from "@/lib/therapyPrompts";
+import { Lock, Users, Radio } from "lucide-react";
+import { THERAPY_MODES, formatLabel, therapistName } from "@/lib/therapyPrompts";
 
 export default function SessionCard({ session, own = false }) {
   const mode = THERAPY_MODES.find((m) => m.value === session.mode);
-  const intensity = INTENSITIES.find((i) => i.value === session.intensity);
+  const name = therapistName(session);
 
   return (
     <Link
@@ -14,10 +14,19 @@ export default function SessionCard({ session, own = false }) {
     >
       <div className="flex items-center gap-2 flex-wrap mb-2">
         <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold">
-          {session.roleSetup === "USER_THERAPIST" ? "Du führst" : "Triania führt"}
+          {session.roleSetup === "USER_THERAPIST" ? "Du führst" : `${name} führt`}
         </span>
+        {(session.format || "EINZEL") === "SERIE" && (
+          <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">
+            {session.seriesTitle ? `${session.seriesTitle} · ` : ""}{formatLabel(session)}
+          </span>
+        )}
         {mode && <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">{mode.label}</span>}
-        {intensity && <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">{intensity.label}</span>}
+        {(session.liveMode || "OFF") !== "OFF" && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-destructive/15 text-destructive text-[11px] font-bold">
+            <Radio className="w-3 h-3" /> Live
+          </span>
+        )}
         {session.status === "DONE" && (
           <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">beendet</span>
         )}

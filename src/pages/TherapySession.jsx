@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Eye, EyeOff, Download, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TherapyThread from "@/components/therapy/TherapyThread";
-import { buildTherapyPrompt, THERAPY_MODES, INTENSITIES, ROLE_SETUPS, FREILAUF_PROMPT, roleLabel } from "@/lib/therapyPrompts";
+import { buildTherapyPrompt, THERAPY_MODES, INTENSITIES, ROLE_SETUPS, FREILAUF_PROMPT, roleLabel, therapistName } from "@/lib/therapyPrompts";
 import SessionControls from "@/components/therapy/SessionControls";
+import SessionPlan from "@/components/therapy/SessionPlan";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import ReadAloudButton from "@/components/ReadAloudButton";
+import { downloadSession } from "@/lib/therapyExport";
+import { newCallCode } from "@/lib/callLink";
+import { publicName } from "@/lib/displayName";
+import { useCallSession } from "@/lib/CallContext";
 
 const CLIENT_LINES = [
   "Weiter fragen",
@@ -45,6 +50,8 @@ export default function TherapySession() {
   const bottomRef = useRef(null);
   const openedRef = useRef(false);
   const messagesRef = useRef([]);
+  const navigate = useNavigate();
+  const call = useCallSession();
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -82,9 +89,21 @@ export default function TherapySession() {
   const isOwner = !!me && !!session && (session.userId === me.id || session.created_by_id === me.id);
   const canWrite = isOwner && session?.status !== "DONE";
 
+  // Live gehen: derselbe Video-Call-Raum, den die Zuschauer von hier aus öffnen.
+  const goLive = () => {
+    if (!session) return;
+    const token = session.liveToken || newCallCode();
+    if (!session.liveToken) {
+      base44.entities.TherapySession.update(session.id, { liveToken: token }).catch(() => {});
+      setSession((s) => ({ ...s, liveToken: token }));
+    }
+    call.start({ token, roomNumber: 1, name: publicName(me, "Therapeutin") });
+    navigate(`/call/${token}?r=1`);
+  };
+
   const buildHistory = (list) => list
     .filter((m) => m.senderType !== "GUEST")
-    .map((m) => `${m.senderType === "AI" ? "Triania" : "Klient"}: ${m.text}`)
+    .map((m) => `${m.senderType === "AI" ? therapistName(session) : "Klient"}: ${m.text}`)
     .join("\n");
 
   const buildGuests = (list) => list.filter((m) => m.senderType === "GUEST").slice(-5).map((m) => m.text);
@@ -96,7 +115,7 @@ export default function TherapySession() {
     const created = await base44.entities.TherapyMessage.create({
       sessionId: session.id,
       senderType: "AI",
-      senderName: "Triania",
+      senderName: therapistName(session),
       text: cleanText,
       suggestions: suggestions || [],
     });
@@ -247,6 +266,7 @@ export default function TherapySession() {
 
   const mode = THERAPY_MODES.find((m) => m.value === session.mode);
   const intensity = INTENSITIES.find((i) => i.value === session.intensity);
+  const name = therapistName(session);
   const quickLines = session.roleSetup === "USER_THERAPIST" ? THERAPIST_LINES : CLIENT_LINES;
   const lastAi = [...messages].reverse().find((m) => m.senderType === "AI");
   const isLast = messages.length > 0 && messages[messages.length - 1]?.id === lastAi?.id;
@@ -257,23 +277,13 @@ export default function TherapySession() {
         <ArrowLeft className="w-3.5 h-3.5" /> Sprechstunde
       </Link>
 
+      <SessionPlan session={session} />
+
       <div className="rounded-2xl border border-border bg-card p-4 mb-4">
-        <div className="flex items-center gap-2 flex-wrap mb-2">
-          <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold">
-            {roleLabel(session)}
-          </span>
-          {mode && <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">{mode.label}</span>}
-          {intensity && <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">{intensity.label}</span>}
-          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            {session.visibility === "PRIVATE" ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-            {session.visibility === "PRIVATE" ? "vertraulich" : "offen für Mitleser"}
-          </span>
-          {session.status === "DONE" && (
-            <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">beendet</span>
-          )}
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setHandsFree((v) => !v)}
-            title="Triania liest ihre Sätze laut vor und deine Stimme wird direkt gesendet"
+            title={`${name} liest ihre Sätze laut vor und deine Stimme wird direkt gesendet`}
             className={cn(
               "px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-colors",
               handsFree ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"
@@ -282,12 +292,47 @@ export default function TherapySession() {
             {handsFree ? "Freisprechen ✓" : "Freisprechen"}
           </button>
           <ReadAloudButton text={lastAi?.text} voice="honey" autoPlay={handsFree} className="px-2.5 py-1.5 rounded-full bg-elevated" />
+          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            {session.visibility === "PRIVATE" ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+            {session.visibility === "PRIVATE" ? "vertraulich" : "offen für Mitleser"}
+          </span>
+          {session.status === "DONE" && (
+            <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">beendet</span>
+          )}
+
+          {(session.liveMode || "OFF") !== "OFF" && isOwner && (
+            <button
+              onClick={goLive}
+              title="Auf Sendung gehen — die Zuschauer öffnen denselben Raum von dieser Seite aus"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive text-white text-[11px] font-bold"
+            >
+              <Radio className="w-3.5 h-3.5" /> Live gehen · {session.liveMode === "CAM" ? "Cam zu Cam" : "nur Stream"}
+            </button>
+          )}
+          {(session.liveMode || "OFF") !== "OFF" && !isOwner && session.liveToken && (
+            <Link
+              to={`/call/${session.liveToken}?r=1`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive text-white text-[11px] font-bold"
+            >
+              <Radio className="w-3.5 h-3.5" /> Live zuschauen
+            </Link>
+          )}
+
+          <button
+            onClick={() => downloadSession(session, messages)}
+            title="Die ganze Sitzung als Datei — Plan, Besetzung und Verlauf"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated text-muted-foreground text-[11px] font-semibold hover:text-foreground transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" /> Herunterladen
+          </button>
+
           {isOwner && session.status !== "DONE" && (
             <button onClick={endSession} className="ml-auto text-xs text-muted-foreground hover:text-foreground">
               Sitzung beenden
             </button>
           )}
         </div>
+
         {isOwner && session.status !== "DONE" && (
           <div className="mt-3 pt-3 border-t border-border">
             <SessionControls
@@ -301,9 +346,8 @@ export default function TherapySession() {
             />
           </div>
         )}
-        <p className="text-[15px] text-foreground leading-snug mt-3">{session.topic}</p>
-        {session.goal && <p className="text-xs text-muted-foreground mt-1">Erhofft sich: {session.goal}</p>}
-        <p className="text-xs text-muted-foreground mt-1">
+
+        <p className="text-xs text-muted-foreground mt-3">
           {session.anonymous ? "Anonym" : session.userName || "Unbekannt"}
         </p>
       </div>
@@ -317,7 +361,7 @@ export default function TherapySession() {
 
         {sending && (
           <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Triania überlegt …
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> {name} überlegt …
           </div>
         )}
 

@@ -16,7 +16,8 @@
       "type": "string",
       "enum": [
         "TRIANIA_THERAPIST",
-        "USER_THERAPIST"
+        "USER_THERAPIST",
+        "BOTH_PROBANDS"
       ],
       "default": "TRIANIA_THERAPIST"
     },
@@ -25,15 +26,73 @@
       "enum": [
         "GUIDED",
         "OPEN",
-        "ROLEPLAY"
+        "ROLEPLAY",
+        "R\u00dcCKBLICK"
       ],
       "default": "GUIDED"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "EINZEL",
+        "SERIE"
+      ],
+      "default": "EINZEL"
+    },
+    "seriesTitle": {
+      "type": "string"
+    },
+    "episodeNumber": {
+      "type": "number",
+      "default": 1
+    },
+    "episodeCount": {
+      "type": "number"
     },
     "topic": {
       "type": "string"
     },
     "goal": {
       "type": "string"
+    },
+    "agenda": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "clientAge": {
+      "type": "string"
+    },
+    "agreement": {
+      "type": "string"
+    },
+    "therapistId": {
+      "type": "string"
+    },
+    "therapistName": {
+      "type": "string"
+    },
+    "therapistAvatar": {
+      "type": "string"
+    },
+    "therapistAge": {
+      "type": "number"
+    },
+    "therapistType": {
+      "type": "string"
+    },
+    "therapistStyle": {
+      "type": "string"
+    },
+    "therapistRole": {
+      "type": "string"
+    },
+    "cast": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
     "intensity": {
       "type": "string",
@@ -59,6 +118,18 @@
         "PUBLIC"
       ],
       "default": "PUBLIC"
+    },
+    "liveMode": {
+      "type": "string",
+      "enum": [
+        "OFF",
+        "CAM",
+        "STREAM"
+      ],
+      "default": "OFF"
+    },
+    "liveToken": {
+      "type": "string"
     },
     "lastMessageAt": {
       "type": "string",

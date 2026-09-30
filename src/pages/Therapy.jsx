@@ -46,8 +46,9 @@ export default function Therapy() {
         <p className="text-[11px] font-semibold tracking-wider uppercase text-primary mb-2">Sprechstunde</p>
         <h1 className="font-display text-3xl text-foreground">Sexualtherapie</h1>
         <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-          Eine Couch, eine Sitzung, kein Smalltalk. Du gibst vor, worum es geht — Triania führt als Therapeutin,
-          oder du führst und sie legt sich hin. Wer will, lässt andere mitlesen und mitreden.
+          Eine Couch, kein Smalltalk. Du baust die Sitzung: welche Therapeutin (oder deine eigene, mit Foto),
+          das Thema, den Ablauf, wie sie antwortet, wer mit im Raum ist, wo ihr seid und was vereinbart ist.
+          Als Einzelsitzung oder als Serie. Wer will, lässt andere mitlesen — oder live zuschauen.
         </p>
       </div>
 
