@@ -6,6 +6,7 @@ import StatusBadge from "@/components/StatusBadge";
 import UserInvite from "@/components/admin/UserInvite";
 import PurchaseRequests from "@/components/admin/PurchaseRequests";
 import CreatorToggleList from "@/components/admin/CreatorToggleList";
+import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
 import { cn } from "@/lib/utils";
 
 export default function Admin() {
@@ -188,6 +189,16 @@ export default function Admin() {
             „Deaktivieren" nimmt jemanden aus der App, „Animiert" schaltet zwischen Foto und gezeichneter Figur.
           </p>
           <CreatorToggleList creators={creators} onChanged={loadData} />
+        </div>
+
+        {/* Stimmen-Editor: Tonlage und Intensität je Charakter */}
+        <div className="p-5 rounded-2xl border border-border bg-card lg:col-span-2">
+          <h2 className="font-display text-xl text-foreground mb-1">Stimmen-Editor</h2>
+          <p className="text-xs text-muted-foreground mb-4">
+            Charakter wählen, Stimme zuordnen, dann „Tonlage &amp; Intensität einstellen" — drehen, anhören, speichern.
+            Die Einstellung gilt für Chat, Videochat und Telegram.
+          </p>
+          <VoiceByCharacter />
         </div>
 
         {/* Users & Invites */}
