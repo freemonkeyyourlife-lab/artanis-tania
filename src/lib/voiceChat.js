@@ -35,6 +35,39 @@ export function setVoiceNotesOn(creatorId, on) {
   try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) { /* ignore */ }
 }
 
+// „Meine Stimme umwandeln" — deine Sprachnachricht geht direkt mit der Stimme
+// des Charakters raus, ohne Zwischenschritt. Ebenfalls pro Charakter gemerkt.
+const MINE_KEY = "artanis_voice_convert";
+let mineCache = null;
+
+function readMine() {
+  if (mineCache) return mineCache;
+  try { mineCache = JSON.parse(localStorage.getItem(MINE_KEY) || "{}"); } catch (e) { mineCache = {}; }
+  return mineCache;
+}
+
+// Hat der Nutzer den Schalter selbst angefasst?
+export function myVoiceConvertDecided(creatorId) {
+  const v = creatorId ? readMine()[creatorId] : undefined;
+  return v === true || v === false;
+}
+
+// Automatisch an, sobald der Charakter eine Stimme hat.
+export function myVoiceConvertOn(creatorId, hasVoice = false) {
+  if (!creatorId) return false;
+  const v = readMine()[creatorId];
+  if (v === true) return true;
+  if (v === false) return false;
+  return !!hasVoice;
+}
+
+export function setMyVoiceConvertOn(creatorId, on) {
+  if (!creatorId) return;
+  const all = { ...readMine(), [creatorId]: !!on };
+  mineCache = all;
+  try { localStorage.setItem(MINE_KEY, JSON.stringify(all)); } catch (e) { /* ignore */ }
+}
+
 // Text mit der Stimme des Charakters sprechen. Eine ElevenLabs-Stimme klingt
 // genau wie in der Stimmbank eingestellt, eine Grundstimme läuft über die
 // eingebaute Sprachausgabe.

@@ -16,7 +16,9 @@ import CharacterSuggestion from "@/components/CharacterSuggestion";
 import ReadAloudButton from "@/components/ReadAloudButton";
 import VoiceChatBar from "@/components/voice/VoiceChatBar";
 import VoiceConvertButton from "@/components/voice/VoiceConvertButton";
-import { speakAsVoice, voiceNotesOn } from "@/lib/voiceChat";
+import VoiceConvertToggle from "@/components/voice/VoiceConvertToggle";
+import useVoiceRecorder from "@/hooks/useVoiceRecorder";
+import { speakAsVoice, voiceNotesOn, myVoiceConvertOn, myVoiceConvertDecided, setMyVoiceConvertOn } from "@/lib/voiceChat";
 import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
 import { CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
@@ -326,6 +328,10 @@ export default function Messages() {
     return voices.find((v) => v.id === creator?.voiceProfileId) || null;
   };
 
+  // Wer hier schreibt, und mit welcher Stimme er gerade klingt.
+  const activeCreator = creators.find((c) => c.id === activeChat) || null;
+  const activeProfile = voiceProfileFor(activeChat);
+
   const buildContext = () => {
     const persona = PERSONA_MODES[chatMode];
 
@@ -474,6 +480,45 @@ export default function Messages() {
     setSetupInput("");
     setSetupStep(prev => prev + 1);
   };
+
+  // Ist der Schalter an, geht deine Aufnahme sofort mit der Stimme des
+  // Charakters raus — sonst tippt das Mikrofon wie gewohnt nur den Text ein.
+  const [convertVoice, setConvertVoice] = useState(false);
+
+  useEffect(() => {
+    if (!activeChat) return;
+    if (!myVoiceConvertDecided(activeChat)) setConvertVoice(myVoiceConvertOn(activeChat, !!voiceProfileFor(activeChat)));
+  }, [activeChat, voices]);
+
+  const toggleVoiceConvert = (next) => {
+    setConvertVoice(next);
+    setMyVoiceConvertOn(activeChat, next);
+  };
+
+  const convertRecorder = useVoiceRecorder(async (fileUri) => {
+    const profile = voiceProfileFor(activeChat);
+    const character = creators.find((c) => c.id === activeChat) || null;
+    if (!profile) {
+      toast({ title: "Keine Stimme hinterlegt", description: "Ordne dem Charakter zuerst in der Stimmbank eine Stimme zu.", variant: "destructive" });
+      return;
+    }
+    try {
+      const res = await base44.functions.invoke("voiceConvert", {
+        fileUri,
+        voiceId: profile.externalVoiceId || "",
+        baseVoice: profile.baseVoice || "honey",
+        mood: profile.mood,
+        intensity: profile.intensity,
+        ending: profile.ending,
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+      await sendVoiceAsCharacter(res.data.url, character);
+    } catch (e) {
+      toast({ title: "Umwandeln hat nicht geklappt", description: e.message || "Bitte noch einmal versuchen.", variant: "destructive" });
+    }
+  });
+
+  const voiceNoteMode = convertVoice && !!activeProfile;
 
   const toggleRecording = async () => {
     if (isRecording) {
@@ -1666,14 +1711,36 @@ export default function Messages() {
                     </DialogContent>
                   </Dialog>
                 )}
-                <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
+                <VoiceConvertToggle
+                  on={voiceNoteMode}
+                  onChange={toggleVoiceConvert}
+                  disabled={!activeProfile}
+                  characterName={activeCreator?.stageName}
+                />
+                <button
+                  onClick={() => (voiceNoteMode ? convertRecorder.toggle("meine-stimme.webm") : toggleRecording())}
+                  disabled={sending || transcribing}
+                  title={voiceNoteMode ? `Aufnehmen — geht mit der Stimme von ${activeCreator?.stageName || "dem Charakter"} raus` : "Sprache in Text umwandeln"}
+                  className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors",
+                    (voiceNoteMode ? convertRecorder.recording : isRecording)
+                      ? "bg-red-500 text-white animate-pulse"
+                      : voiceNoteMode
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-elevated text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {voiceNoteMode
+                    ? (convertRecorder.busy ? <Loader2 className="w-4 h-4 animate-spin" /> : convertRecorder.recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />)
+                    : (isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />)}
+                </button>
                 <VoiceConvertButton
                   creators={creators}
                   creator={creators.find((c) => c.id === activeChat) || null}
                   onConverted={sendVoiceAsCharacter}
                   disabled={sending}
                 />
-                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : takeover ? `Du schreibst als ${creators.find(c => c.id === activeChat)?.stageName || "Charakter"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
+                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={convertRecorder.busy ? "Wird umgewandelt …" : convertRecorder.recording ? "Aufnahme läuft — Mikrofon tippen zum Senden" : transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : takeover ? `Du schreibst als ${creators.find(c => c.id === activeChat)?.stageName || "Charakter"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing || convertRecorder.recording || convertRecorder.busy} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingFiles.length) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
               </>
