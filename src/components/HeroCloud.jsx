@@ -1,25 +1,25 @@
 import React from "react";
 import { Image } from "@/components/ui/image";
 
-// V-Form: die Mitte groß und nah, nach außen kleiner, tiefer und schmaler.
-// So laufen die Konturen in die Flucht — keine Kante, kein Rahmen, kein Kasten.
+// Fächer: die Mitte groß und klar, nach außen nur etwas kleiner und tiefer.
+// Kein Zusammenschieben — jeder bleibt ganz sichtbar.
 const SLOTS = [
-  { w: 132, h: 188, drop: 78, rot: 30, z: 11, dim: 0.34 },
-  { w: 176, h: 248, drop: 46, rot: 20, z: 15, dim: 0.6 },
-  { w: 234, h: 320, drop: 16, rot: 10, z: 20, dim: 0.84 },
-  { w: 430, h: 352, drop: 0, rot: 0, z: 30, dim: 1 },
-  { w: 234, h: 320, drop: 16, rot: -10, z: 20, dim: 0.84 },
-  { w: 176, h: 248, drop: 46, rot: -20, z: 15, dim: 0.6 },
-  { w: 132, h: 188, drop: 78, rot: -30, z: 11, dim: 0.34 },
+  { w: 152, h: 212, drop: 74, z: 11, dim: 0.42 },
+  { w: 202, h: 282, drop: 42, z: 15, dim: 0.68 },
+  { w: 262, h: 352, drop: 14, z: 20, dim: 0.9 },
+  { w: 448, h: 400, drop: 0, z: 30, dim: 1 },
+  { w: 262, h: 352, drop: 14, z: 20, dim: 0.9 },
+  { w: 202, h: 282, drop: 42, z: 15, dim: 0.68 },
+  { w: 152, h: 212, drop: 74, z: 11, dim: 0.42 },
 ];
 
 // Jede Kante ein bisschen anders — nichts sieht gleichmäßig abgeschnitten aus.
 const MIST = [
-  "radial-gradient(92% 84% at 50% 48%, #000 20%, transparent 64%)",
-  "radial-gradient(96% 88% at 50% 46%, #000 22%, transparent 66%)",
-  "radial-gradient(94% 90% at 51% 45%, #000 24%, transparent 68%)",
-  "radial-gradient(102% 94% at 50% 47%, #000 28%, transparent 72%)",
-  "radial-gradient(95% 87% at 49% 46%, #000 22%, transparent 66%)",
+  "radial-gradient(88% 82% at 50% 50%, #000 18%, transparent 62%)",
+  "radial-gradient(92% 86% at 50% 48%, #000 20%, transparent 64%)",
+  "radial-gradient(90% 88% at 51% 47%, #000 22%, transparent 66%)",
+  "radial-gradient(100% 92% at 50% 48%, #000 30%, transparent 74%)",
+  "radial-gradient(91% 85% at 49% 48%, #000 20%, transparent 64%)",
 ];
 
 export default function HeroCloud({ images = [], center }) {
@@ -33,48 +33,50 @@ export default function HeroCloud({ images = [], center }) {
   if (!items.length) return null;
 
   return (
-    <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-center pointer-events-none select-none overflow-hidden">
-      {/* Warmes Licht hinter der Mitte — darin leuchten die Konturen auf. */}
-      <div
-        className="absolute top-[90px] left-1/2 -translate-x-1/2 w-[720px] h-[420px] blur-3xl"
-        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(226,149,120,0.3), transparent 70%)" }}
-      />
-      {items.map((it, i) => {
-        const s = SLOTS[i] || SLOTS[SLOTS.length - 1];
-        const mask = MIST[i % MIST.length];
-        return (
-          <div
-            key={`${it.src}-${i}`}
-            className="relative flex-shrink-0 animate-hero-pop"
-            style={{
-              width: `${s.w}px`,
-              height: `${s.h}px`,
-              marginLeft: i === 0 ? 0 : `-${Math.round(s.w * 0.2)}px`,
-              marginTop: `${s.drop}px`,
-              zIndex: s.z,
-              opacity: s.dim,
-              animationDelay: `${i * 0.14}s`,
-            }}
-          >
+    <div className="absolute inset-x-0 top-0 z-10 pointer-events-none select-none overflow-hidden">
+      <div className="flex items-start justify-center origin-top scale-[0.5] sm:scale-75 lg:scale-100">
+        {items.map((it, i) => {
+          const s = SLOTS[i] || SLOTS[SLOTS.length - 1];
+          const mask = MIST[i % MIST.length];
+          return (
             <div
-              className="w-full h-full"
+              key={`${it.src}-${i}`}
+              className="relative flex-shrink-0 animate-hero-pop"
               style={{
-                transform: `perspective(1500px) rotateY(${s.rot}deg)`,
-                transformOrigin: "50% 65%",
-                WebkitMaskImage: mask,
-                maskImage: mask,
+                width: `${s.w}px`,
+                height: `${s.h}px`,
+                marginLeft: i === 0 ? 0 : `-${Math.round(s.w * 0.1)}px`,
+                marginTop: `${s.drop}px`,
+                zIndex: s.z,
+                opacity: s.dim,
+                animationDelay: `${i * 0.14}s`,
               }}
             >
-              <Image
-                src={it.src}
-                fittingType="fill"
-                focalPointY={it.hero ? 0.5 : 0.28}
-                className="w-full h-full"
+              {/* Goldener Schimmer — die Figuren leuchten von hinten an. */}
+              <div
+                className="absolute -inset-8 blur-2xl"
+                style={{ background: "radial-gradient(50% 50% at 50% 55%, rgba(226,149,120,0.5), transparent 72%)" }}
               />
+              <div
+                className="relative w-full h-full"
+                style={{ WebkitMaskImage: mask, maskImage: mask }}
+              >
+                <Image
+                  src={it.src}
+                  fittingType="fill"
+                  focalPointY={it.hero ? 0.45 : 0.28}
+                  className="w-full h-full"
+                />
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      {/* Glänzende Glasoptik darüber — ein weicher Schimmer, keine Kante. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(112deg, transparent 24%, rgba(255,255,255,0.07) 40%, rgba(255,255,255,0.02) 56%, transparent 72%)" }}
+      />
     </div>
   );
 }

@@ -24,7 +24,7 @@ const HERO_CLOUD = [
 ];
 
 // Die Mitte: wir zwei, nah und groß.
-const HERO_CENTER = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/fd7ec00d6_generated_image.png";
+const HERO_CENTER = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/9795fbefc_generated_image.png";
 
 // Frische Motive für die Teaser oben — Bilder, die noch niemand gesehen hat.
 const TEASER_IMAGES = [
