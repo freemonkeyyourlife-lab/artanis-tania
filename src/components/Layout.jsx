@@ -1,29 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut, ChevronDown } from "lucide-react";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import HeaderNav, { buildNavGroups } from "@/components/nav/HeaderNav";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
 import { hasProAccess, localProActive } from "@/lib/proAccess";
 import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
-
-const NAV_LINKS = [
-  { label: "Home", path: "/" },
-  { label: "Nachrichten", path: "/messages" },
-  { label: "Wettbewerbe", path: "/contests" },
-  { label: "Profil", path: "/profile" },
-  { label: "Verwaltung", path: "/admin" },
-  { label: "Studio", path: "/studio" },
-  { label: "Leitstand", path: "/leitstand" },
-];
-
-const PERSONA_LINKS = [
-  { label: "Artanis", path: "/artanis" },
-  { label: "Triania", path: "/triania" },
-  { label: "Couple", path: "/couple" },
-];
 
 const MORE_LINKS = [
   { label: "Dockingstation", path: "/dock" },
@@ -43,12 +27,6 @@ const MORE_LINKS = [
   { label: "Bibliothek", path: "/library" },
 ];
 
-const MOBILE_LINKS = [
-  ...PERSONA_LINKS,
-  ...NAV_LINKS.slice(1),
-  ...MORE_LINKS,
-];
-
 const MOBILE_NAV = [
   { icon: Home, label: "Start", path: "/" },
   { icon: Sparkles, label: "Interaktiv", path: "/interactive" },
@@ -61,6 +39,7 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [me, setMe] = useState(null);
   const [memberStatus, setMemberStatus] = useState(null);
   const [incomingCount, setIncomingCount] = useState(0);
   const [waitingChats, setWaitingChats] = useState(0);
@@ -73,7 +52,10 @@ export default function Layout() {
 
   useEffect(() => {
     base44.auth.me()
-      .then((me) => setMemberStatus(hasProAccess(me) ? "GOLD" : (me?.memberStatus || "STANDARD")))
+      .then((user) => {
+        setMe(user);
+        setMemberStatus(hasProAccess(user) ? "GOLD" : (user?.memberStatus || "STANDARD"));
+      })
       .catch(() => setMemberStatus(localProActive() ? "GOLD" : "STANDARD"));
   }, []);
 
@@ -109,7 +91,8 @@ export default function Layout() {
   }, []);
 
   const menuItems = layout ? layoutMenu(layout) : MORE_LINKS;
-  const mobileLinks = [...PERSONA_LINKS, ...NAV_LINKS.slice(1), ...menuItems];
+  const groups = buildNavGroups(menuItems);
+  const mobileLinks = groups.flatMap((g) => g.items);
   const navFont = layoutFont(layout);
 
   return (
@@ -128,77 +111,7 @@ export default function Layout() {
             )}
           </div>
 
-          <nav className="hidden lg:flex items-center" style={{ gap: `${navFont.gap}px`, fontSize: `${navFont.fontSize}px`, fontWeight: navFont.fontWeight }}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    "px-3.5 py-2 rounded-full whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
-                    PERSONA_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
-                  )}
-                >
-                  Personen <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="glass-strong border-border">
-                {PERSONA_LINKS.map((l) => (
-                  <DropdownMenuItem key={l.path} asChild>
-                    <Link to={l.path} className="text-sm cursor-pointer">{l.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {NAV_LINKS.slice(1, 4).map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "px-3.5 py-2 rounded-full whitespace-nowrap text-gloss transition-colors",
-                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    "px-3.5 py-2 rounded-full whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
-                    menuItems.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
-                  )}
-                >
-                  Mehr <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="glass-strong border-border">
-                {menuItems.map((l) => (
-                  <DropdownMenuItem key={l.path} asChild>
-                    <Link to={l.path} className="text-sm cursor-pointer">{l.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {NAV_LINKS.slice(4).map((link) => (
-
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "px-3.5 py-2 rounded-full whitespace-nowrap text-gloss transition-colors",
-                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
-                )}
-              >
-                {link.label}
-                {link.path === "/leitstand" && waitingChats > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{waitingChats}</span>
-                )}
-              </Link>
-            ))}
-          </nav>
+          <HeaderNav groups={groups} font={navFont} waitingChats={waitingChats} />
 
           <div className="flex items-center gap-2 lg:gap-3">
             {location.pathname !== "/" && (
@@ -220,7 +133,24 @@ export default function Layout() {
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{incomingCount}</span>
               )}
             </Link>
-            <Link to="/account" className="w-9 h-9 rounded-full glass-btn flex items-center justify-center hover:text-primary transition-colors">
+            <Link
+              to="/account"
+              title="Mein Konto"
+              className="hidden lg:flex items-center gap-2.5 pl-1.5 pr-4 py-1 rounded-full glass-btn hover:text-primary transition-colors"
+            >
+              <span className="w-7 h-7 rounded-full bg-primary/25 flex items-center justify-center font-display text-primary text-xs flex-shrink-0">
+                {(me?.full_name || me?.email || "?").charAt(0).toUpperCase()}
+              </span>
+              <span className="flex flex-col items-start leading-tight">
+                <span className="text-[13px] font-bold text-foreground max-w-[150px] truncate">
+                  {me?.full_name || me?.email || "Mein Konto"}
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                  {memberStatus === "GOLD" ? "Gold · alles frei" : "Standard"}
+                </span>
+              </span>
+            </Link>
+            <Link to="/account" className="lg:hidden w-9 h-9 rounded-full glass-btn flex items-center justify-center hover:text-primary transition-colors">
               <User className="w-4 h-4" />
             </Link>
             <button

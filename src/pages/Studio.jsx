@@ -24,22 +24,38 @@ import CharacterTransfer from "@/components/studio/CharacterTransfer";
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
 
-const TABS = [
-  { id: "guide", label: "Anleitung" },
-  { id: "characters", label: "Charaktere" },
-  { id: "dock", label: "Dockingstation" },
-  { id: "voices", label: "Stimmbank" },
-  { id: "generator", label: "Generator" },
-  { id: "models", label: "Hugging Face" },
-  { id: "textmodels", label: "Text-KI" },
-  { id: "plan", label: "Content-Plan" },
-  { id: "gallery", label: "Galerie" },
-  { id: "stories", label: "Storys" },
-  { id: "topics", label: "Themen" },
-  { id: "content", label: "Preise & Content" },
-  { id: "live", label: "Live-Stream" },
-  { id: "contests", label: "Wettbewerbe" },
-  { id: "members", label: "Mitglieder" },
+// Drei Blöcke statt einer langen Reihe: erstellen, erleben, einrichten.
+const TAB_GROUPS = [
+  {
+    label: "Selbst erstellen",
+    tabs: [
+      { id: "characters", label: "Charaktere" },
+      { id: "dock", label: "Dockingstation" },
+      { id: "voices", label: "Stimmbank" },
+      { id: "generator", label: "Generator" },
+      { id: "content", label: "Inhalte & Preise" },
+    ],
+  },
+  {
+    label: "Erlebnis",
+    tabs: [
+      { id: "stories", label: "Storys" },
+      { id: "topics", label: "Themen" },
+      { id: "gallery", label: "Galerie" },
+      { id: "plan", label: "Content-Plan" },
+      { id: "live", label: "Live-Stream" },
+      { id: "contests", label: "Wettbewerbe" },
+    ],
+  },
+  {
+    label: "Einrichten & Hilfe",
+    tabs: [
+      { id: "guide", label: "Anleitung" },
+      { id: "textmodels", label: "Text-KI" },
+      { id: "models", label: "Bild-KI" },
+      { id: "members", label: "Mitglieder" },
+    ],
+  },
 ];
 
 export default function Studio() {
@@ -80,21 +96,33 @@ export default function Studio() {
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-8">
+    <div className="w-full px-4 lg:px-10 py-8">
       <div className="mb-6">
         <h1 className="font-display text-3xl text-foreground">Studio</h1>
         <p className="text-muted-foreground text-sm">Verwalte Charaktere, Storys und Themen — alles selbst, ohne Umweg.</p>
       </div>
 
-      <div className="flex flex-wrap gap-1 p-1 rounded-2xl bg-elevated border border-border w-fit mb-6">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={cn("px-5 py-2 rounded-full text-sm font-medium transition-colors", tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-          >
-            {t.label}
-          </button>
+      <div className="space-y-3 mb-8">
+        {TAB_GROUPS.map((group) => (
+          <div key={group.label} className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <span className="sm:w-44 flex-shrink-0 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              {group.label}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {group.tabs.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={cn(
+                    "px-5 py-2.5 rounded-full text-[15px] font-bold transition-colors whitespace-nowrap",
+                    tab === t.id ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 
