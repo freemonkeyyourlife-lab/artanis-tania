@@ -142,16 +142,16 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap gap-3 mt-8">
-            <Link to="/explore" className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:accent-glow-strong transition-all">
+            <Link to="/explore" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-gloss">
               Explore <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link to="/live" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass border border-border text-foreground text-sm font-semibold hover:border-primary/30 transition-all">
+            <Link to="/live" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Live / Online
             </Link>
-            <Link to="/interactive" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass border border-border text-foreground text-sm font-semibold hover:border-primary/30 transition-all">
+            <Link to="/interactive" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
               <Sparkles className="w-4 h-4 text-primary" /> Interactive Experience
             </Link>
-            <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass border border-border text-foreground text-sm font-semibold hover:border-primary/30 transition-all">
+            <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
               <MessageSquare className="w-4 h-4" /> Private Chat
             </Link>
           </div>
@@ -168,7 +168,7 @@ export default function Home() {
                 onClick={() => setActiveFilter(filter)}
                 className={cn(
                   "px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
-                  activeFilter === filter ? "bg-primary text-primary-foreground" : "glass text-muted-foreground hover:text-foreground"
+                  activeFilter === filter ? "glass-btn glass-btn-accent" : "glass-btn text-muted-foreground hover:text-foreground"
                 )}
               >
                 {filter}
@@ -296,7 +296,7 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {["Recommend a story", "What's new?", "Find content", "Book a session"].map((prompt) => (
-                  <Link key={prompt} to="/messages" className="px-3 py-1.5 rounded-full glass border border-border text-xs text-foreground hover:border-primary/30 transition-colors">
+                  <Link key={prompt} to="/messages" className="px-3 py-1.5 rounded-full glass-btn text-xs text-foreground">
                     {prompt}
                   </Link>
                 ))}
@@ -331,7 +331,7 @@ export default function Home() {
                 <Link2 className="w-4 h-4 text-primary" /> Private Room
               </h3>
               <p className="text-sm text-muted-foreground mb-4">Generate an invite-only private room link.</p>
-              <Link to="/admin" className="block w-full py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold text-center hover:accent-glow transition-all">
+              <Link to="/admin" className="block w-full py-2.5 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-center text-gloss">
                 Create Room Link
               </Link>
             </div>
@@ -355,7 +355,7 @@ export default function Home() {
               <Crown className="w-8 h-8 text-primary mb-3" />
               <h3 className="font-display text-lg text-foreground mb-2">VIP Access</h3>
               <p className="text-sm text-muted-foreground mb-4">Exclusive content, private rooms, priority requests, and early access.</p>
-              <Link to="/account" className="block w-full py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold text-center hover:accent-glow-strong transition-all">
+              <Link to="/account" className="block w-full py-2.5 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-center text-gloss">
                 Become VIP
               </Link>
             </div>

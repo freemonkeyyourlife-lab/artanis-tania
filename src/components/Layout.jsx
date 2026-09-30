@@ -41,7 +41,6 @@ const MORE_LINKS = [
 ];
 
 const MOBILE_LINKS = [
-  { label: "Home", path: "/" },
   ...PERSONA_LINKS,
   ...NAV_LINKS.slice(1),
   ...MORE_LINKS,
@@ -102,11 +101,11 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border" style={{ height: "72px" }}>
+      <header className="fixed top-0 left-0 right-0 z-50 glass-milky border-b border-border/60" style={{ height: "72px" }}>
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link to="/">
-              <span className="font-display text-lg lg:text-xl text-foreground tracking-wide">
+              <span className="font-display text-lg lg:text-xl font-extrabold text-foreground tracking-wide text-gloss">
                 ARTANIS <span className="text-primary">×</span> TRIANIA
               </span>
             </Link>
@@ -116,19 +115,6 @@ export default function Layout() {
           </div>
 
           <nav className="hidden lg:flex items-center gap-1">
-            {[NAV_LINKS[0]].map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
-                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -204,34 +190,34 @@ export default function Layout() {
               <button
                 onClick={() => navigate(-1)}
                 title="Zurück"
-                className="w-9 h-9 rounded-full glass flex items-center justify-center hover:text-primary transition-colors"
+                className="w-9 h-9 rounded-full glass-btn flex items-center justify-center hover:text-primary transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
             <InviteShareButton className="hidden sm:flex" />
-            <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
+            <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass-btn flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
               <Search className="w-4 h-4" />
             </span>
-            <Link to="/messages" title={incomingCount > 0 ? `${incomingCount} wollen mit dir chatten` : "Messages"} className="hidden sm:flex w-9 h-9 rounded-full glass items-center justify-center hover:text-primary transition-colors relative">
+            <Link to="/messages" title={incomingCount > 0 ? `${incomingCount} wollen mit dir chatten` : "Messages"} className="hidden sm:flex w-9 h-9 rounded-full glass-btn items-center justify-center hover:text-primary transition-colors relative">
               <MessageSquare className="w-4 h-4" />
               {incomingCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{incomingCount}</span>
               )}
             </Link>
-            <Link to="/account" className="w-9 h-9 rounded-full glass flex items-center justify-center hover:text-primary transition-colors">
+            <Link to="/account" className="w-9 h-9 rounded-full glass-btn flex items-center justify-center hover:text-primary transition-colors">
               <User className="w-4 h-4" />
             </Link>
             <button
               onClick={() => base44.auth.logout("/")}
               title="Abmelden"
-              className="w-9 h-9 rounded-full glass flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+              className="w-9 h-9 rounded-full glass-btn flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
             >
               <LogOut className="w-4 h-4" />
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden w-9 h-9 rounded-full glass flex items-center justify-center"
+              className="lg:hidden w-9 h-9 rounded-full glass-btn flex items-center justify-center"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
