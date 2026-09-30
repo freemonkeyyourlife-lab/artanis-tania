@@ -61,6 +61,13 @@
     "notifiedAt": {
       "type": "string",
       "format": "date-time"
+    },
+    "voiceProfileId": {
+      "type": "string"
+    },
+    "voiceNotes": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

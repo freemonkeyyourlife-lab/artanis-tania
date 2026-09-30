@@ -53,6 +53,10 @@
     "humanOverride": {
       "type": "boolean",
       "default": false
+    },
+    "voiceNote": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

@@ -1,9 +1,57 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { secrets } from 'base44:runtime';
+import { synthesize, sendVoice, sendAudio } from '../../shared/voiceNote.ts';
 
 const API = "https://api.telegram.org";
 const PREFIX = "telegram:";
 const CHANNEL = "TELEGRAM";
+
+const readSecret = (name: string) => {
+  try {
+    return secrets.get(name) || "";
+  } catch (e) {
+    return "";
+  }
+};
+
+// Die im Chat gewählte Stimme sprechen lassen und nach Telegram schicken.
+async function sendSpoken(base44: any, token: string, chatId: string, conv: any, text: string) {
+  const voiceId = String(conv?.voiceProfileId || "");
+  if (!voiceId) throw new Error("Für diesen Chat ist noch keine Stimme gewählt.");
+
+  const voice = await base44.asServiceRole.entities.Voice.get(voiceId);
+  if (!voice || voice.provider !== "ELEVENLABS" || !voice.externalVoiceId) {
+    throw new Error("Diese Stimme kann nicht frei sprechen.");
+  }
+
+  const key = readSecret("ELEVENLABS_API_KEY");
+  if (!key) throw new Error("Kein ElevenLabs-Schlüssel hinterlegt.");
+
+  const spoken = {
+    key,
+    voiceId: voice.externalVoiceId,
+    text,
+    mood: voice.mood,
+    intensity: voice.intensity,
+    speed: voice.speed,
+  };
+
+  // Erst als echte Sprachnachricht mit Wellenform — nimmt Telegram das Format
+  // nicht an, geht dieselbe Stimme als Audiodatei raus.
+  try {
+    const bytes = await synthesize({ ...spoken, format: "opus_48000_64" });
+    const data = await sendVoice({ token, chatId, bytes });
+    if (data.ok) return true;
+    console.error("telegramForward sendVoice: " + (data.description || "unbekannt"));
+  } catch (error) {
+    console.error("telegramForward opus: " + (error && error.message));
+  }
+
+  const mp3 = await synthesize({ ...spoken, format: "mp3_44100_128" });
+  const fallback = await sendAudio({ token, chatId, bytes: mp3, title: conv.creatorName || "Sprachnachricht" });
+  if (!fallback.ok) throw new Error(fallback.description || "Senden hat nicht geklappt.");
+  return true;
+}
 
 // Wird vom Ablauf „Telegram-Antwort" aufgerufen: was in der App geschrieben
 // wird, geht denselben Weg zurück aufs Handy des Kunden.
@@ -23,25 +71,39 @@ export default async function (req: Request): Promise<Response> {
     const handle = String(conv?.participantId || "");
     if (!handle.startsWith(PREFIX)) return Response.json({ ok: true, skipped: "kein Telegram-Chat" });
 
-    let token = "";
-    try {
-      token = secrets.get("TELEGRAM_BOT_TOKEN") || "";
-    } catch (e) {
-      token = "";
-    }
+    const token = readSecret("TELEGRAM_BOT_TOKEN");
     if (!token) return Response.json({ ok: true, skipped: "kein Schlüssel" });
 
-    const res = await fetch(`${API}/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: handle.slice(PREFIX.length), text: msg.text }),
-    });
-    const data = await res.json();
-    if (!data.ok) {
-      console.error("telegramForward: " + (data.description || "unbekannt"));
-      return Response.json({ ok: false, error: data.description || "Senden hat nicht geklappt." });
+    const chatId = handle.slice(PREFIX.length);
+    // Von Hand als Sprachnachricht geschickt: dann bleibt der Text weg.
+    const voiceOnly = msg.voiceNote === true;
+    const withVoice = voiceOnly || conv.voiceNotes === true;
+
+    if (!voiceOnly) {
+      const res = await fetch(`${API}/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text: msg.text }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        console.error("telegramForward: " + (data.description || "unbekannt"));
+        return Response.json({ ok: false, error: data.description || "Senden hat nicht geklappt." });
+      }
     }
-    return Response.json({ ok: true, sentTo: handle });
+
+    let spoken = false;
+    let voiceError = "";
+    if (withVoice) {
+      try {
+        spoken = await sendSpoken(base44, token, chatId, conv, msg.text);
+      } catch (error) {
+        voiceError = error && error.message;
+        console.error("telegramForward voice: " + voiceError);
+      }
+    }
+
+    return Response.json({ ok: true, sentTo: handle, spoken, voiceError });
   } catch (error) {
     console.error("telegramForward error: " + (error && error.message));
     return Response.json({ ok: false, error: error && error.message }, { status: 500 });

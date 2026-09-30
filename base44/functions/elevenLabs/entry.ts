@@ -1,23 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { secrets } from 'base44:runtime';
+import { synthesize } from '../../shared/voiceNote.ts';
 
 // Stimmen aus dem ElevenLabs-Konto holen und Text damit sprechen lassen.
 // action "voices": die Stimmen, die im Konto liegen (eigene, geklonte, fertige).
 // sonst: den übergebenen Text mit der gewählten Stimme sprechen und ablegen.
 
 const API = 'https://api.elevenlabs.io/v1';
-
-// Stimmung → ElevenLabs-Regler. Weniger Stabilität und mehr Stil = intensiver,
-// mehr Stabilität = ruhiger und kontrollierter.
-const MOOD_SETTINGS = {
-  NEUTRAL: { stability: 0.5, similarity_boost: 0.75, style: 0 },
-  SANFT: { stability: 0.68, similarity_boost: 0.75, style: 0.05 },
-  VERFUEHRERISCH: { stability: 0.35, similarity_boost: 0.85, style: 0.35 },
-  HEISS: { stability: 0.28, similarity_boost: 0.9, style: 0.5 },
-  SPIELERISCH: { stability: 0.4, similarity_boost: 0.75, style: 0.3 },
-  ERNST: { stability: 0.72, similarity_boost: 0.85, style: 0.08 },
-  HART: { stability: 0.55, similarity_boost: 0.9, style: 0.22 },
-};
 
 export default async function (req) {
   try {
@@ -28,14 +17,13 @@ export default async function (req) {
     // Beim Einfügen schleichen sich leicht Leerzeichen ein — die lehnt ElevenLabs ab.
     const key = (secrets.get('ELEVENLABS_API_KEY') || '').trim();
     if (!key) return Response.json({ error: 'Kein ElevenLabs-Schlüssel hinterlegt.' }, { status: 400 });
-    const headers = { 'xi-api-key': key };
 
     const body = await req.json();
 
     if (body.action === 'voices') {
       if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-      const res = await fetch(`${API}/voices`, { headers });
+      const res = await fetch(`${API}/voices`, { headers: { 'xi-api-key': key } });
       const data = await res.json();
       if (!res.ok) {
         console.log('elevenLabs voices error', res.status, JSON.stringify(data).slice(0, 300));
@@ -57,50 +45,24 @@ export default async function (req) {
     const text = (body.text || '').trim();
     if (!voiceId || !text) return Response.json({ error: 'Stimme oder Text fehlt.' }, { status: 400 });
 
-    // Tempo und Stimmung aus der Stimmbank mitgeben — sonst klingt jede Stimme gleich.
-    const preset = MOOD_SETTINGS[body.mood] || MOOD_SETTINGS.NEUTRAL;
-    // Intensität 0–100 aus dem Editor: höher = weniger Stabilität, mehr Ausdruck.
-    const level = Number(body.intensity);
-    const mood = Number.isFinite(level)
-      ? {
-          ...preset,
-          stability: Math.max(0, Math.min(1, 0.8 - (level / 100) * 0.6)),
-          style: Math.max(0, Math.min(1, (level / 100) * 0.7)),
-        }
-      : preset;
-    const wanted = Number(body.speed);
-    const speed = Number.isFinite(wanted) ? Math.max(0.7, Math.min(1.2, wanted)) : 1;
-
-    const res = await fetch(`${API}/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: { ...headers, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-      body: JSON.stringify({
-        text: text.slice(0, 2500),
-        model_id: body.modelId || 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: mood.stability,
-          similarity_boost: mood.similarity_boost,
-          style: mood.style,
-          use_speaker_boost: true,
-          speed,
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      const detail = await res.text();
-      console.log('elevenLabs speak error', voiceId, res.status, detail.slice(0, 300));
-      let message = `ElevenLabs (${res.status})`;
-      try {
-        message = JSON.parse(detail)?.detail?.message || message;
-      } catch (parseError) {
-        // keine JSON-Antwort — dann bleibt der Statuscode
-      }
-      return Response.json({ error: message }, { status: 502 });
+    // Tempo, Stimmung und Intensität aus der Stimmbank mitgeben — sonst klingt jede Stimme gleich.
+    let bytes;
+    try {
+      bytes = await synthesize({
+        key,
+        voiceId,
+        text,
+        mood: body.mood,
+        intensity: body.intensity,
+        speed: body.speed,
+        modelId: body.modelId,
+      });
+    } catch (error) {
+      console.log('elevenLabs speak error', voiceId, error.message);
+      return Response.json({ error: error.message }, { status: 502 });
     }
 
     // Ablegen, damit dasselbe Stück Ton nicht jedes Mal neu bezahlt wird.
-    const bytes = new Uint8Array(await res.arrayBuffer());
     const file = new File([bytes], 'stimme.mp3', { type: 'audio/mpeg' });
     const { file_uri } = await base44.asServiceRole.integrations.Core.UploadPrivateFile({ file });
     const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({

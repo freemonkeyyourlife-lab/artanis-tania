@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, Loader2 } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Mic } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 import TakeoverSwitch from "@/components/leitstand/TakeoverSwitch";
+import VoiceReplyBar from "@/components/leitstand/VoiceReplyBar";
 
 // Hier schreibst du als der Charakter — jede Zeile kommt beim Gast als Nachricht der Figur an.
 export default function LeitstandChat({ conversation, messages, onChanged, onBack }) {
@@ -19,9 +20,11 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
     onChanged?.();
   };
 
-  const send = async () => {
+  // voiceOnly: diese Zeile geht als Sprachnachricht raus, ohne Text daneben.
+  const send = async (voiceOnly = false) => {
     const value = text.trim();
     if (!value || sending) return;
+    if (voiceOnly && !conversation.voiceProfileId) return;
     setSending(true);
     try {
       await base44.entities.Message.create({
@@ -30,6 +33,7 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
         senderType: "AI",
         text: value,
         humanOverride: true,
+        voiceNote: voiceOnly,
       });
       await base44.entities.Conversation.update(conversation.id, {
         waitingSince: null,
@@ -74,7 +78,9 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
         <div ref={endRef} />
       </div>
 
-      <div className="p-4 border-t border-border flex gap-2">
+      <VoiceReplyBar conversation={conversation} onChanged={onChanged} />
+
+      <div className="p-4 flex gap-2">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -83,7 +89,15 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
           className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
         />
         <button
-          onClick={send}
+          onClick={() => send(true)}
+          disabled={!text.trim() || sending || !conversation.voiceProfileId}
+          title={conversation.voiceProfileId ? "Nur als Sprachnachricht senden" : "Erst oben eine Stimme wählen"}
+          className="w-10 h-10 rounded-full bg-elevated border border-border text-primary flex items-center justify-center disabled:opacity-40 flex-shrink-0"
+        >
+          <Mic className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => send()}
           disabled={!text.trim() || sending}
           className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"
         >
