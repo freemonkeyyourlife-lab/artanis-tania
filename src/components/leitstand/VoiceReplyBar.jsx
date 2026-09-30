@@ -50,9 +50,13 @@ export default function VoiceReplyBar({ conversation, onChanged }) {
         Jede Antwort zusätzlich als Sprachnachricht
       </label>
 
-      {voices.length === 0 && (
+      {voices.length === 0 ? (
         <span className="text-[11px] text-muted-foreground">Noch keine ElevenLabs-Stimme in der Stimmbank.</span>
-      )}
+      ) : conversation.voiceNotes === true && !conversation.voiceProfileId ? (
+        <span className="text-[11px] font-semibold text-amber-300">
+          Sprachnachricht ist an, aber es fehlt die Stimme — wähle sie links aus, sonst kommt nur Text an.
+        </span>
+      ) : null}
 
       <HelpButton topic="sprachnachrichten" className="ml-auto" />
     </div>
