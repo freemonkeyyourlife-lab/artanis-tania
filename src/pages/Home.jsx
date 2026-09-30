@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const HERO_BG = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/36d23e21f_generated_image.png";
 
-// Die Wolke oben — Artemis & Artemia als Banner in der Mitte, die anderen drumherum.
+// Die Flanken oben — sie laufen im V nach außen in die Flucht.
 const HERO_CLOUD = [
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/6549e1153_Screenshot2026-09-28053726.png",
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/09e9be2ef_generated_image.png",
@@ -23,6 +23,9 @@ const HERO_CLOUD = [
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dcbb95a47_Screenshot2026-09-28051650.png",
 ];
 
+// Die Mitte: wir zwei, nah und groß.
+const HERO_CENTER = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/fd7ec00d6_generated_image.png";
+
 // Frische Motive für die Teaser oben — Bilder, die noch niemand gesehen hat.
 const TEASER_IMAGES = [
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/b80095c82_generated_image.png",
@@ -30,7 +33,7 @@ const TEASER_IMAGES = [
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/0097a75a2_generated_image.png",
 ];
 
-const FEED_FILTERS = ["All", "Solo Artanis", "Solo Triania", "Couple", "Interactive Stories", "Topics"];
+const FEED_FILTERS = ["Alle", "Solo Artanis", "Solo Triania", "Paar", "Interaktive Storys", "Themen"];
 
 export default function Home() {
   const [creators, setCreators] = useState([]);
@@ -118,7 +121,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-transparent to-transparent" />
         </div>
 
-        <HeroCloud images={HERO_CLOUD} />
+        <HeroCloud images={HERO_CLOUD} center={HERO_CENTER} />
         {/* Die Bilder lösen sich nach oben und unten in den Hintergrund auf — keine harten Kanten. */}
         <div className="absolute inset-x-0 top-0 h-[150px] z-20 pointer-events-none bg-gradient-to-b from-background to-transparent" />
         <div className="absolute inset-x-0 top-0 h-[470px] z-20 pointer-events-none bg-gradient-to-b from-transparent via-background/20 to-background" />
@@ -135,24 +138,24 @@ export default function Home() {
           )}
           <h1 className="font-display text-4xl sm:text-5xl lg:text-[56px] leading-[1.1] text-foreground max-w-3xl">
             ARTANIS × TRIANIA
-            <span className="block text-gradient-warm mt-2">Private Interactive Archive</span>
+            <span className="block text-gradient-warm mt-2">Interaktives Archiv</span>
           </h1>
           <p className="text-muted-foreground text-sm lg:text-base mt-4 max-w-xl">
-            Exclusive content, interactive experiences, and private sessions from Artanis, Triania, and their shared world.
+            Exklusive Inhalte, interaktive Szenen und private Stunden — von Artanis, Triania und ihrer gemeinsamen Welt.
           </p>
 
           <div className="flex flex-wrap gap-3 mt-8">
             <Link to="/explore" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-gloss">
-              Explore <ArrowRight className="w-4 h-4" />
+              Entdecken <ArrowRight className="w-4 h-4" />
             </Link>
             <Link to="/live" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Live / Online
             </Link>
             <Link to="/interactive" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
-              <Sparkles className="w-4 h-4 text-primary" /> Interactive Experience
+              <Sparkles className="w-4 h-4 text-primary" /> Interaktive Szene
             </Link>
             <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
-              <MessageSquare className="w-4 h-4" /> Private Chat
+              <MessageSquare className="w-4 h-4" /> Privater Chat
             </Link>
           </div>
         </div>
@@ -184,7 +187,7 @@ export default function Home() {
           <div className="lg:col-span-8 space-y-12">
             {/* Featured Personas */}
             <div>
-              <h2 className="font-display text-2xl text-foreground mb-4">Featured Personas</h2>
+              <h2 className="font-display text-2xl text-foreground mb-4">Im Rampenlicht</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {artanis && <PersonaCard creator={artanis} />}
                 {triania && <PersonaCard creator={triania} />}
@@ -196,7 +199,7 @@ export default function Home() {
             {aiCharacters.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="font-display text-2xl text-foreground">AI Characters</h2>
+                  <h2 className="font-display text-2xl text-foreground">KI-Charaktere</h2>
                   <span className="px-2 py-0.5 rounded-full bg-violet-600/90 text-white text-[10px] font-semibold uppercase">KI-Modelle</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">KI-Modelle auf Basis echter Charaktere — schreibe eigene Szenarien oder spiele welche durch</p>
@@ -221,15 +224,15 @@ export default function Home() {
             {/* Latest Releases */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display text-2xl text-foreground">Latest Releases</h2>
-                <Link to="/explore" className="text-sm text-primary hover:underline">View all</Link>
+                <h2 className="font-display text-2xl text-foreground">Neueste Inhalte</h2>
+                <Link to="/explore" className="text-sm text-primary hover:underline">Alle ansehen</Link>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {latestContent.map((item) => (
                   <ContentCard key={item.id} content={item} />
                 ))}
                 {latestContent.length === 0 && !loading && (
-                  <p className="text-muted-foreground col-span-full text-center py-12">No content yet</p>
+                  <p className="text-muted-foreground col-span-full text-center py-12">Noch keine Inhalte</p>
                 )}
               </div>
             </div>
@@ -238,8 +241,8 @@ export default function Home() {
             {experiences.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display text-2xl text-foreground">Interactive Experiences</h2>
-                  <Link to="/interactive" className="text-sm text-primary hover:underline">View all</Link>
+                  <h2 className="font-display text-2xl text-foreground">Interaktive Szenen</h2>
+                  <Link to="/interactive" className="text-sm text-primary hover:underline">Alle ansehen</Link>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {experiences.map((exp) => (
@@ -265,8 +268,8 @@ export default function Home() {
             {requests.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display text-2xl text-foreground">Community Requests</h2>
-                  <Link to="/request" className="text-sm text-primary hover:underline">Submit a request</Link>
+                  <h2 className="font-display text-2xl text-foreground">Wünsche der Community</h2>
+                  <Link to="/request" className="text-sm text-primary hover:underline">Wunsch einreichen</Link>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {requests.slice(0, 6).map((req) => (
@@ -286,16 +289,16 @@ export default function Home() {
                   <Bot className="w-5 h-5 text-violet-400" />
                 </div>
                 <div>
-                  <h3 className="font-display text-lg text-foreground">AI Assistant</h3>
-                  <p className="text-xs text-muted-foreground">Always available</p>
+                  <h3 className="font-display text-lg text-foreground">KI-Assistenz</h3>
+                  <p className="text-xs text-muted-foreground">Immer erreichbar</p>
                 </div>
                 <StatusBadge experienceType="AI_INTERACTIVE" className="ml-auto" />
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Ask about content, topics, stories, or request a private session.
+                Frag nach Inhalten, Themen oder Storys — oder buche eine private Stunde.
               </p>
               <div className="flex flex-wrap gap-2">
-                {["Recommend a story", "What's new?", "Find content", "Book a session"].map((prompt) => (
+                {["Story empfehlen", "Was ist neu?", "Inhalte finden", "Stunde buchen"].map((prompt) => (
                   <Link key={prompt} to="/messages" className="px-3 py-1.5 rounded-full glass-btn text-xs text-foreground">
                     {prompt}
                   </Link>
@@ -306,13 +309,13 @@ export default function Home() {
             {/* Upcoming Sessions */}
             <div className="rounded-2xl border border-border bg-card p-5">
               <h3 className="font-display text-lg text-foreground mb-4 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-primary" /> Upcoming Sessions
+                <Calendar className="w-4 h-4 text-primary" /> Nächste Termine
               </h3>
               <div className="space-y-3">
                 {[
-                  { creator: "Artanis", title: "Evening Interactive", time: "Today 21:00", type: "PRERECORDED_INTERACTIVE" },
-                  { creator: "Triania", title: "Solo Storytime", time: "Tomorrow 20:00", type: "AI_INTERACTIVE" },
-                  { creator: "Couple", title: "Friday Night Live", time: "Fri 22:00", type: "LIVE" },
+                  { creator: "Artanis", title: "Abendliche Szene", time: "Heute 21:00", type: "PRERECORDED_INTERACTIVE" },
+                  { creator: "Triania", title: "Solo-Storyzeit", time: "Morgen 20:00", type: "AI_INTERACTIVE" },
+                  { creator: "Paar", title: "Freitagnacht live", time: "Fr 22:00", type: "LIVE" },
                 ].map((s, i) => (
                   <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-elevated">
                     <div className="flex-1 min-w-0">
@@ -328,18 +331,18 @@ export default function Home() {
             {/* Room Invite */}
             <div className="rounded-2xl border border-border bg-card p-5">
               <h3 className="font-display text-lg text-foreground mb-2 flex items-center gap-2">
-                <Link2 className="w-4 h-4 text-primary" /> Private Room
+                <Link2 className="w-4 h-4 text-primary" /> Privater Raum
               </h3>
-              <p className="text-sm text-muted-foreground mb-4">Generate an invite-only private room link.</p>
+              <p className="text-sm text-muted-foreground mb-4">Erzeuge einen privaten Raumlink, der nur für Eingeladene gilt.</p>
               <Link to="/admin" className="block w-full py-2.5 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-center text-gloss">
-                Create Room Link
+                Raumlink erstellen
               </Link>
             </div>
 
             {/* Topics */}
             {topics.length > 0 && (
               <div className="rounded-2xl border border-border bg-card p-5">
-                <h3 className="font-display text-lg text-foreground mb-4">Topics</h3>
+                <h3 className="font-display text-lg text-foreground mb-4">Themen</h3>
                 <div className="flex flex-wrap gap-2">
                   {topics.slice(0, 12).map((topic) => (
                     <span key={topic.id} className="px-3 py-1.5 rounded-full glass border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors cursor-pointer">
@@ -353,10 +356,10 @@ export default function Home() {
             {/* VIP */}
             <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-5 accent-glow">
               <Crown className="w-8 h-8 text-primary mb-3" />
-              <h3 className="font-display text-lg text-foreground mb-2">VIP Access</h3>
-              <p className="text-sm text-muted-foreground mb-4">Exclusive content, private rooms, priority requests, and early access.</p>
+              <h3 className="font-display text-lg text-foreground mb-2">VIP-Zugang</h3>
+              <p className="text-sm text-muted-foreground mb-4">Exklusive Inhalte, private Räume, bevorzugte Wünsche und früher Zugang.</p>
               <Link to="/account" className="block w-full py-2.5 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-center text-gloss">
-                Become VIP
+                VIP werden
               </Link>
             </div>
           </div>

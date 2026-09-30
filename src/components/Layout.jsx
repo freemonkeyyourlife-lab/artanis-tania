@@ -9,10 +9,10 @@ import { hasProAccess, localProActive } from "@/lib/proAccess";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
-  { label: "Messages", path: "/messages" },
+  { label: "Nachrichten", path: "/messages" },
   { label: "Wettbewerbe", path: "/contests" },
-  { label: "Profile", path: "/profile" },
-  { label: "Admin", path: "/admin" },
+  { label: "Profil", path: "/profile" },
+  { label: "Verwaltung", path: "/admin" },
   { label: "Studio", path: "/studio" },
   { label: "Leitstand", path: "/leitstand" },
 ];
@@ -26,18 +26,18 @@ const PERSONA_LINKS = [
 const MORE_LINKS = [
   { label: "Kasse", path: "/paylinks" },
   { label: "Sprechstunde", path: "/therapy" },
-  { label: "Request", path: "/request" },
-  { label: "Explore", path: "/explore" },
+  { label: "Wünsche", path: "/request" },
+  { label: "Entdecken", path: "/explore" },
   { label: "Videos", path: "/videos" },
-  { label: "Photos", path: "/photos" },
-  { label: "Stories", path: "/stories" },
-  { label: "Topics", path: "/topics" },
+  { label: "Fotos", path: "/photos" },
+  { label: "Storys", path: "/stories" },
+  { label: "Themen", path: "/topics" },
   { label: "Live", path: "/live" },
-  { label: "Interactive", path: "/interactive" },
-  { label: "Groups", path: "/groups" },
+  { label: "Interaktiv", path: "/interactive" },
+  { label: "Gruppen", path: "/groups" },
   { label: "Community", path: "/community" },
   { label: "Börse", path: "/coins" },
-  { label: "Library", path: "/library" },
+  { label: "Bibliothek", path: "/library" },
 ];
 
 const MOBILE_LINKS = [
@@ -47,11 +47,11 @@ const MOBILE_LINKS = [
 ];
 
 const MOBILE_NAV = [
-  { icon: Home, label: "Home", path: "/" },
-  { icon: Sparkles, label: "Interactive", path: "/interactive" },
+  { icon: Home, label: "Start", path: "/" },
+  { icon: Sparkles, label: "Interaktiv", path: "/interactive" },
   { icon: MessageSquare, label: "Chat", path: "/messages" },
-  { icon: Library, label: "Library", path: "/library" },
-  { icon: User, label: "Profile", path: "/profile" },
+  { icon: Library, label: "Bibliothek", path: "/library" },
+  { icon: User, label: "Profil", path: "/profile" },
 ];
 
 export default function Layout() {
