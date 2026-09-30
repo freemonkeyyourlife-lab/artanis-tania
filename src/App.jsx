@@ -53,6 +53,7 @@ import Tutorial from '@/pages/Tutorial';
 import TutorialPlayer from '@/components/tutorial/TutorialPlayer';
 import Baukasten from '@/pages/Baukasten';
 import Anleitung from '@/pages/Anleitung';
+import VoiceStudio from '@/pages/VoiceStudio';
 import HelpAssistant from '@/components/help/HelpAssistant';
 
 const AuthenticatedApp = () => {
@@ -127,6 +128,7 @@ const AuthenticatedApp = () => {
         <Route path="/contests/:id" element={<ContestDetail />} />
         <Route path="/tutorial" element={<Tutorial />} />
         <Route path="/baukasten" element={<Baukasten />} />
+        <Route path="/stimmen" element={<VoiceStudio />} />
         <Route path="/anleitung" element={<Anleitung />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />

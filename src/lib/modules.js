@@ -20,6 +20,7 @@ export const MODULE_TYPES = [
   { path: "/paylinks", label: "Kasse" },
   { path: "/contests", label: "Wettbewerbe" },
   { path: "/studio", label: "Studio" },
+  { path: "/stimmen", label: "Stimmen" },
   { path: "/baukasten", label: "Baukasten" },
   { path: "/dock", label: "Dockingstation" },
   { path: "/leitstand", label: "Leitstand" },

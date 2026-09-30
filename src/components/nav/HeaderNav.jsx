@@ -13,6 +13,7 @@ const CHARACTER_ITEMS = [
 
 const CREATE_ITEMS = [
   { label: "Studio", path: "/studio" },
+  { label: "Stimmen", path: "/stimmen" },
   { label: "Baukasten", path: "/baukasten" },
   { label: "Dockingstation", path: "/dock" },
   { label: "Kasse", path: "/paylinks" },
