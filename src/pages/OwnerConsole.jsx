@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -23,6 +24,7 @@ const TABS = [
   { id: "structure", label: "Struktur", icon: SlidersHorizontal },
   { id: "access", label: "Zugang", icon: KeyRound },
   { id: "channels", label: "Kanäle", icon: Link2 },
+  { id: "baukasten", label: "Baukasten", icon: Blocks },
   { id: "data", label: "Sichern", icon: Database },
 ];
 
@@ -489,6 +491,30 @@ export default function OwnerConsole() {
       )}
 
       {tab === "channels" && <ChannelHub />}
+
+      {tab === "baukasten" && (
+        <>
+          <GuideBox
+            title="Der Baukasten"
+            steps={[
+              "Bausteine anlegen: eine Situation mit Varianten, eine einzelne Datei oder eine ganze Szene — jeweils mit der Sprechzeile dazu.",
+              "Baukasten zusammensetzen: Bausteine auswählen, Titelbild festlegen, Namen geben.",
+              "Freigeben, wenn andere es nachbauen dürfen — sonst bleibt es privat.",
+              "Alles liegt im Baukasten-Bereich, den auch deine Besucher über die Kopfzeile erreichen.",
+            ]}
+          >
+            Hier baust du aus deinem eigenen Material Pakete, die du immer wieder verwenden kannst.
+          </GuideBox>
+          <div className="glass rounded-2xl border border-border p-5">
+            <Link
+              to="/baukasten"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss"
+            >
+              <Blocks className="w-4 h-4" /> Baukasten öffnen
+            </Link>
+          </div>
+        </>
+      )}
 
       {tab === "data" && (
         <>

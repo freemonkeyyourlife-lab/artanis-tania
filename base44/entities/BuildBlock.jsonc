@@ -1,0 +1,122 @@
+{
+  "name": "BuildBlock",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "blockKind": {
+      "type": "string",
+      "enum": [
+        "SITUATION",
+        "DATEI",
+        "SZENE"
+      ],
+      "default": "SITUATION"
+    },
+    "personaName": {
+      "type": "string"
+    },
+    "situation": {
+      "type": "string"
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "activeVariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mediaType": {
+      "type": "string",
+      "enum": [
+        "IMAGE",
+        "VIDEO",
+        "AUDIO"
+      ],
+      "default": "IMAGE"
+    },
+    "mediaUrl": {
+      "type": "string"
+    },
+    "mediaItems": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "voiceLine": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "note": {
+      "type": "string"
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    },
+    "shared": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "blockKind"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.shared": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

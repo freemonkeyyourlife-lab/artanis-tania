@@ -31,6 +31,7 @@ const TAB_GROUPS = [
     tabs: [
       { id: "characters", label: "Charaktere" },
       { id: "dock", label: "Dockingstation" },
+      { id: "baukasten", label: "Baukasten" },
       { id: "voices", label: "Stimmbank" },
       { id: "generator", label: "Generator" },
       { id: "content", label: "Inhalte & Preise" },
@@ -140,6 +141,22 @@ export default function Studio() {
       {tab === "live" && <LiveManager />}
       {tab === "contests" && <ContestManager />}
       {tab === "members" && <MemberManager />}
+
+      {tab === "baukasten" && (
+        <div className="glass rounded-2xl border-2 border-border p-6">
+          <p className="font-display text-2xl text-foreground mb-2">Baukasten</p>
+          <p className="text-[15px] font-semibold text-muted-foreground mb-4 max-w-2xl">
+            Bausteine anlegen, zu Paketen zusammensetzen und andere nachbauen lassen — mit Situation,
+            Varianten und der Sprechzeile dazu.
+          </p>
+          <Link
+            to="/baukasten"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss"
+          >
+            Baukasten öffnen
+          </Link>
+        </div>
+      )}
 
       {tab === "characters" && (
       <>

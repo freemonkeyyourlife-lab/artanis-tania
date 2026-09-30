@@ -51,6 +51,7 @@ import HostLiveAlert from '@/components/HostLiveAlert';
 import OnboardingIntro from '@/components/onboarding/OnboardingIntro';
 import Tutorial from '@/pages/Tutorial';
 import TutorialPlayer from '@/components/tutorial/TutorialPlayer';
+import Baukasten from '@/pages/Baukasten';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -122,6 +123,7 @@ const AuthenticatedApp = () => {
         <Route path="/contests" element={<Contests />} />
         <Route path="/contests/:id" element={<ContestDetail />} />
         <Route path="/tutorial" element={<Tutorial />} />
+        <Route path="/baukasten" element={<Baukasten />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>
