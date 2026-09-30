@@ -5,6 +5,7 @@ import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 import TakeoverSwitch from "@/components/leitstand/TakeoverSwitch";
 import VoiceReplyBar from "@/components/leitstand/VoiceReplyBar";
+import CopyRoomLinkButton from "@/components/call/CopyRoomLinkButton";
 
 // Hier schreibst du als der Charakter — jede Zeile kommt beim Gast als Nachricht der Figur an.
 export default function LeitstandChat({ conversation, messages, onChanged, onBack }) {
@@ -61,6 +62,7 @@ export default function LeitstandChat({ conversation, messages, onChanged, onBac
             {conversation.handledBy === "HUMAN" ? "Du bist dran — die KI hält sich raus" : "KI antwortet, wenn du 2 Minuten nicht reagierst"}
           </p>
         </div>
+        <CopyRoomLinkButton />
         <TakeoverSwitch value={conversation.handledBy} onChange={setHandler} />
       </div>
 
