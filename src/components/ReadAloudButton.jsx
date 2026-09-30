@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Volume2, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveVoice } from "@/lib/voiceDj";
 
 // Tonlage und Tempo je Charakter-Stimme — damit sich die Charaktere beim Vorlesen unterscheiden.
 const VOICE_TUNING = {
@@ -11,7 +12,7 @@ const VOICE_TUNING = {
   spark: { pitch: 1.3, rate: 1.2 },
 };
 
-export default function ReadAloudButton({ text, voice, className, autoPlay = false }) {
+export default function ReadAloudButton({ text, voice, profile, className, autoPlay = false }) {
   const [speaking, setSpeaking] = useState(false);
   const supported = typeof window !== "undefined" && "speechSynthesis" in window;
 
@@ -19,7 +20,8 @@ export default function ReadAloudButton({ text, voice, className, autoPlay = fal
     if (!supported || !text) return;
     const synth = window.speechSynthesis;
     synth.cancel();
-    const tune = VOICE_TUNING[voice] || VOICE_TUNING.river;
+    // Ist dem Charakter eine Stimme aus der Stimmbank zugeordnet, gilt die — sonst die Grundstimmung.
+    const tune = profile ? resolveVoice(profile) : (VOICE_TUNING[voice] || VOICE_TUNING.river);
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "de-DE";
     utterance.pitch = tune.pitch;
@@ -30,7 +32,7 @@ export default function ReadAloudButton({ text, voice, className, autoPlay = fal
     utterance.onerror = () => setSpeaking(false);
     setSpeaking(true);
     synth.speak(utterance);
-  }, [text, voice, supported]);
+  }, [text, voice, profile, supported]);
 
   // Freisprechen: jede neue Zeile wird von selbst vorgelesen.
   useEffect(() => {

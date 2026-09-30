@@ -82,6 +82,9 @@
         "spark"
       ]
     },
+    "voiceProfileId": {
+      "type": "string"
+    },
     "profileVisibility": {
       "type": "string",
       "enum": [

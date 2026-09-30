@@ -58,6 +58,7 @@ const EXTRA_SHOTS = [
 
 export default function Messages() {
   const [creators, setCreators] = useState([]);
+  const [voices, setVoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeChat, setActiveChat] = useState(null);
   const [openChats, setOpenChats] = useState([]);
@@ -126,14 +127,16 @@ export default function Messages() {
   useEffect(() => { load(); }, []);
   const load = async () => {
     try {
-      const [creatorData, contentData, storyData] = await Promise.all([
+      const [creatorData, contentData, storyData, voiceData] = await Promise.all([
         base44.entities.Creator.list(),
         base44.entities.Content.filter({ published: true }, "-created_date", 20),
-        base44.entities.Story.filter({ published: true }, "-created_date", 20)
+        base44.entities.Story.filter({ published: true }, "-created_date", 20),
+        base44.entities.Voice.list()
       ]);
       setCreators(creatorData.sort((a, b) => (a.creatorCategory === "REAL" ? 0 : 1) - (b.creatorCategory === "REAL" ? 0 : 1)));
       setContentList(contentData);
       setStories(storyData);
+      setVoices(voiceData);
       try {
         const user = await base44.auth.me();
         setCurrentUser(user);
@@ -250,6 +253,12 @@ export default function Messages() {
     });
     return unsubscribe;
   }, [currentUser, toast]);
+
+  // Die Stimmbank: der Charakter spricht mit der Stimme, die ihm zugeordnet ist.
+  const voiceProfileFor = (creatorId) => {
+    const creator = creators.find((c) => c.id === creatorId);
+    return voices.find((v) => v.id === creator?.voiceProfileId) || null;
+  };
 
   const buildContext = () => {
     const persona = PERSONA_MODES[chatMode];
@@ -544,7 +553,7 @@ export default function Messages() {
     // Optional voice note
     if (parsed.voice) {
       try {
-        const res = await base44.integrations.Core.GenerateSpeech({ text: parsed.voice, voice: creator?.voice || undefined });
+        const res = await base44.integrations.Core.GenerateSpeech({ text: parsed.voice, voice: voiceProfileFor(activeChat)?.baseVoice || creator?.voice || undefined });
         if (res?.url) attachments.push({ type: "audio", url: res.url, locked: false, price: null });
       } catch (e) {
         console.error("Voice generation failed:", e);
@@ -1415,7 +1424,7 @@ export default function Messages() {
                       )}
                       {viewMode === "ai" && msg.senderType === "AI" && msg.text && (
                         <div className="mt-1.5">
-                          <ReadAloudButton text={msg.text} voice={creators.find((c) => c.id === activeChat)?.voice} />
+                          <ReadAloudButton text={msg.text} voice={creators.find((c) => c.id === activeChat)?.voice} profile={voiceProfileFor(activeChat)} />
                         </div>
                       )}
                       {msg.characters?.length > 0 && (

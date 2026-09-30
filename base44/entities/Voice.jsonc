@@ -1,0 +1,71 @@
+{
+  "name": "Voice",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "baseVoice": {
+      "type": "string",
+      "enum": [
+        "river",
+        "honey",
+        "sunny",
+        "storm",
+        "spark"
+      ],
+      "default": "honey"
+    },
+    "mood": {
+      "type": "string",
+      "enum": [
+        "NEUTRAL",
+        "SANFT",
+        "VERFUEHRERISCH",
+        "HEISS",
+        "SPIELERISCH",
+        "ERNST",
+        "HART"
+      ],
+      "default": "NEUTRAL"
+    },
+    "speed": {
+      "type": "number",
+      "default": 1
+    },
+    "depth": {
+      "type": "number",
+      "default": 0
+    },
+    "sampleFile": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ownerName": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "public": {
+      "type": "boolean",
+      "default": true
+    },
+    "priceCoins": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

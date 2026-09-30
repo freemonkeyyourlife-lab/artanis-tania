@@ -18,6 +18,7 @@ import PlanManager from "@/components/studio/PlanManager";
 import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
 import DockManager from "@/components/studio/DockManager";
+import VoiceManager from "@/components/studio/VoiceManager";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -26,6 +27,7 @@ const TABS = [
   { id: "guide", label: "Anleitung" },
   { id: "characters", label: "Charaktere" },
   { id: "dock", label: "Dockingstation" },
+  { id: "voices", label: "Stimmbank" },
   { id: "generator", label: "Generator" },
   { id: "models", label: "Hugging Face" },
   { id: "textmodels", label: "Text-KI" },
@@ -83,7 +85,7 @@ export default function Studio() {
         <p className="text-muted-foreground text-sm">Verwalte Charaktere, Storys und Themen — alles selbst, ohne Umweg.</p>
       </div>
 
-      <div className="flex gap-1 p-1 rounded-full bg-elevated border border-border w-fit mb-6">
+      <div className="flex flex-wrap gap-1 p-1 rounded-2xl bg-elevated border border-border w-fit mb-6">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -97,6 +99,7 @@ export default function Studio() {
 
       {tab === "guide" && <GuideManager />}
       {tab === "dock" && <DockManager />}
+      {tab === "voices" && <VoiceManager />}
       {tab === "generator" && <GeneratorManager creators={creators} />}
       {tab === "models" && <ModelManager />}
       {tab === "textmodels" && <TextModelManager />}
