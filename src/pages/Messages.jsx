@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Loader2, Banknote, Cast } from "lucide-react";
+import { Send, Play, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Loader2, Banknote, Cast } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -15,6 +15,8 @@ import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS, sanitizeImagePr
 import CharacterSuggestion from "@/components/CharacterSuggestion";
 import ReadAloudButton from "@/components/ReadAloudButton";
 import VoiceChatBar from "@/components/voice/VoiceChatBar";
+import SpeakerBar from "@/components/chat/SpeakerBar";
+import { playLevelFor, setPlayLevelFor, playPrompt } from "@/lib/playStyle";
 import VoiceConvertButton from "@/components/voice/VoiceConvertButton";
 import VoiceConvertToggle from "@/components/voice/VoiceConvertToggle";
 import useVoiceRecorder from "@/hooks/useVoiceRecorder";
@@ -108,7 +110,10 @@ export default function Messages() {
     try { return !!localStorage.getItem(TEXT_MODEL_KEY); } catch (e) { return false; }
   });
   const [extraCharacters, setExtraCharacters] = useState([]);
-  const [takeover, setTakeover] = useState(false);
+  // Wer schreibt: ich selbst, ich als eine der Figuren, oder ich höre nur zu.
+  const [speakAs, setSpeakAs] = useState("ME");
+  // Wie viel Gas die Szene hat — pro Gespräch gemerkt.
+  const [playLevel, setPlayLevel] = useState("NORMAL");
   const [spannerMode, setSpannerMode] = useState(false);
   const [incomingConversations, setIncomingConversations] = useState([]);
   const { toast } = useToast();
@@ -286,8 +291,8 @@ export default function Messages() {
 
   useEffect(() => {
     setExtraCharacters([]);
-    setTakeover(false);
     setPendingFiles([]);
+    setPlayLevel(playLevelFor(activeChat));
   }, [activeChat]);
 
   useEffect(() => {
@@ -309,6 +314,8 @@ export default function Messages() {
     if (viewMode !== "ai" || !activeChat) return;
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type !== "create" || !event.data?.humanOverride) return;
+      // Eigene Zeilen stehen schon im Chat — sie kommen nicht noch einmal an.
+      if (event.data.created_by_id === currentUser?.id) return;
       const conv = aiConvsRef.current[activeChat];
       if (!conv || event.data.conversationId !== conv.id) return;
       setMessages((prev) => {
@@ -468,6 +475,7 @@ export default function Messages() {
       const names = [activeCreator?.stageName, ...extraCharacters.map((c) => c.stageName)].filter(Boolean);
       ctx += `\n\n⚠️ ES SIND ${names.length} FRAUEN IM RAUM: ${names.join(", ")}. JEDE von ihnen MUSS in JEDER Antwort mindestens einen Satz sagen, immer mit ihrem Namen in eckigen Klammern davor — z.B. [${names[1] || names[0]}]: … Keine Antwort darf eine von ihnen stumm lassen. Alle sind im Bild zu sehen, und keine verlässt den Raum.`;
     }
+    ctx += playPrompt(playLevel);
     ctx += "\n\n⚠️ SPRACHE: Antworte ausschließlich auf Deutsch (Du-Form) — auch wenn der Nutzer englisch schreibt. Kein Sprachwechsel.";
     return ctx;
   };
@@ -692,49 +700,51 @@ export default function Messages() {
   };
 
   const sendMessage = async (overrideText) => {
+    const listening = speakAs === "LISTEN";
     const msgText = overrideText || input;
     const img = pendingImage;
     const files = pendingFiles;
-    if ((!msgText.trim() && !files.length) || !activeChat) return;
+    if ((!listening && !msgText.trim() && !files.length) || !activeChat) return;
     if (viewMode === "dm") { return sendDmMessage(msgText); }
     const chatKey = activeChat;
+    // Schreibe ich als eine Figur, geht die Zeile als diese Figur raus.
+    const asCharacter = !listening && speakAs !== "ME" ? creators.find((c) => c.id === speakAs) || null : null;
 
-    // Takeover: the admin writes as the character instead of the AI
-    if (takeover) {
-      const asCharacter = {
-        senderType: "AI",
-        text: msgText,
-        attachments: files.map((f) => ({ ...f, locked: false, price: null })),
-        createdAt: new Date().toISOString(),
-      };
-      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), asCharacter] }));
-      const conv = await ensureConv(chatKey);
-      if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: creators.find(c => c.id === chatKey)?.stageName, senderType: "AI", text: msgText, attachments: asCharacter.attachments }).catch(() => {});
-      setInput("");
-      setPendingFiles([]);
-      return;
+    if (asCharacter) {
+      const asMsg = { senderType: "AI", sender: asCharacter.stageName, text: msgText, attachments: files, humanOverride: true, createdAt: new Date().toISOString() };
+      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), asMsg] }));
+    } else if (!listening) {
+      const userMsg = { senderType: "HUMAN", text: msgText, attachment: img || null, attachments: files, createdAt: new Date().toISOString() };
+      setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
+      await saveUserReferences(files.filter((f) => f.type === "image").map((f) => f.url));
     }
-
-    const userMsg = { senderType: "HUMAN", text: msgText, attachment: img || null, attachments: files, createdAt: new Date().toISOString() };
-    setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
-    await saveUserReferences(files.filter((f) => f.type === "image").map((f) => f.url));
     const conv = await ensureConv(chatKey);
-    if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: publicName(currentUser), senderType: "HUMAN", text: msgText, attachment: img || null, attachments: files }).catch(() => {});
+    if (conv && asCharacter) {
+      base44.entities.Message.create({ conversationId: conv.id, sender: asCharacter.stageName, senderType: "AI", text: msgText, attachments: files, humanOverride: true }).catch(() => {});
+    } else if (conv && !listening) {
+      base44.entities.Message.create({ conversationId: conv.id, sender: publicName(currentUser), senderType: "HUMAN", text: msgText, attachment: img || null, attachments: files }).catch(() => {});
+    }
     setInput("");
     setPendingFiles([]);
     setSending(true);
 
     try {
       // Hat der echte Charakter übernommen oder selbst geantwortet, bleibt die KI still.
-      if (await waitForHuman(conv)) return;
+      // Schreibst du selbst als Figur, antworten die anderen immer.
+      if (!asCharacter && await waitForHuman(conv)) return;
       const hist = (messages[chatKey] || []).slice(-12).map(m => {
         let t = m.text || "";
         if (m.attachment) t += t ? " [also sent a photo]" : "[sent a photo]";
-        return `${m.senderType === "HUMAN" ? "User" : "You"}: ${t}`;
+        const who = m.senderType === "HUMAN" ? "User" : (m.humanOverride && m.sender ? m.sender : "You");
+        return `${who}: ${t}`;
       }).join("\n");
-      const userTurn = files.length
-        ? "\n\nThe user sent you " + (files.length === 1 ? "a photo" : files.length + " files, one after another") + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see. Everything they sent is now saved as a PERMANENT reference: whoever is in it keeps exactly that face, body, hair colour and skin in every future image — never change them again. Say out loud that you'll keep it. Then generate a response image that incorporates what they showed you (put yourself in the scene with them)."
-        : "\n\nThe user said: \"" + userMsg.text + "\"";
+      const userTurn = listening
+        ? "\n\nDer Nutzer hört nur zu und sagt nichts. Spiel die Szene von allein weiter: die Figuren im Raum reden und handeln miteinander, ohne ihn. Knüpfe direkt an das letzte Gesagte an und bring die Szene ein Stück voran."
+        : asCharacter
+          ? `\n\nDer Nutzer schreibt gerade als ${asCharacter.stageName}. ${asCharacter.stageName} hat gesagt: "${msgText}". Antworte als die ANDEREN im Raum — ${asCharacter.stageName} selbst kommt jetzt nicht zu Wort.`
+          : files.length
+            ? "\n\nThe user sent you " + (files.length === 1 ? "a photo" : files.length + " files, one after another") + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see. Everything they sent is now saved as a PERMANENT reference: whoever is in it keeps exactly that face, body, hair colour and skin in every future image — never change them again. Say out loud that you'll keep it. Then generate a response image that incorporates what they showed you (put yourself in the scene with them)."
+            : "\n\nThe user said: \"" + msgText + "\"";
       const system = buildContext();
       const userPrompt = (hist ? "CONVERSATION SO FAR:\n" + hist + "\n\n" : "") + userTurn + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : "");
       // Läuft ein Text-Modell über Hugging Face, antwortet der Charakter damit — sonst mit der Standard-KI.
@@ -771,7 +781,7 @@ export default function Messages() {
       }
       setFreeLeft(freeRemaining(currentUser?.id));
 
-      const userMsgCount = [...(messages[chatKey] || []), userMsg].filter(m => m.senderType === "HUMAN").length;
+      const userMsgCount = (messages[chatKey] || []).filter(m => m.senderType === "HUMAN").length + (asCharacter || listening ? 0 : 1);
       if (userMsgCount > 0 && userMsgCount % 5 === 0) {
         toast({
           title: "🎁 Belohnung freigeschaltet!",
@@ -1423,15 +1433,6 @@ export default function Messages() {
                     {spannerMode ? "Spanner ✓" : "Spanner"}
                   </button>
                 )}
-                {viewMode === "ai" && (
-                  <button
-                    onClick={() => setTakeover((v) => !v)}
-                    title="Selbst als dieser Charakter schreiben"
-                    className={cn("px-2.5 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-colors", takeover ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
-                  >
-                    {takeover ? "Übernommen ✓" : "Selbst schreiben"}
-                  </button>
-                )}
                 <QuickPayButton onSend={sendPaymentLink} disabled={sending} />
                 {viewMode === "ai" && (
                   <Link to={`/ai-call/${activeChat}`} title="Videochat starten" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-primary transition-colors">
@@ -1458,6 +1459,18 @@ export default function Messages() {
                   <RotateCcw className="w-4 h-4" />
                 </button>
               </div>
+
+              {viewMode === "ai" && (
+                <SpeakerBar
+                  speakAs={speakAs}
+                  onSpeakAs={setSpeakAs}
+                  creators={creators.filter((c) => c.active !== false)}
+                  playLevel={playLevel}
+                  onPlayLevel={(lvl) => { setPlayLevel(lvl); setPlayLevelFor(activeChat, lvl); }}
+                  busy={sending}
+                  onContinue={() => sendMessage("")}
+                />
+              )}
 
               {viewMode === "ai" && (
                 <div className="px-4 py-2 border-b border-border">
@@ -1791,8 +1804,12 @@ export default function Messages() {
                   onConverted={sendVoiceAsCharacter}
                   disabled={sending}
                 />
-                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={convertRecorder.busy ? "Wird umgewandelt …" : convertRecorder.recording ? "Aufnahme läuft — Mikrofon tippen zum Senden" : transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : takeover ? `Du schreibst als ${creators.find(c => c.id === activeChat)?.stageName || "Charakter"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing || convertRecorder.recording || convertRecorder.busy} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
-                <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingFiles.length) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
+                <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={convertRecorder.busy ? "Wird umgewandelt …" : convertRecorder.recording ? "Aufnahme läuft — Mikrofon tippen zum Senden" : transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : speakAs === "LISTEN" ? "Du hörst zu — drück Weiter, damit die Szene weiterläuft" : speakAs !== "ME" ? `Du schreibst als ${creators.find(c => c.id === speakAs)?.stageName || "Figur"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing || convertRecorder.recording || convertRecorder.busy || speakAs === "LISTEN"} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
+                {speakAs === "LISTEN" ? (
+                  <button onClick={() => sendMessage("")} disabled={sending} title="Die Figuren weiterspielen lassen" className="h-10 px-4 rounded-full bg-primary text-primary-foreground flex items-center gap-1.5 text-xs font-bold disabled:opacity-50 flex-shrink-0"><Play className="w-4 h-4" />Weiter</button>
+                ) : (
+                  <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingFiles.length) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
+                )}
               </div>
               </>
               )}
