@@ -631,8 +631,9 @@ export default function Messages() {
     return style + IMAGE_SAFE_RULES + who + sameMan + fixedOutfit + imgCtx + "realistic, natural lighting matching the scene, slightly grainy, raw, intimate, not professional, tasteful and teasing, leave something to the imagination, " + desc;
   };
 
-  const parseAndGenerateMedia = async (text, extraRefImages = []) => {
-    const parsed = parseReply(text);
+  // Die Medien zur Antwort — Bilder, Video, Sprachnachricht. Läuft NACH der
+  // Textantwort und hängt sich an dieselbe Nachricht.
+  const generateMediaFor = async (parsed, extraRefImages = []) => {
     const creator = creators.find(c => c.id === activeChat);
     const creatorRefs = creator?.referenceImages?.length ? creator.referenceImages : [];
     const userRefs = userPref?.userReferenceImages || [];
@@ -682,7 +683,7 @@ export default function Messages() {
     // Konnte ein Bild nicht erzeugt werden: direkt aus dem Chat das Nachdrehen anbieten.
     if (missed) attachments.push({ type: "reshoot", note: missed });
 
-    return { cleanText: parsed.cleanText, attachments, suggestions: parsed.suggestions, characters: parsed.characters };
+    return attachments;
   };
 
   const sendMessage = async (overrideText) => {
@@ -745,12 +746,23 @@ export default function Messages() {
       }
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
-      const { cleanText, attachments, suggestions, characters } = await parseAndGenerateMedia(aiText, files.map((f) => f.url));
-      const aiMsg = { senderType: "AI", text: cleanText, attachments, suggestions, characters, createdAt: new Date().toISOString() };
+
+      // Erst die Antwort: sie steht sofort und ist gespeichert. Die Medien
+      // kommen danach und hängen sich an dieselbe Nachricht — so bleibt keine
+      // Antwort aus, wenn ein Bild oder Video lange braucht.
+      const parsed = parseReply(aiText);
+      const aiMsg = { senderType: "AI", text: parsed.cleanText, attachments: [], suggestions: parsed.suggestions, characters: parsed.characters, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
+      let savedAi = null;
       if (conv) {
-        base44.entities.Message.create({ conversationId: conv.id, sender: creators.find(c => c.id === chatKey)?.stageName, senderType: "AI", text: cleanText, attachments, suggestions, characters }).catch(() => {});
+        savedAi = await base44.entities.Message.create({ conversationId: conv.id, sender: creators.find(c => c.id === chatKey)?.stageName, senderType: "AI", text: parsed.cleanText, attachments: [], suggestions: parsed.suggestions, characters: parsed.characters }).catch(() => null);
         base44.entities.Conversation.update(conv.id, { lastMessageAt: new Date().toISOString(), waitingSince: null }).catch(() => {});
+      }
+
+      const attachments = await generateMediaFor(parsed, files.map((f) => f.url));
+      if (attachments.length) {
+        setMessages(prev => ({ ...prev, [chatKey]: (prev[chatKey] || []).map((m) => (m === aiMsg ? { ...m, attachments } : m)) }));
+        if (savedAi?.id) base44.entities.Message.update(savedAi.id, { attachments }).catch(() => {});
       }
       setFreeLeft(freeRemaining(currentUser?.id));
 
@@ -762,8 +774,11 @@ export default function Messages() {
         });
       }
     } catch (e) {
-      const aiMsg = { senderType: "AI", text: "I'm here and ready to chat! What would you like to talk about?", createdAt: new Date().toISOString() };
+      // Auch wenn etwas schiefgeht, meldet sich der Charakter — und die Zeile bleibt gespeichert.
+      const fallback = "Ich bin da — sag es mir bitte noch einmal.";
+      const aiMsg = { senderType: "AI", text: fallback, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
+      if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: creators.find(c => c.id === chatKey)?.stageName, senderType: "AI", text: fallback }).catch(() => {});
     } finally {
       setSending(false);
     }
