@@ -14,17 +14,15 @@ import { cn } from "@/lib/utils";
 const HERO_BG = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/36d23e21f_generated_image.png";
 
 // Die Flanken oben — sie laufen im V nach außen in die Flucht.
-const HERO_CLOUD = [
-  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/6549e1153_Screenshot2026-09-28053726.png",
-  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/09e9be2ef_generated_image.png",
-  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png",
-  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/021e28b6a_825292887_1624149129493507_2639521819362873359_n.webp",
-  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/78af4f762_Screenshot2026-09-28034357.png",
-  "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dcbb95a47_Screenshot2026-09-28051650.png",
+// Mit Info-Fenster beim Drüberfahren — man sieht sofort, was dahintersteckt.
+const HERO_ITEMS = [
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/6549e1153_Screenshot2026-09-28053726.png", title: "Privater Chat", text: "Schreib ihr direkt — sie antwortet dir", to: "/messages" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/09e9be2ef_generated_image.png", title: "Interaktive Szene", text: "Du entscheidest, was passiert", to: "/interactive" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png", title: "Storys", text: "Geschichten aus ihrer Welt", to: "/stories" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/9795fbefc_generated_image.png", title: "Artanis × Triania", text: "Unser gemeinsames Profil", to: "/couple" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/78af4f762_Screenshot2026-09-28034357.png", title: "Live / Online", text: "Wer gerade da ist", to: "/live" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dcbb95a47_Screenshot2026-09-28051650.png", title: "Wettbewerbe", text: "Mitmachen, abstimmen, gewinnen", to: "/contests" },
 ];
-
-// Die Mitte: wir zwei, nah und groß.
-const HERO_CENTER = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/9795fbefc_generated_image.png";
 
 // Frische Motive für die Teaser oben — Bilder, die noch niemand gesehen hat.
 const TEASER_IMAGES = [
@@ -121,12 +119,12 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-transparent to-transparent" />
         </div>
 
-        <HeroCloud images={HERO_CLOUD} center={HERO_CENTER} />
+        <HeroCloud items={HERO_ITEMS} />
         {/* Die Bilder lösen sich nach oben und unten in den Hintergrund auf — keine harten Kanten. */}
         <div className="absolute inset-x-0 top-0 h-[150px] z-20 pointer-events-none bg-gradient-to-b from-background to-transparent" />
         <div className="absolute inset-x-0 top-0 h-[470px] z-20 pointer-events-none bg-gradient-to-b from-transparent via-background/20 to-background" />
 
-        <div className="relative z-30 min-h-[860px] max-w-[1600px] mx-auto px-4 lg:px-8 flex flex-col justify-end pt-[260px] lg:pt-[320px] pb-20">
+        <div className="relative z-30 min-h-[860px] max-w-[1600px] mx-auto px-4 lg:px-8 pointer-events-none [&>*]:pointer-events-auto flex flex-col justify-end pt-[260px] lg:pt-[320px] pb-20">
           <div className="mb-10">
             <HeroNews items={newsItems} />
           </div>
@@ -164,14 +162,14 @@ export default function Home() {
       {/* Quick Feed Selector */}
       <section className="sticky top-[72px] z-30 glass border-y border-border">
         <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-3">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide">
             {FEED_FILTERS.map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
                 className={cn(
-                  "px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
-                  activeFilter === filter ? "glass-btn glass-btn-accent" : "glass-btn text-muted-foreground hover:text-foreground"
+                  "px-5 py-2.5 rounded-full text-[15px] font-bold whitespace-nowrap transition-colors text-gloss",
+                  activeFilter === filter ? "glass-btn glass-btn-accent" : "glass-btn text-foreground"
                 )}
               >
                 {filter}

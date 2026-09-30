@@ -114,13 +114,13 @@ export default function Layout() {
             )}
           </div>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors flex items-center gap-1",
-                    PERSONA_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                    "px-3.5 py-2 rounded-full text-[15px] font-bold whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
+                    PERSONA_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
                   )}
                 >
                   Personen <ChevronDown className="w-3.5 h-3.5" />
@@ -140,8 +140,8 @@ export default function Layout() {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
-                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                  "px-3.5 py-2 rounded-full text-[15px] font-bold whitespace-nowrap text-gloss transition-colors",
+                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
                 )}
               >
                 {link.label}
@@ -152,8 +152,8 @@ export default function Layout() {
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors flex items-center gap-1",
-                    MORE_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                    "px-3.5 py-2 rounded-full text-[15px] font-bold whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
+                    MORE_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
                   )}
                 >
                   Mehr <ChevronDown className="w-3.5 h-3.5" />
@@ -173,8 +173,8 @@ export default function Layout() {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "px-2.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
-                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                  "px-3.5 py-2 rounded-full text-[15px] font-bold whitespace-nowrap text-gloss transition-colors",
+                  location.pathname === link.path ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
                 )}
               >
                 {link.label}

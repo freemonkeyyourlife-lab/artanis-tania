@@ -1,51 +1,38 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Image } from "@/components/ui/image";
 
-// Fächer: die Mitte groß und klar, nach außen nur etwas kleiner und tiefer.
-// Kein Zusammenschieben — jeder bleibt ganz sichtbar.
+// Fächer: die Mitte groß, nach außen etwas kleiner — aber alle klar sichtbar.
 const SLOTS = [
-  { w: 152, h: 212, drop: 74, z: 11, dim: 0.42 },
-  { w: 202, h: 282, drop: 42, z: 15, dim: 0.68 },
-  { w: 262, h: 352, drop: 14, z: 20, dim: 0.9 },
-  { w: 448, h: 400, drop: 0, z: 30, dim: 1 },
-  { w: 262, h: 352, drop: 14, z: 20, dim: 0.9 },
-  { w: 202, h: 282, drop: 42, z: 15, dim: 0.68 },
-  { w: 152, h: 212, drop: 74, z: 11, dim: 0.42 },
+  { w: 220, h: 300, drop: 40, z: 12, dim: 0.85 },
+  { w: 250, h: 330, drop: 22, z: 16, dim: 0.92 },
+  { w: 280, h: 360, drop: 8, z: 20, dim: 1 },
+  { w: 460, h: 410, drop: 0, z: 30, dim: 1 },
+  { w: 280, h: 360, drop: 8, z: 20, dim: 1 },
+  { w: 250, h: 330, drop: 22, z: 16, dim: 0.92 },
+  { w: 220, h: 300, drop: 40, z: 12, dim: 0.85 },
 ];
 
-// Jede Kante ein bisschen anders — nichts sieht gleichmäßig abgeschnitten aus.
-const MIST = [
-  "radial-gradient(88% 82% at 50% 50%, #000 18%, transparent 62%)",
-  "radial-gradient(92% 86% at 50% 48%, #000 20%, transparent 64%)",
-  "radial-gradient(90% 88% at 51% 47%, #000 22%, transparent 66%)",
-  "radial-gradient(100% 92% at 50% 48%, #000 30%, transparent 74%)",
-  "radial-gradient(91% 85% at 49% 48%, #000 20%, transparent 64%)",
-];
+// Weiche Ränder: Gesicht und Haare bleiben frei, nur die Außenkante verläuft.
+const MASK = "radial-gradient(95% 92% at 50% 44%, #000 42%, transparent 80%)";
 
-export default function HeroCloud({ images = [], center }) {
-  const mid = Math.ceil(images.length / 2);
-  const items = [
-    ...images.slice(0, mid).map((src) => ({ src })),
-    { src: center, hero: true },
-    ...images.slice(mid).map((src) => ({ src })),
-  ].filter((it) => it.src);
-
+export default function HeroCloud({ items = [] }) {
   if (!items.length) return null;
 
   return (
-    <div className="absolute inset-x-0 top-0 z-10 pointer-events-none select-none overflow-hidden">
-      <div className="flex items-start justify-center origin-top scale-[0.5] sm:scale-75 lg:scale-100">
+    <div className="absolute inset-x-0 top-0 z-[25] pointer-events-none select-none overflow-hidden">
+      <div className="flex items-start justify-center origin-top scale-[0.45] sm:scale-75 lg:scale-100">
         {items.map((it, i) => {
           const s = SLOTS[i] || SLOTS[SLOTS.length - 1];
-          const mask = MIST[i % MIST.length];
           return (
-            <div
+            <Link
               key={`${it.src}-${i}`}
-              className="relative flex-shrink-0 animate-hero-pop"
+              to={it.to || "/explore"}
+              className="group relative flex-shrink-0 animate-hero-pop pointer-events-auto hover:!opacity-100 transition-opacity"
               style={{
                 width: `${s.w}px`,
                 height: `${s.h}px`,
-                marginLeft: i === 0 ? 0 : `-${Math.round(s.w * 0.1)}px`,
+                marginLeft: i === 0 ? 0 : `-${Math.round(s.w * 0.06)}px`,
                 marginTop: `${s.drop}px`,
                 zIndex: s.z,
                 opacity: s.dim,
@@ -54,29 +41,26 @@ export default function HeroCloud({ images = [], center }) {
             >
               {/* Goldener Schimmer — die Figuren leuchten von hinten an. */}
               <div
-                className="absolute -inset-8 blur-2xl"
-                style={{ background: "radial-gradient(50% 50% at 50% 55%, rgba(226,149,120,0.5), transparent 72%)" }}
+                className="absolute -inset-8 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity"
+                style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(226,149,120,0.55), transparent 72%)" }}
               />
-              <div
-                className="relative w-full h-full"
-                style={{ WebkitMaskImage: mask, maskImage: mask }}
-              >
-                <Image
-                  src={it.src}
-                  fittingType="fill"
-                  focalPointY={it.hero ? 0.45 : 0.28}
-                  className="w-full h-full"
+              <div className="relative w-full h-full" style={{ WebkitMaskImage: MASK, maskImage: MASK }}>
+                <Image src={it.src} fittingType="fill" focalPointY={0.3} className="w-full h-full" />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.12) 44%, rgba(255,255,255,0.03) 56%, transparent 70%)" }}
                 />
               </div>
-            </div>
+              {(it.title || it.text) && (
+                <div className="absolute left-1/2 bottom-6 -translate-x-1/2 w-[85%] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 glass-btn rounded-2xl px-4 py-3 text-center">
+                  <p className="text-sm font-bold text-foreground text-gloss">{it.title}</p>
+                  {it.text && <p className="text-xs font-semibold text-foreground/80 mt-0.5">{it.text}</p>}
+                </div>
+              )}
+            </Link>
           );
         })}
       </div>
-      {/* Glänzende Glasoptik darüber — ein weicher Schimmer, keine Kante. */}
-      <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(112deg, transparent 24%, rgba(255,255,255,0.07) 40%, rgba(255,255,255,0.02) 56%, transparent 72%)" }}
-      />
     </div>
   );
 }
