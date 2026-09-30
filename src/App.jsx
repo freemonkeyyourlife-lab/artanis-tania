@@ -49,6 +49,8 @@ import Dock from '@/pages/Dock';
 import WaitingChatAlert from '@/components/WaitingChatAlert';
 import HostLiveAlert from '@/components/HostLiveAlert';
 import OnboardingIntro from '@/components/onboarding/OnboardingIntro';
+import Tutorial from '@/pages/Tutorial';
+import TutorialPlayer from '@/components/tutorial/TutorialPlayer';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -80,6 +82,7 @@ const AuthenticatedApp = () => {
       <WaitingChatAlert />
       <HostLiveAlert />
       <OnboardingIntro />
+      <TutorialPlayer />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
@@ -118,6 +121,7 @@ const AuthenticatedApp = () => {
         <Route path="/creator/:id" element={<CreatorDetail />} />
         <Route path="/contests" element={<Contests />} />
         <Route path="/contests/:id" element={<ContestDetail />} />
+        <Route path="/tutorial" element={<Tutorial />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>

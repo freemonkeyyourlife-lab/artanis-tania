@@ -1,0 +1,67 @@
+{
+  "name": "TutorialProgress",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "currentChapterId": {
+      "type": "string"
+    },
+    "currentStep": {
+      "type": "number",
+      "default": 0
+    },
+    "doneSteps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skippedChapters": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "showAll": {
+      "type": "boolean",
+      "default": true
+    },
+    "paused": {
+      "type": "boolean",
+      "default": false
+    },
+    "finished": {
+      "type": "boolean",
+      "default": false
+    },
+    "lastSeenAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "userId"
+  ],
+  "rls": {
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

@@ -26,6 +26,7 @@ const ADMIN_ITEMS = [
 // Diese Punkte hängen immer unter „Erleben" — auch wenn im eigenen Menü
 // gerade keiner davon steht. Sonst verschwindet dir ein Bereich unbemerkt.
 const CORE_EXPLORE = [
+  { label: "Tutorial", path: "/tutorial" },
   { label: "Nachrichten", path: "/messages" },
   { label: "Sprechstunde", path: "/therapy" },
   { label: "Wettbewerbe", path: "/contests" },
