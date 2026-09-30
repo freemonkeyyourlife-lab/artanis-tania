@@ -17,6 +17,7 @@ import SceneReadButton from "@/components/chat/SceneReadButton";
 import RolePicker from "@/components/chat/RolePicker";
 import CharacterDirector from "@/components/chat/CharacterDirector";
 import StoryExportButton from "@/components/chat/StoryExportButton";
+import ChatCastMenu from "@/components/chat/ChatCastMenu";
 import { speechPrompt } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
 import { splitScene, playScene } from "@/lib/sceneVoice";
@@ -368,12 +369,41 @@ export default function Messages() {
   const roomIds = activeChat ? [activeChat, ...extraCharacters.map((c) => c.id)] : [];
   const aiNames = aiCast(roomIds, role).map(nameOf).filter(Boolean);
   const playedNames = role.playing.map(nameOf).filter(Boolean);
+  const listenerNames = (role.muted || []).map(nameOf).filter(Boolean);
 
   const commitRole = (next) => {
-    setRole(next);
-    setRoleFor(activeChat, next);
+    // Wer nur zuhört, bleibt gemerkt — auch wenn die Rollenauswahl ihn nicht kennt.
+    const merged = { ...next, muted: next.muted || role.muted || [] };
+    setRole(merged);
+    setRoleFor(activeChat, merged);
     setRoleReady(true);
     setRoleDialog(false);
+  };
+
+  // Was diese Figur gerade ist: spielt mit, du spielst sie, hört nur zu — oder ist nicht dabei.
+  const castState = (id) => {
+    if ((role.muted || []).includes(id)) return "MUTE";
+    if (role.mode === "PLAY" && role.playing.includes(id)) return "ME";
+    return roomIds.includes(id) ? "AI" : "OFF";
+  };
+
+  // Ein Klick im Menü — Figur reinholen, rausnehmen oder ihre Rolle umschalten.
+  const setCastState = (id, next) => {
+    if (id === activeChat && next === "OFF") return;
+    const creator = creators.find((c) => c.id === id);
+    if (!creator) return;
+    if (next !== "OFF" && !roomIds.includes(id)) setExtraCharacters((prev) => [...prev, creator]);
+    if (next === "OFF") setExtraCharacters((prev) => prev.filter((c) => c.id !== id));
+    const playing = role.playing.filter((x) => x !== id);
+    const muted = (role.muted || []).filter((x) => x !== id);
+    if (next === "ME") playing.push(id);
+    if (next === "MUTE") muted.push(id);
+    commitRole({
+      mode: playing.length ? "PLAY" : role.mode === "PLAY" ? "ME" : role.mode,
+      playing,
+      muted,
+      current: playing.includes(role.current) ? role.current : playing[0] || null,
+    });
   };
 
   // Jede Figur spricht mit ihrer eigenen Stimme, die Erzählung mit einer ruhigen Erzählstimme.
@@ -510,15 +540,16 @@ export default function Messages() {
       ctx += "- If you are alone in the scene, put on a show for him and let him tell you what he wants to watch.\n";
       ctx += "═══ END THIRD-PERSON ═══\n";
     }
-    ctx += rolePrompt(role, playedNames, aiNames);
+    ctx += rolePrompt(role, playedNames, aiNames, listenerNames);
 
     // ── SCENARIO ANCHOR #3 (last thing the AI sees — triple-anchored) ──
     if (scenario) {
       ctx += "\n\n⚠️ FINAL REMINDER: You are in the scenario \"" + scenario.title + "\". Respect the current location and position — do NOT teleport or jump around. If the user wants to change the location, follow their lead naturally and describe the move. Only reference objects that exist in the current scene.";
     }
     // Letzte, stärkste Anweisung: hinzugefügte Personen dürfen nicht stumm bleiben.
-    if (extraCharacters.length > 0) {
-      const names = [activeCreator?.stageName, ...extraCharacters.map((c) => c.stageName)].filter(Boolean);
+    const speakers = [activeCreator, ...extraCharacters].filter((c) => c && !(role.muted || []).includes(c.id));
+    if (speakers.length > 1) {
+      const names = speakers.map((c) => c.stageName);
       ctx += `\n\n⚠️ ES SIND ${names.length} FRAUEN IM RAUM: ${names.join(", ")}. JEDE von ihnen MUSS in JEDER Antwort mindestens einen Satz sagen, immer mit ihrem Namen in eckigen Klammern davor — z.B. [${names[1] || names[0]}]: … Keine Antwort darf eine von ihnen stumm lassen. Alle sind im Bild zu sehen, und keine verlässt den Raum.`;
     }
     ctx += playPrompt(playLevel);
@@ -1465,39 +1496,13 @@ export default function Messages() {
                   </select>
                 )}
                 {viewMode === "ai" && (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <button title="Person hinzufügen" className="relative w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
-                        <UserPlus className="w-4 h-4" />
-                        {extraCharacters.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{extraCharacters.length}</span>}
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <h3 className="font-display text-lg text-foreground mb-1">Person hinzufügen</h3>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Die KI spielt alle, die hier drin sind — auch mehrere gleichzeitig. Du selbst bleibst du und musst niemanden spielen. Willst du doch eine Rolle übernehmen, nimm oben „Selbst schreiben".
-                      </p>
-                      <div className="max-h-[60vh] overflow-y-auto space-y-2">
-                        {creators.filter((c) => c.id !== activeChat && c.active !== false).map((c) => {
-                          const added = extraCharacters.some((x) => x.id === c.id);
-                          return (
-                            <button key={c.id} onClick={() => toggleExtra(c)} className={cn("w-full p-3 flex items-center gap-3 rounded-xl border text-left transition-colors", added ? "border-primary bg-primary/10" : "border-border hover:bg-elevated")}>
-                              {c.avatar ? (
-                                <Image src={c.avatar} fittingType="fit" className="w-16 h-16 rounded-full flex-shrink-0 bg-elevated" />
-                              ) : (
-                                <div className="w-9 h-9 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{c.stageName[0]}</div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-foreground truncate">{c.stageName}</p>
-                                <p className="text-xs text-muted-foreground">{c.personaType === "SOLO_MALE" ? "Mann" : c.personaType === "COUPLE" ? "Paar" : c.personaType === "GROUP" ? "Gruppe" : "Frau"}</p>
-                              </div>
-                              <span className="text-xs text-primary font-bold flex-shrink-0">{added ? "Drin" : "Hinzufügen"}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <ChatCastMenu
+                    creators={creators.filter((c) => c.active !== false)}
+                    mainId={activeChat}
+                    stateOf={castState}
+                    onChange={setCastState}
+                    count={extraCharacters.length}
+                  />
                 )}
                 <QuickPayButton onSend={sendPaymentLink} disabled={sending} />
                 {viewMode === "ai" && (
