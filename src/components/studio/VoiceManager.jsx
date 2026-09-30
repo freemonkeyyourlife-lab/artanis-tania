@@ -6,6 +6,7 @@ import { resolveVoice } from "@/lib/voiceDj";
 import VoiceForm from "@/components/studio/VoiceForm";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
 import ElevenLabsImport from "@/components/studio/ElevenLabsImport";
+import VoiceSayBox from "@/components/studio/VoiceSayBox";
 
 const SORTS = [
   { id: "favorite", label: "Favoriten zuerst" },
@@ -131,6 +132,8 @@ export default function VoiceManager() {
           <Plus className="w-4 h-4" /> Neue Stimme
         </button>
       </div>
+
+      <VoiceSayBox voices={voices} />
 
       {showImport && (
         <div className="mb-5">

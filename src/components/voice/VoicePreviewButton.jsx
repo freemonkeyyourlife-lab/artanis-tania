@@ -7,7 +7,7 @@ import { resolveVoice } from "@/lib/voiceDj";
 const SAMPLE_TEXT = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
 
 // Hört sich die eingestellte Stimme an — genau so, wie sie später im Chat klingt.
-export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, className, onCached }) {
+export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, className, onCached, useSample = true }) {
   const [state, setState] = useState("idle");
   const audioRef = useRef(null);
 
@@ -25,7 +25,7 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
       // Liegt eine eigene Aufnahme vor, hörst du genau die — sonst die Grundstimme.
       let url;
       let rate = v.audioRate;
-      if (profile?.sampleFile) {
+      if (useSample && profile?.sampleFile) {
         const res = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: profile.sampleFile, expires_in: 600 });
         url = res?.signed_url;
         rate = 1;
@@ -34,8 +34,8 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
         if (res.data?.error) throw new Error(res.data.error);
         url = res.data.url;
         rate = 1;
-        // Einmal gesprochen bleibt liegen — beim nächsten Mal ist es sofort da.
-        if (res.data.file_uri && profile.id) {
+        // Nur die feste Hörprobe ablegen — freie Texte nicht, damit die Originalaufnahme erhalten bleibt.
+        if (res.data.file_uri && profile.id && !profile.sampleFile && text === SAMPLE_TEXT) {
           await base44.entities.Voice.update(profile.id, { sampleFile: res.data.file_uri });
           onCached?.();
         }

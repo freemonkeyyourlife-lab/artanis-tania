@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Loader2, Mic, Square, Trash2, Upload } from "lucide-react";
+import { Check, Loader2, Mic, Sparkles, Square, Trash2, Upload } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { BASE_VOICES, MOODS } from "@/lib/voiceDj";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
@@ -24,11 +25,15 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
     priceCoins: initial?.priceCoins ?? 0,
     sampleFile: initial?.sampleFile || "",
     source: initial?.source || "EINGESPROCHEN",
+    provider: initial?.provider || "GRUNDSTIMME",
+    externalVoiceId: initial?.externalVoiceId || "",
     originNote: initial?.originNote || "",
     favorite: initial?.favorite === true,
   });
   const [tagInput, setTagInput] = useState("");
   const [recording, setRecording] = useState(false);
+  const [cloning, setCloning] = useState(false);
+  const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
@@ -95,6 +100,26 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
       if (res?.signed_url) new Audio(res.signed_url).play();
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  // Aus der Aufnahme eine Stimme machen, die jeden Text sprechen kann.
+  const cloneVoice = async () => {
+    if (!form.sampleFile) return;
+    setCloning(true);
+    try {
+      const res = await base44.functions.invoke("elevenLabsClone", {
+        fileUri: form.sampleFile,
+        name: form.name.trim() || "Eigene Stimme",
+        description: form.description,
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+      setForm((prev) => ({ ...prev, provider: "ELEVENLABS", externalVoiceId: res.data.voiceId }));
+      toast({ title: "Stimme geklont", description: "Sie kann jetzt jeden Text sprechen." });
+    } catch (e) {
+      toast({ title: "Klonen hat nicht geklappt", description: e.message, variant: "destructive" });
+    } finally {
+      setCloning(false);
     }
   };
 
@@ -223,6 +248,31 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
           </>
         )}
       </div>
+
+      {form.sampleFile && (
+        <div className="rounded-2xl border border-border bg-elevated p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={cloneVoice}
+              disabled={cloning}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50"
+            >
+              {cloning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              {cloning ? "Klont …" : form.externalVoiceId ? "Neu klonen" : "Als eigene Stimme klonen"}
+            </button>
+            {form.provider === "ELEVENLABS" && form.externalVoiceId && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600/20 text-emerald-400 text-[11px] font-semibold">
+                <Check className="w-3 h-3" /> Spricht jeden Text
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            Aus der Aufnahme wird eine Stimme, die jeden Text sprechen kann — im Chat, in der Sprechprobe und im Video-Call.
+            Am besten eine mp3- oder wav-Datei mit mindestens 30 Sekunden. Nur Stimmen verwenden, für die du die Erlaubnis hast.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
