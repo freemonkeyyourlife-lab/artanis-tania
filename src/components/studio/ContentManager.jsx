@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { Check } from "lucide-react";
+import ContentUploadForm from "@/components/studio/ContentUploadForm";
 
 const VISIBILITIES = ["PUBLIC", "REGISTERED", "FREE_MEMBER", "VIP", "PPV", "PRIVATE", "UNLISTED"];
 
-export default function ContentManager() {
+export default function ContentManager({ creators = [] }) {
   const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,13 +44,15 @@ export default function ContentManager() {
     return <div className="flex justify-center py-16"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>;
   }
 
-  if (items.length === 0) {
-    return <p className="text-muted-foreground text-center py-16">Noch keine Inhalte — leg welche an, dann kannst du hier Preise setzen.</p>;
-  }
-
   return (
     <div className="space-y-3">
-      <p className="text-muted-foreground text-xs mb-1">Preis und Sichtbarkeit jederzeit ändern — 0 € heißt gratis.</p>
+      <ContentUploadForm creators={creators} onCreated={load} />
+      {items.length === 0 && (
+        <p className="text-muted-foreground text-center py-10">Noch keine Inhalte — lade oben deinen ersten hoch.</p>
+      )}
+      {items.length > 0 && (
+        <p className="text-muted-foreground text-xs mb-1">Preis und Sichtbarkeit jederzeit ändern — 0 € heißt gratis.</p>
+      )}
       {items.map((item) => (
         <div key={item.id} className="rounded-2xl border border-border bg-card p-4 flex flex-col lg:flex-row lg:items-center gap-4">
           <div className="flex-1 min-w-0">

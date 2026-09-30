@@ -19,6 +19,7 @@ import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
 import DockManager from "@/components/studio/DockManager";
 import VoiceManager from "@/components/studio/VoiceManager";
+import CharacterTransfer from "@/components/studio/CharacterTransfer";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -107,14 +108,15 @@ export default function Studio() {
       {tab === "gallery" && <GalleryManager creators={creators} />}
       {tab === "stories" && <StoryManager creators={creators} />}
       {tab === "topics" && <TopicManager />}
-      {tab === "content" && <ContentManager />}
+      {tab === "content" && <ContentManager creators={creators} />}
       {tab === "live" && <LiveManager />}
       {tab === "contests" && <ContestManager />}
       {tab === "members" && <MemberManager />}
 
       {tab === "characters" && (
       <>
-      <div className="flex justify-end mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <CharacterTransfer creators={creators} onImported={load} />
         <button
           onClick={() => setEditing("new")}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold whitespace-nowrap"
