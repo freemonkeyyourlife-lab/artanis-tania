@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
 import { hasProAccess, localProActive } from "@/lib/proAccess";
+import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
@@ -61,6 +62,12 @@ export default function Layout() {
   const [memberStatus, setMemberStatus] = useState(null);
   const [incomingCount, setIncomingCount] = useState(0);
   const [waitingChats, setWaitingChats] = useState(0);
+  const [layout, setLayout] = useState(null);
+
+  // Der Besitzer legt Reihenfolge, Schrift und ausgeblendete Punkte fest.
+  useEffect(() => {
+    loadLayout().then(setLayout).catch(() => setLayout(null));
+  }, []);
 
   useEffect(() => {
     base44.auth.me()
@@ -99,6 +106,10 @@ export default function Layout() {
     return () => { clearTimeout(timer); unsubscribe?.(); };
   }, []);
 
+  const menuItems = layout ? layoutMenu(layout) : MORE_LINKS;
+  const mobileLinks = [...PERSONA_LINKS, ...NAV_LINKS.slice(1), ...menuItems];
+  const navFont = layoutFont(layout);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 glass-milky border-b border-border/60" style={{ height: "72px" }}>
@@ -114,12 +125,12 @@ export default function Layout() {
             )}
           </div>
 
-          <nav className="hidden lg:flex items-center gap-2">
+          <nav className="hidden lg:flex items-center" style={{ gap: `${navFont.gap}px`, fontSize: `${navFont.fontSize}px`, fontWeight: navFont.fontWeight }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "px-3.5 py-2 rounded-full text-[15px] font-bold whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
+                    "px-3.5 py-2 rounded-full whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
                     PERSONA_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
                   )}
                 >
@@ -140,7 +151,7 @@ export default function Layout() {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "px-3.5 py-2 rounded-full text-[15px] font-bold whitespace-nowrap text-gloss transition-colors",
+                  "px-3.5 py-2 rounded-full whitespace-nowrap text-gloss transition-colors",
                   location.pathname === link.path ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
                 )}
               >
@@ -152,15 +163,15 @@ export default function Layout() {
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "px-3.5 py-2 rounded-full text-[15px] font-bold whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
-                    MORE_LINKS.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
+                    "px-3.5 py-2 rounded-full whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
+                    menuItems.some((l) => l.path === location.pathname) ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
                   )}
                 >
                   Mehr <ChevronDown className="w-3.5 h-3.5" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="glass-strong border-border">
-                {MORE_LINKS.map((l) => (
+                {menuItems.map((l) => (
                   <DropdownMenuItem key={l.path} asChild>
                     <Link to={l.path} className="text-sm cursor-pointer">{l.label}</Link>
                   </DropdownMenuItem>
@@ -169,11 +180,12 @@ export default function Layout() {
             </DropdownMenu>
 
             {NAV_LINKS.slice(4).map((link) => (
+
               <Link
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "px-3.5 py-2 rounded-full text-[15px] font-bold whitespace-nowrap text-gloss transition-colors",
+                  "px-3.5 py-2 rounded-full whitespace-nowrap text-gloss transition-colors",
                   location.pathname === link.path ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
                 )}
               >
@@ -227,7 +239,7 @@ export default function Layout() {
         {mobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 glass-strong border-b border-border p-4">
             <nav className="flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
-              {MOBILE_LINKS.map((link) => (
+              {mobileLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
