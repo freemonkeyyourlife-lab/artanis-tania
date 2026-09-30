@@ -6,11 +6,11 @@ import { Mic, MicOff, Video as VideoIcon, VideoOff, ArrowLeft, Home, MessageSqua
 import useCallRoom from "@/hooks/useCallRoom";
 import CallStage from "@/components/call/CallStage";
 import CallControls from "@/components/call/CallControls";
-import CallChat from "@/components/call/CallChat";
 import CallInvite from "@/components/call/CallInvite";
-import CallSharePanel from "@/components/call/CallSharePanel";
-import CallBotPanel from "@/components/call/CallBotPanel";
+import CallWindows from "@/components/call/CallWindows";
 import LiveToggle from "@/components/call/LiveToggle";
+import { loadWindows, subscribeWindows, toggleWindow, openWindow, closeWindow, setDock, setTextSize } from "@/lib/callWindows";
+import { onUiCommand, takePendingUiCommand, clearUiCommand } from "@/lib/ownerUi";
 import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
 import { getRooms, addRoom } from "@/lib/callRooms";
 import { publicName } from "@/lib/displayName";
@@ -23,8 +23,25 @@ export default function VideoCall() {
   const [wantCam, setWantCam] = useState(true);
   const [wantMic, setWantMic] = useState(true);
   const [myName, setMyName] = useState("");
-  const [sidePanel, setSidePanel] = useState(null);
+  const [windows, setWindows] = useState(() => loadWindows());
   const [rooms, setRooms] = useState(() => getRooms());
+
+  useEffect(() => subscribeWindows(() => setWindows(loadWindows())), []);
+
+  // Persönliche Fenster-Befehle aus der zentralen Eingabe landen hier.
+  useEffect(() => {
+    const apply = (cmd) => {
+      if (!cmd) return;
+      const panel = cmd.params?.panel;
+      if (cmd.action === "open_panel" && panel) openWindow(panel);
+      if (cmd.action === "hide_panel" && panel) closeWindow(panel);
+      if (cmd.action === "move_panel") setDock(cmd.params?.side);
+      if (cmd.action === "set_text_size") setTextSize(cmd.params?.size);
+    };
+    apply(takePendingUiCommand());
+    clearUiCommand();
+    return onUiCommand(apply);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -157,10 +174,13 @@ export default function VideoCall() {
     status === "waiting" ? "Warte auf weitere Teilnehmer…" :
     status === "error" ? "Fehler" : "Verbinde…";
 
+  const windowsOpen = windows.open.length > 0;
+  const dockRight = windows.dock !== "left";
+
   return (
     <div className="fixed inset-0 bg-background flex flex-col">
-      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 sm:px-4 py-2 border-b border-border flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <button
             onClick={() => navigate("/")}
             title="Zurück zur Startseite"
@@ -175,33 +195,33 @@ export default function VideoCall() {
             <span className="font-mono tracking-[0.2em] ml-2">{prettyCode}</span>
           </span>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
           {isHost && watchers > 0 && (
             <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-600/20 text-violet-300 text-[11px] font-semibold whitespace-nowrap flex-shrink-0">
               <Eye className="w-3 h-3" /> {watchers} Zuschauer
             </span>
           )}
           <button
-            onClick={() => setSidePanel((v) => (v === "chat" ? null : "chat"))}
+            onClick={() => toggleWindow("chat")}
             title="Chat im Call"
-            className={cn("relative w-9 h-9 rounded-full flex items-center justify-center transition-colors", sidePanel === "chat" ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+            className={cn("relative w-9 h-9 rounded-full flex items-center justify-center transition-colors", windows.open.includes("chat") ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
           >
             <MessageSquare className="w-4 h-4" />
-            {sidePanel !== "chat" && messages.length > 0 && (
+            {!windows.open.includes("chat") && messages.length > 0 && (
               <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{messages.length}</span>
             )}
           </button>
           <button
-            onClick={() => setSidePanel((v) => (v === "bot" ? null : "bot"))}
+            onClick={() => toggleWindow("bot")}
             title="Parallel mit deinem Bot schreiben"
-            className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", sidePanel === "bot" ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+            className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", windows.open.includes("bot") ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
           >
             <Bot className="w-4 h-4" /> <span className="hidden sm:inline">Bot</span>
           </button>
           <button
-            onClick={() => setSidePanel((v) => (v === "share" ? null : "share"))}
-            title="Alles zum Weitergeben öffnet sich rechts"
-            className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", sidePanel === "share" ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+            onClick={() => toggleWindow("share")}
+            title="Alles zum Weitergeben"
+            className={cn("inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold transition-colors", windows.open.includes("share") ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
           >
             <Share2 className="w-4 h-4" /> <span className="hidden sm:inline">Teilen</span>
           </button>
@@ -214,7 +234,22 @@ export default function VideoCall() {
         </div>
       </div>
 
-      <div className="flex-1 flex min-h-0 relative">
+      <div className="flex-1 flex min-h-0 relative overflow-hidden">
+        {!dockRight && windowsOpen && (
+          <aside className="absolute inset-x-0 bottom-0 h-[72%] z-30 rounded-t-3xl border-t border-border shadow-2xl flex flex-col lg:static lg:inset-auto lg:h-auto lg:rounded-none lg:shadow-none lg:border-t-0 lg:border-r lg:border-border lg:w-[380px] lg:max-w-[46%] lg:flex-shrink-0">
+            <CallWindows
+              messages={messages}
+              mySeat={mySeat}
+              onSend={sendChat}
+              token={token}
+              roomNumber={roomNumber}
+              rooms={rooms}
+              isHost={isHost}
+              onOpen={openRoom}
+              onNewRoom={newRoom}
+            />
+          </aside>
+        )}
         <CallStage
           localVideoRef={localVideoRef}
           camOn={camOn}
@@ -222,45 +257,19 @@ export default function VideoCall() {
           myName={myName || "Du"}
           peers={peers}
         />
-        {sidePanel && (
-          <aside className="absolute inset-0 z-20 sm:static sm:inset-auto sm:z-auto w-full sm:w-96 border-l border-border bg-card flex flex-col">
-            <div className="px-2 py-2 border-b border-border flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={() => setSidePanel("chat")}
-                className={cn("px-3 py-1.5 rounded-full text-xs font-semibold transition-colors", sidePanel === "chat" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-              >
-                Chat
-              </button>
-              <button
-                onClick={() => setSidePanel("share")}
-                className={cn("px-3 py-1.5 rounded-full text-xs font-semibold transition-colors", sidePanel === "share" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-              >
-                Teilen
-              </button>
-              <button
-                onClick={() => setSidePanel("bot")}
-                className={cn("px-3 py-1.5 rounded-full text-xs font-semibold transition-colors", sidePanel === "bot" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-              >
-                Bot
-              </button>
-              <button onClick={() => setSidePanel(null)} className="ml-auto w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground" title="Seitenleiste schließen">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            {sidePanel === "chat" ? (
-              <CallChat messages={messages} mySeat={mySeat} onSend={sendChat} />
-            ) : sidePanel === "share" ? (
-              <CallSharePanel
-                token={token}
-                roomNumber={roomNumber}
-                rooms={rooms}
-                isHost={isHost}
-                onOpen={openRoom}
-                onNewRoom={newRoom}
-              />
-            ) : (
-              <CallBotPanel />
-            )}
+        {dockRight && windowsOpen && (
+          <aside className="absolute inset-x-0 bottom-0 h-[72%] z-30 rounded-t-3xl border-t border-border shadow-2xl flex flex-col lg:static lg:inset-auto lg:h-auto lg:rounded-none lg:shadow-none lg:border-t-0 lg:border-l lg:border-border lg:w-[380px] lg:max-w-[46%] lg:flex-shrink-0">
+            <CallWindows
+              messages={messages}
+              mySeat={mySeat}
+              onSend={sendChat}
+              token={token}
+              roomNumber={roomNumber}
+              rooms={rooms}
+              isHost={isHost}
+              onOpen={openRoom}
+              onNewRoom={newRoom}
+            />
           </aside>
         )}
       </div>

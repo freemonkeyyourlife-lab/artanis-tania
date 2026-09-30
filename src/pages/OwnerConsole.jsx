@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic, Terminal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -16,9 +16,14 @@ import StructureEditor from "@/components/owner/StructureEditor";
 import ChannelHub from "@/components/owner/ChannelHub";
 import InfoTextEditor from "@/components/owner/InfoTextEditor";
 import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
+import OwnerCommandBar from "@/components/owner/OwnerCommandBar";
+import ModuleEditor from "@/components/owner/ModuleEditor";
+import WindowLayoutEditor from "@/components/owner/WindowLayoutEditor";
 import { cn } from "@/lib/utils";
 
 const TABS = [
+  { id: "befehle", label: "Befehle", icon: Terminal },
+  { id: "module", label: "Module", icon: LayoutGrid },
   { id: "lage", label: "Lage", icon: LayoutGrid },
   { id: "menu", label: "Menü", icon: LayoutGrid },
   { id: "font", label: "Schrift", icon: Type },
@@ -38,9 +43,10 @@ const mark = (count, { required = true } = {}) =>
 
 export default function OwnerConsole() {
   const [me, setMe] = useState(undefined);
-  const [tab, setTab] = useState("lage");
+  const [tab, setTab] = useState("befehle");
   const [record, setRecord] = useState(null);
   const [items, setItems] = useState(DEFAULT_MENU);
+  const [savedItems, setSavedItems] = useState(DEFAULT_MENU);
   const [font, setFont] = useState(DEFAULT_FONT);
   const [structure, setStructure] = useState(DEFAULT_STRUCTURE);
   const [counts, setCounts] = useState(null);
@@ -59,7 +65,10 @@ export default function OwnerConsole() {
     if (!me || me.role !== "admin") return;
     loadLayout().then((row) => {
       setRecord(row);
-      if (Array.isArray(row?.navItems) && row.navItems.length) setItems(row.navItems);
+      if (Array.isArray(row?.navItems) && row.navItems.length) {
+        setItems(row.navItems);
+        setSavedItems(row.navItems);
+      }
       setFont({
         size: row?.navFontSize || DEFAULT_FONT.size,
         weight: row?.navFontWeight || DEFAULT_FONT.weight,
@@ -103,12 +112,13 @@ export default function OwnerConsole() {
     })();
   }, [me]);
 
-  const save = async () => {
+  const save = async (override) => {
     setSaving(true);
     setNotice("");
+    const nextItems = override ?? items;
     try {
       const saved = await saveLayout(record, {
-        navItems: items,
+        navItems: nextItems,
         navFontSize: font.size,
         navFontWeight: font.weight,
         navGap: font.gap,
@@ -116,6 +126,8 @@ export default function OwnerConsole() {
         ...structure,
       });
       setRecord(saved);
+      setItems(nextItems);
+      setSavedItems(nextItems);
       clearStructureCache();
       await loadStructure();
       setNotice("Gespeichert — die Änderungen sind jetzt live.");
@@ -299,6 +311,47 @@ export default function OwnerConsole() {
 
       {notice && (
         <p className="glass rounded-xl border border-border px-4 py-3 text-[15px] font-bold text-primary mb-5">{notice}</p>
+      )}
+
+      {tab === "befehle" && (
+        <>
+          <GuideBox
+            title="So sprichst du mit der App"
+            steps={[
+              "Sag oder tippe, was du willst — zum Beispiel: Erstelle einen Charakter namens Luna, 27, mit der Stimme Honey.",
+              "Bei persönlichen Fenstern (öffnen, verschieben, ausblenden) mache ich es sofort. Das kannst du jederzeit rückgängig machen.",
+              "Bei etwas, das für alle gilt, zeige ich dir vorher genau, was passiert, und frage nach.",
+              "Fehlt mir eine Angabe, frage ich nach — ich erfinde nichts.",
+            ]}
+          >
+            Das ist die zentrale Eingabe. Klicken und Formulare bleiben daneben bestehen — du musst nichts umlernen.
+          </GuideBox>
+          <OwnerCommandBar />
+        </>
+      )}
+
+      {tab === "module" && (
+        <>
+          <GuideBox
+            title="Module und Fenster"
+            steps={[
+              "Oben sortierst du die Module der Kopfzeile: ziehen, Pfeile oder die Zahl eintippen.",
+              "Ausblenden heißt nur: nicht mehr in der Leiste. Es wird nichts gelöscht, und du holst es hier zurück.",
+              "Änderungen an den Modulen gelten für alle — du siehst sie vorher in der Vorschau und wendest sie dann bewusst an.",
+              "Die Fenster-Anordnung darunter ist nur deine eigene Ansicht und wirkt sofort.",
+            ]}
+          >
+            Hier verwaltest du die Bausteine der App — und getrennt davon deine eigenen Fenster.
+          </GuideBox>
+          <div className="glass rounded-2xl border border-border p-5 mb-5">
+            <p className="font-display text-xl text-foreground mb-1">Module für alle</p>
+            <p className="text-[15px] font-semibold text-muted-foreground mb-4">
+              Das sind die Einträge der Kopfzeile. Änderungen hier sehen alle Besucher.
+            </p>
+            <ModuleEditor items={items} saved={savedItems} onChange={setItems} onApply={(next) => save(next)} />
+          </div>
+          <WindowLayoutEditor />
+        </>
       )}
 
       {tab === "lage" && (
