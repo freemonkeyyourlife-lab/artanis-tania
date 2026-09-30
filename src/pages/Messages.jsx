@@ -16,6 +16,7 @@ import CharacterSuggestion from "@/components/CharacterSuggestion";
 import SceneReadButton from "@/components/chat/SceneReadButton";
 import RolePicker from "@/components/chat/RolePicker";
 import CharacterDirector from "@/components/chat/CharacterDirector";
+import StoryExportButton from "@/components/chat/StoryExportButton";
 import { speechPrompt } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
 import { splitScene, playScene } from "@/lib/sceneVoice";
@@ -601,18 +602,17 @@ export default function Messages() {
         stream.getTracks().forEach(t => t.stop());
         setIsRecording(false);
         setTranscribing(true);
+        let url = null;
         try {
           const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
           const audioFile = new File([audioBlob], "voice.webm", { type: "audio/webm" });
-          const uploadResult = await base44.integrations.Core.UploadPublicFile({ file: audioFile });
-          const transcriptRes = await base44.integrations.Core.TranscribeAudio({ audio_url: uploadResult.file_url });
-          const text = typeof transcriptRes === "string" ? transcriptRes : (transcriptRes.transcript || transcriptRes.text || transcriptRes.output || "");
-          if (text) setInput(prev => prev ? prev + " " + text : text);
+          url = (await base44.integrations.Core.UploadPublicFile({ file: audioFile })).file_url;
         } catch (e) {
           console.error(e);
-        } finally {
           setTranscribing(false);
         }
+        // Aufnahme beendet = gesendet. Kein zweites Abhören, kein extra Klick.
+        if (url) await sendVoiceNote(url);
       };
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
@@ -745,13 +745,20 @@ export default function Messages() {
     return attachments;
   };
 
-  const sendMessage = async (overrideText) => {
+  const sendMessage = async (overrideText, extraFiles) => {
     const listening = speakAs === "LISTEN";
     const msgText = overrideText || input;
-    const img = pendingImage;
-    const files = pendingFiles;
+    if (extraFiles?.length) return sendMessageWith(msgText, [...pendingFiles, ...extraFiles]);
+    return sendMessageWith(msgText, pendingFiles);
+  };
+
+  const sendMessageWith = async (msgText, files) => {
+    const listening = speakAs === "LISTEN";
+    const img = files.find((f) => f.type === "image")?.url || null;
+    // Die eigene Sprachnachricht zählt als gesagter Text — nicht als Bild.
+    const visual = files.filter((f) => f.type !== "audio");
     if ((!listening && !msgText.trim() && !files.length) || !activeChat) return;
-    if (viewMode === "dm") { return sendDmMessage(msgText); }
+    if (viewMode === "dm") { return sendDmMessage(msgText, files); }
     const chatKey = activeChat;
     if (!aiNames.length) {
       toast({ title: "Niemand spielt mit sich selbst", description: "Hol noch jemanden dazu oder gib eine Figur frei — oben unter Rollen.", variant: "destructive" });
@@ -798,8 +805,8 @@ export default function Messages() {
         ? "\n\nDer Nutzer hört nur zu und sagt nichts. Spiel die Szene von allein weiter: die Figuren im Raum reden und handeln miteinander, ohne ihn. Knüpfe direkt an das letzte Gesagte an und bring die Szene ein Stück voran."
         : asCharacter
           ? `\n\nDer Nutzer schreibt gerade als ${asCharacter.stageName}. ${asCharacter.stageName} hat gesagt: "${msgText}". Antworte als die ANDEREN im Raum — ${asCharacter.stageName} selbst kommt jetzt nicht zu Wort.`
-          : files.length
-            ? "\n\nThe user sent you " + (files.length === 1 ? "a photo" : files.length + " files, one after another") + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see. Everything they sent is now saved as a PERMANENT reference: whoever is in it keeps exactly that face, body, hair colour and skin in every future image — never change them again. Say out loud that you'll keep it. Then generate a response image that incorporates what they showed you (put yourself in the scene with them)."
+          : visual.length
+            ? "\n\nThe user sent you " + (visual.length === 1 ? "a photo" : visual.length + " files, one after another") + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see. Everything they sent is now saved as a PERMANENT reference: whoever is in it keeps exactly that face, body, hair colour and skin in every future image — never change them again. Say out loud that you'll keep it. Then generate a response image that incorporates what they showed you (put yourself in the scene with them)."
             : "\n\nThe user said: \"" + msgText + "\"";
       const system = buildContext();
       const userPrompt = (hist ? "CONVERSATION SO FAR:\n" + hist + "\n\n" : "") + userTurn + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : "");
@@ -831,7 +838,7 @@ export default function Messages() {
         base44.entities.Conversation.update(conv.id, { lastMessageAt: new Date().toISOString(), waitingSince: null }).catch(() => {});
       }
 
-      const attachments = await generateMediaFor(parsed, files.map((f) => f.url));
+      const attachments = await generateMediaFor(parsed, visual.map((f) => f.url));
       if (attachments.length) {
         setMessages(prev => ({ ...prev, [chatKey]: (prev[chatKey] || []).map((m) => (m === aiMsg ? { ...m, attachments } : m)) }));
         if (savedAi?.id) base44.entities.Message.update(savedAi.id, { attachments }).catch(() => {});
@@ -1130,10 +1137,9 @@ export default function Messages() {
     }
   };
 
-  const sendDmMessage = async (msgText) => {
-    if ((!msgText.trim() && !pendingFiles.length) || !activeChat) return;
+  const sendDmMessage = async (msgText, files = pendingFiles) => {
+    if ((!msgText.trim() && !files.length) || !activeChat) return;
     const chatKey = activeChat;
-    const files = pendingFiles;
     try {
       const me = await base44.auth.me();
       const created = await base44.entities.Message.create({
@@ -1150,23 +1156,24 @@ export default function Messages() {
     } catch (e) { console.error(e); }
   };
 
-  // Deine aufgenommene Stimme — umgewandelt, aber noch NICHT gesendet: sie liegt
-  // angehängt bereit, der Text steht zum Nachlesen im Feld, Bilder kannst du dazulegen.
-  const stageVoice = async (url, character) => {
+  // Deine Sprachnachricht geht sofort raus: das Audio hängt dran, der gesprochene
+  // Text steht dabei — so antwortet die Figur direkt und die Story bleibt exportierbar.
+  const sendVoiceNote = async (url) => {
     if (!activeChat || !url) return;
-    setPendingFiles((prev) => [...prev, { type: "audio", url, name: "Sprachnachricht" }]);
     setTranscribing(true);
+    let text = "";
     try {
       const res = await base44.integrations.Core.TranscribeAudio({ audio_url: url });
-      const text = typeof res === "string" ? res : (res?.transcript || res?.text || "");
-      if (text) setInput((prev) => (prev ? prev + " " + text : text));
+      text = typeof res === "string" ? res : (res?.transcript || res?.text || "");
     } catch (e) {
       console.error(e);
     } finally {
       setTranscribing(false);
     }
-    toast({ title: "Sprachnachricht bereit", description: `Mit der Stimme von ${character?.stageName || "dem Charakter"} — hör rein, lies nach, häng Bilder an. Gesendet wird erst mit Senden.` });
+    const typed = input.trim();
+    await sendMessage([typed, text.trim()].filter(Boolean).join(" ") || " ", [{ type: "audio", url, name: "Sprachnachricht" }]);
   };
+  const stageVoice = (url) => sendVoiceNote(url);
 
   const requestUnlock = async (item) => {
     if (window.self !== window.top) {
@@ -1514,6 +1521,11 @@ export default function Messages() {
                 <button onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })} title="Zur letzten Nachricht springen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <ArrowDown className="w-4 h-4" />
                 </button>
+                <StoryExportButton
+                  messages={messages[activeChat] || []}
+                  title={viewMode === "dm" ? dmParticipantName || "Chat" : activeCreator?.stageName || "Story"}
+                  meName={publicName(currentUser) || "Ich"}
+                />
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -1877,7 +1889,7 @@ export default function Messages() {
                 <button
                   onClick={() => (voiceNoteMode ? convertRecorder.toggle("meine-stimme.webm") : toggleRecording())}
                   disabled={sending || transcribing}
-                  title={voiceNoteMode ? `Aufnehmen — geht mit der Stimme von ${activeCreator?.stageName || "dem Charakter"} raus` : "Sprache in Text umwandeln"}
+                  title={voiceNoteMode ? `Aufnehmen — geht mit der Stimme von ${activeCreator?.stageName || "dem Charakter"} sofort raus` : "Sprachnachricht aufnehmen — beim Stoppen geht sie raus"}
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors",
                     (voiceNoteMode ? convertRecorder.recording : isRecording)

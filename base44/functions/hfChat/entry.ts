@@ -32,10 +32,11 @@ export default async function (req) {
     if (body.system) messages.push({ role: 'system', content: body.system });
     messages.push({ role: 'user', content: prompt });
 
+    // Denk-Modelle sollen direkt antworten, nicht laut nachdenken.
     const res = await fetch(`${ROUTER}/chat/completions`, {
       method: 'POST',
       headers: { ...auth, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: modelId, messages, max_tokens: 1200, temperature: 0.9 }),
+      body: JSON.stringify({ model: modelId, messages, max_tokens: 1200, temperature: 0.9, chat_template_kwargs: { enable_thinking: false } }),
     });
 
     const text = await res.text();
@@ -52,8 +53,14 @@ export default async function (req) {
     }
 
     const answer = data.choices?.[0]?.message || {};
-    // Manche Modelle denken lange — bleibt am Ende nichts übrig, nehmen wir das, was da ist.
-    return Response.json({ text: answer.content || answer.reasoning || '' });
+    // Nie die Denk-Notizen des Modells in den Chat geben. Bleibt keine echte
+    // Antwort übrig, kommt ein leerer Text zurück — dann antwortet die Standard-KI.
+    let out = String(answer.content || '').replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim();
+    if (/^(here'?s a thinking process|thinking process|\*\*?analy[sz]e|okay,? (so|let me)|let me think|we need to|the user)/i.test(out)) {
+      console.log('hfChat: Denk-Notizen statt Antwort verworfen', modelId);
+      out = '';
+    }
+    return Response.json({ text: out });
   } catch (error) {
     console.log('hfChat failed', error.message);
     return Response.json({ error: error.message }, { status: 500 });
