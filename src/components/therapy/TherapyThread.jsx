@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import ChatText from "@/components/chat/ChatText";
 
 const label = (msg) => {
   if (msg.senderType === "AI") return msg.senderName || "Triania";
@@ -42,7 +43,7 @@ export default function TherapyThread({ messages }) {
                     : "bg-elevated text-foreground"
                 )}
               >
-                {msg.text}
+                {msg.senderType === "AI" ? <ChatText text={msg.text} /> : msg.text}
               </div>
             </div>
           </div>

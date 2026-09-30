@@ -11,7 +11,7 @@ import SessionControls from "@/components/therapy/SessionControls";
 import SessionPlan from "@/components/therapy/SessionPlan";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
-import ReadAloudButton from "@/components/ReadAloudButton";
+import TherapyReadButton from "@/components/therapy/TherapyReadButton";
 import { downloadSession } from "@/lib/therapyExport";
 import { newCallCode } from "@/lib/callLink";
 import { publicName } from "@/lib/displayName";
@@ -110,7 +110,7 @@ export default function TherapySession() {
 
   const buildHistory = (list) => list
     .filter((m) => m.senderType !== "GUEST")
-    .map((m) => `${m.senderType === "AI" ? therapistName(session) : "Klient"}: ${m.text}`)
+    .map((m) => `${m.senderType === "AI" ? (session.actor?.active ? "Szene" : therapistName(session)) : "Klient"}: ${m.text}`)
     .join("\n");
 
   const buildGuests = (list) => list.filter((m) => m.senderType === "GUEST").slice(-5).map((m) => m.text);
@@ -255,10 +255,11 @@ export default function TherapySession() {
       setSession(updated);
       if (roleSetup && roleSetup !== session.roleSetup) await switchRole(roleSetup);
       const present = (patch.cast || []).filter((c) => c.mode === "PRESENT");
+      const actorName = patch.actor?.active ? (patch.actor.name || "der Akteur") : null;
       const note = await base44.entities.TherapyMessage.create({
         sessionId: session.id,
         senderType: "SYSTEM",
-        text: `Neu konfiguriert — Thema, Besetzung${present.length ? ` (${present.map((c) => c.name).join(", ")} im Raum)` : ""} und ihre Reaktionsweise. Gilt ab jetzt.`,
+        text: `Neu konfiguriert — Thema, Besetzung${present.length ? ` (${present.map((c) => c.name).join(", ")} im Raum)` : ""}${actorName ? `, Akteur ${actorName} spielt mit` : ""} und ihre Reaktionsweise. Gilt ab jetzt.`,
       });
       setMessages((prev) => (prev.some((m) => m.id === note.id) ? prev : [...prev, note]));
       setConfigOpen(false);
@@ -323,7 +324,13 @@ export default function TherapySession() {
           >
             {handsFree ? "Freisprechen ✓" : "Freisprechen"}
           </button>
-          <ReadAloudButton text={lastAi?.text} voice="honey" autoPlay={handsFree} className="px-2.5 py-1.5 rounded-full bg-elevated" />
+          <TherapyReadButton
+            session={session}
+            text={lastAi?.text}
+            sceneKey={`therapy-${session.id}`}
+            autoPlay={handsFree}
+            className="px-2.5 py-1.5 rounded-full bg-elevated"
+          />
           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
             {session.visibility === "PRIVATE" ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
             {session.visibility === "PRIVATE" ? "vertraulich" : "offen für Mitleser"}

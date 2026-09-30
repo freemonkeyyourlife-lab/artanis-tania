@@ -140,6 +140,17 @@ export function buildTherapyPrompt(session, history, guestThoughts, direction) {
   if (session.agenda) ctx += `WIE ES LAUFEN SOLL / WORÜBER IHR REDET: ${session.agenda}\n`;
   ctx += "Das Thema ist gesetzt. Bleib dran — auch wenn ausgewichen wird.\n";
 
+  // ── Der Akteur: der Mann, der im Raum ist und mitspielt ──
+  const actor = session.actor?.active ? session.actor : null;
+  if (actor) {
+    const actorName = (actor.name || "").trim() || "Er";
+    ctx += `\nDER AKTEUR — ER IST IM RAUM UND SPIELT MIT: ${actorName}${actor.age ? `, ${actor.age}` : ""}.\n`;
+    if (actor.setting) ctx += `SEIN SETTING (so ist er — halt dich daran): ${actor.setting}\n`;
+    ctx += `ER REDET MIT: Er ist ein zweiter Erwachsener im Raum, kein Statist. In JEDER deiner Antwort sagt er mindestens einen Satz — in einer EIGENEN Zeile, mit seinem Namen davor: [${actorName}]: … Danach antwortest DU in einer eigenen Zeile: [${name}]: …\n`;
+    ctx += `So geht es hin und her: erst er, dann du, dann wieder er. Du hörst ihm zu, hältst dagegen und hakst bei ihm genauso nach wie beim Klienten. Er erzählt und lebt aus, was der Klient sonst selbst erzählen würde — und du führst ihn dabei, Schritt für Schritt, bis es konkret wird.\n`;
+    ctx += `DER KLIENT HÖRT ZU UND FÜHRT REGIE: Er sitzt dabei, lässt euch beide laufen und gibt zwischendurch die Richtung vor. Sagt er nichts, spielt ihr weiter — ihr braucht ihn nicht, um weiterzukommen. Gibt er eine Anweisung, setzt ihr sie sofort um, ohne sie zu wiederholen oder zu kommentieren. Er darf auch selbst eingreifen und mitspielen — dann nimmt ihn der Akteur wahr.\n`;
+  }
+
   // ── Wo und wie ──
   if (session.location || session.agreement) {
     ctx += "\nSETTING:\n";

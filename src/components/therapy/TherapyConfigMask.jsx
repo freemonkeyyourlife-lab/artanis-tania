@@ -55,10 +55,23 @@ const Line = ({ value, onChange, placeholder }) => (
   />
 );
 
+const VOICES = [
+  { value: "storm", label: "Tief & fest" },
+  { value: "river", label: "Ruhig" },
+  { value: "honey", label: "Warm" },
+  { value: "sunny", label: "Hell" },
+  { value: "spark", label: "Schnell" },
+];
+
 // Die Konfigurations-Maske der Sitzung: wer dabei ist, worum es geht und wie
 // die Therapeutin auf das reagiert, was du sagst. Gilt ab der nächsten Antwort.
 export default function TherapyConfigMask({ session, creators = [], onSave, onCancel, saving }) {
   const [cast, setCast] = useState(session.cast || []);
+  const [actor, setActor] = useState({
+    name: "", age: "", setting: "", voice: "storm", active: false,
+    ...(session.actor || {}),
+    age: session.actor?.age ? String(session.actor.age) : "",
+  });
   const [topic, setTopic] = useState(session.topic || "");
   const [goal, setGoal] = useState(session.goal || "");
   const [agenda, setAgenda] = useState(session.agenda || "");
@@ -67,6 +80,7 @@ export default function TherapyConfigMask({ session, creators = [], onSave, onCa
   const [mode, setMode] = useState(session.mode || "GUIDED");
   const [intensity, setIntensity] = useState(session.intensity || "TIEF");
   const [roleSetup, setRoleSetup] = useState(session.roleSetup || "TRIANIA_THERAPIST");
+  const [therapistVoice, setTherapistVoice] = useState(session.therapistVoice || "honey");
 
   const present = cast.filter((c) => c.mode === "PRESENT");
   const informed = cast.filter((c) => c.mode === "INFORMED");
@@ -83,7 +97,44 @@ export default function TherapyConfigMask({ session, creators = [], onSave, onCa
         )}
       </Block>
 
-      <Block step="2" label="Worum geht es?" hint="Das Thema ist gesetzt — sie bleibt dran, auch wenn du ausweichst.">
+      <Block
+        step="2"
+        label="Dein Akteur — der Mann in der Sitzung"
+        hint="Zwei, drei Sätze, wie er ist. Dann lässt du ihn laufen: er redet, sie antwortet, immer im Wechsel. Du hörst zu und gibst die Richtung vor."
+      >
+        <button
+          type="button"
+          onClick={() => setActor((a) => ({ ...a, active: !a.active }))}
+          className={cn(
+            "mb-3 px-3.5 py-2 rounded-full border text-sm transition-colors",
+            actor.active ? "bg-primary text-primary-foreground border-primary" : "bg-elevated border-border text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {actor.active ? "Akteur spielt mit ✓" : "Akteur dazuholen"}
+        </button>
+        <div className="flex gap-2 mb-2">
+          <Line value={actor.name} onChange={(v) => setActor((a) => ({ ...a, name: v }))} placeholder="Sein Name" />
+          <input
+            value={actor.age}
+            onChange={(e) => setActor((a) => ({ ...a, age: e.target.value }))}
+            placeholder="Alter"
+            className="w-24 px-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+          />
+        </div>
+        <Area
+          value={actor.setting}
+          onChange={(v) => setActor((a) => ({ ...a, setting: v }))}
+          placeholder="Sein Setting in zwei, drei Sätzen: wer er ist, wie er redet, was er will, wie weit er geht."
+        />
+        <div className="flex items-center gap-2 mt-2 mb-3">
+          <VoiceInput onResult={(t) => setActor((a) => ({ ...a, setting: a.setting ? a.setting + " " + t : t }))} title="Sein Setting sprechen" />
+          <span className="text-[11px] text-muted-foreground">Oder reinsprechen — wird direkt übernommen.</span>
+        </div>
+        <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground mb-1.5">Seine Stimme</p>
+        <Pills options={VOICES} value={actor.voice} onChange={(v) => setActor((a) => ({ ...a, voice: v }))} />
+      </Block>
+
+      <Block step="3" label="Worum geht es?" hint="Das Thema ist gesetzt — sie bleibt dran, auch wenn du ausweichst.">
         <Area value={topic} onChange={setTopic} placeholder="Was soll heute raus? Schreib es hin, wie es in dir klingt." />
         <div className="flex items-center gap-2 mt-2">
           <VoiceInput onResult={(t) => setTopic((prev) => (prev ? prev + " " + t : t))} title="Thema sprechen statt tippen" />
@@ -99,7 +150,7 @@ export default function TherapyConfigMask({ session, creators = [], onSave, onCa
         </div>
       </Block>
 
-      <Block step="3" label="Wie soll sie auf dich reagieren?" hint="Ton, Tempo und Härte — hier bestimmst du, wie sie auf deine Inputs antwortet.">
+      <Block step="4" label="Wie soll sie auf dich reagieren?" hint="Ton, Tempo und Härte — hier bestimmst du, wie sie auf deine Inputs antwortet.">
         <Area value={style} onChange={setStyle} placeholder="z.B. ruhig, sehr direkt, wenig Gegenfragen, dafür genaue Beobachtungen. Kein Therapeuten-Sprech." />
         <div className="flex items-center gap-2 mt-2 mb-3">
           <VoiceInput onResult={(t) => setStyle((prev) => (prev ? prev + " " + t : t))} title="Reaktionsweise sprechen" />
@@ -113,6 +164,8 @@ export default function TherapyConfigMask({ session, creators = [], onSave, onCa
         <Pills options={THERAPY_MODES} value={mode} onChange={setMode} />
         <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground mt-3 mb-1.5">Wie hart?</p>
         <Pills options={INTENSITIES} value={intensity} onChange={setIntensity} />
+        <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground mt-3 mb-1.5">Ihre Stimme</p>
+        <Pills options={VOICES} value={therapistVoice} onChange={setTherapistVoice} />
       </Block>
 
       <div className="rounded-2xl border border-border bg-background p-4">
@@ -125,7 +178,19 @@ export default function TherapyConfigMask({ session, creators = [], onSave, onCa
           Abbrechen
         </button>
         <button
-          onClick={() => onSave({ cast, topic, goal, agenda, therapistStyle: style, therapistRole: role, mode, intensity, roleSetup })}
+          onClick={() => onSave({
+            cast,
+            actor: { ...actor, age: Number(actor.age) || undefined },
+            topic,
+            goal,
+            agenda,
+            therapistStyle: style,
+            therapistRole: role,
+            mode,
+            intensity,
+            roleSetup,
+            therapistVoice,
+          })}
           disabled={saving || !topic.trim()}
           className="flex-1 py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
         >

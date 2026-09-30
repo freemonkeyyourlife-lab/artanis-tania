@@ -88,6 +88,46 @@
     "therapistRole": {
       "type": "string"
     },
+    "therapistVoice": {
+      "type": "string",
+      "enum": [
+        "river",
+        "honey",
+        "sunny",
+        "storm",
+        "spark"
+      ],
+      "default": "honey"
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "age": {
+          "type": "number"
+        },
+        "setting": {
+          "type": "string"
+        },
+        "voice": {
+          "type": "string",
+          "enum": [
+            "river",
+            "honey",
+            "sunny",
+            "storm",
+            "spark"
+          ],
+          "default": "storm"
+        },
+        "active": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
     "cast": {
       "type": "array",
       "items": {
