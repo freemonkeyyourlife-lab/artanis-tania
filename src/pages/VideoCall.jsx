@@ -9,7 +9,7 @@ import CallControls from "@/components/call/CallControls";
 import CallChat from "@/components/call/CallChat";
 import CallInvite from "@/components/call/CallInvite";
 import LiveToggle from "@/components/call/LiveToggle";
-import { resetCallToken, normalizeCallCode } from "@/lib/callLink";
+import { resetCallToken, normalizeCallCode, callInviteUrl } from "@/lib/callLink";
 import { publicName } from "@/lib/displayName";
 
 export default function VideoCall() {
@@ -40,7 +40,9 @@ export default function VideoCall() {
     mode, setMode, watchers, closed,
   } = useCallRoom({ token, joined, wantCam, wantMic, name: myName });
 
-  const inviteLink = `${window.location.origin}/call/${token}`;
+  const inviteLink = callInviteUrl(token);
+  // Derselbe Code = derselbe Raum. Sichtbar für alle, damit das sofort prüfbar ist.
+  const prettyCode = `${token.slice(0, 4)}-${token.slice(4)}`;
 
   // Der Link bleibt gleich — ein neuer entsteht nur auf ausdrücklichen Wunsch.
   const createNewLink = () => {
@@ -60,9 +62,13 @@ export default function VideoCall() {
         </button>
         <div className="w-full max-w-md text-center py-8">
           <h1 className="font-display text-2xl text-foreground">Video-Call beitreten</h1>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground">
+            Raum <span className="font-mono tracking-[0.25em] text-foreground">{prettyCode}</span>
+          </p>
+          <p className="text-sm text-muted-foreground mt-3">
             Du entscheidest selbst, was du teilst. Kamera und Mikrofon kannst du jederzeit wieder ausschalten.
           </p>
+          <p className="text-xs text-muted-foreground mt-2">Alle mit demselben Code sind im selben Raum.</p>
 
           {window.self !== window.top && (
             <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-left">
@@ -155,6 +161,9 @@ export default function VideoCall() {
           </button>
           <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", status === "live" ? "bg-emerald-500" : status === "error" ? "bg-destructive" : "bg-amber-500 animate-pulse")} />
           <span className="text-sm text-foreground font-medium truncate">{statusLabel}</span>
+          <span className="px-2.5 py-1 rounded-full bg-elevated border border-border font-mono text-[11px] tracking-[0.2em] text-muted-foreground flex-shrink-0">
+            {prettyCode}
+          </span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {isHost && watchers > 0 && (

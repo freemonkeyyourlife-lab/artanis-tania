@@ -15,17 +15,33 @@ export function normalizeCallCode(value) {
   return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
+// Merkt sich den Code auch dann, wenn der Browser keinen Speicher freigibt —
+// sonst bekäme jeder Seitenaufruf einen neuen Raum.
+let cached = null;
+
 function store(token) {
+  cached = token;
   try { localStorage.setItem(KEY, token); } catch (e) { /* ignore */ }
   return token;
 }
 
 export function getCallToken() {
+  if (cached) return cached;
   let token = null;
   try { token = localStorage.getItem(KEY); } catch (e) { /* ignore */ }
   // Der alte lange Link wird einmalig durch den kurzen Code ersetzt.
   if (!token || token.length !== LENGTH) return store(newCallCode());
+  cached = token;
   return token;
+}
+
+// Die Adresse für den Einladungslink. In der Vorschau zeigt die Adresszeile auf
+// die Vorschau — ein Link daraus führt Gäste woanders hin als in deinen Raum.
+const PUBLISHED = "https://artanis-triania-live.base44.app";
+
+export function callInviteUrl(token) {
+  const base = window.self !== window.top ? PUBLISHED : window.location.origin;
+  return `${base}/call/${token}`;
 }
 
 export function resetCallToken() {
