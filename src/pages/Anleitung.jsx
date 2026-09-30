@@ -1,48 +1,60 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Blocks, Mic, Github, Plug, KeyRound, ShieldAlert } from "lucide-react";
+import { Blocks, Mic, Github, Plug, KeyRound, ShieldAlert, Sparkles, Image as ImageIcon, MessageSquare } from "lucide-react";
 
-// Zum Nachschlagen: wie alles zusammenhängt — und was hier bewusst nicht geht.
-// Nur für den Besitzer.
+// Zum Nachschlagen: wie alles zusammenhängt — Schritt für Schritt, mit den
+// genauen Stellen in der App. Nur für den Besitzer.
 const SECTIONS = [
   {
-    icon: Blocks,
-    title: "Der Baukasten",
-    intro: "Aus einzelnen Teilen wird ein Paket, das du immer wieder verwendest.",
-    items: [
-      "Baustein: eine Situation mit Varianten, eine einzelne Datei oder eine ganze Szene. Jeder Baustein trägt eine Sprechzeile.",
-      "Baukasten: mehrere Bausteine zu einem Paket zusammengesetzt — mit Titelbild, Schlagworten und Namen.",
-      "Nachbauen: gibst du ein Paket frei, können andere eine eigene Kopie anlegen und sie mit ihrem Material füllen.",
-      "Datei: jedes Paket lässt sich exportieren und wieder einlesen — zum Sichern oder Weiterreichen.",
-      "Grundstimme: im Baustein wählst du, mit welcher Stimme aus der Stimmbank der Baustein spricht.",
-    ],
-    to: "/baukasten",
-    toLabel: "Baukasten öffnen",
-  },
-  {
-    icon: Mic,
-    title: "Stimmen und Sprechzeilen",
-    intro: "Damit jede Figur in jedem Moment etwas zu sagen hat.",
-    items: [
-      "Stimmbank (im Studio): die Stimmen selbst — Grundstimme, Stimmung, Tempo, Tiefe, Beispielsatz.",
-      "Sprechzeilen (im Baukasten): Sätze in sechs Stufen, von der Begrüßung bis zum Schluss, je mit Situation.",
-      "Anhören: beim ersten Anhören wird die Zeile gesprochen und bleibt liegen — danach kostet es nichts mehr.",
-      "Im Baustein holst du eine Zeile mit einem Klick als Grundgerüst und schreibst sie weiter.",
+    icon: Sparkles,
+    title: "Hugging Face — hier kommen die Modelle her",
+    intro: "Dein Konto hängt schon an der App. Du musst nichts eintippen — du holst dir die Modelle im Studio.",
+    steps: [
+      "Verbinden: ist schon erledigt. Dein Hugging-Face-Konto ist mit der App verbunden. Kein Schlüssel, keine ID, nichts zum Eintragen.",
+      "Bildmodelle ansehen: App → Studio → Reiter Bild-KI. Oben steht die Liste der Modelle, die bei Hugging Face gerade wirklich laufen.",
+      "Suchen: ins Suchfeld tippen, zum Beispiel flux, sdxl oder realistic.",
+      "Übernehmen: beim gewünschten Modell auf Prüfen & übernehmen. Die App macht einen kurzen Probelauf — nur was wirklich ein Bild liefert, bleibt drin. Alles andere fällt von selbst raus.",
+      "Benutzen: App → Studio → Reiter Generator. Dort ist das Modell jetzt als Quelle wählbar.",
+      "Textmodelle ansehen: App → Studio → Reiter Text-KI. Genau dasselbe — suchen, Prüfen & übernehmen.",
+      "Benutzen: im Chat oben rechts das Modell auswählen. Ab dann antwortet die Figur damit.",
+      "Guthaben: die ganz großen Modelle kosten bei Hugging Face Geld. Verwalten kannst du das unter huggingface.co/settings/billing — der Link steht auch im Studio unter Bild-KI.",
     ],
     to: "/studio",
-    toLabel: "Zur Stimmbank",
+    toLabel: "Direkt ins Studio",
+  },
+  {
+    icon: Github,
+    title: "GitHub — zwei verschiedene Wege",
+    intro: "Sag mir vorher, welchen der beiden du meinst — sie sind völlig verschieden.",
+    steps: [
+      "Was du brauchst: nur dein GitHub-Konto. Es gibt keinen Schlüssel zum Eintippen — die Anmeldung läuft über GitHub selbst, und ich sehe dein Passwort nie.",
+      "Weg A — dein Projekt sichern: damit liegt der ganze Code der App in deinem GitHub-Repository und du kannst ihn dort sichern und mitnehmen.",
+      "Weg B — GitHub-Daten in der App nutzen: damit kann die App auf deine GitHub-Inhalte zugreifen, zum Beispiel Repositories oder Issues anzeigen.",
+      "Wenn du einen davon willst: sag einfach welchen. Dann starte ich die Anmeldung, du klickst bei GitHub auf Zustimmen, fertig.",
+    ],
+  },
+  {
+    icon: ImageIcon,
+    title: "Was ist schon eingebaut — und was noch nicht",
+    intro: "Damit du siehst, wo du gerade stehst.",
+    items: [
+      "Fertig: Hugging Face ist verbunden. Bildmodelle und Textmodelle holst du im Studio mit einem Klick.",
+      "Fertig: der kostenlose Weg ohne Konto heißt Pollinations — im Studio unter Bild-KI als Plattform wählbar, wenn du mal kein Guthaben ausgeben willst.",
+      "Fertig: Zahlen über Stripe (Testmodus), Coins, Telegram-Benachrichtigungen, Videochat.",
+      "Offen: GitHub — noch nicht verbunden. Sag welchen Weg du willst.",
+      "Offen: weitere Verbindungen wie Google, Slack, Notion — die gibt es, sind aber noch nicht eingerichtet.",
+    ],
   },
   {
     icon: Plug,
     title: "Was hier geht",
     intro: "Die Wege, die auf dieser Plattform wirklich funktionieren.",
     items: [
-      "GitHub: zwei getrennte Dinge — die Synchronisierung deines Projekts mit einem Repository, und eine Verbindung, um GitHub-Daten in der App zu nutzen. Sag welches, dann richte ich es ein.",
-      "Verbindungen (Integrationen): Google, Slack, Notion, HubSpot und viele mehr lassen sich verbinden — jeder Nutzer mit eigenem Konto oder du einmal für alle.",
-      "Secrets: Schlüssel und Zugangsdaten für Dienste, die keine fertige Verbindung haben, liegen im Dashboard unter Secrets.",
-      "Hintergrund-Funktionen: alles, was im Hintergrund laufen soll — Zahlungen, Telegram, Benachrichtigungen — liegt dort.",
-      "Automatik: Abläufe, die von selbst starten — wenn X passiert, dann Y — findest du im Dashboard.",
+      "Verbindungen (Integrationen): Google, Slack, Notion, HubSpot und viele mehr — entweder du verbindest sie einmal für alle, oder jeder Nutzer verbindet sein eigenes Konto.",
+      "Secrets: Schlüssel für Dienste, die keine fertige Verbindung haben. Nur nötig, wenn ich dir ausdrücklich sage, dass ein Dienst einen braucht.",
+      "Hintergrund-Funktionen: alles, was im Hintergrund läuft — Zahlungen, Telegram, Benachrichtigungen.",
+      "Automatik: Abläufe, die von selbst starten. Wenn X passiert, dann Y.",
     ],
   },
   {
@@ -50,13 +62,22 @@ const SECTIONS = [
     title: "Was hier nicht geht",
     intro: "Damit du keine Zeit mit Sachen verbringst, die technisch nicht möglich sind.",
     items: [
-      "Zugangsdaten übernehmen: ich kann keine Passwörter oder Logins von dir annehmen und mich damit irgendwo anmelden. Verbindungen laufen immer über den offiziellen Weg der Plattform.",
+      "Zugangsdaten annehmen: ich kann keine Passwörter oder Logins von dir annehmen und mich damit irgendwo anmelden. Verbindungen laufen immer über den offiziellen Weg.",
       "Firebase und Replit: dafür gibt es hier keine Verbindung. Der Weg für Daten ist die eingebaute Datenbank, der Weg für Code dieses Projekt.",
       "Echte 3D-Modelle, die sich aus einem Chat aufbauen: dafür fehlt die Rechenleistung. Der stilisierte Look bleibt der Weg.",
       "Stimmklonen ohne Anbieter-Schlüssel: nur mit einem verbundenen Anbieter möglich.",
-      "Fremde Dienste ohne eigene Schlüssel anzapfen: nicht möglich — jeder Dienst braucht seinen eigenen Zugang.",
+      "Fremde Dienste ohne eigenen Zugang anzapfen: nicht möglich — jeder Dienst braucht seinen eigenen.",
     ],
   },
+];
+
+const FIND_SPOTS = [
+  "Dashboard → Secrets: Schlüssel für Dienste, die keine fertige Verbindung haben.",
+  "Dashboard → Integrations: Verbindungen zu fremden Diensten.",
+  "Dashboard → API: die Schlüssel, die andere für deine App brauchen.",
+  "Dashboard → Logs: wenn mal etwas nicht läuft, steht es hier.",
+  "App → Studio: Charaktere, Stimmbank, Bild-KI, Text-KI, Inhalte, Storys.",
+  "App → Besitzer-Konsole: Menü, Zugang, Kanäle, Baukasten.",
 ];
 
 export default function Anleitung() {
@@ -86,10 +107,10 @@ export default function Anleitung() {
   return (
     <div className="w-full px-4 lg:px-10 py-8">
       <div className="mb-6">
-        <h1 className="font-display text-4xl text-foreground text-gloss">Programmierer</h1>
+        <h1 className="font-display text-4xl text-foreground text-gloss">Anleitung</h1>
         <p className="text-[15px] font-semibold text-muted-foreground mt-2 max-w-4xl leading-relaxed">
-          Alles zum Nachschlagen: wie die Teile zusammenhängen, wie du sie erweiterst — und was hier
-          bewusst nicht geht. Damit du nicht jedes Mal fragen musst.
+          Zum Nachschlagen: Schritt für Schritt, mit den genauen Stellen in der App. Damit du nicht
+          jedes Mal fragen musst — und damit du weißt, was schon läuft und was nicht.
         </p>
       </div>
 
@@ -105,14 +126,31 @@ export default function Anleitung() {
                 <h2 className="font-display text-2xl text-foreground">{s.title}</h2>
               </div>
               <p className="text-[15px] font-semibold text-muted-foreground mb-4">{s.intro}</p>
-              <ul className="space-y-2">
-                {s.items.map((item, i) => (
-                  <li key={i} className="flex gap-3 text-[15px] font-semibold text-foreground/90 leading-relaxed">
-                    <span className="text-primary font-bold flex-shrink-0">·</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+
+              {s.steps && (
+                <ol className="space-y-3">
+                  {s.steps.map((step, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground text-[13px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {i + 1}
+                      </span>
+                      <span className="text-[15px] font-semibold text-foreground/90 leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+
+              {s.items && (
+                <ul className="space-y-2">
+                  {s.items.map((item, i) => (
+                    <li key={i} className="flex gap-3 text-[15px] font-semibold text-foreground/90 leading-relaxed">
+                      <span className="text-primary font-bold flex-shrink-0">·</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
               {s.to && (
                 <Link
                   to={s.to}
@@ -133,14 +171,7 @@ export default function Anleitung() {
             <h2 className="font-display text-2xl text-foreground">Wo du was findest</h2>
           </div>
           <ul className="space-y-2">
-            {[
-              "Dashboard → Secrets: Schlüssel und Zugangsdaten für Dienste.",
-              "Dashboard → Integrations: Verbindungen zu fremden Diensten.",
-              "Dashboard → API: die Schlüssel, die andere für deine App brauchen.",
-              "Dashboard → Logs: wenn mal etwas nicht läuft, steht es hier.",
-              "App → Besitzer-Konsole: Menü, Zugang, Kanäle, Baukasten — alles auf einen Blick.",
-              "App → Studio: Charaktere, Stimmbank, Inhalte, Storys, Wettbewerbe.",
-            ].map((item, i) => (
+            {FIND_SPOTS.map((item, i) => (
               <li key={i} className="flex gap-3 text-[15px] font-semibold text-foreground/90 leading-relaxed">
                 <span className="text-primary font-bold flex-shrink-0">·</span>
                 <span>{item}</span>
@@ -149,16 +180,19 @@ export default function Anleitung() {
           </ul>
         </div>
 
-        <div className="glass rounded-2xl border-2 border-primary/40 p-6 flex items-start gap-3">
-          <Github className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
-          <div>
-            <p className="font-display text-xl text-foreground mb-1">Wenn du etwas anbauen willst</p>
-            <p className="text-[15px] font-semibold text-muted-foreground leading-relaxed">
-              Sag einfach in einem Satz, was du willst — ich baue es ein. Für fremde Dienste brauche ich
-              keine Zugangsdaten von dir: entweder gibt es eine offizielle Verbindung, oder du hinterlegst
-              den Schlüssel selbst im Dashboard.
-            </p>
+        <div className="glass rounded-2xl border-2 border-primary/40 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <MessageSquare className="w-5 h-5 text-primary" />
+            </span>
+            <h2 className="font-display text-2xl text-foreground">Wenn du etwas anbauen willst</h2>
           </div>
+          <p className="text-[15px] font-semibold text-muted-foreground leading-relaxed">
+            Sag in einem Satz, was du willst — ich baue es ein. Für fremde Dienste brauche ich keine
+            Zugangsdaten von dir: entweder gibt es eine offizielle Verbindung, oder du hinterlegst den
+            Schlüssel selbst im Dashboard. Dann sage ich dir nur, welcher Name dorthin gehört und wo du
+            den Wert herbekommst.
+          </p>
         </div>
       </div>
     </div>

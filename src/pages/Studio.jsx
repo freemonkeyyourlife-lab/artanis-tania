@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import CharacterForm from "@/components/studio/CharacterForm";
@@ -98,9 +98,17 @@ export default function Studio() {
 
   return (
     <div className="w-full px-4 lg:px-10 py-8">
-      <div className="mb-6">
-        <h1 className="font-display text-3xl text-foreground">Studio</h1>
-        <p className="text-muted-foreground text-sm">Verwalte Charaktere, Storys und Themen — alles selbst, ohne Umweg.</p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl text-foreground">Studio</h1>
+          <p className="text-muted-foreground text-sm">Verwalte Charaktere, Storys und Themen — alles selbst, ohne Umweg.</p>
+        </div>
+        <Link
+          to="/anleitung"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-foreground"
+        >
+          <BookOpen className="w-4 h-4" /> Anleitung: Modelle eintragen
+        </Link>
       </div>
 
       <div className="space-y-3 mb-8">
