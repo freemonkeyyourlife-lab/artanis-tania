@@ -15,6 +15,7 @@ import { parseReply, consumeFree, freeRemaining, FREE_CREATIONS, sanitizeImagePr
 import CharacterSuggestion from "@/components/CharacterSuggestion";
 import ReadAloudButton from "@/components/ReadAloudButton";
 import VoiceChatBar from "@/components/voice/VoiceChatBar";
+import VoiceConvertButton from "@/components/voice/VoiceConvertButton";
 import { speakAsVoice, voiceNotesOn } from "@/lib/voiceChat";
 import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
@@ -995,6 +996,25 @@ export default function Messages() {
     } catch (e) { console.error(e); }
   };
 
+  // Deine aufgenommene Stimme — umgewandelt in die Stimme eines Charakters.
+  const sendVoiceAsCharacter = async (url, character) => {
+    const chatKey = activeChat;
+    if (!chatKey || !url) return;
+    const attachment = { type: "audio", url, locked: false, price: null };
+    const convId = viewMode === "dm" ? chatKey : (await ensureConv(chatKey))?.id;
+    if (!convId) return;
+    setMessages((prev) => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), { senderType: "HUMAN", text: "", attachments: [attachment], createdAt: new Date().toISOString() }] }));
+    base44.entities.Message.create({
+      conversationId: convId,
+      sender: publicName(currentUser),
+      senderType: "HUMAN",
+      text: "",
+      attachments: [attachment],
+      voiceNote: true,
+    }).catch(() => {});
+    toast({ title: "Sprachnachricht gesendet", description: `Deine Stimme klingt jetzt wie ${character?.stageName || "der Charakter"}.` });
+  };
+
   const requestUnlock = async (item) => {
     if (window.self !== window.top) {
       toast({ title: "Bezahlen nur in der App", description: "Öffne die App in einem eigenen Tab, um zu bezahlen.", variant: "destructive" });
@@ -1647,6 +1667,12 @@ export default function Messages() {
                   </Dialog>
                 )}
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
+                <VoiceConvertButton
+                  creators={creators}
+                  creator={creators.find((c) => c.id === activeChat) || null}
+                  onConverted={sendVoiceAsCharacter}
+                  disabled={sending}
+                />
                 <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : takeover ? `Du schreibst als ${creators.find(c => c.id === activeChat)?.stageName || "Charakter"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
                 <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingFiles.length) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
