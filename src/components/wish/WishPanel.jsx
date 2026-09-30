@@ -102,7 +102,7 @@ export default function WishPanel({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto p-4 py-10" onClick={onClose}>
+    <div className="fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto p-4 py-10" onClick={onClose}>
       <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
       <div
         className="relative glass-strong rounded-[2.5rem] border-2 border-border p-6 sm:p-8 max-w-3xl w-full"

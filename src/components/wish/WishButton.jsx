@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import WishPanel from "@/components/wish/WishPanel";
@@ -21,7 +22,9 @@ export default function WishButton({ className }) {
         <Sparkles className="w-4 h-4" />
         <span className="hidden md:inline">Sag was du willst</span>
       </button>
-      {open && <WishPanel onClose={() => setOpen(false)} />}
+      {/* Der Dialog liegt außerhalb der Kopfzeile — sonst bleibt er in deren
+          Ebene gefangen und ist nicht zu sehen. */}
+      {open && createPortal(<WishPanel onClose={() => setOpen(false)} />, document.body)}
     </>
   );
 }
