@@ -10,8 +10,8 @@ import { hasProAccess } from "@/lib/proAccess";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { speakAsVoice } from "@/lib/voiceChat";
 
-const LANGUAGE_RULE =
-  "Du bist in einem VIDEOCHAT und sprichst laut. Antworte deshalb IMMER auf Deutsch, in der Du-Form, kurz und gesprochen — 1 bis 3 Sätze, wie ein echter Mensch am Telefon. Keine Aufzählungen, keine Regieanweisungen, kein Sternchen-Text, keine Emojis. Nur das, was du wirklich sagen würdest.";
+const LANGUAGE_RULE = (audioOnly) =>
+  `Du bist in einem ${audioOnly ? "TELEFONAT (nur Ton, kein Bild)" : "VIDEOCHAT"} und sprichst laut. Antworte deshalb IMMER auf Deutsch, in der Du-Form, kurz und gesprochen — 1 bis 3 Sätze, wie ein echter Mensch am Telefon. Keine Aufzählungen, keine Regieanweisungen, kein Sternchen-Text, keine Emojis. Nur das, was du wirklich sagen würdest.`;
 
 // Jede Aufnahme eine andere Position — so lebt das Bild im Call.
 const VARIATIONS = [
@@ -29,6 +29,8 @@ const VARIATIONS = [
 export default function AiVideoCall() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // Ohne `?audio=1` läuft der Videochat — mit dem Zusatz nur Ton, ohne Bild und Kamera.
+  const audioOnly = new URLSearchParams(window.location.search).get("audio") === "1";
   const [creator, setCreator] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
