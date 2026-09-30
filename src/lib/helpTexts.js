@@ -23,6 +23,19 @@ export const HELP = {
       "Den Schlüssel niemals in Chats oder Nachrichten schicken — wer ihn hat, verbraucht dein Guthaben.",
     ],
   },
+  sprachnachrichten: {
+    title: "Sprachnachrichten im Chat",
+    steps: [
+      "Das gilt für Chats, die über Telegram laufen — im Leitstand erkennst du sie am Gastnamen.",
+      "Chat öffnen: oben über dem Eingabefeld sitzt die Sprach-Zeile.",
+      "Stimme wählen: das Auswahlfeld links. Darin stehen alle ElevenLabs-Stimmen aus deiner Stimmbank — mit genau dem Klang (Tonlage, Intensität, Tempo), den du dort eingestellt hast.",
+      "Ist die Liste leer, liegt noch keine ElevenLabs-Stimme in der Stimmbank: Studio → Stimmbank → „Aus ElevenLabs“ → Stimmen übernehmen.",
+      "Häkchen „Jede Antwort zusätzlich als Sprachnachricht“: ab dann bekommt der Gast jede Antwort, die du hier schreibst, als Text und als Sprachnachricht.",
+      "Der Mikrofon-Knopf neben dem Senden schickt die getippte Zeile sofort nur als Sprachnachricht — ohne Text daneben. Dafür muss oben eine Stimme gewählt sein.",
+      "Ohne Häkchen und ohne Mikrofon geht alles wie bisher als Text raus.",
+      "Jede Sprachnachricht verbraucht ElevenLabs-Guthaben — das Häkchen also nur einschalten, wo du es wirklich willst.",
+    ],
+  },
   elevenlabsImport: {
     title: "Stimmen aus ElevenLabs holen",
     steps: [

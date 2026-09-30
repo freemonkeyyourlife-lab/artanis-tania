@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Mic } from "lucide-react";
+import HelpButton from "@/components/HelpButton";
 
 // Die Sprach-Steuerung für einen Gast-Chat: welche Stimme spricht — und ob
 // jede Antwort zusätzlich als Sprachnachricht rausgeht.
@@ -52,6 +53,8 @@ export default function VoiceReplyBar({ conversation, onChanged }) {
       {voices.length === 0 && (
         <span className="text-[11px] text-muted-foreground">Noch keine ElevenLabs-Stimme in der Stimmbank.</span>
       )}
+
+      <HelpButton topic="sprachnachrichten" className="ml-auto" />
     </div>
   );
 }
