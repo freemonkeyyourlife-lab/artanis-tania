@@ -52,9 +52,26 @@ export function callGuestUrl(token, roomNumber, guestToken) {
   return `${url}${url.includes("?") ? "&" : "?"}g=${guestToken}`;
 }
 
+// Der Code für einen persönlichen Gäste-Link. Der Raum nimmt genau diesen Code
+// an — so kennt die App den fertigen Link schon, bevor sie ihn verschickt.
+const GUEST_ALPHABET = "abcdefghijkmnpqrstuvwxyz23456789";
+
+export function inviteCode() {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => GUEST_ALPHABET[b % GUEST_ALPHABET.length]).join("");
+}
+
 // Die Einladung als fertiger Text — gleich, ob sie per Link, Bot oder Teilen rausgeht.
 export function callInviteText(token, roomNumber) {
   return `ARTANIS × TRIANIA — Chatraum ${roomNumber}.\nKomm rein: ${callInviteUrl(token, roomNumber)}`;
+}
+
+// Derselbe Text für einen persönlichen Zugang — mit Namen, wenn du ihn kennst.
+export function guestInviteText(roomNumber, url, name) {
+  const who = String(name || "").trim();
+  const line = who ? `${who}, hier ist dein persönlicher Zugang:` : "Hier ist dein persönlicher Zugang:";
+  return `ARTANIS × TRIANIA — Chatraum ${roomNumber}.\n${line} ${url}`;
 }
 
 export function resetCallToken() {

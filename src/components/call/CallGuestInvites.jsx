@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { UserPlus, Copy, Check, Share2, Lock } from "lucide-react";
-import { callGuestUrl } from "@/lib/callLink";
+import { callGuestUrl, guestInviteText } from "@/lib/callLink";
 import { useToast } from "@/components/ui/use-toast";
+import CallTelegramInvites from "@/components/call/CallTelegramInvites";
 
 // Persönliche Gäste-Links: jeder bekommt seinen eigenen, und du nimmst ihn
 // jederzeit wieder zurück. Wer hereinkommen darf, entscheidet der Raum selbst.
@@ -28,7 +29,7 @@ export default function CallGuestInvites({ token, roomNumber, invites = [], onCr
   };
 
   const share = async (invite, url) => {
-    const text = `ARTANIS × TRIANIA — Chatraum ${roomNumber}.\n${invite.name}, hier ist dein persönlicher Zugang: ${url}`;
+    const text = guestInviteText(roomNumber, url, invite.name);
     if (navigator.share) {
       try { await navigator.share({ title: "ARTANIS × TRIANIA", text, url }); return; } catch (e) { /* abgebrochen */ }
     }
@@ -63,6 +64,8 @@ export default function CallGuestInvites({ token, roomNumber, invites = [], onCr
           Damit auch wirklich nur Eingeladene herein dürfen, stell den Zugang unten auf <span className="font-semibold text-foreground">Privat</span>.
         </p>
       </div>
+
+      <CallTelegramInvites token={token} roomNumber={roomNumber} onCreate={onCreate} />
 
       {invites.length === 0 ? (
         <p className="px-1 text-xs text-muted-foreground">

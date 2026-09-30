@@ -352,8 +352,9 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   }, []);
 
   // Persönliche Gäste-Links anlegen und sperren — die Liste führt der Raum.
-  const createInvite = useCallback((name) => {
-    roomRef.current?.send({ type: "invite_create", name: String(name || "").slice(0, 40) });
+  // Mit eigenem Code, wenn die App den Link schon kennt (z. B. für Telegram).
+  const createInvite = useCallback((name, code) => {
+    roomRef.current?.send({ type: "invite_create", name: String(name || "").slice(0, 40), token: String(code || "") });
   }, []);
 
   const revokeInvite = useCallback((token) => {

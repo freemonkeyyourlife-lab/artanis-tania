@@ -147,7 +147,12 @@ export default class CallRoom extends Actor {
     if (msg.type === 'invite_create') {
       if (!me.host) return;
       const name = String(msg.name ?? '').trim().slice(0, 40);
-      const token = newInviteToken();
+      // Den Code darf der Gastgeber mitgeben — so kennt die App den Link schon,
+      // bevor sie ihn verschickt. Sonst macht der Raum selbst einen.
+      const asked = String(msg.token ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const token = asked.length >= 8 && asked.length <= 32 && !this.invites.has(asked)
+        ? asked
+        : newInviteToken();
       this.invites.set(token, { token, name: name || 'Gast', active: true, usedBy: '', usedAt: '', created: new Date().toISOString() });
       await this.storage.put('invites', [...this.invites.entries()]);
       this.sendInvites();
