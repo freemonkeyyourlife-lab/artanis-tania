@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { User as UserIcon, Crown, Settings, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import InviteRedeem from "@/components/owner/InviteRedeem";
 
 export default function Account() {
   const { toast } = useToast();
@@ -78,6 +79,8 @@ export default function Account() {
           <button onClick={save} disabled={saving} className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:accent-glow transition-all">Änderungen speichern</button>
         </div>
       </div>
+
+      <InviteRedeem />
 
       <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-6 accent-glow mb-6">
         <Crown className="w-8 h-8 text-primary mb-3" />

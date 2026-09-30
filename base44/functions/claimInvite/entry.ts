@@ -8,10 +8,14 @@ export default async function (req) {
     const user = await base44.auth.me().catch(() => null);
 
     const body = await req.json().catch(() => ({}));
+    // Entweder über den Link (?invite=token) oder über den kurzen Code zum Vorlesen.
     const token = String(body.token || '').trim();
-    if (!token) return Response.json({ error: 'Kein Token' }, { status: 400 });
+    const code = String(body.code || '').trim().toUpperCase();
+    if (!token && !code) return Response.json({ error: 'Kein Token und kein Code' }, { status: 400 });
 
-    const found = await base44.asServiceRole.entities.InviteLink.filter({ token });
+    const found = token
+      ? await base44.asServiceRole.entities.InviteLink.filter({ token })
+      : await base44.asServiceRole.entities.InviteLink.filter({ code });
     const invite = found[0];
     if (!invite) return Response.json({ error: 'Einladung nicht gefunden' }, { status: 404 });
     if (invite.active === false) return Response.json({ error: 'Einladung ist deaktiviert' }, { status: 400 });

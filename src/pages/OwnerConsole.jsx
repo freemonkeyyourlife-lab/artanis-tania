@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
 import LageRow from "@/components/owner/LageRow";
+import InviteBuilder from "@/components/owner/InviteBuilder";
+import InviteList from "@/components/owner/InviteList";
 import { DEFAULT_MENU, DEFAULT_FONT, loadLayout, saveLayout } from "@/lib/siteLayout";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +33,7 @@ export default function OwnerConsole() {
   const [saving, setSaving] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
+  const [inviteRefresh, setInviteRefresh] = useState(0);
   const [notice, setNotice] = useState("");
   const fileRef = useRef(null);
 
@@ -387,17 +390,28 @@ export default function OwnerConsole() {
       {tab === "access" && (
         <>
           <GuideBox
-            title="Zugang vergeben"
+            title="Zugang vergeben — zwei Wege"
             steps={[
-              "E-Mail-Adresse eintragen und Rolle wählen — Nutzer oder Admin.",
-              "Auf Einladen drücken. Die Person bekommt eine E-Mail und legt ihr Passwort selbst fest.",
-              "Nutzer sieht Inhalte und kann kaufen. Admin darf zusätzlich alles verwalten.",
-              "Ohne Einladung kommt niemand rein.",
+              "Einladung anlegen: Du brauchst dafür keine E-Mail-Adresse. Du bekommst einen Link, einen kurzen Code und einen QR-Code — alle drei führen auf denselben Zugang.",
+              "Weitergeben: Link kopieren, per WhatsApp oder SMS schicken, per E-Mail versenden, den Code vorlesen oder den QR-Code zeigen. Such dir aus, was gerade passt.",
+              "Der Gast löst sie ein, indem er den Link öffnet oder den Code auf seiner Konto-Seite eintippt. Danach ist sein Zugang sofort frei.",
+              "Nur der letzte Weg unten braucht wirklich eine E-Mail-Adresse — damit bekommt jemand direkt ein Konto und setzt selbst sein Passwort.",
             ]}
           >
-            Hier bestimmst du, wer die Plattform überhaupt betreten darf.
+            Eine Einladung ist der Schlüssel zum Reinkommen — für genau die Leute, die du dabeihaben willst. Ohne sie kommt niemand rein.
           </GuideBox>
-          <div className="glass rounded-2xl border border-border p-5">
+
+          <InviteBuilder onCreated={() => setInviteRefresh((n) => n + 1)} />
+
+          <div className="mt-5">
+            <InviteList refreshKey={inviteRefresh} />
+          </div>
+
+          <div className="glass rounded-2xl border border-border p-5 mt-5">
+            <p className="font-display text-xl text-foreground mb-1">Direkt per E-Mail freischalten</p>
+            <p className="text-[15px] font-semibold text-muted-foreground mb-4">
+              Braucht als Einziges wirklich eine E-Mail-Adresse: die Person bekommt sofort ein Konto und legt ihr Passwort selbst fest.
+            </p>
             <div className="flex flex-wrap gap-2">
               <Input
                 placeholder="E-Mail-Adresse"

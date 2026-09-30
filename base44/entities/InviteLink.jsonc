@@ -4,6 +4,9 @@
     "token": {
       "type": "string"
     },
+    "code": {
+      "type": "string"
+    },
     "userId": {
       "type": "string"
     },
@@ -32,10 +35,14 @@
     "channel": {
       "type": "string",
       "enum": [
+        "LINK",
+        "WHATSAPP",
+        "SMS",
+        "EMAIL",
+        "QR",
+        "CODE",
         "PLATFORM",
         "TELEGRAM",
-        "EMAIL",
-        "WHATSAPP",
         "INSTAGRAM",
         "SNAPCHAT",
         "EXTERNAL",
