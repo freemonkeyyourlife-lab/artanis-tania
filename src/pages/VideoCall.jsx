@@ -62,7 +62,8 @@ export default function VideoCall() {
   const {
     status, error, peers, isHost, camOn, micOn,
     attachLocal, toggleCam, toggleMic,
-    messages, sendChat, sendChatVoice, sharing, toggleShare, mySeat,
+    messages, sendChat, sendChatVoice, sharing, toggleShare, switchShare, mySeat,
+    getLocalVideo,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
   } = call;
@@ -275,6 +276,7 @@ export default function VideoCall() {
           micOn={micOn}
           myName={myName || "Du"}
           peers={peers}
+          getVideo={getLocalVideo}
         />
         {dockRight && windowsOpen && (
           <aside className="absolute inset-x-0 bottom-0 h-[88%] z-30 rounded-t-3xl border-t border-border shadow-2xl flex flex-col lg:static lg:inset-auto lg:h-auto lg:rounded-none lg:shadow-none lg:border-t-0 lg:border-l lg:border-border lg:w-[560px] lg:max-w-[58%] lg:flex-shrink-0">
@@ -318,6 +320,7 @@ export default function VideoCall() {
         toggleCam={toggleCam}
         sharing={sharing}
         onToggleShare={toggleShare}
+        onSwitchShare={switchShare}
         mode={mode}
         setMode={setMode}
         onEnd={() => { call.leave(); navigate("/live"); }}

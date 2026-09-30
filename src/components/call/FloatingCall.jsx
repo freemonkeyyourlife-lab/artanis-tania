@@ -1,24 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Maximize2, Minimize2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCallSession } from "@/lib/CallContext";
 import { normalizeCallCode } from "@/lib/callLink";
+import { useToast } from "@/components/ui/use-toast";
+import PipButton from "@/components/call/PipButton";
 
 // Der laufende Call als kleines Fenster: du kannst im Dashboard weiterklicken
 // und trotzdem zeigen, was du zeigen willst — der Call reißt dabei nicht ab.
 export default function FloatingCall() {
-  const { session, joined, closed, peers, camOn, micOn, sharing, toggleCam, toggleMic, attachLocal, leave } = useCallSession();
+  const { session, joined, closed, peers, camOn, micOn, sharing, toggleCam, toggleMic, attachLocal, getLocalVideo, leave } = useCallSession();
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [collapsed, setCollapsed] = useState(false);
+  const toldRef = useRef("");
 
-  if (!joined || !session || closed) return null;
   const pathToken = location.pathname.startsWith("/call/")
     ? normalizeCallCode(location.pathname.split("/")[2] || "")
     : "";
-  // Auf der Call-Seite selbst übernimmt das große Bild.
-  if (pathToken === session.token) return null;
+  const visible = joined && !!session && !closed && pathToken !== session?.token;
+
+  // Einmal pro Call: damit klar ist, dass niemand versehentlich rausgeflogen ist.
+  useEffect(() => {
+    if (!visible || !session) return;
+    if (toldRef.current === session.token) return;
+    toldRef.current = session.token;
+    toast({
+      title: "Der Call läuft weiter",
+      description: "Du bleibst online und sichtbar. Erst Auflegen beendet den Call.",
+    });
+  }, [visible, session, toast]);
+
+  if (!visible) return null;
 
   const roomNumber = session.roomNumber || 1;
   const back = () => navigate(`/call/${session.token}?r=${roomNumber}`);
@@ -65,6 +80,9 @@ export default function FloatingCall() {
             <span className="text-[11px] text-muted-foreground">Kamera aus</span>
           </div>
         )}
+        <div className="absolute top-2 right-2">
+          <PipButton getVideo={getLocalVideo} />
+        </div>
       </div>
 
       <div className="flex items-center gap-2 p-2">
@@ -90,7 +108,7 @@ export default function FloatingCall() {
         </button>
         <button
           onClick={leave}
-          title="Auflegen"
+          title="Auflegen — beendet den Call"
           className="w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
         >
           <PhoneOff className="w-3.5 h-3.5" />

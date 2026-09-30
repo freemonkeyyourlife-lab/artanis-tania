@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { MicOff, VideoOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PipButton from "@/components/call/PipButton";
 
 function TileName({ name, micOn }) {
   return (
@@ -33,7 +34,7 @@ function PeerTile({ peer }) {
   );
 }
 
-export default function CallStage({ localVideoRef, camOn, micOn, myName, peers }) {
+export default function CallStage({ localVideoRef, camOn, micOn, myName, peers, getVideo }) {
   const count = peers.length + 1;
   // Wenige Leute groß, viele Leute kompakt — derselbe Raum trägt jede Gruppengröße.
   const layout = count <= 2
@@ -54,6 +55,11 @@ export default function CallStage({ localVideoRef, camOn, micOn, myName, peers }
           {!camOn && (
             <div className="absolute inset-0 flex items-center justify-center bg-card">
               <VideoOff className="w-6 h-6 text-muted-foreground" />
+            </div>
+          )}
+          {getVideo && (
+            <div className="absolute top-2 right-2 z-10">
+              <PipButton getVideo={getVideo} />
             </div>
           )}
           <TileName name={`${myName} (du)`} micOn={micOn} />

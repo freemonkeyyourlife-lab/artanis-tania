@@ -1,5 +1,5 @@
 import React from "react";
-import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, MonitorOff } from "lucide-react";
+import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, MonitorOff, MonitorUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PaymentLinkDialog from "@/components/pay/PaymentLinkDialog";
 
@@ -11,7 +11,7 @@ const ROOM_MODES = [
 
 export default function CallControls({
   micOn, camOn, toggleMic, toggleCam, onEnd,
-  isHost, sharing, onToggleShare, mode, setMode,
+  isHost, sharing, onToggleShare, onSwitchShare, mode, setMode,
 }) {
   return (
     <div className="border-t border-border">
@@ -51,10 +51,19 @@ export default function CallControls({
         <button
           onClick={onToggleShare}
           className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-colors", sharing ? "bg-primary text-primary-foreground" : "bg-elevated text-foreground")}
-          title={sharing ? "Bildschirm-Teilen beenden" : "Bildschirm teilen"}
+          title={sharing ? "Bildschirm-Teilen beenden" : "Bildschirm teilen — alle angeschlossenen Bildschirme stehen zur Auswahl"}
         >
           {sharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
         </button>
+        {sharing && onSwitchShare && (
+          <button
+            onClick={onSwitchShare}
+            className="w-12 h-12 rounded-full flex items-center justify-center bg-elevated text-foreground transition-colors"
+            title="Anderen Bildschirm zeigen — das Teilen läuft dabei weiter"
+          >
+            <MonitorUp className="w-5 h-5" />
+          </button>
+        )}
         <PaymentLinkDialog className="w-12 h-12" />
         <button
           onClick={onEnd}

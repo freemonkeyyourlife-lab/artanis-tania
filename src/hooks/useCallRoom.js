@@ -391,6 +391,32 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     setSharing(false);
   }, [setPreview]);
 
+  // Das Auswahlfenster des Browsers listet alle angeschlossenen Bildschirme auf.
+  // „monitor" gibt den ganzen Bildschirm den Vorrang, surfaceSwitching lässt dich
+  // mitten im Teilen auf einen anderen Monitor wechseln.
+  const pickScreen = () =>
+    navigator.mediaDevices.getDisplayMedia({
+      video: { displaySurface: "monitor" },
+      audio: false,
+      systemAudio: "include",
+      surfaceSwitching: "include",
+      selfBrowserSurface: "exclude",
+      monitorTypeSurfaces: "include",
+      preferCurrentTab: false,
+    });
+
+  const applyScreen = useCallback((display) => {
+    const track = display.getVideoTracks()[0];
+    screenRef.current = track;
+    for (const pc of pcsRef.current.values()) {
+      const sender = pc.getSenders().find((s) => s.track && s.track.kind === "video");
+      if (sender) sender.replaceTrack(track).catch(() => {});
+    }
+    setPreview(display);
+    track.onended = () => stopShare();
+    setSharing(true);
+  }, [setPreview, stopShare]);
+
   const toggleShare = useCallback(async () => {
     if (screenRef.current) { stopShare(); return; }
     setError("");
@@ -399,28 +425,38 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
         const t = await ensureTrack("video");
         if (!t) return;
       }
-      const display = await navigator.mediaDevices.getDisplayMedia({ video: true });
-      const track = display.getVideoTracks()[0];
-      screenRef.current = track;
-      for (const pc of pcsRef.current.values()) {
-        const sender = pc.getSenders().find((s) => s.track && s.track.kind === "video");
-        if (sender) sender.replaceTrack(track).catch(() => {});
-      }
-      setPreview(display);
-      track.onended = () => stopShare();
-      setSharing(true);
+      applyScreen(await pickScreen());
     } catch (e) {
       console.error("Bildschirm teilen nicht möglich:", e);
       setError(window.self !== window.top
         ? "Bildschirm teilen ist in der Vorschau blockiert. Öffne die App in einem eigenen Tab — dort funktioniert es."
         : "Bildschirm teilen wurde abgebrochen oder ist nicht erlaubt.");
     }
-  }, [ensureTrack, stopShare, setPreview]);
+  }, [ensureTrack, applyScreen]);
+
+  // Mehrere Monitore: hier wählst du direkt einen anderen Bildschirm — das Teilen
+  // läuft dabei ohne Unterbrechung weiter.
+  const switchShare = useCallback(async () => {
+    if (!screenRef.current) return;
+    setError("");
+    try {
+      const display = await pickScreen();
+      const old = screenRef.current;
+      old.onended = null;
+      applyScreen(display);
+      old.getTracks().forEach((t) => t.stop());
+    } catch (e) {
+      // Abgebrochen — der bisherige Bildschirm bleibt einfach stehen.
+    }
+  }, [applyScreen]);
+
+  const getLocalVideo = useCallback(() => localVideoRef.current, []);
 
   return {
     status, error, peers, isHost, camOn, micOn,
     attachLocal, toggleCam, toggleMic,
-    messages, sendChat, sendChatVoice, sharing, toggleShare, mySeat,
+    messages, sendChat, sendChatVoice, sharing, toggleShare, switchShare, mySeat,
+    getLocalVideo,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
   };
