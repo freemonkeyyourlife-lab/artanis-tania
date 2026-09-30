@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { Image } from "@/components/ui/image";
-import VoiceDescribeBox from "@/components/voice/VoiceDescribeBox";
+import VoiceFeelControl from "@/components/voice/VoiceFeelControl";
 import VoiceInput from "@/components/VoiceInput";
 import { SPEECH_STYLES, styleFor, setStyleFor } from "@/lib/speechStyle";
 
 // Eine Figur im Chat: wie sie klingt (ihre Stimme) und wie sie redet (ihre Wörter).
-export default function CharacterDirectCard({ chatId, creator, voice, onVoiceSaved }) {
+export default function CharacterDirectCard({ chatId, creator, voice, voices = [], onVoiceSaved }) {
   const [style, setStyle] = useState(() => styleFor(chatId, creator.id));
   const [saved, setSaved] = useState("");
 
@@ -15,11 +14,6 @@ export default function CharacterDirectCard({ chatId, creator, voice, onVoiceSav
     setStyle(next);
     setStyleFor(chatId, creator.id, next);
     setSaved("Übernommen — gilt ab der nächsten Antwort.");
-  };
-
-  const applyVoice = async (patch) => {
-    const updated = await base44.entities.Voice.update(voice.id, patch);
-    onVoiceSaved(updated);
   };
 
   return (
@@ -36,11 +30,7 @@ export default function CharacterDirectCard({ chatId, creator, voice, onVoiceSav
         </div>
       </div>
 
-      {voice ? (
-        <VoiceDescribeBox voice={voice} onApply={applyVoice} />
-      ) : (
-        <p className="text-xs text-muted-foreground">Ordne ihr oben zuerst eine Stimme zu, dann kannst du den Klang hier beschreiben.</p>
-      )}
+      <VoiceFeelControl creator={creator} voice={voice} voices={voices} onChanged={onVoiceSaved} />
 
       <div className="rounded-2xl border border-border bg-background p-3">
         <p className="text-xs font-semibold text-muted-foreground mb-2">Wie soll sie reden — welche Wörter?</p>

@@ -24,6 +24,7 @@ export default function CharacterDirector({ chatId, people, voices, onVoiceSaved
               chatId={chatId}
               creator={c}
               voice={voices.find((v) => v.id === c.voiceProfileId) || null}
+              voices={voices}
               onVoiceSaved={onVoiceSaved}
             />
           ))}

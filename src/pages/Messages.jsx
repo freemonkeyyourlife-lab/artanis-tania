@@ -1605,7 +1605,7 @@ export default function Messages() {
                     chatId={activeChat}
                     people={[activeCreator, ...extraCharacters]}
                     voices={voices}
-                    onVoiceSaved={(v) => setVoices((prev) => prev.map((x) => (x.id === v.id ? v : x)))}
+                    onVoiceSaved={load}
                   />
                 </div>
               )}

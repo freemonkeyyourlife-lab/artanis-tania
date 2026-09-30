@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Mic, Square, PhoneOff, Loader2, Lock } from "lucide-react";
+import { Mic, Square, PhoneOff, Loader2, Lock, SlidersHorizontal } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import VoiceFeelControl from "@/components/voice/VoiceFeelControl";
 import { cn } from "@/lib/utils";
 import { hasProAccess } from "@/lib/proAccess";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
@@ -40,6 +42,7 @@ export default function AiVideoCall() {
   const [history, setHistory] = useState([]);
   const [camReady, setCamReady] = useState(false);
   const [voice, setVoice] = useState(null);
+  const [voices, setVoices] = useState([]);
 
   const selfRef = useRef(null);
   const streamRef = useRef(null);
@@ -59,6 +62,7 @@ export default function AiVideoCall() {
       if (c.voiceProfileId) {
         try { setVoice(await base44.entities.Voice.get(c.voiceProfileId)); } catch (e) { /* Stimme gibt es nicht mehr */ }
       }
+      try { setVoices(await base44.entities.Voice.list()); } catch (e) { /* Stimmbank nicht erreichbar */ }
       try { setUser(await base44.auth.me()); } catch (e) { /* Besucher ohne Konto */ }
     } catch (e) {
       console.error(e);
@@ -269,6 +273,23 @@ export default function AiVideoCall() {
           placeholder="Oder schreiben …"
           className="flex-1 px-4 py-2.5 rounded-full bg-white/10 border border-white/15 text-sm text-white placeholder:text-white/40 focus:outline-none"
         />
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              title="Stimme ansprechen — welche Stimme, und wie sie klingt"
+              className="w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center flex-shrink-0 hover:bg-white/20 transition-colors"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 className="font-display text-lg text-foreground">Stimme</h3>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Wie {creator?.stageName} klingt — Stimme wählen und per Gefühl einstellen. Gilt sofort im Anruf.
+            </p>
+            {creator && <VoiceFeelControl creator={creator} voice={voice} voices={voices} onChanged={load} />}
+          </DialogContent>
+        </Dialog>
         <button
           onClick={toggleMic}
           disabled={busy}
