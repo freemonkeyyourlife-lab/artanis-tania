@@ -9,11 +9,11 @@ import HelpButton from "@/components/HelpButton";
 // als Sprachnachricht rausgehen. Gilt für Chat, Videochat und Telegram.
 export default function VoiceChatBar({ creator, creators = [], voices = [], onChanged, className }) {
   const current = voices.find((v) => v.id === creator?.voiceProfileId) || null;
-  const [on, setOn] = useState(() => voiceNotesOn(creator?.id, !!current));
+  const [on, setOn] = useState(() => voiceNotesOn(creator?.id, true));
 
-  // Stimme neu zugewiesen und noch nichts entschieden? Dann läuft sie an.
+  // Vorlesen ist von Anfang an an — nur ein bewusstes Ausschalten hält es aus.
   useEffect(() => {
-    if (!voiceDecided(creator?.id)) setOn(voiceNotesOn(creator?.id, !!current));
+    if (!voiceDecided(creator?.id)) setOn(voiceNotesOn(creator?.id, true));
   }, [creator?.id, current?.id]);
 
   if (!creator?.id) return null;
@@ -48,13 +48,13 @@ export default function VoiceChatBar({ creator, creators = [], voices = [], onCh
       </select>
       <button
         onClick={toggle}
-        title="Antworten zusätzlich als Sprachnachricht"
+        title="Jede Nachricht automatisch vorlesen — jede Figur mit ihrer Stimme"
         className={cn(
           "px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors",
           on ? "bg-primary text-primary-foreground" : "bg-elevated border border-border text-muted-foreground hover:text-foreground"
         )}
       >
-        {on ? "Sprachnachricht ✓" : "Sprachnachricht"}
+        {on ? "Vorlesen ✓" : "Vorlesen aus"}
       </button>
       <HelpButton topic="chatstimme" />
     </div>
