@@ -25,6 +25,8 @@ import { publicName } from "@/lib/displayName";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
 const TEXT_MODEL_KEY = "artanis_text_model";
+// Wie breit die Liste links steht — den Balken daneben ziehst du dir selbst zurecht.
+const LIST_W_KEY = "artanis_chat_list_w";
 // So lange darf der echte Charakter selbst antworten, bevor die KI übernimmt.
 const HUMAN_WINDOW_MS = 120000;
 
@@ -64,7 +66,11 @@ export default function Messages() {
   const [openChats, setOpenChats] = useState([]);
   const [messages, setMessages] = useState({});
   const [drafts, setDrafts] = useState({});
-  const [pendingImage, setPendingImage] = useState(null);
+  const [pendingFiles, setPendingFiles] = useState([]);
+  const [dragging, setDragging] = useState(false);
+  const [listWidth, setListWidth] = useState(() => {
+    try { return Number(localStorage.getItem(LIST_W_KEY)) || 360; } catch (e) { return 360; }
+  });
   const [sending, setSending] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [chatMode, setChatMode] = useState("artanis");
@@ -111,6 +117,49 @@ export default function Messages() {
       ...prev,
       [activeChat]: typeof value === "function" ? value(prev[activeChat] || "") : value,
     }));
+  };
+
+  // Alles Angehängte liegt hier — eins nach dem anderen, so viele du magst.
+  const pendingImage = pendingFiles[0]?.url || null;
+
+  const attachFiles = async (files) => {
+    const added = [];
+    for (const file of files) {
+      try {
+        const result = await base44.integrations.Core.UploadPublicFile({ file });
+        const kind = file.type.startsWith("video") ? "video" : file.type.startsWith("audio") ? "audio" : "image";
+        added.push({ type: kind, url: result.file_url, name: file.name });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    if (added.length) setPendingFiles((prev) => [...prev, ...added]);
+    else toast({ title: "Nicht angehängt", description: "Die Datei kam nicht durch.", variant: "destructive" });
+  };
+
+  const onDropFiles = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer?.files || []);
+    if (files.length) attachFiles(files);
+  };
+
+  // Den Balken zwischen Liste und Chat ziehen — die Breite bleibt gemerkt.
+  const startResize = (e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = listWidth;
+    const move = (ev) => setListWidth(Math.min(720, Math.max(240, startW + ev.clientX - startX)));
+    const stop = () => {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", stop);
+      setListWidth((w) => {
+        try { localStorage.setItem(LIST_W_KEY, String(w)); } catch (err) { /* ignore */ }
+        return w;
+      });
+    };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", stop);
   };
 
   useEffect(() => {
@@ -208,7 +257,7 @@ export default function Messages() {
   useEffect(() => {
     setExtraCharacters([]);
     setTakeover(false);
-    setPendingImage(null);
+    setPendingFiles([]);
   }, [activeChat]);
 
   useEffect(() => {
@@ -569,7 +618,8 @@ export default function Messages() {
   const sendMessage = async (overrideText) => {
     const msgText = overrideText || input;
     const img = pendingImage;
-    if ((!msgText.trim() && !img) || !activeChat) return;
+    const files = pendingFiles;
+    if ((!msgText.trim() && !files.length) || !activeChat) return;
     if (viewMode === "dm") { return sendDmMessage(msgText); }
     const chatKey = activeChat;
 
@@ -578,24 +628,24 @@ export default function Messages() {
       const asCharacter = {
         senderType: "AI",
         text: msgText,
-        attachments: img ? [{ type: "image", url: img, locked: false, price: null }] : [],
+        attachments: files.map((f) => ({ ...f, locked: false, price: null })),
         createdAt: new Date().toISOString(),
       };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), asCharacter] }));
       const conv = await ensureConv(chatKey);
       if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: creators.find(c => c.id === chatKey)?.stageName, senderType: "AI", text: msgText, attachments: asCharacter.attachments }).catch(() => {});
       setInput("");
-      setPendingImage(null);
+      setPendingFiles([]);
       return;
     }
 
-    const userMsg = { senderType: "HUMAN", text: msgText, attachment: img || null, createdAt: new Date().toISOString() };
+    const userMsg = { senderType: "HUMAN", text: msgText, attachment: img || null, attachments: files, createdAt: new Date().toISOString() };
     setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), userMsg] }));
-    if (img) saveUserReference(img);
+    await saveUserReferences(files.filter((f) => f.type === "image").map((f) => f.url));
     const conv = await ensureConv(chatKey);
-    if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: publicName(currentUser), senderType: "HUMAN", text: msgText, attachment: img || null }).catch(() => {});
+    if (conv) base44.entities.Message.create({ conversationId: conv.id, sender: publicName(currentUser), senderType: "HUMAN", text: msgText, attachment: img || null, attachments: files }).catch(() => {});
     setInput("");
-    setPendingImage(null);
+    setPendingFiles([]);
     setSending(true);
 
     try {
@@ -606,8 +656,8 @@ export default function Messages() {
         if (m.attachment) t += t ? " [also sent a photo]" : "[sent a photo]";
         return `${m.senderType === "HUMAN" ? "User" : "You"}: ${t}`;
       }).join("\n");
-      const userTurn = img
-        ? "\n\nThe user sent you a photo" + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see in the photo. This photo is now saved as a PERMANENT reference: whoever is in it keeps exactly that face, body, hair colour and skin in every future image — never change them again. Say out loud that you'll keep it. Then generate a response image that incorporates their photo (put yourself in the scene with what they showed you)."
+      const userTurn = files.length
+        ? "\n\nThe user sent you " + (files.length === 1 ? "a photo" : files.length + " files, one after another") + (msgText.trim() ? " WITH this message: \"" + msgText + "\"" : "") + ". React to BOTH as one natural reply — answer what they wrote AND react to what you see. Everything they sent is now saved as a PERMANENT reference: whoever is in it keeps exactly that face, body, hair colour and skin in every future image — never change them again. Say out loud that you'll keep it. Then generate a response image that incorporates what they showed you (put yourself in the scene with them)."
         : "\n\nThe user said: \"" + userMsg.text + "\"";
       const system = buildContext();
       const userPrompt = (hist ? "CONVERSATION SO FAR:\n" + hist + "\n\n" : "") + userTurn + (scenario ? "\n\n⚠️ You are in: " + scenario.title + ". Stay in position. Only reference what exists here." : "");
@@ -625,7 +675,7 @@ export default function Messages() {
       }
       const delay = 3000 + Math.floor(Math.random() * 2000);
       await new Promise(r => setTimeout(r, delay));
-      const { cleanText, attachments, suggestions, characters } = await parseAndGenerateMedia(aiText, img ? [img] : []);
+      const { cleanText, attachments, suggestions, characters } = await parseAndGenerateMedia(aiText, files.map((f) => f.url));
       const aiMsg = { senderType: "AI", text: cleanText, attachments, suggestions, characters, createdAt: new Date().toISOString() };
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), aiMsg] }));
       if (conv) {
@@ -683,16 +733,9 @@ export default function Messages() {
   };
 
   const handleUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const result = await base44.integrations.Core.UploadPublicFile({ file });
-      setPendingImage(result.file_url);
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Fehler", description: "Bild konnte nicht hochgeladen werden.", variant: "destructive" });
-    }
+    const files = Array.from(e.target.files || []);
     e.target.value = "";
+    if (files.length) await attachFiles(files);
   };
 
   const persistUserRefs = async (refs) => {
@@ -708,16 +751,18 @@ export default function Messages() {
 
   // Anything the user uploads or marks becomes a permanent reference —
   // every future image is built on it.
-  const saveUserReference = async (url) => {
-    if (!url) return;
+  const saveUserReferences = async (urls) => {
     const existing = userPref?.userReferenceImages || [];
-    if (existing.includes(url)) return;
+    const fresh = urls.filter((u) => u && !existing.includes(u));
+    if (!fresh.length) return;
     try {
-      await persistUserRefs([...existing, url]);
+      await persistUserRefs([...existing, ...fresh]);
     } catch (err) {
       console.error(err);
     }
   };
+
+  const saveUserReference = (url) => saveUserReferences([url]);
 
   const handleUploadUserPhoto = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -913,8 +958,9 @@ export default function Messages() {
   };
 
   const sendDmMessage = async (msgText) => {
-    if ((!msgText.trim() && !pendingImage) || !activeChat) return;
+    if ((!msgText.trim() && !pendingFiles.length) || !activeChat) return;
     const chatKey = activeChat;
+    const files = pendingFiles;
     try {
       const me = await base44.auth.me();
       const created = await base44.entities.Message.create({
@@ -922,11 +968,12 @@ export default function Messages() {
         sender: publicName(me),
         senderType: "HUMAN",
         text: msgText,
-        attachment: pendingImage || null
+        attachment: files[0]?.url || null,
+        attachments: files
       });
       setMessages(prev => ({ ...prev, [chatKey]: [...(prev[chatKey] || []), created] }));
       setInput("");
-      setPendingImage(null);
+      setPendingFiles([]);
     } catch (e) { console.error(e); }
   };
 
@@ -993,7 +1040,7 @@ export default function Messages() {
     setSetupAnswers({});
     setSetupInput("");
     setInput("");
-    setPendingImage(null);
+    setPendingFiles([]);
     setSending(false);
   };
 
@@ -1039,10 +1086,18 @@ export default function Messages() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
-      <h1 className="font-display text-3xl text-foreground mb-6">Messages</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
-        <div className={cn("rounded-2xl border border-border bg-card overflow-hidden flex flex-col", activeChat && "hidden lg:block")}>
+    <div className="w-full px-3 lg:px-5 py-4">
+      <div className="flex items-center justify-between gap-4 mb-3">
+        <h1 className="font-display text-2xl text-foreground">Messages</h1>
+        <p className="hidden lg:block text-[13px] font-semibold text-muted-foreground">
+          Zieh den Balken neben der Liste — so breit, wie du es magst. Dateien kannst du einfach in den Chat ziehen.
+        </p>
+      </div>
+      <div className="flex gap-2 h-[calc(100vh-136px)]">
+        <div
+          style={{ "--list-w": `${listWidth}px` }}
+          className={cn("w-full lg:w-[var(--list-w)] lg:flex-shrink-0 rounded-2xl border border-border bg-card overflow-hidden flex-col", activeChat ? "hidden lg:flex" : "flex")}
+        >
           <div className="flex gap-1 p-2 border-b border-border">
             <button onClick={() => { setViewMode("ai"); setActiveChat(null); setDmParticipantName(""); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors", viewMode === "ai" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Chats</button>
             <button onClick={() => { setViewMode("dm"); setActiveChat(null); loadDmUsers(); }} className={cn("flex-1 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center justify-center gap-1.5", viewMode === "dm" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Direct Messages{incomingConversations.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">{incomingConversations.length}</span>}</button>
@@ -1125,7 +1180,23 @@ export default function Messages() {
           </div>
         </div>
 
-        <div className={cn("lg:col-span-2 rounded-2xl border border-border bg-card flex flex-col", !activeChat && "hidden lg:flex")}>
+        <div
+          onMouseDown={startResize}
+          title="Ziehen: Breite der Liste"
+          className="hidden lg:block w-1.5 rounded-full bg-border hover:bg-primary/60 cursor-col-resize flex-shrink-0"
+        />
+
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragging(false); }}
+          onDrop={onDropFiles}
+          className={cn("relative flex-1 min-w-0 rounded-2xl border border-border bg-card flex flex-col", !activeChat && "hidden lg:flex")}
+        >
+          {dragging && (
+            <div className="absolute inset-0 z-20 rounded-2xl bg-background/85 backdrop-blur flex items-center justify-center pointer-events-none border-2 border-dashed border-primary">
+              <p className="font-display text-xl text-primary">Loslassen — ich häng es an</p>
+            </div>
+          )}
           {activeChat ? (
             <>
               <ChatTabs tabs={openChats} activeId={activeChat} onActivate={activateTab} onClose={closeTab} />
@@ -1479,17 +1550,28 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
               {viewMode === "ai" && <QuickActions onAction={(text) => sendMessage(text)} disabled={sending} scenario={scenario} />}
-              {pendingImage && (
-                <div className="px-4 pt-3 flex items-center gap-3">
-                  <div className="relative flex-shrink-0">
-                    <Image src={pendingImage} fittingType="fill" className="w-16 h-16 rounded-lg" />
-                    <button onClick={() => setPendingImage(null)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-xs leading-none">×</button>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Bild angehängt — schreib was dazu oder sende direkt.</span>
+              {pendingFiles.length > 0 && (
+                <div className="px-4 pt-3 flex items-center gap-3 flex-wrap">
+                  {pendingFiles.map((f, i) => (
+                    <div key={`${f.url}-${i}`} className="relative flex-shrink-0">
+                      {f.type === "image" ? (
+                        <Image src={f.url} fittingType="fill" className="w-16 h-16 rounded-lg" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg bg-elevated flex items-center justify-center text-[11px] font-bold text-muted-foreground uppercase">{f.type}</div>
+                      )}
+                      <button
+                        onClick={() => setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-xs leading-none"
+                      >×</button>
+                    </div>
+                  ))}
+                  <span className="text-xs text-muted-foreground">
+                    {pendingFiles.length === 1 ? "Angehängt" : `${pendingFiles.length} angehängt`} — schreib was dazu oder sende direkt.
+                  </span>
                 </div>
               )}
               <div className="p-4 border-t border-border flex gap-2">
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
+                <input ref={fileInputRef} type="file" accept="image/*,video/*,audio/*" multiple onChange={handleUpload} className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording} className="w-10 h-10 rounded-full bg-elevated text-muted-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0 hover:text-foreground transition-colors"><ImagePlus className="w-4 h-4" /></button>
                 {viewMode === "ai" && (
                   <button
@@ -1534,7 +1616,7 @@ export default function Messages() {
                 )}
                 <button onClick={toggleRecording} disabled={sending} className={cn("w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 flex-shrink-0 transition-colors", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-elevated text-muted-foreground hover:text-foreground")}>{isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}</button>
                 <input type="text" value={isRecording ? "" : input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={transcribing ? "Transkribiere Audio..." : isRecording ? "Aufnahme läuft — Mikrofon tippen zum Stoppen" : takeover ? `Du schreibst als ${creators.find(c => c.id === activeChat)?.stageName || "Charakter"} …` : "Nachricht schreiben oder sprechen..."} disabled={isRecording || transcribing} className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-base text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none disabled:opacity-60" />
-                <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingImage) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
+                <button onClick={() => sendMessage()} disabled={(!input.trim() && !pendingFiles.length) || sending} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 flex-shrink-0"><Send className="w-4 h-4" /></button>
               </div>
               </>
               )}
