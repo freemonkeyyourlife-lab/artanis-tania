@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Mic } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import CharacterForm from "@/components/studio/CharacterForm";
+import CharacterVoiceBox from "@/components/studio/CharacterVoiceBox";
+import { assignVoiceToCreator } from "@/lib/voiceAssign";
 import StoryManager from "@/components/studio/StoryManager";
 import TopicManager from "@/components/studio/TopicManager";
 import ContentManager from "@/components/studio/ContentManager";
@@ -64,6 +66,7 @@ export default function Studio() {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | "new" | creator
+  const [soundFor, setSoundFor] = useState(null); // Charakter, dessen Klang gerade offen ist
 
   useEffect(() => { load(); }, []);
   const load = async () => {
@@ -89,6 +92,13 @@ export default function Studio() {
   // Ein Klick: derselbe Charakter einmal echt, einmal als Zeichentrickfigur.
   const toggleStyle = async (c) => {
     await base44.entities.Creator.update(c.id, { artStyle: c.artStyle === "CARTOON" ? "PHOTOREAL" : "CARTOON" });
+    load();
+  };
+
+  // Klang am Charakter einstellen, ohne das Bearbeiten-Formular zu öffnen.
+  const assignVoice = async (c, voiceId) => {
+    await assignVoiceToCreator(c.id, voiceId, creators);
+    setSoundFor((s) => (s && s.id === c.id ? { ...s, voiceProfileId: voiceId } : s));
     load();
   };
 
@@ -188,6 +198,18 @@ export default function Studio() {
         </div>
       )}
 
+      {soundFor && (
+        <div className="mb-6 rounded-2xl border border-primary/30 bg-card p-5">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <p className="font-display text-lg text-foreground">Klang von „{soundFor.stageName}“</p>
+            <button onClick={() => setSoundFor(null)} className="text-xs font-semibold text-muted-foreground hover:text-foreground">
+              Schließen
+            </button>
+          </div>
+          <CharacterVoiceBox value={soundFor.voiceProfileId || ""} onChange={(id) => assignVoice(soundFor, id)} />
+        </div>
+      )}
+
       {creators.length === 0 ? (
         <p className="text-muted-foreground text-center py-16">Noch keine Charaktere — leg deinen ersten an.</p>
       ) : (
@@ -233,6 +255,15 @@ export default function Studio() {
                   )}
                 >
                   {c.artStyle === "CARTOON" ? "Animiert ✓" : "Animiert"}
+                </button>
+                <button
+                  onClick={() => setSoundFor(soundFor?.id === c.id ? null : c)}
+                  className={cn(
+                    "w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold transition-colors",
+                    soundFor?.id === c.id ? "bg-primary text-primary-foreground" : "bg-primary/15 text-primary hover:bg-primary/25"
+                  )}
+                >
+                  <Mic className="w-3.5 h-3.5" /> Klang & Stimme
                 </button>
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => setEditing(c)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground hover:text-foreground transition-colors">

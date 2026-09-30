@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Mic, Pencil, Plus, Trash2, Star, Search, Download, SlidersHorizontal } from "lucide-react";
+import { Mic, Pencil, Plus, Trash2, Star, Search, Download, SlidersHorizontal, Users } from "lucide-react";
 import VoiceTuner from "@/components/studio/VoiceTuner";
 import { cn } from "@/lib/utils";
 import { resolveVoice } from "@/lib/voiceDj";
@@ -9,6 +9,8 @@ import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
 import ElevenLabsImport from "@/components/studio/ElevenLabsImport";
 import VoiceSayBox from "@/components/studio/VoiceSayBox";
 import HelpButton from "@/components/HelpButton";
+import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
+import { assignVoiceToCreator } from "@/lib/voiceAssign";
 
 const SORTS = [
   { id: "favorite", label: "Favoriten zuerst" },
@@ -33,6 +35,7 @@ export default function VoiceManager() {
   const [tagFilter, setTagFilter] = useState("");
   const [showImport, setShowImport] = useState(false);
   const [tuning, setTuning] = useState(null);
+  const [byCharacter, setByCharacter] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -75,11 +78,12 @@ export default function VoiceManager() {
 
   // Eine Stimme gehört immer nur einem Charakter — vorher beim alten lösen.
   const assign = async (voice, creatorId) => {
-    const previous = creators.filter((c) => c.voiceProfileId === voice.id && c.id !== creatorId);
-    for (const c of previous) {
-      await base44.entities.Creator.update(c.id, { voiceProfileId: "" });
+    if (!creatorId) {
+      const owner = creators.find((c) => c.voiceProfileId === voice.id);
+      if (owner) await base44.entities.Creator.update(owner.id, { voiceProfileId: "" });
+    } else {
+      await assignVoiceToCreator(creatorId, voice.id, creators);
     }
-    if (creatorId) await base44.entities.Creator.update(creatorId, { voiceProfileId: voice.id });
     load();
   };
 
@@ -128,6 +132,15 @@ export default function VoiceManager() {
         >
           {SORTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
         </select>
+        <button
+          onClick={() => setByCharacter((b) => !b)}
+          className={cn(
+            "inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-semibold whitespace-nowrap transition-colors",
+            byCharacter ? "bg-primary text-primary-foreground border-primary" : "bg-elevated border-border text-foreground hover:border-primary/50"
+          )}
+        >
+          <Users className="w-4 h-4" /> Nach Charakter
+        </button>
         <HelpButton topic="stimmbank" />
         <HelpButton topic="elevenlabsKey" label="Schlüssel" />
         <button
@@ -144,6 +157,10 @@ export default function VoiceManager() {
         </button>
       </div>
 
+      {byCharacter ? (
+        <VoiceByCharacter />
+      ) : (
+        <>
       <VoiceSayBox voices={voices} />
 
       {showImport && (
@@ -297,6 +314,8 @@ export default function VoiceManager() {
             );
           })}
         </div>
+      )}
+        </>
       )}
     </div>
   );

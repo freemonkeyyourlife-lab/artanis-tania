@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -15,6 +15,7 @@ import { DEFAULT_STRUCTURE, DEFAULT_INTRO_STEPS, DEFAULT_INTERESTS, DEFAULT_INFO
 import StructureEditor from "@/components/owner/StructureEditor";
 import ChannelHub from "@/components/owner/ChannelHub";
 import InfoTextEditor from "@/components/owner/InfoTextEditor";
+import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -25,6 +26,7 @@ const TABS = [
   { id: "access", label: "Zugang", icon: KeyRound },
   { id: "channels", label: "Kanäle", icon: Link2 },
   { id: "baukasten", label: "Baukasten", icon: Blocks },
+  { id: "voices", label: "Stimmen", icon: Mic },
   { id: "programmierer", label: "Programmierer", icon: BookOpen },
   { id: "data", label: "Sichern", icon: Database },
 ];
@@ -515,6 +517,17 @@ export default function OwnerConsole() {
             </Link>
           </div>
         </>
+      )}
+
+      {tab === "voices" && (
+        <div className="glass rounded-2xl border-2 border-border p-6">
+          <p className="font-display text-2xl text-foreground mb-2">Stimmen deiner Charaktere</p>
+          <p className="text-[15px] font-semibold text-muted-foreground mb-5 max-w-2xl">
+            Charakter wählen, Stimme zuordnen und Tonlage, Intensität und Tempo direkt hier drehen —
+            anhören, speichern, fertig.
+          </p>
+          <VoiceByCharacter />
+        </div>
       )}
 
       {tab === "programmierer" && (
