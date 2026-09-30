@@ -236,7 +236,7 @@ export default function VideoCall() {
 
       <div className="flex-1 flex min-h-0 relative overflow-hidden">
         {!dockRight && windowsOpen && (
-          <aside className="absolute inset-x-0 bottom-0 h-[78%] z-30 rounded-t-3xl border-t border-border shadow-2xl flex flex-col lg:static lg:inset-auto lg:h-auto lg:rounded-none lg:shadow-none lg:border-t-0 lg:border-r lg:border-border lg:w-[460px] lg:max-w-[52%] lg:flex-shrink-0">
+          <aside className="absolute inset-x-0 bottom-0 h-[88%] z-30 rounded-t-3xl border-t border-border shadow-2xl flex flex-col lg:static lg:inset-auto lg:h-auto lg:rounded-none lg:shadow-none lg:border-t-0 lg:border-r lg:border-border lg:w-[560px] lg:max-w-[58%] lg:flex-shrink-0">
             <CallWindows
               messages={messages}
               mySeat={mySeat}
@@ -259,7 +259,7 @@ export default function VideoCall() {
           peers={peers}
         />
         {dockRight && windowsOpen && (
-          <aside className="absolute inset-x-0 bottom-0 h-[78%] z-30 rounded-t-3xl border-t border-border shadow-2xl flex flex-col lg:static lg:inset-auto lg:h-auto lg:rounded-none lg:shadow-none lg:border-t-0 lg:border-l lg:border-border lg:w-[460px] lg:max-w-[52%] lg:flex-shrink-0">
+          <aside className="absolute inset-x-0 bottom-0 h-[88%] z-30 rounded-t-3xl border-t border-border shadow-2xl flex flex-col lg:static lg:inset-auto lg:h-auto lg:rounded-none lg:shadow-none lg:border-t-0 lg:border-l lg:border-border lg:w-[560px] lg:max-w-[58%] lg:flex-shrink-0">
             <CallWindows
               messages={messages}
               mySeat={mySeat}

@@ -84,23 +84,23 @@ export default function CallChat({ messages, mySeat, onSend, onSendVoice }) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="px-3 py-2 border-b border-border flex items-center gap-2 flex-shrink-0">
+      <div className="px-3.5 py-2.5 border-b border-border flex items-center gap-2 flex-shrink-0">
         <button
           onClick={() => setReadAloud((v) => !v)}
           className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors",
+            "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors",
             readAloud ? "bg-primary text-primary-foreground" : "bg-elevated border border-border text-muted-foreground hover:text-foreground"
           )}
           title="Neue Nachrichten laut vorlesen"
         >
-          {readAloud ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          {readAloud ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           Vorlesen {readAloud ? "an" : "aus"}
         </button>
         {voices.length > 0 && (
           <select
             value={voice?.id || ""}
             onChange={(e) => pickVoice(e.target.value)}
-            className="flex-1 min-w-0 px-3 py-1.5 rounded-full bg-elevated border border-border text-[11px] font-semibold text-muted-foreground focus:outline-none focus:border-primary/50"
+            className="flex-1 min-w-0 px-3.5 py-2 rounded-full bg-elevated border border-border text-[13px] font-semibold text-muted-foreground focus:outline-none focus:border-primary/50"
           >
             {voices.map((v) => (
               <option key={v.id} value={v.id}>{v.name}</option>
@@ -109,9 +109,9 @@ export default function CallChat({ messages, mySeat, onSend, onSendVoice }) {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
         {messages.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center pt-6 px-4">
+          <p className="text-sm text-muted-foreground text-center pt-6 px-4">
             Noch keine Nachrichten — alles, was du hier schreibst, sehen alle im Call sofort.
           </p>
         )}
@@ -121,12 +121,12 @@ export default function CallChat({ messages, mySeat, onSend, onSendVoice }) {
             <div
               key={i}
               className={cn(
-                "max-w-[85%] px-3 py-2 rounded-2xl text-sm break-words",
+                "max-w-[88%] px-4 py-3 rounded-2xl text-[15px] leading-relaxed break-words",
                 mine ? "bg-primary text-primary-foreground ml-auto" : "bg-elevated text-foreground"
               )}
             >
-              {!mine && <p className="text-[11px] font-semibold opacity-70 mb-0.5">{m.name || "Gast"}</p>}
-              {m.audio && <audio controls src={m.audio} className="w-52 max-w-full mb-1" />}
+              {!mine && <p className="text-[12px] font-semibold opacity-70 mb-1">{m.name || "Gast"}</p>}
+              {m.audio && <audio controls src={m.audio} className="w-64 max-w-full mb-1.5" />}
               {m.text}
             </div>
           );
@@ -134,35 +134,35 @@ export default function CallChat({ messages, mySeat, onSend, onSendVoice }) {
         <div ref={endRef} />
       </div>
 
-      {voiceError && <p className="px-3 pb-1 text-[11px] font-semibold text-destructive flex-shrink-0">{voiceError}</p>}
+      {voiceError && <p className="px-3.5 pb-1.5 text-[12px] font-semibold text-destructive flex-shrink-0">{voiceError}</p>}
 
-      <div className="p-3 border-t border-border flex gap-2 flex-shrink-0">
+      <div className="p-3.5 border-t border-border flex gap-2 flex-shrink-0">
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder={recorder.recording ? "Aufnahme läuft — Mikrofon tippen zum Senden" : converting ? "Wird umgewandelt …" : "Nachricht an alle…"}
-          className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none"
+          className="flex-1 px-4 py-3 rounded-full bg-background border border-border text-[15px] text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 appearance-none"
         />
         <button
           onClick={() => recorder.toggle("meine-stimme.webm")}
           disabled={converting || recorder.busy}
           title={voice ? `Aufnehmen — geht mit der Stimme von ${voice.name} raus` : "Erst oben eine Stimme wählen"}
           className={cn(
-            "w-10 h-10 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50",
+            "w-11 h-11 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50",
             recorder.recording ? "bg-red-500 border-red-500 text-white animate-pulse" : "bg-elevated border-border text-primary"
           )}
         >
-          {converting || recorder.busy ? <Loader2 className="w-4 h-4 animate-spin" /> : recorder.recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          {converting || recorder.busy ? <Loader2 className="w-5 h-5 animate-spin" /> : recorder.recording ? <Square className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
         </button>
         <button
           onClick={submit}
           disabled={!text.trim()}
-          className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+          className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 disabled:opacity-50"
           title="Senden"
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-5 h-5" />
         </button>
       </div>
     </div>
