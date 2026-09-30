@@ -57,7 +57,16 @@ export default async function (req) {
     if (!voiceId || !text) return Response.json({ error: 'Stimme oder Text fehlt.' }, { status: 400 });
 
     // Tempo und Stimmung aus der Stimmbank mitgeben — sonst klingt jede Stimme gleich.
-    const mood = MOOD_SETTINGS[body.mood] || MOOD_SETTINGS.NEUTRAL;
+    const preset = MOOD_SETTINGS[body.mood] || MOOD_SETTINGS.NEUTRAL;
+    // Intensität 0–100 aus dem Editor: höher = weniger Stabilität, mehr Ausdruck.
+    const level = Number(body.intensity);
+    const mood = Number.isFinite(level)
+      ? {
+          ...preset,
+          stability: Math.max(0, Math.min(1, 0.8 - (level / 100) * 0.6)),
+          style: Math.max(0, Math.min(1, (level / 100) * 0.7)),
+        }
+      : preset;
     const wanted = Number(body.speed);
     const speed = Number.isFinite(wanted) ? Math.max(0.7, Math.min(1.2, wanted)) : 1;
 

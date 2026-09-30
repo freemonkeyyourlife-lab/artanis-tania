@@ -53,6 +53,7 @@ import Tutorial from '@/pages/Tutorial';
 import TutorialPlayer from '@/components/tutorial/TutorialPlayer';
 import Baukasten from '@/pages/Baukasten';
 import Anleitung from '@/pages/Anleitung';
+import HelpAssistant from '@/components/help/HelpAssistant';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -85,6 +86,7 @@ const AuthenticatedApp = () => {
       <HostLiveAlert />
       <OnboardingIntro />
       <TutorialPlayer />
+      <HelpAssistant />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />

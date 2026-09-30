@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Mic, Pencil, Plus, Trash2, Star, Search, Download } from "lucide-react";
+import { Mic, Pencil, Plus, Trash2, Star, Search, Download, SlidersHorizontal } from "lucide-react";
+import VoiceTuner from "@/components/studio/VoiceTuner";
 import { cn } from "@/lib/utils";
 import { resolveVoice } from "@/lib/voiceDj";
 import VoiceForm from "@/components/studio/VoiceForm";
@@ -31,6 +32,7 @@ export default function VoiceManager() {
   const [sort, setSort] = useState("favorite");
   const [tagFilter, setTagFilter] = useState("");
   const [showImport, setShowImport] = useState(false);
+  const [tuning, setTuning] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -224,7 +226,7 @@ export default function VoiceManager() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {v.label} · Tempo {voice.speed?.toFixed(2) ?? "1.00"}× · Tiefe {voice.depth > 0 ? "+" : ""}{voice.depth ?? 0}
+                      {v.label} · Tempo {voice.speed?.toFixed(2) ?? "1.00"}× · Tonlage {voice.depth > 0 ? "+" : ""}{voice.depth ?? 0}{typeof voice.intensity === "number" && ` · Intensität ${voice.intensity}`}
                       {voice.priceCoins > 0 && ` · ${voice.priceCoins} Coins`}
                       {voice.ownerName && ` · ${voice.ownerName}`}
                     </p>
@@ -272,6 +274,15 @@ export default function VoiceManager() {
                   >
                     {voice.public !== false ? "Freigabe zurücknehmen" : "Freigeben"}
                   </button>
+                  <button
+                    onClick={() => setTuning(tuning === voice.id ? null : voice.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold transition-colors",
+                      tuning === voice.id ? "bg-primary text-primary-foreground" : "bg-primary/15 text-primary hover:bg-primary/25"
+                    )}
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" /> Klang einstellen
+                  </button>
                   <button onClick={() => setEditing(voice)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <Pencil className="w-3.5 h-3.5" /> Bearbeiten
                   </button>
@@ -279,6 +290,9 @@ export default function VoiceManager() {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
+                {tuning === voice.id && (
+                  <VoiceTuner key={voice.updated_date} voice={voice} onSaved={() => { setTuning(null); load(); }} />
+                )}
               </div>
             );
           })}

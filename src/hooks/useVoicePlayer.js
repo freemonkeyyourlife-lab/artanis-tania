@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { resolveVoice } from "@/lib/voiceDj";
+import { resolveVoice, cloudTuning } from "@/lib/voiceDj";
 
 // Tonlage und Tempo je Grundstimme — damit sich die Charaktere beim Vorlesen unterscheiden.
 export const VOICE_TUNING = {
@@ -37,14 +37,19 @@ export default function useVoicePlayer(profile, fallbackVoice) {
       if (cloudVoice) {
         setLoading(true);
         try {
+          const tune = cloudTuning(profile);
           const res = await base44.functions.invoke("elevenLabs", {
             voiceId: cloudVoice,
             text,
-            speed: profile?.speed,
+            speed: tune.apiSpeed,
             mood: profile?.mood,
+            intensity: tune.intensity,
           });
           if (res.data?.error) throw new Error(res.data.error);
           const audio = new Audio(res.data.url);
+          audio.preservesPitch = false;
+          audio.webkitPreservesPitch = false;
+          audio.playbackRate = tune.pitch;
           audio.onended = () => setSpeaking(false);
           audio.onerror = () => setSpeaking(false);
           audioRef.current = audio;

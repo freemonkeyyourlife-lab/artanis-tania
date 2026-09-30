@@ -24,6 +24,19 @@ export const moodPreset = (id) => MOODS.find((m) => m.id === id) || MOODS[0];
 
 export const baseVoiceLabel = (id) => (BASE_VOICES.find((v) => v.id === id) || BASE_VOICES[0]).label;
 
+// Für ElevenLabs-Stimmen: Tonlage wird beim Abspielen verschoben, das Tempo
+// wird vorher so ausgeglichen, dass es am Ende genau passt.
+export function cloudTuning(profile) {
+  const speed = typeof profile?.speed === "number" ? profile.speed : 1;
+  const depth = typeof profile?.depth === "number" ? profile.depth : 0;
+  const pitch = Math.max(0.75, Math.min(1.25, 1 + depth / 100));
+  return {
+    pitch,
+    apiSpeed: Math.max(0.7, Math.min(1.2, speed / pitch)),
+    intensity: typeof profile?.intensity === "number" ? profile.intensity : undefined,
+  };
+}
+
 // Aus einem Stimmbank-Profil die fertigen Werte fürs Vorlesen machen.
 export function resolveVoice(profile) {
   const base = BASE_VOICES.find((v) => v.id === profile?.baseVoice) || BASE_VOICES[0];

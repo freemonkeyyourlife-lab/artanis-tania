@@ -19,6 +19,7 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
     mood: initial?.mood || "NEUTRAL",
     speed: initial?.speed ?? 1,
     depth: initial?.depth ?? 0,
+    intensity: initial?.intensity ?? 50,
     tags: initial?.tags || [],
     ownerName: initial?.ownerName || "",
     active: initial?.active !== false,
@@ -141,9 +142,10 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
     setSaving(true);
     try {
       // Wurde am Klang gedreht, muss die alte Hörprobe weg — sonst klingt sie noch wie vorher.
-      const retuned = initial?.id && form.provider === "ELEVENLABS" &&
-        (initial.speed !== form.speed || initial.mood !== form.mood || initial.depth !== form.depth);
-      const payload = retuned ? { ...form, sampleFile: "" } : form;
+      // Nur die automatisch abgelegte Hörprobe — eine eigene Aufnahme bleibt immer erhalten.
+      const retuned = initial?.id && initial.sampleCached &&
+        (initial.speed !== form.speed || initial.mood !== form.mood || initial.depth !== form.depth || initial.intensity !== form.intensity);
+      const payload = retuned ? { ...form, sampleFile: "", sampleCached: false } : form;
       if (initial?.id) await base44.entities.Voice.update(initial.id, payload);
       else await base44.entities.Voice.create(payload);
       onSaved();
@@ -225,8 +227,12 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
           <input type="range" min="0.7" max="1.4" step="0.02" value={form.speed} onChange={(e) => set("speed", Number(e.target.value))} className="w-full accent-[hsl(var(--primary))]" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Tiefe — {form.depth > 0 ? "+" : ""}{form.depth}</label>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Tonlage — {form.depth > 0 ? "+" : ""}{form.depth}</label>
           <input type="range" min="-40" max="20" step="2" value={form.depth} onChange={(e) => set("depth", Number(e.target.value))} className="w-full accent-[hsl(var(--primary))]" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Intensität — {form.intensity} (nur ElevenLabs)</label>
+          <input type="range" min="0" max="100" step="5" value={form.intensity} onChange={(e) => set("intensity", Number(e.target.value))} className="w-full accent-[hsl(var(--primary))]" />
         </div>
       </div>
 

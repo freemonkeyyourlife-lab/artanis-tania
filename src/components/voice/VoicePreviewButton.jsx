@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Loader2, Play, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { resolveVoice } from "@/lib/voiceDj";
+import { resolveVoice, cloudTuning } from "@/lib/voiceDj";
 
 const SAMPLE_TEXT = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
 
@@ -28,20 +28,22 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
       if (useSample && profile?.sampleFile) {
         const res = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: profile.sampleFile, expires_in: 600 });
         url = res?.signed_url;
-        rate = 1;
+        rate = profile?.sampleCached ? cloudTuning(profile).pitch : 1;
       } else if (profile?.provider === "ELEVENLABS" && profile?.externalVoiceId) {
+        const tune = cloudTuning(profile);
         const res = await base44.functions.invoke("elevenLabs", {
           voiceId: profile.externalVoiceId,
           text,
-          speed: profile?.speed,
+          speed: tune.apiSpeed,
           mood: profile?.mood,
+          intensity: tune.intensity,
         });
         if (res.data?.error) throw new Error(res.data.error);
         url = res.data.url;
-        rate = 1;
+        rate = tune.pitch;
         // Nur die feste Hörprobe ablegen — freie Texte nicht, damit die Originalaufnahme erhalten bleibt.
         if (res.data.file_uri && profile.id && !profile.sampleFile && text === SAMPLE_TEXT) {
-          await base44.entities.Voice.update(profile.id, { sampleFile: res.data.file_uri });
+          await base44.entities.Voice.update(profile.id, { sampleFile: res.data.file_uri, sampleCached: true });
           onCached?.();
         }
       } else {

@@ -51,8 +51,15 @@
       "type": "number",
       "default": 0
     },
+    "intensity": {
+      "type": "number"
+    },
     "sampleFile": {
       "type": "string"
+    },
+    "sampleCached": {
+      "type": "boolean",
+      "default": false
     },
     "source": {
       "type": "string",
