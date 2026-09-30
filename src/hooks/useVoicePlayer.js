@@ -44,6 +44,7 @@ export default function useVoicePlayer(profile, fallbackVoice) {
             speed: tune.apiSpeed,
             mood: profile?.mood,
             intensity: tune.intensity,
+            ending: profile?.ending,
           });
           if (res.data?.error) throw new Error(res.data.error);
           const audio = new Audio(res.data.url);

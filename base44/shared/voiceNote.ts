@@ -20,15 +20,35 @@ const MOOD_SETTINGS: Record<string, any> = {
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 // Intensität 0–100: höher = weniger Stabilität, mehr Ausdruck.
-export function voiceSettings(mood: string, intensity: any) {
+// Ausklang 0–100: höher = am Satzende ruhiger und weicher statt abgehackt.
+export function voiceSettings(mood: string, intensity: any, ending: any) {
   const preset = MOOD_SETTINGS[mood] || MOOD_SETTINGS.NEUTRAL;
   const level = Number(intensity);
-  if (!Number.isFinite(level)) return preset;
+  const base = Number.isFinite(level)
+    ? {
+        ...preset,
+        stability: clamp(0.8 - (level / 100) * 0.6, 0, 1),
+        style: clamp((level / 100) * 0.7, 0, 1),
+      }
+    : preset;
+
+  const end = Number(ending);
+  const soft = clamp(Number.isFinite(end) ? end : 50, 0, 100) / 100;
   return {
-    ...preset,
-    stability: clamp(0.8 - (level / 100) * 0.6, 0, 1),
-    style: clamp((level / 100) * 0.7, 0, 1),
+    ...base,
+    stability: clamp(base.stability + soft * 0.2, 0, 1),
+    style: clamp(base.style - soft * 0.3, 0, 1),
   };
+}
+
+// Am Satzende einen kurzen Atemzug anhängen — sonst hört die Stimme einfach auf.
+export function withEnding(text: any, ending: any) {
+  const clean = String(text || "").trim();
+  if (!clean) return clean;
+  const end = Number(ending);
+  const level = Number.isFinite(end) ? clamp(end, 0, 100) : 50;
+  if (level < 15) return clean;
+  return /[.!?…]$/.test(clean) ? `${clean} …` : `${clean}. …`;
 }
 
 // Den Text sprechen und die fertigen Tondaten zurückgeben.
@@ -38,12 +58,13 @@ export async function synthesize(input: {
   text: string;
   mood?: string;
   intensity?: any;
+  ending?: any;
   speed?: any;
   format?: string;
   modelId?: string;
 }): Promise<Uint8Array> {
   const format = input.format || "mp3_44100_128";
-  const settings = voiceSettings(String(input.mood || ""), input.intensity);
+  const settings = voiceSettings(String(input.mood || ""), input.intensity, input.ending);
   const wanted = Number(input.speed);
 
   const res = await fetch(`${ELEVEN}/text-to-speech/${input.voiceId}?output_format=${format}`, {
@@ -54,7 +75,7 @@ export async function synthesize(input: {
       Accept: format.startsWith("opus") ? "audio/ogg" : "audio/mpeg",
     },
     body: JSON.stringify({
-      text: String(input.text || "").slice(0, 2500),
+      text: withEnding(input.text, input.ending).slice(0, 2500),
       model_id: input.modelId || "eleven_multilingual_v2",
       voice_settings: {
         stability: settings.stability,

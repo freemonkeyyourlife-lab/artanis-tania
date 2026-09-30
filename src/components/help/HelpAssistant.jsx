@@ -5,7 +5,7 @@ import VoiceInput from "@/components/VoiceInput";
 import HelpAnswer from "@/components/help/HelpAnswer";
 import { askHelp } from "@/lib/helpAssistant";
 
-// Runder Fragezeichen-Knopf unten links: fragen per Text oder Sprache. Nur für den Besitzer.
+// Runder Fragezeichen-Knopf oben rechts: fragen per Text oder Sprache. Nur für den Besitzer.
 export default function HelpAssistant() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
@@ -35,11 +35,11 @@ export default function HelpAssistant() {
 
   return (
     <>
-      <button onClick={() => setOpen((o) => !o)} title="Hilfe fragen" className="fixed bottom-5 left-5 z-[90] w-14 h-14 rounded-full glass-btn glass-btn-accent flex items-center justify-center accent-glow-strong">
+      <button onClick={() => setOpen((o) => !o)} title="Hilfe fragen" className="fixed top-20 right-5 z-[90] w-14 h-14 rounded-full glass-btn glass-btn-accent flex items-center justify-center accent-glow-strong">
         {open ? <X className="w-6 h-6" /> : <HelpCircle className="w-7 h-7" />}
       </button>
       {open && (
-        <div className="fixed bottom-24 left-5 z-[90] w-[min(420px,calc(100vw-2.5rem))] h-[min(600px,70vh)] glass-strong rounded-3xl border-2 border-border flex flex-col overflow-hidden">
+        <div className="fixed top-36 right-5 z-[90] w-[min(420px,calc(100vw-2.5rem))] h-[min(600px,70vh)] glass-strong rounded-3xl border-2 border-border flex flex-col overflow-hidden">
           <div className="px-5 py-4 border-b border-border">
             <p className="font-display text-lg text-foreground">Frag mich</p>
             <p className="text-xs text-muted-foreground">Tippen oder aufs Mikro drücken und reinsprechen.</p>

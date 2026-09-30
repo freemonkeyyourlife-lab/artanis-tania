@@ -54,6 +54,7 @@ export default async function (req) {
         text,
         mood: body.mood,
         intensity: body.intensity,
+        ending: body.ending,
         speed: body.speed,
         modelId: body.modelId,
       });

@@ -37,6 +37,7 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
           speed: tune.apiSpeed,
           mood: profile?.mood,
           intensity: tune.intensity,
+          ending: profile?.ending,
         });
         if (res.data?.error) throw new Error(res.data.error);
         url = res.data.url;

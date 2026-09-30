@@ -33,6 +33,7 @@ async function sendSpoken(base44: any, token: string, chatId: string, conv: any,
     text,
     mood: voice.mood,
     intensity: voice.intensity,
+    ending: voice.ending,
     speed: voice.speed,
   };
 

@@ -20,6 +20,7 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
     speed: initial?.speed ?? 1,
     depth: initial?.depth ?? 0,
     intensity: initial?.intensity ?? 50,
+    ending: initial?.ending ?? 50,
     tags: initial?.tags || [],
     ownerName: initial?.ownerName || "",
     active: initial?.active !== false,
@@ -144,7 +145,8 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
       // Wurde am Klang gedreht, muss die alte Hörprobe weg — sonst klingt sie noch wie vorher.
       // Nur die automatisch abgelegte Hörprobe — eine eigene Aufnahme bleibt immer erhalten.
       const retuned = initial?.id && initial.sampleCached &&
-        (initial.speed !== form.speed || initial.mood !== form.mood || initial.depth !== form.depth || initial.intensity !== form.intensity);
+        (initial.speed !== form.speed || initial.mood !== form.mood || initial.depth !== form.depth ||
+          initial.intensity !== form.intensity || initial.ending !== form.ending);
       const payload = retuned ? { ...form, sampleFile: "", sampleCached: false } : form;
       if (initial?.id) await base44.entities.Voice.update(initial.id, payload);
       else await base44.entities.Voice.create(payload);
@@ -233,6 +235,10 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
         <div>
           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Intensität — {form.intensity} (nur ElevenLabs)</label>
           <input type="range" min="0" max="100" step="5" value={form.intensity} onChange={(e) => set("intensity", Number(e.target.value))} className="w-full accent-[hsl(var(--primary))]" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Ausklang am Satzende — {form.ending} (nur ElevenLabs)</label>
+          <input type="range" min="0" max="100" step="5" value={form.ending} onChange={(e) => set("ending", Number(e.target.value))} className="w-full accent-[hsl(var(--primary))]" />
         </div>
       </div>
 

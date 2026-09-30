@@ -54,6 +54,10 @@
     "intensity": {
       "type": "number"
     },
+    "ending": {
+      "type": "number",
+      "default": 50
+    },
     "sampleFile": {
       "type": "string"
     },

@@ -50,6 +50,7 @@ export async function speakAsVoice(profile, text) {
       speed: tune.apiSpeed,
       mood: profile?.mood,
       intensity: tune.intensity,
+      ending: profile?.ending,
     });
     if (res.data?.error) throw new Error(res.data.error);
     return res.data?.url || null;
