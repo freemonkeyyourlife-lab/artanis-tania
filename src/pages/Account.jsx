@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { User as UserIcon, Crown, Settings, LogOut, Mic } from "lucide-react";
+import { User as UserIcon, Crown, Settings, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import InviteRedeem from "@/components/owner/InviteRedeem";
-import VoiceProfilesPanel from "@/components/voice/VoiceProfilesPanel";
 
 export default function Account() {
   const { toast } = useToast();
@@ -80,18 +79,6 @@ export default function Account() {
           <button onClick={save} disabled={saving} className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:accent-glow transition-all">Änderungen speichern</button>
         </div>
       </div>
-
-      {user.role === "admin" && (
-        <div className="rounded-2xl border border-border bg-card p-6 mb-6">
-          <h2 className="font-display text-xl text-foreground mb-1 flex items-center gap-2">
-            <Mic className="w-5 h-5 text-primary" /> Stimmen-Profile
-          </h2>
-          <p className="text-xs text-muted-foreground mb-4">
-            Für jede Figur ein eigener Klang — tippe Worte an wie „tief", „hauchen" oder „rauchig". Artanis und Triania stehen oben.
-          </p>
-          <VoiceProfilesPanel />
-        </div>
-      )}
 
       <InviteRedeem />
 

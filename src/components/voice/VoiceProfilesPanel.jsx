@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 import { assignVoiceToCreator } from "@/lib/voiceAssign";
 import VoiceDescribeBox from "@/components/voice/VoiceDescribeBox";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
+import VoiceInput from "@/components/VoiceInput";
+
+const DEFAULT_SNIPPET = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -39,6 +42,9 @@ export default function VoiceProfilesPanel() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
   const [wordsFor, setWordsFor] = useState({});
+  const [snippets, setSnippets] = useState({});
+
+  const snippetFor = (id) => snippets[id] ?? DEFAULT_SNIPPET;
 
   useEffect(() => { load(); }, []);
 
@@ -134,7 +140,7 @@ export default function VoiceProfilesPanel() {
                   {voice ? `${voice.name} · ${words.length ? words.join(" · ") : "noch ohne Worte"}` : "Noch kein Profil — tippe ein Wort an"}
                 </p>
               </div>
-              {voice && <VoicePreviewButton profile={voice} live />}
+              {voice && <VoicePreviewButton profile={voice} text={snippetFor(creator.id)} live />}
             </div>
 
             <div className="flex flex-wrap gap-1.5">
@@ -175,6 +181,15 @@ export default function VoiceProfilesPanel() {
                 <p className="text-[11px] text-muted-foreground mt-2">
                   Stimmung {voice.mood || "NEUTRAL"} · Tempo {Number(voice.speed ?? 1).toFixed(2)}× · Tonlage {voice.depth ?? 0} · Intensität {voice.intensity ?? 50} · Ausklang {voice.ending ?? 50}
                 </p>
+                <div className="mt-3 flex gap-2">
+                  <input
+                    value={snippetFor(creator.id)}
+                    onChange={(e) => setSnippets((prev) => ({ ...prev, [creator.id]: e.target.value }))}
+                    placeholder="Test-Schnipsel — tippe, was sie sagen soll"
+                    className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+                  />
+                  <VoiceInput title="Test-Schnipsel einsprechen" onResult={(t) => setSnippets((prev) => ({ ...prev, [creator.id]: t }))} />
+                </div>
                 <div className="mt-3">
                   <VoiceDescribeBox voice={voice} onApply={(patch) => applyTuning(voice, patch)} />
                 </div>

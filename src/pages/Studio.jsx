@@ -22,6 +22,7 @@ import GuideManager from "@/components/studio/GuideManager";
 import DockManager from "@/components/studio/DockManager";
 import VoiceManager from "@/components/studio/VoiceManager";
 import VoiceTuner from "@/components/studio/VoiceTuner";
+import VoiceProfilesPanel from "@/components/voice/VoiceProfilesPanel";
 import CharacterTransfer from "@/components/studio/CharacterTransfer";
 
 const personaLabel = (t) =>
@@ -36,6 +37,7 @@ const TAB_GROUPS = [
       { id: "dock", label: "Dockingstation" },
       { id: "baukasten", label: "Baukasten" },
       { id: "voices", label: "Stimmbank" },
+      { id: "voiceprofiles", label: "Stimmen-Profile" },
       { id: "generator", label: "Generator" },
       { id: "content", label: "Inhalte & Preise" },
     ],
@@ -154,6 +156,15 @@ export default function Studio() {
       {tab === "guide" && <GuideManager />}
       {tab === "dock" && <DockManager />}
       {tab === "voices" && <VoiceManager />}
+      {tab === "voiceprofiles" && (
+        <div className="glass rounded-2xl border-2 border-border p-6">
+          <p className="font-display text-2xl text-foreground">Stimmen-Profile</p>
+          <p className="text-xs text-muted-foreground mb-5">
+            Für jede Figur ein eigener Klang. Beschreib ihn in Worten wie „tief", „hauchend" oder „schnell" — und hör ihn dir mit deinem Test-Schnipsel an.
+          </p>
+          <VoiceProfilesPanel />
+        </div>
+      )}
       {tab === "generator" && <GeneratorManager creators={creators} />}
       {tab === "models" && <ModelManager />}
       {tab === "textmodels" && <TextModelManager />}
