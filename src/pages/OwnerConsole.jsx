@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -12,6 +12,7 @@ import UserSwitcher from "@/components/owner/UserSwitcher";
 import { DEFAULT_MENU, DEFAULT_FONT, loadLayout, saveLayout } from "@/lib/siteLayout";
 import { DEFAULT_STRUCTURE, DEFAULT_INTRO_STEPS, DEFAULT_INTERESTS, DEFAULT_INFO, clearStructureCache, loadStructure } from "@/lib/onboarding";
 import StructureEditor from "@/components/owner/StructureEditor";
+import ChannelHub from "@/components/owner/ChannelHub";
 import InfoTextEditor from "@/components/owner/InfoTextEditor";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ const TABS = [
   { id: "font", label: "Schrift", icon: Type },
   { id: "structure", label: "Struktur", icon: SlidersHorizontal },
   { id: "access", label: "Zugang", icon: KeyRound },
+  { id: "channels", label: "Kanäle", icon: Link2 },
   { id: "data", label: "Sichern", icon: Database },
 ];
 
@@ -485,6 +487,8 @@ export default function OwnerConsole() {
           </div>
         </>
       )}
+
+      {tab === "channels" && <ChannelHub />}
 
       {tab === "data" && (
         <>

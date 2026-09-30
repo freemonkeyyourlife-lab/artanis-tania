@@ -1,0 +1,46 @@
+{
+  "name": "ChannelSetup",
+  "type": "object",
+  "properties": {
+    "ownerWhatsapp": {
+      "type": "string"
+    },
+    "ownerTelegram": {
+      "type": "string"
+    },
+    "ownerInstagram": {
+      "type": "string"
+    },
+    "ownerEmail": {
+      "type": "string"
+    },
+    "telegramBotUsername": {
+      "type": "string"
+    },
+    "telegramChatId": {
+      "type": "string"
+    }
+  },
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
