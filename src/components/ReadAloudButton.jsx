@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Volume2, Square } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Volume2, Square, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resolveVoice } from "@/lib/voiceDj";
+import { base44 } from "@/api/base44Client";
 
 // Tonlage und Tempo je Charakter-Stimme — damit sich die Charaktere beim Vorlesen unterscheiden.
 const VOICE_TUNING = {
@@ -14,10 +15,36 @@ const VOICE_TUNING = {
 
 export default function ReadAloudButton({ text, voice, profile, className, autoPlay = false }) {
   const [speaking, setSpeaking] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const audioRef = useRef(null);
   const supported = typeof window !== "undefined" && "speechSynthesis" in window;
+  // Ist dem Charakter eine Stimme aus ElevenLabs zugeordnet, sprechen wir darüber.
+  const cloudVoice = profile?.provider === "ELEVENLABS" ? profile.externalVoiceId : "";
+
+  // Über ElevenLabs: die Stimme kommt als fertiger Ton zurück.
+  const speakCloud = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await base44.functions.invoke("elevenLabs", { voiceId: cloudVoice, text });
+      if (res.data?.error) throw new Error(res.data.error);
+      const audio = new Audio(res.data.url);
+      audio.onended = () => setSpeaking(false);
+      audio.onerror = () => setSpeaking(false);
+      audioRef.current = audio;
+      setSpeaking(true);
+      await audio.play();
+    } catch (e) {
+      console.error(e);
+      setSpeaking(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [cloudVoice, text]);
 
   const speak = useCallback(() => {
-    if (!supported || !text) return;
+    if (!text) return;
+    if (cloudVoice) { speakCloud(); return; }
+    if (!supported) return;
     const synth = window.speechSynthesis;
     synth.cancel();
     // Ist dem Charakter eine Stimme aus der Stimmbank zugeordnet, gilt die — sonst die Grundstimmung.
@@ -32,38 +59,47 @@ export default function ReadAloudButton({ text, voice, profile, className, autoP
     utterance.onerror = () => setSpeaking(false);
     setSpeaking(true);
     synth.speak(utterance);
-  }, [text, voice, profile, supported]);
+  }, [text, voice, profile, supported, cloudVoice, speakCloud]);
+
+  const halt = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    if (supported) window.speechSynthesis.cancel();
+    setSpeaking(false);
+  };
 
   // Freisprechen: jede neue Zeile wird von selbst vorgelesen.
   useEffect(() => {
     if (!autoPlay || !text) return;
     speak();
-    return () => { if (supported) window.speechSynthesis.cancel(); };
+    return () => {
+      if (audioRef.current) audioRef.current.pause();
+      if (supported) window.speechSynthesis.cancel();
+    };
   }, [autoPlay, text, speak, supported]);
 
   useEffect(() => {
-    return () => { if (supported) window.speechSynthesis.cancel(); };
+    return () => {
+      if (audioRef.current) audioRef.current.pause();
+      if (supported) window.speechSynthesis.cancel();
+    };
   }, [supported]);
 
-  if (!supported || !text) return null;
+  if (!text || (!supported && !cloudVoice)) return null;
 
   const toggle = () => {
-    if (speaking) {
-      window.speechSynthesis.cancel();
-      setSpeaking(false);
-      return;
-    }
+    if (speaking) { halt(); return; }
     speak();
   };
 
   return (
     <button
       onClick={toggle}
+      disabled={loading}
       title={speaking ? "Vorlesen stoppen" : "Vorlesen"}
-      className={cn("inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors", className)}
+      className={cn("inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50", className)}
     >
-      {speaking ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-      {speaking ? "Stopp" : "Vorlesen"}
+      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : speaking ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+      {loading ? "Lädt …" : speaking ? "Stopp" : "Vorlesen"}
     </button>
   );
 }

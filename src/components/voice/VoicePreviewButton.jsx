@@ -7,7 +7,7 @@ import { resolveVoice } from "@/lib/voiceDj";
 const SAMPLE_TEXT = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
 
 // Hört sich die eingestellte Stimme an — genau so, wie sie später im Chat klingt.
-export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, className }) {
+export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, className, onCached }) {
   const [state, setState] = useState("idle");
   const audioRef = useRef(null);
 
@@ -29,6 +29,16 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
         const res = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: profile.sampleFile, expires_in: 600 });
         url = res?.signed_url;
         rate = 1;
+      } else if (profile?.provider === "ELEVENLABS" && profile?.externalVoiceId) {
+        const res = await base44.functions.invoke("elevenLabs", { voiceId: profile.externalVoiceId, text });
+        if (res.data?.error) throw new Error(res.data.error);
+        url = res.data.url;
+        rate = 1;
+        // Einmal gesprochen bleibt liegen — beim nächsten Mal ist es sofort da.
+        if (res.data.file_uri && profile.id) {
+          await base44.entities.Voice.update(profile.id, { sampleFile: res.data.file_uri });
+          onCached?.();
+        }
       } else {
         const res = await base44.integrations.Core.GenerateSpeech({ text, voice: v.baseVoice });
         url = res?.url;

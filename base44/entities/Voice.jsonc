@@ -8,6 +8,17 @@
     "description": {
       "type": "string"
     },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "GRUNDSTIMME",
+        "ELEVENLABS"
+      ],
+      "default": "GRUNDSTIMME"
+    },
+    "externalVoiceId": {
+      "type": "string"
+    },
     "baseVoice": {
       "type": "string",
       "enum": [

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Mic, Pencil, Plus, Trash2, Star, Search } from "lucide-react";
+import { Mic, Pencil, Plus, Trash2, Star, Search, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resolveVoice } from "@/lib/voiceDj";
 import VoiceForm from "@/components/studio/VoiceForm";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
+import ElevenLabsImport from "@/components/studio/ElevenLabsImport";
 
 const SORTS = [
   { id: "favorite", label: "Favoriten zuerst" },
@@ -27,6 +28,7 @@ export default function VoiceManager() {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("favorite");
   const [tagFilter, setTagFilter] = useState("");
+  const [showImport, setShowImport] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -117,12 +119,27 @@ export default function VoiceManager() {
           {SORTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
         </select>
         <button
+          onClick={() => setShowImport((s) => !s)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-elevated border border-border text-sm font-semibold text-foreground whitespace-nowrap hover:border-primary/50 transition-colors"
+        >
+          <Download className="w-4 h-4" /> Aus ElevenLabs
+        </button>
+        <button
           onClick={() => setEditing("new")}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold whitespace-nowrap"
         >
           <Plus className="w-4 h-4" /> Neue Stimme
         </button>
       </div>
+
+      {showImport && (
+        <div className="mb-5">
+          <ElevenLabsImport
+            existingIds={voices.map((v) => v.externalVoiceId).filter(Boolean)}
+            onImported={load}
+          />
+        </div>
+      )}
 
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
@@ -181,7 +198,7 @@ export default function VoiceManager() {
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-display text-base text-foreground">{voice.name}</p>
                       <span className="px-2 py-0.5 rounded-full bg-elevated border border-border text-[10px] font-semibold text-muted-foreground">
-                        {SOURCE_LABEL[voice.source] || "Eingesprochen"}
+                        {voice.provider === "ELEVENLABS" ? "ElevenLabs" : (SOURCE_LABEL[voice.source] || "Eingesprochen")}
                       </span>
                       {voice.sampleFile && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold">
@@ -206,7 +223,7 @@ export default function VoiceManager() {
                       </div>
                     )}
                   </div>
-                  <VoicePreviewButton profile={voice} />
+                  <VoicePreviewButton profile={voice} onCached={load} />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 mt-4">
