@@ -7,6 +7,8 @@ import GuideBox from "@/components/owner/GuideBox";
 import LageRow from "@/components/owner/LageRow";
 import InviteBuilder from "@/components/owner/InviteBuilder";
 import InviteList from "@/components/owner/InviteList";
+import GoldmutAccess from "@/components/owner/GoldmutAccess";
+import UserSwitcher from "@/components/owner/UserSwitcher";
 import { DEFAULT_MENU, DEFAULT_FONT, loadLayout, saveLayout } from "@/lib/siteLayout";
 import { cn } from "@/lib/utils";
 
@@ -402,6 +404,14 @@ export default function OwnerConsole() {
           </GuideBox>
 
           <InviteBuilder onCreated={() => setInviteRefresh((n) => n + 1)} />
+
+          <div className="mt-5">
+            <GoldmutAccess />
+          </div>
+
+          <div className="mt-5">
+            <UserSwitcher me={me} />
+          </div>
 
           <div className="mt-5">
             <InviteList refreshKey={inviteRefresh} />

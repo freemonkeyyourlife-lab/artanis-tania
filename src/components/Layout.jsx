@@ -6,6 +6,7 @@ import HeaderNav, { buildNavGroups } from "@/components/nav/HeaderNav";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
 import { hasProAccess, localProActive } from "@/lib/proAccess";
+import { getViewAs, setViewAs, subscribeViewAs } from "@/lib/viewAs";
 import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
 
@@ -41,6 +42,7 @@ export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [me, setMe] = useState(null);
   const [memberStatus, setMemberStatus] = useState(null);
+  const [viewAs, setViewAsState] = useState(null);
   const [incomingCount, setIncomingCount] = useState(0);
   const [waitingChats, setWaitingChats] = useState(0);
   const [layout, setLayout] = useState(null);
@@ -48,6 +50,12 @@ export default function Layout() {
   // Der Besitzer legt Reihenfolge, Schrift und ausgeblendete Punkte fest.
   useEffect(() => {
     loadLayout().then(setLayout).catch(() => setLayout(null));
+  }, []);
+
+  // Testansicht: du schaust dir die App gerade als ein anderer Nutzer an.
+  useEffect(() => {
+    setViewAsState(getViewAs());
+    return subscribeViewAs(() => setViewAsState(getViewAs()));
   }, []);
 
   useEffect(() => {
@@ -109,6 +117,16 @@ export default function Layout() {
             {memberStatus === "GOLD" && (
               <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wider">Gold</span>
             )}
+            {viewAs && (
+              <button
+                onClick={() => setViewAs(null)}
+                title="Testansicht beenden — zurück zu dir"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full glass-btn text-[11px] font-bold text-amber-300 whitespace-nowrap"
+              >
+                Blick als: {viewAs.name} · {viewAs.memberStatus === "GOLD" ? "Gold" : "Standard"}
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
 
           <HeaderNav groups={groups} font={navFont} waitingChats={waitingChats} />
@@ -139,14 +157,14 @@ export default function Layout() {
               className="hidden lg:flex items-center gap-2.5 pl-1.5 pr-4 py-1 rounded-full glass-btn hover:text-primary transition-colors"
             >
               <span className="w-7 h-7 rounded-full bg-primary/25 flex items-center justify-center font-display text-primary text-xs flex-shrink-0">
-                {(me?.full_name || me?.email || "?").charAt(0).toUpperCase()}
+                {(viewAs?.name || me?.full_name || me?.email || "?").charAt(0).toUpperCase()}
               </span>
               <span className="flex flex-col items-start leading-tight">
                 <span className="text-[13px] font-bold text-foreground max-w-[150px] truncate">
-                  {me?.full_name || me?.email || "Mein Konto"}
+                  {viewAs?.name || me?.full_name || me?.email || "Mein Konto"}
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                  {memberStatus === "GOLD" ? "Gold · alles frei" : "Standard"}
+                  {(viewAs ? viewAs.memberStatus : memberStatus) === "GOLD" ? "Gold · alles frei" : "Standard"}
                 </span>
               </span>
             </Link>

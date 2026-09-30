@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 // Die Kopfzeile hat vier Bereiche statt acht einzelner Knöpfe.
 // „Erleben" ist der Menüpunkt-Block, den du in der Besitzer-Konsole sortierst.
-const PERSON_ITEMS = [
+const CHARACTER_ITEMS = [
   { label: "Artanis", path: "/artanis" },
   { label: "Triania", path: "/triania" },
   { label: "Couple", path: "/couple" },
@@ -24,22 +24,30 @@ const ADMIN_ITEMS = [
   { label: "Besitzer-Konsole", path: "/owner" },
 ];
 
-const DEFAULT_EXPLORE = [
+// Diese Punkte hängen immer unter „Erleben" — auch wenn im eigenen Menü
+// gerade keiner davon steht. Sonst verschwindet dir ein Bereich unbemerkt.
+const CORE_EXPLORE = [
   { label: "Nachrichten", path: "/messages" },
+  { label: "Sprechstunde", path: "/therapy" },
   { label: "Wettbewerbe", path: "/contests" },
   { label: "Live", path: "/live" },
   { label: "Interaktiv", path: "/interactive" },
   { label: "Entdecken", path: "/explore" },
 ];
 
+const exploreItems = (menuItems) =>
+  menuItems.length
+    ? [...menuItems, ...CORE_EXPLORE.filter((c) => !menuItems.some((m) => m.path === c.path))]
+    : CORE_EXPLORE;
+
 // Kein Eintrag taucht zweimal auf — auch wenn dein Menü einen Punkt enthält,
 // der schon in einem anderen Block steht.
 export function buildNavGroups(menuItems = []) {
   const seen = new Set();
   const groups = [
-    { label: "Personen", items: PERSON_ITEMS },
+    { label: "Charaktere", items: CHARACTER_ITEMS },
     { label: "Selbst erstellen", items: CREATE_ITEMS },
-    { label: "Erleben", items: menuItems.length ? menuItems : DEFAULT_EXPLORE },
+    { label: "Erleben", items: exploreItems(menuItems) },
     { label: "Verwaltung", items: ADMIN_ITEMS },
   ];
   return groups
