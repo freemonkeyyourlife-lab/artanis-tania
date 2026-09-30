@@ -10,6 +10,7 @@ import ContentCard from "@/components/ContentCard";
 import HeroCloud from "@/components/HeroCloud";
 import HeroNews from "@/components/hero/HeroNews";
 import RequestCard from "@/components/RequestCard";
+import { useRequestVotes } from "@/hooks/useRequestVotes";
 import { cn } from "@/lib/utils";
 
 const HERO_BG = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/36d23e21f_generated_image.png";
@@ -43,8 +44,15 @@ export default function Home() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
+  const { userId, vote } = useRequestVotes();
 
   useEffect(() => { loadData(); }, []);
+
+  // Eine Stimme für einen Community-Wunsch — zählt genau einmal pro Person.
+  const voteRequest = async (request) => {
+    const updated = await vote(request);
+    if (updated) setRequests((prev) => prev.map((r) => (r.id === request.id ? updated : r)));
+  };
 
   const loadData = async () => {
     try {
@@ -264,7 +272,7 @@ export default function Home() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {requests.slice(0, 6).map((req) => (
-                    <RequestCard key={req.id} request={req} />
+                    <RequestCard key={req.id} request={req} currentUserId={userId} onVote={voteRequest} />
                   ))}
                 </div>
               </div>

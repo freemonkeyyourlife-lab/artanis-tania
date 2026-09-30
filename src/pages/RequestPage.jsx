@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import RequestCard from "@/components/RequestCard";
+import RequestRanking from "@/components/community/RequestRanking";
+import { useRequestVotes } from "@/hooks/useRequestVotes";
 import { Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -22,6 +23,7 @@ export default function RequestPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ type: "VIDEO_IDEA", title: "", description: "", creatorName: "" });
+  const { userId, vote } = useRequestVotes();
 
   useEffect(() => { load(); }, []);
 
@@ -41,6 +43,12 @@ export default function RequestPage() {
       setRequests(data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+  };
+
+  // Eine Stimme abgeben oder zurücknehmen — die Rangliste rutscht sofort nach.
+  const voteRequest = async (request) => {
+    const updated = await vote(request);
+    if (updated) setRequests((prev) => prev.map((r) => (r.id === request.id ? updated : r)));
   };
 
   const submit = async () => {
@@ -94,14 +102,14 @@ export default function RequestPage() {
         </div>
       </div>
 
-      <h2 className="font-display text-xl text-foreground mb-4">Top Requests</h2>
+      <h2 className="font-display text-xl text-foreground mb-1">Rangliste</h2>
+      <p className="text-muted-foreground text-sm mb-4">Die Stimmen der Community entscheiden die Reihenfolge.</p>
       {loading ? (
         <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>
+      ) : requests.length === 0 ? (
+        <p className="text-muted-foreground text-center py-8">Noch keine Wünsche — reich den ersten ein.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {requests.map(r => <RequestCard key={r.id} request={r} />)}
-          {requests.length === 0 && <p className="text-muted-foreground col-span-full text-center py-8">No requests yet</p>}
-        </div>
+        <RequestRanking requests={requests} currentUserId={userId} onVote={voteRequest} />
       )}
     </div>
   );
