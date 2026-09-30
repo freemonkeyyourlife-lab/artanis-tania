@@ -12,6 +12,8 @@ import BackgroundSlideshow from "@/components/BackgroundSlideshow";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import WishButton from "@/components/wish/WishButton";
 import { useCallSession } from "@/lib/CallContext";
+import { getRooms } from "@/lib/callRooms";
+import { publicName } from "@/lib/displayName";
 
 const MORE_LINKS = [
   { label: "Dockingstation", path: "/dock" },
@@ -51,9 +53,15 @@ export default function Layout() {
   const [layout, setLayout] = useState(null);
   // Der Call ist von jeder Seite aus erreichbar — und läuft weiter, wenn du
   // weiterklickst.
-  const { session, joined } = useCallSession();
+  const { session, joined, start } = useCallSession();
   const callRunning = joined && !!session;
-  const openCall = () => navigate(callRunning ? `/call/${session.token}?r=${session.roomNumber || 1}` : "/call");
+  // Der Call ist ein Teil von dem, was du gerade machst: Er startet klein in der
+  // Ecke und läuft mit — statt dich aus der Seite zu werfen.
+  const openCall = () => {
+    if (callRunning) { navigate(`/call/${session.token}?r=${session.roomNumber || 1}`); return; }
+    const room = getRooms()[0];
+    start({ token: room.token, roomNumber: room.number, name: publicName(me, "Ich") });
+  };
 
   // Der Besitzer legt Reihenfolge, Schrift und ausgeblendete Punkte fest.
   useEffect(() => {
