@@ -44,6 +44,9 @@
     "tagline": {
       "type": "string"
     },
+    "personaPrompt": {
+      "type": "string"
+    },
     "avatar": {
       "type": "string"
     },

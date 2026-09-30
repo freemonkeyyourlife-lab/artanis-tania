@@ -286,6 +286,9 @@ export default function Messages() {
       ctx += (activeCreator.bio || "") + "\n";
       ctx += "RULES: Start EVERY spoken line with the speaker's name in brackets, e.g. [Name]: ... Each has her own voice, her own mood and her own secret — never mix them up. They react to each other, tease each other and the user, and can touch each other. The user can address anyone by name — only that one answers first. Keep every character present in the scene.\n";
       ctx += "═══ END GROUP ═══\n";
+    } else if (activeCreator && activeCreator.personaPrompt) {
+      // Ein an der Dockingstation angedockter Charakter bringt seine eigene Anweisung mit.
+      ctx += "\n\n" + activeCreator.personaPrompt;
     } else if (activeCreator && !["Artanis", "Triania", "Artanis × Triania"].includes(activeCreator.stageName)) {
       ctx += `\n\nIMPORTANT: Your name is ${activeCreator.stageName} — NOT Triania or Artanis. You are ${activeCreator.stageName}. ${activeCreator.bio || ""} You are a friend of Triania's. Use the personality template above, but your identity is ${activeCreator.stageName}. When you refer to yourself, use the name ${activeCreator.stageName}.`;
       ctx += `\n\nAPPEARANCE: ${CHARACTER_ALLURE}`;
@@ -1053,6 +1056,10 @@ export default function Messages() {
                   <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold uppercase flex-shrink-0">Real</span>
                 </button>
               ))}
+              <Link to="/dock" className="block m-3 p-3 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/15 transition-colors">
+                <p className="text-sm font-semibold text-foreground">Eigenen Charakter mitbringen</p>
+                <p className="text-[11px] text-muted-foreground">Leg ihn an der Dockingstation rein — er läuft dann mit unserer Persönlichkeit.</p>
+              </Link>
               <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">KI-Modelle</p>
               {creators.filter(c => c.creatorCategory === "AI_MODEL" && c.stageName !== "Testdummy" && c.active !== false).map(c => (
                 <button key={c.id} onClick={() => openAiChat(c)} className={cn("w-full p-4 flex items-center gap-3 border-b border-border text-left transition-colors", activeChat === c.id ? "bg-primary/10" : "hover:bg-elevated")}>

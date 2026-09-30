@@ -17,6 +17,7 @@ import TextModelManager from "@/components/studio/TextModelManager";
 import PlanManager from "@/components/studio/PlanManager";
 import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
+import DockManager from "@/components/studio/DockManager";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -24,6 +25,7 @@ const personaLabel = (t) =>
 const TABS = [
   { id: "guide", label: "Anleitung" },
   { id: "characters", label: "Charaktere" },
+  { id: "dock", label: "Dockingstation" },
   { id: "generator", label: "Generator" },
   { id: "models", label: "Hugging Face" },
   { id: "textmodels", label: "Text-KI" },
@@ -94,6 +96,7 @@ export default function Studio() {
       </div>
 
       {tab === "guide" && <GuideManager />}
+      {tab === "dock" && <DockManager />}
       {tab === "generator" && <GeneratorManager creators={creators} />}
       {tab === "models" && <ModelManager />}
       {tab === "textmodels" && <TextModelManager />}

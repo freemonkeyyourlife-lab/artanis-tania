@@ -25,6 +25,7 @@ const PERSONA_LINKS = [
 ];
 
 const MORE_LINKS = [
+  { label: "Dockingstation", path: "/dock" },
   { label: "Kasse", path: "/paylinks" },
   { label: "Sprechstunde", path: "/therapy" },
   { label: "Wünsche", path: "/request" },

@@ -45,6 +45,7 @@ import PayLinks from '@/pages/PayLinks';
 import Pay from '@/pages/Pay';
 import TherapySession from '@/pages/TherapySession';
 import OwnerConsole from '@/pages/OwnerConsole';
+import Dock from '@/pages/Dock';
 import WaitingChatAlert from '@/components/WaitingChatAlert';
 import HostLiveAlert from '@/components/HostLiveAlert';
 
@@ -106,6 +107,7 @@ const AuthenticatedApp = () => {
         <Route path="/community" element={<Community />} />
         <Route path="/coins" element={<Coins />} />
         <Route path="/studio" element={<Studio />} />
+        <Route path="/dock" element={<Dock />} />
         <Route path="/leitstand" element={<Leitstand />} />
         <Route path="/owner" element={<OwnerConsole />} />
         <Route path="/therapy" element={<Therapy />} />
