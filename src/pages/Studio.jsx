@@ -141,6 +141,9 @@ export default function Studio() {
                 )}
                 {c.featured && <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">Featured</span>}
                 {c.active === false && <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-destructive text-white text-[10px] font-semibold uppercase">Inaktiv</span>}
+                <span className={cn("absolute bottom-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase", c.artStyle === "CARTOON" ? "bg-violet-600 text-white" : "glass text-foreground")}>
+                  {c.artStyle === "CARTOON" ? "Animiert" : "Foto"}
+                </span>
               </Link>
               <div className="p-3">
                 <p className="text-sm font-medium text-foreground truncate">{c.stageName}</p>
