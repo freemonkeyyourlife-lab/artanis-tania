@@ -64,6 +64,12 @@ export default function VoiceManager() {
     load();
   };
 
+  // Freigeben: danach darf sie jeder nutzen — nicht nur du.
+  const togglePublic = async (voice) => {
+    await base44.entities.Voice.update(voice.id, { public: voice.public === false });
+    load();
+  };
+
   // Eine Stimme gehört immer nur einem Charakter — vorher beim alten lösen.
   const assign = async (voice, creatorId) => {
     const previous = creators.filter((c) => c.voiceProfileId === voice.id && c.id !== creatorId);
@@ -208,6 +214,11 @@ export default function VoiceManager() {
                           <Mic className="w-3 h-3" /> Eigene Aufnahme
                         </span>
                       )}
+                      {voice.public !== false && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-600/20 text-emerald-400 text-[10px] font-semibold">
+                          Freigegeben
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {v.label} · Tempo {voice.speed?.toFixed(2) ?? "1.00"}× · Tiefe {voice.depth > 0 ? "+" : ""}{voice.depth ?? 0}
@@ -248,6 +259,15 @@ export default function VoiceManager() {
                     )}
                   >
                     {voice.active === false ? "Aktivieren" : "Deaktivieren"}
+                  </button>
+                  <button
+                    onClick={() => togglePublic(voice)}
+                    className={cn(
+                      "px-3 py-2 rounded-full text-xs font-semibold transition-colors",
+                      voice.public !== false ? "bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30" : "bg-elevated border border-border text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {voice.public !== false ? "Freigabe zurücknehmen" : "Freigeben"}
                   </button>
                   <button onClick={() => setEditing(voice)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <Pencil className="w-3.5 h-3.5" /> Bearbeiten

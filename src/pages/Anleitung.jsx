@@ -64,6 +64,22 @@ const SECTIONS = [
     toLabel: "Direkt ins Studio",
   },
   {
+    icon: Mic,
+    title: "Stimmen — holen, klonen, freigeben",
+    intro: "Der ElevenLabs-Schlüssel liegt schon in der App. Du musst nichts mehr eintragen und fürs Benutzen auch nicht mehr zu ElevenLabs.",
+    steps: [
+      "Holen: App → Studio → Stimmbank → Knopf „Aus ElevenLabs“. Dort stehen alle Stimmen aus deinem ElevenLabs-Konto — eigene, geklonte und fertige.",
+      "„Alle noch fehlenden übernehmen“ holt sie in einem Zug herüber. Danach sind sie hier ganz normal nutzbar: Sprechprobe, Chat, Video-Call.",
+      "Neue Stimme anlegen: Stimmbank → „Neue Stimme“. Aufnahme einsprechen oder eine mp3/wav hochladen (mindestens 30 Sekunden), dann „Als eigene Stimme klonen“. Das passiert hier in der App — nicht bei ElevenLabs.",
+      "Einem Charakter geben: in der Zeile der Stimme rechts den Charakter auswählen. Eine Stimme gehört immer nur einem Charakter.",
+      "Freigeben: in der Zeile auf „Freigeben“. Danach darf sie jeder nutzen — oben erscheint dann das grüne Zeichen. Mit „Freigabe zurücknehmen“ nimmst du es wieder weg.",
+      "Kostenpflichtig machen: im Bearbeiten-Fenster unter „Preis in Coins“ (0 = gratis).",
+      "Anhören: oben in der Stimmbank die Sprechprobe — Stimme wählen, Text tippen, anhören. Genau so klingt sie später im Chat.",
+    ],
+    to: "/studio",
+    toLabel: "Zur Stimmbank",
+  },
+  {
     icon: Plug,
     title: "Was hier geht",
     intro: "Die Wege, die auf dieser Plattform wirklich funktionieren.",
