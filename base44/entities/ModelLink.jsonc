@@ -21,6 +21,9 @@
       ],
       "default": "BILD"
     },
+    "io": {
+      "type": "string"
+    },
     "note": {
       "type": "string"
     },

@@ -40,7 +40,7 @@ export default function ModelLinkList() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState("");
-  const [form, setForm] = useState({ name: "", url: "", kind: "BILD" });
+  const [form, setForm] = useState({ name: "", url: "", kind: "BILD", io: "" });
 
   const load = async (search = "") => {
     setLoading(true);
@@ -70,8 +70,9 @@ export default function ModelLinkList() {
         name: form.name.trim(),
         url: form.url.trim(),
         kind: form.kind,
+        io: form.io.trim(),
       });
-      setForm({ name: "", url: "", kind: form.kind });
+      setForm({ name: "", url: "", kind: form.kind, io: "" });
       await load(query);
     } finally {
       setBusy(false);
@@ -174,6 +175,12 @@ export default function ModelLinkList() {
             placeholder="https://huggingface.co/…"
             className="flex-[2] min-w-[240px] h-11 text-[15px] font-semibold"
           />
+          <Input
+            value={form.io}
+            onChange={(e) => setForm({ ...form, io: e.target.value })}
+            placeholder="Typ, z. B. Bild → Video"
+            className="flex-1 min-w-[180px] h-11 text-[15px] font-semibold"
+          />
           <div className="flex gap-1.5">
             {KINDS.map((k) => (
               <button
@@ -239,6 +246,11 @@ export default function ModelLinkList() {
                       <p className="text-[12px] font-semibold text-muted-foreground truncate flex items-center gap-1.5 mt-0.5">
                         <ExternalLink className="w-3 h-3 flex-shrink-0" /> {hostOf(l.url)}
                       </p>
+                      {l.io && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-bold mt-1.5">
+                          {l.io}
+                        </span>
+                      )}
                       {l.note && (
                         <p className="text-[12px] font-semibold text-muted-foreground/80 line-clamp-2 mt-1">{l.note}</p>
                       )}
