@@ -211,14 +211,19 @@ export default function GeneratorManager({ creators }) {
                 key={m.id}
                 onClick={() => toggleModel(m.id)}
                 className={cn(
-                  "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+                  "w-full flex items-start gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-left transition-colors",
                   on ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <span className={cn("w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0", on ? "bg-primary border-primary text-primary-foreground" : "border-border")}>
+                <span className={cn("w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0", on ? "bg-primary border-primary text-primary-foreground" : "border-border")}>
                   {on && <Check className="w-3 h-3" />}
                 </span>
-                <span className="truncate">{m.name}</span>
+                <span className="min-w-0">
+                  <span className="block truncate">{m.name}</span>
+                  {m.description && (
+                    <span className="block text-[11px] font-normal text-muted-foreground line-clamp-2 mt-0.5">{m.description}</span>
+                  )}
+                </span>
               </button>
             );
           })}

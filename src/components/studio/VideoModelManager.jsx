@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils";
 import ModelKindTag from "@/components/studio/ModelKindTag";
 import ModelTags from "@/components/studio/ModelTags";
 import ModelFilterBar from "@/components/studio/ModelFilterBar";
+import ModelExplainBox from "@/components/studio/ModelExplainBox";
 import { matchesFilter } from "@/lib/modelTags";
+import { explainModel } from "@/lib/modelExplain";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -23,6 +25,7 @@ export default function VideoModelManager() {
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(null);
   const [filter, setFilter] = useState({ style: "", explicit: "", moods: [] });
+  const [explaining, setExplaining] = useState(false);
 
   useEffect(() => { load(); search(""); }, []);
 
@@ -105,7 +108,32 @@ export default function VideoModelManager() {
     load();
   };
 
+  // Erklärung am Modell festhalten — sie steht dann überall dort, wo man wählt.
+  const saveDescription = async (m, description) => {
+    await base44.entities.VideoModel.update(m.id, { description });
+    load();
+  };
+
+  const explainMissing = async () => {
+    const open = models.filter((m) => !m.description);
+    if (!open.length) return;
+    setExplaining(true);
+    try {
+      for (const m of open) {
+        const description = await explainModel({ name: m.name, modelId: m.modelId, kind: "VIDEO" });
+        if (description) await base44.entities.VideoModel.update(m.id, { description });
+      }
+      await load();
+      toast({ title: "Erklärungen ergänzt", description: `${open.length} Video-Modelle sind jetzt beschrieben.` });
+    } catch (e) {
+      toast({ title: "Nicht für alle geklappt", description: "Versuch es für die restlichen nochmal.", variant: "destructive" });
+    } finally {
+      setExplaining(false);
+    }
+  };
+
   const visible = models.filter((m) => matchesFilter(m, filter));
+  const missing = models.filter((m) => !m.description);
 
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -178,9 +206,21 @@ export default function VideoModelManager() {
       </div>
 
       <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-          Deine Video-Modelle ({visible.length} von {models.length})
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Deine Video-Modelle ({visible.length} von {models.length})
+          </p>
+          {missing.length > 0 && (
+            <button
+              onClick={explainMissing}
+              disabled={explaining}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated border border-border text-[11px] font-semibold text-foreground disabled:opacity-50"
+            >
+              {explaining ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-primary" />}
+              {explaining ? "Erklärt …" : `Fehlende erklären (${missing.length})`}
+            </button>
+          )}
+        </div>
 
         <ModelFilterBar kind="VIDEO" models={models} value={filter} onChange={setFilter} />
 
@@ -201,6 +241,7 @@ export default function VideoModelManager() {
                   <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
                   <p className="text-[11px] text-muted-foreground truncate">{m.modelId}{m.note ? ` · ${m.note}` : ""}</p>
                   <ModelTags kind="VIDEO" model={m} editable className="mt-1.5" onSave={(t) => saveTags(m, t)} />
+                  <ModelExplainBox model={m} kind="VIDEO" onSave={(d) => saveDescription(m, d)} />
                 </div>
                 <button
                   onClick={() => toggle(m)}

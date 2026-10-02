@@ -30,6 +30,9 @@ export default function MassModelPicker({ models, modelIds, onToggle, onLevel })
                 <span className="text-[14px] font-bold text-foreground truncate">{m.name}</span>
                 {m.favorite && <span className="ml-auto text-[11px] font-bold text-primary">Favorit</span>}
               </button>
+              {m.description && (
+                <p className="text-[11px] font-semibold text-muted-foreground mt-1.5 pl-6 line-clamp-2">{m.description}</p>
+              )}
               <div className="flex flex-wrap gap-1 mt-2 pl-6">
                 {DIRECTION_LEVELS.map((l) => (
                   <button

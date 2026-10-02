@@ -58,6 +58,9 @@
     "note": {
       "type": "string"
     },
+    "description": {
+      "type": "string"
+    },
     "enabled": {
       "type": "boolean",
       "default": true
