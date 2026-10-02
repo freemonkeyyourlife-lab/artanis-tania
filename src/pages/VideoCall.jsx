@@ -12,7 +12,7 @@ import LiveToggle from "@/components/call/LiveToggle";
 import { loadWindows, subscribeWindows, toggleWindow, openWindow, closeWindow, setDock, setTextSize, setStageSplit } from "@/lib/callWindows";
 import { onUiCommand, takePendingUiCommand, clearUiCommand } from "@/lib/ownerUi";
 import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
-import { readPreferredCamera, savePreferredCamera, phoneCameraUrl } from "@/lib/videoSource";
+import { readPreferredCamera, savePreferredCamera, phoneCameraUrl, markSourceAsked, sourceAlreadyAsked } from "@/lib/videoSource";
 import VideoSourceDialog from "@/components/call/VideoSourceDialog";
 import VoiceEditorDialog from "@/components/voice/VoiceEditorDialog";
 import { getRooms, addRoom } from "@/lib/callRooms";
@@ -30,10 +30,24 @@ export default function VideoCall() {
   const [isOwner, setIsOwner] = useState(false);
   const [windows, setWindows] = useState(() => loadWindows());
   const [rooms, setRooms] = useState(() => getRooms());
-  // Beim Start einer neuen Video-Session einmal nach der Videoquelle fragen —
-  // nicht, wenn du nur in einen schon laufenden Call zurückkommst.
-  const [sourceOpen, setSourceOpen] = useState(() => !(call.joined && call.session?.token === token));
+  // Beim Start einer Sitzung einmal nach der Videoquelle fragen — und zwar
+  // unabhängig davon, ob die Sitzung gerade frisch gestartet wurde oder du
+  // noch auf dem Beitritts-Bildschirm stehst.
+  const [sourceOpen, setSourceOpen] = useState(() => !sourceAlreadyAsked(call.session?.startedAt || token));
   const [camChoice, setCamChoice] = useState(() => readPreferredCamera());
+
+  // Schließen heißt: gefragt. Danach kommt der Dialog in dieser Sitzung nicht wieder.
+  const closeSource = (open) => {
+    setSourceOpen(open);
+    if (!open) markSourceAsked(call.session?.startedAt || token);
+  };
+
+  // Beitreten heißt: die Wahl wurde schon getroffen — nicht gleich noch einmal fragen.
+  const joinNow = () => {
+    const startedAt = Date.now();
+    markSourceAsked(startedAt);
+    call.start({ token, roomNumber, name: myName, startedAt });
+  };
 
   useEffect(() => subscribeWindows(() => setWindows(loadWindows())), []);
 
@@ -169,7 +183,7 @@ export default function VideoCall() {
           </div>
 
           <button
-            onClick={() => call.start({ token, roomNumber, name: myName })}
+            onClick={joinNow}
             className="w-full mt-6 px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold"
           >
             Jetzt beitreten
@@ -185,7 +199,7 @@ export default function VideoCall() {
 
         <VideoSourceDialog
           open={sourceOpen}
-          onOpenChange={setSourceOpen}
+          onOpenChange={closeSource}
           devices={devices}
           activeId={camChoice}
           onPick={(id) => { savePreferredCamera(id); setCamChoice(id); }}
@@ -371,7 +385,7 @@ export default function VideoCall() {
       {/* Auch mitten in der Sitzung: Kamera umschalten, das Handy dazuholen. */}
       <VideoSourceDialog
         open={sourceOpen}
-        onOpenChange={setSourceOpen}
+        onOpenChange={closeSource}
         devices={devices}
         activeId={camChoice}
         onPick={(id) => { savePreferredCamera(id); setCamChoice(id); switchDevice(id); }}

@@ -13,6 +13,18 @@ export function savePreferredCamera(deviceId) {
   } catch (e) { /* dann eben ohne Merken */ }
 }
 
+// Welche Sitzung schon gefragt wurde. Bleibt im Speicher der laufenden Seite:
+// ein frischer Start fragt, die Rückkehr in denselben Call nicht mehr.
+const asked = new Set();
+
+export function markSourceAsked(sessionKey) {
+  if (sessionKey) asked.add(String(sessionKey));
+}
+
+export function sourceAlreadyAsked(sessionKey) {
+  return asked.has(String(sessionKey));
+}
+
 // Dasselbe Gerät, zweite Kamera: das Handy tritt dem Raum bei und liefert sein Bild.
 export function phoneCameraUrl(token, roomNumber) {
   return `${callBase()}/call/${token}${roomNumber ? `?r=${roomNumber}` : ""}`;

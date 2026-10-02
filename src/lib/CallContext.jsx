@@ -27,7 +27,9 @@ export function CallProvider({ children }) {
     wantMic,
     setWantCam,
     setWantMic,
-    start: (next) => { setSession(next); setJoined(true); },
+    // Jede Sitzung bekommt einen eigenen Stempel — daran erkennt die Call-Seite,
+    // ob sie gerade frisch gestartet wurde.
+    start: (next) => { setSession({ startedAt: Date.now(), ...next }); setJoined(true); },
     leave: () => { setJoined(false); setSession(null); },
     ...room,
   };
