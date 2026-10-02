@@ -1,3 +1,5 @@
+import { START_PATHS } from "./onboarding";
+
 // Das Intro als geführtes Erlebnis. Alles, was die Erzählerin sagt, steht hier
 // an einer Stelle; der Ablauf selbst kommt aus buildIntroFlow. Die Reihenfolge
 // der Bausteine: ankommen, vorstellen, Modus fragen, Fragen, Weiche, Tour.
@@ -68,6 +70,91 @@ export const RECALL_TIPS = [
   "Frag sie doch mal das und das — ich kenne sie nämlich ganz gut, ich weiß, wie sie reagiert. Vertrau mir.",
 ];
 
+// ── Was es gibt ───────────────────────────────────────────────────────────
+// PLATZHALTER: Davids Beispiel-Wortlaut. Die exakten Texte kommen aus seinem
+// Studio (Bausteine „Themen" und „Angebote") — hier nur die Stelle dafür.
+export const THEME_LINES = [
+  "Eins vorweg: wir haben eigentlich alles, was es querbeet gibt.",
+  "Und was es noch nicht gibt, nehmen wir trotzdem auf — ab ins Archiv.",
+  "Auch das, was du selbst baust. Gold wert: dann wissen wir auch, was du alles willst.",
+];
+
+export const COMPANION_OFFER_LINES = [
+  "Das ist eine Sache, die er hat — der Letzte.",
+  "Und von meiner Freundin kommen nächste Woche noch ein paar Sachen: Ehegeschichten.",
+  "Da kannst du den Typen spielen — oder uns beide.",
+  "Oder wir erzählen dir Sachen, die wir beide gemacht haben.",
+  "Du kannst mit uns mitmachen, ich begleite dich.",
+  "Oder du willst was Eigenes und kreierst dir ein selbst vorgegebenes Szenario.",
+  "Oder du nimmst eine vorgegebene Frau und spielst mit ihr ein selbst kreiertes Szenario.",
+];
+
+// Der Baukasten: jeder mit allem und alles, mit jedem für alles, um alles.
+// Vier Schrauben — Figur, Geschichte, Szenario, Rolle. Frei kombinierbar.
+export const BUILDKIT_LINES = [
+  "Jeder mit allem und alles, mit jedem für alles, um alles.",
+  "Du kannst alles kombinieren. Nichts ist festgelegt.",
+];
+
+export const BUILDKIT_AXES = [
+  {
+    id: "figure",
+    label: "Die Frau",
+    question: "Wer ist die Frau?",
+    options: [
+      { id: "hier", label: "Eine von hier", hint: "Artemis, Tania und die anderen." },
+      { id: "eigene", label: "Meine eigene", hint: "Die Figur, die du dir selbst gebaut hast." },
+      { id: "mitgebracht", label: "Eine, die ich mitbringe", hint: "Von woanders geholt und mitgebracht." },
+    ],
+  },
+  {
+    id: "story",
+    label: "Die Geschichte",
+    question: "Und welche Geschichte dazu?",
+    options: [
+      { id: "letzte", label: "Die letzte, die er hat", hint: "Die neueste, ganz frisch." },
+      { id: "ehegeschichten", label: "Ehegeschichten", hint: "Kommen nächste Woche von ihrer Freundin." },
+      { id: "wahre", label: "Wahre Begebenheiten", hint: "Sachen, die wirklich passiert sind." },
+      { id: "keine", label: "Keine — frei", hint: "Du fängst ohne Vorgabe an." },
+    ],
+  },
+  {
+    id: "scenario",
+    label: "Das Szenario",
+    question: "Woher kommt das Szenario?",
+    options: [
+      { id: "vorgabe", label: "Aus einer Vorgabe", hint: "Du nimmst, was da ist." },
+      { id: "selbst", label: "Ich erfinde es selbst", hint: "Dein eigenes Szenario, von dir geschrieben." },
+      { id: "fremde_frau", label: "Vorgegebene Frau, mein Szenario", hint: "Sie kommt von hier — die Handlung bestimmst du." },
+    ],
+  },
+  {
+    id: "role",
+    label: "Deine Rolle",
+    question: "Und was machst du dabei?",
+    options: [
+      { id: "mitspielen", label: "Ich spiele mit", hint: "Du bist mittendrin." },
+      { id: "begleitet", label: "Sie begleitet mich", hint: "Sie geht mit und führt dich." },
+      { id: "zuhoeren", label: "Nur zuhören", hint: "Sie erzählt, du hörst zu." },
+      { id: "zuschauen", label: "Nur zuschauen", hint: "Du siehst zu und sagst nichts." },
+    ],
+  },
+];
+
+export const BUILDKIT_MISSING = "Und wenn's das noch nicht gibt — sag's mir. Wir nehmen es auf.";
+
+export const ARCHIVED_LINES = [
+  "Danke. Das liegt jetzt im Archiv — dann wissen wir auch, was du alles willst.",
+];
+
+// Sie liest die Angebote vor — damit er nur noch antworten muss und nichts
+// anklicken oder tippen muss.
+export function optionLines(question, options = []) {
+  if (!options.length) return question ? [question] : [];
+  const names = options.map((o) => (typeof o === "string" ? o : o.label));
+  return [question, `Sag einfach: ${names.join(", oder: ")}.`].filter(Boolean);
+}
+
 // Der Takt: eine Zeile nach der anderen, wie in einem Chat — keine Textwand.
 export const INTRO_TAKT = { line: 1100, pause: 380 };
 
@@ -100,6 +187,21 @@ export const setIntroMode = (mode) => write(MODE_KEY, mode || "");
 // Wohin er will: sie geht ins Eck und schaut zu, oder sie führt ihn durch.
 export const INTRO_BRANCH = { CORNER: "CORNER", TOUR: "TOUR" };
 
+export const BRANCH_QUESTION = "Willst du erst mal allein schauen?";
+
+export const BRANCH_OPTIONS = [
+  {
+    id: INTRO_BRANCH.CORNER,
+    label: "Ich schaue mich jetzt mal um",
+    hint: "Sie zieht sich ins Eck zurück und schaut dir zu. Du kannst sie jederzeit rückrufen.",
+  },
+  {
+    id: INTRO_BRANCH.TOUR,
+    label: "Leg los, führ mich rum",
+    hint: "Sie geht mit dir durch und zeigt dir, was hier geht.",
+  },
+];
+
 export const introBranch = () => read(BRANCH_KEY);
 export const setIntroBranch = (branch) => write(BRANCH_KEY, branch || "");
 
@@ -117,7 +219,7 @@ export function buildIntroFlow({ structure = {}, branch = "" } = {}) {
       eyebrow: "Sie begrüßt dich",
       lines: structure.greetingText ? [structure.greetingText] : GREETING_LINES,
     },
-    { id: "mode", kind: "mode" },
+    { id: "mode", kind: "mode", lines: optionLines(MODE_QUESTION, INTRO_MODES) },
   ];
 
   if (structure.askGender !== false) {
@@ -145,7 +247,12 @@ export function buildIntroFlow({ structure = {}, branch = "" } = {}) {
   }
 
   beats.push({ id: "wish", kind: "wish" });
-  beats.push({ id: "branch", kind: "branch" });
+  // Was es gibt — und dass alles, was fehlt, trotzdem aufgenommen wird.
+  beats.push({ id: "themes", kind: "script", eyebrow: "Was es gibt", lines: THEME_LINES });
+  beats.push({ id: "companion", kind: "script", eyebrow: "Was wir dir anbieten", lines: COMPANION_OFFER_LINES });
+  // Der Baukasten: Figur, Geschichte, Szenario, Rolle — frei kombinierbar.
+  beats.push({ id: "baukasten", kind: "baukasten" });
+  beats.push({ id: "branch", kind: "branch", lines: optionLines(BRANCH_QUESTION, BRANCH_OPTIONS) });
 
   if (branch === INTRO_BRANCH.TOUR) {
     (structure.introSteps || []).forEach((step, i) => {
@@ -158,7 +265,7 @@ export function buildIntroFlow({ structure = {}, branch = "" } = {}) {
   beats.push({ id: "therapist", kind: "script", eyebrow: "Sprechstunde", lines: THERAPIST_LINES });
   beats.push({ id: "voyeur", kind: "script", eyebrow: "Sie bleibt da", lines: VOYEUR_LINES });
   beats.push({ id: "interests", kind: "interests" });
-  beats.push({ id: "start", kind: "start" });
+  beats.push({ id: "start", kind: "start", lines: optionLines("Wo willst du anfangen?", START_PATHS) });
 
   return beats;
 }

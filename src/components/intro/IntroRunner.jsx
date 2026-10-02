@@ -9,31 +9,43 @@ import NarratorArrival from "@/components/intro/NarratorArrival";
 import IntroModeAsk from "@/components/intro/IntroModeAsk";
 import IntroScriptBeat from "@/components/intro/IntroScriptBeat";
 import IntroBranchAsk from "@/components/intro/IntroBranchAsk";
+import IntroBuildKit from "@/components/intro/IntroBuildKit";
 import IntroCompanion from "@/components/intro/IntroCompanion";
+import IntroVoiceBar from "@/components/intro/IntroVoiceBar";
 import { speakAsVoice, prefetchSpeech } from "@/lib/voiceChat";
+import { matchIntroVoice } from "@/lib/introVoice";
+import { fileMissingWish } from "@/lib/introArchive";
 import { START_PATHS } from "@/lib/onboarding";
 import {
   buildIntroFlow,
   fillLine,
+  optionLines,
   pickByChance,
   setIntroMode,
   setIntroBranch,
   introMode,
   introBranch,
-  INTRO_BRANCH,
   INTRO_FRIENDS,
+  INTRO_MODES,
   INTRO_TAKT,
+  BUILDKIT_AXES,
+  BRANCH_OPTIONS,
+  ARCHIVED_LINES,
   LANDING_HINT,
 } from "@/lib/introStory";
 
 // Der Ablauf des Intros. Sie fängt sofort an zu reden — die Daten für ihre
-// Stimme werden im Hintergrund geholt, nicht davor. Jede Zeile kommt im Takt,
-// und die nächste wird schon geholt, während die vorige läuft.
+// Stimme werden im Hintergrund geholt, nicht davor. Sie liest vor, was es gibt;
+// er antwortet mit der Stimme und muss nichts anklicken. Wer den Tipp-Modus
+// gewählt hat, tippt und klickt wie gewohnt.
 export default function IntroRunner({ structure, onFinish }) {
   const [lead, setLead] = useState(null);
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState(() => introMode());
   const [branch, setBranch] = useState(() => introBranch());
+  const [kitAxis, setKitAxis] = useState(0);
+  const [kit, setKit] = useState({});
+  const [heard, setHeard] = useState(null);
   const [answers, setAnswers] = useState({ gender: "", orientation: "", wish: "", interests: [], path: "" });
   const [speaking, setSpeaking] = useState(false);
   const [revealed, setRevealed] = useState(0);
@@ -76,7 +88,7 @@ export default function IntroRunner({ structure, onFinish }) {
 
   const flow = React.useMemo(() => buildIntroFlow({ structure, branch }), [structure, branch]);
   const current = flow[Math.min(step, flow.length - 1)] || { kind: "start" };
-  const lines = current.lines || [];
+  const hearsAudio = mode === "AUDIO" || mode === "BOTH";
 
   const ctx = {
     narrator: lead?.name,
@@ -137,10 +149,18 @@ export default function IntroRunner({ structure, onFinish }) {
     }
   };
 
-  const hearsAudio = mode === "AUDIO" || mode === "BOTH";
+  // Der Baukasten führt ihn Schraube für Schraube — sie liest jede vor.
+  const kitLines = React.useMemo(() => {
+    const axis = BUILDKIT_AXES[kitAxis];
+    return axis ? optionLines(axis.question, axis.options) : [];
+  }, [kitAxis]);
+
+  const lines = current.kind === "baukasten" ? kitLines : current.lines || [];
+  const beatKey = current.kind === "baukasten" ? `${current.id}-${kitAxis}` : current.id;
 
   // Was auf dem Bildschirm steht, wird gesprochen — und gibt den Takt vor.
   useEffect(() => {
+    setHeard(null);
     setRevealed(0);
     if (!lines.length) return;
     if (hearsAudio) {
@@ -150,18 +170,35 @@ export default function IntroRunner({ structure, onFinish }) {
     // Ohne Ton kommt der Takt aus der Zeit.
     const timers = lines.map((_, i) => setTimeout(() => setRevealed(i + 1), INTRO_TAKT.line * (i + 1)));
     return () => timers.forEach(clearTimeout);
-  }, [current.id, hearsAudio, lead?.id]);
+  }, [beatKey, hearsAudio, lead?.id]);
 
-  const next = () => setStep((s) => Math.min(s + 1, flow.length - 1));
-  const back = () => {
-    halt();
-    setStep((s) => Math.max(0, s - 1));
+  // Was sie ihm gerade anbietet — er kann es einfach sagen.
+  const voiceOptions = React.useMemo(() => {
+    if (!hearsAudio) return [];
+    if (current.kind === "mode") return INTRO_MODES.map((m) => ({ id: m.id, label: m.label }));
+    if (current.kind === "choice") return (current.options || []).map((o) => ({ id: o, label: o }));
+    if (current.kind === "branch") return BRANCH_OPTIONS.map((o) => ({ id: o.id, label: o.label }));
+    if (current.kind === "start") return START_PATHS.map((p) => ({ id: p.id, label: p.label }));
+    if (current.kind === "interests") return (structure.interestOptions || []).map((o) => ({ id: o, label: o }));
+    if (current.kind === "baukasten") return (BUILDKIT_AXES[kitAxis]?.options || []).map((o) => ({ id: o.id, label: o.label }));
+    return [];
+  }, [current, hearsAudio, kitAxis, structure]);
+
+  const next = () => {
+    if (current.kind === "baukasten" && kitAxis < BUILDKIT_AXES.length - 1) {
+      setKitAxis((k) => k + 1);
+      return;
+    }
+    setStep((s) => Math.min(s + 1, flow.length - 1));
   };
 
-  const finish = (goTo) => {
+  const back = () => {
     halt();
-    const chosen = START_PATHS.find((p) => p.id === answers.path);
-    onFinish?.({ ...answers, path: chosen?.label || "" }, goTo || chosen?.to);
+    if (current.kind === "baukasten" && kitAxis > 0) {
+      setKitAxis((k) => k - 1);
+      return;
+    }
+    setStep((s) => Math.max(0, s - 1));
   };
 
   const pickMode = (m) => {
@@ -183,6 +220,42 @@ export default function IntroRunner({ structure, onFinish }) {
       ...a,
       interests: a.interests.includes(item) ? a.interests.filter((i) => i !== item) : [...a.interests, item],
     }));
+
+  const pickKit = (axisId, optionId) => {
+    setKit((k) => ({ ...k, [axisId]: k[axisId] === optionId ? "" : optionId }));
+  };
+
+  // Was er gesagt hat, gilt für das, was gerade dasteht.
+  const applyVoice = (id) => {
+    if (current.kind === "mode") return pickMode(id);
+    if (current.kind === "choice") return setAnswers((a) => ({ ...a, [current.field]: a[current.field] === id ? "" : id }));
+    if (current.kind === "branch") return pickBranch(id);
+    if (current.kind === "start") return setAnswers((a) => ({ ...a, path: a.path === id ? "" : id }));
+    if (current.kind === "interests") return toggleInterest(id);
+    if (current.kind === "baukasten") return pickKit(BUILDKIT_AXES[kitAxis].id, id);
+  };
+
+  const handleVoice = (text) => {
+    const hit = matchIntroVoice(text, voiceOptions);
+    setHeard({ text, ok: !!hit });
+    if (!hit) return;
+    if (hit.type === "stop") return stop();
+    if (hit.type === "back") return back();
+    if (hit.type === "next") return next();
+    if (hit.type === "option") applyVoice(hit.id);
+  };
+
+  // Was es noch nicht gibt, wird aufgenommen — und sie bestätigt es ihm.
+  const archiveWish = async (text, combination) => {
+    await fileMissingWish({ text, name, interests: answers.interests, combination });
+    speak(ARCHIVED_LINES);
+  };
+
+  const finish = (goTo) => {
+    halt();
+    const chosen = START_PATHS.find((p) => p.id === answers.path);
+    onFinish?.({ ...answers, baukasten: kit, path: chosen?.label || "" }, goTo || chosen?.to);
+  };
 
   const isLast = current.kind === "start";
   const branchIdx = flow.findIndex((b) => b.id === "branch");
@@ -269,6 +342,16 @@ export default function IntroRunner({ structure, onFinish }) {
           </div>
         )}
 
+        {current.kind === "baukasten" && (
+          <IntroBuildKit
+            axis={kitAxis}
+            values={kit}
+            onPick={pickKit}
+            onAxis={setKitAxis}
+            onArchive={archiveWish}
+          />
+        )}
+
         {current.kind === "branch" && <IntroBranchAsk onPick={pickBranch} />}
 
         {current.kind === "interests" && (
@@ -324,6 +407,8 @@ export default function IntroRunner({ structure, onFinish }) {
             </div>
           </div>
         )}
+
+        <IntroVoiceBar options={voiceOptions} heard={heard} onSay={handleVoice} />
       </IntroShell>
     </>
   );
