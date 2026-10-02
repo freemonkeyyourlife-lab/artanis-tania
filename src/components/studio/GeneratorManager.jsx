@@ -10,6 +10,8 @@ import FinalPromptPreview from "@/components/studio/FinalPromptPreview";
 import { emptyDirection, directionPrompt } from "@/lib/imageDirection";
 import { composeImagePrompt } from "@/lib/composeImagePrompt";
 import { generateWithModel } from "@/lib/imageGen";
+import { modelStrength, STANDARD_STRENGTH } from "@/lib/modelStrengths";
+import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
 // Mehrere Modelle dürfen gleichzeitig ran — und als Kombi abgespeichert werden.
@@ -203,6 +205,7 @@ export default function GeneratorManager({ creators }) {
             )}
           >
             Standard-Generator
+            <ModelStrengthNote chips={STANDARD_STRENGTH.chips} hint={STANDARD_STRENGTH.hint} />
           </button>
           {models.map((m) => {
             const on = modelKeys.includes(m.id);
@@ -220,9 +223,7 @@ export default function GeneratorManager({ creators }) {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate">{m.name}</span>
-                  {m.description && (
-                    <span className="block text-[11px] font-normal text-muted-foreground line-clamp-2 mt-0.5">{m.description}</span>
-                  )}
+                  <ModelStrengthNote chips={modelStrength(m).chips} hint={modelStrength(m).hint} />
                 </span>
               </button>
             );

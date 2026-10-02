@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOODS, bestModelFor, explicitLabel, styleLabel } from "@/lib/modelTags";
+import { modelStrength } from "@/lib/modelStrengths";
+import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
 
 const ENTITY = { BILD: "ImageModel", VIDEO: "VideoModel", TEXT: "TextModel" };
 
@@ -57,18 +59,21 @@ export default function MoodModelPicker({ target = "BILD", onPick }) {
       </div>
 
       {best ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-elevated px-3 py-2.5">
-          <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-          <p className="text-[13px] font-semibold text-foreground flex-1 min-w-0">
-            Passt am besten: <span className="text-primary">{best.model.name}</span>
-            {traits.length ? ` · ${traits.join(" · ")}` : ""}
-          </p>
-          <button
-            onClick={() => onPick?.(best.model, moods)}
-            className="px-4 py-1.5 rounded-full glass-btn glass-btn-accent text-[12px] font-bold text-gloss"
-          >
-            Nehmen
-          </button>
+        <div className="mt-3 rounded-xl border border-primary/30 bg-elevated px-3 py-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
+            <p className="text-[13px] font-semibold text-foreground flex-1 min-w-0">
+              Passt am besten: <span className="text-primary">{best.model.name}</span>
+              {traits.length ? ` · ${traits.join(" · ")}` : ""}
+            </p>
+            <button
+              onClick={() => onPick?.(best.model, moods)}
+              className="px-4 py-1.5 rounded-full glass-btn glass-btn-accent text-[12px] font-bold text-gloss"
+            >
+              Nehmen
+            </button>
+          </div>
+          <ModelStrengthNote chips={modelStrength(best.model).chips} hint={modelStrength(best.model).hint} />
         </div>
       ) : (
         <p className="mt-3 text-[12px] font-semibold text-muted-foreground">

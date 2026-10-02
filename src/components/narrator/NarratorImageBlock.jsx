@@ -13,7 +13,8 @@ import FinalPromptPreview from "@/components/studio/FinalPromptPreview";
 import NarratorModelPicker from "@/components/narrator/NarratorModelPicker";
 import NarratorRefStrip from "@/components/narrator/NarratorRefStrip";
 import NarratorImageResult from "@/components/narrator/NarratorImageResult";
-import { inputCls, labelCls, chipCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
+import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import { labelCls, chipCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
 
 const rows = (res) => (Array.isArray(res) ? res : res?.items || []);
 const unique = (list) => list.filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
@@ -185,23 +186,21 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
         <div className="space-y-4">
           <div>
             <label className={labelCls}>Wie sie aussieht</label>
-            <textarea
+            <VoiceTextArea
               value={appearance}
-              onChange={(e) => setAppearance(e.target.value)}
+              onChange={setAppearance}
               rows={3}
               placeholder="Haare, Augen, Figur, was sie trägt — damit sie auch so gezeichnet wird."
-              className={cn(inputCls, "resize-none")}
             />
           </div>
 
           <div>
             <label className={labelCls}>Prompt</label>
-            <textarea
+            <VoiceTextArea
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={setPrompt}
               rows={5}
               placeholder="Was soll zu sehen sein? Pose, Perspektive, Ort, Outfit, Licht …"
-              className={cn(inputCls, "resize-none")}
             />
           </div>
 

@@ -9,6 +9,7 @@ import NarratorVoiceBlock from "@/components/narrator/NarratorVoiceBlock";
 import NarratorTextBlock from "@/components/narrator/NarratorTextBlock";
 import NarratorRegieBlock from "@/components/narrator/NarratorRegieBlock";
 import ConciergePanel from "@/components/studio/ConciergePanel";
+import VoiceTextArea from "@/components/voice/VoiceTextArea";
 
 // Die vier Blöcke, in denen sie fertig wird — plus der Story-Modus, in dem
 // zwei von ihnen abwechselnd durch die Geschichten führen.
@@ -27,7 +28,13 @@ export default function NarratorWorkbench() {
   const [current, setCurrent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("bild");
-  const [identity, setIdentity] = useState({ name: "", kind: "ERZAEHLERIN", gender: "WEIBLICH", active: true });
+  const [identity, setIdentity] = useState({
+    name: "",
+    kind: "ERZAEHLERIN",
+    gender: "WEIBLICH",
+    active: true,
+    personality: "",
+  });
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
 
@@ -41,6 +48,7 @@ export default function NarratorWorkbench() {
       kind: pick?.kind || "ERZAEHLERIN",
       gender: pick?.gender || "WEIBLICH",
       active: pick?.active !== false,
+      personality: pick?.personality || "",
     });
     setLoading(false);
   };
@@ -153,6 +161,19 @@ export default function NarratorWorkbench() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="mt-3">
+          <label className={labelCls}>
+            Ihre Persönlichkeit{" "}
+            <span className="font-semibold normal-case tracking-normal opacity-70">wie sie ist — tippen oder sprechen</span>
+          </label>
+          <VoiceTextArea
+            value={identity.personality}
+            onChange={(personality) => setIdentity({ ...identity, personality })}
+            rows={3}
+            placeholder="Wie redet sie? Was mag sie, was nicht? Was macht sie mit dir, wenn du nicht aufpasst?"
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mt-4">

@@ -9,6 +9,8 @@ import ModelTags from "@/components/studio/ModelTags";
 import ModelTagsPicker from "@/components/studio/ModelTagsPicker";
 import ModelFilterBar from "@/components/studio/ModelFilterBar";
 import ModelExplainBox from "@/components/studio/ModelExplainBox";
+import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import { modelStrength } from "@/lib/modelStrengths";
 import { emptyTags, matchesFilter } from "@/lib/modelTags";
 import { explainModel } from "@/lib/modelExplain";
 
@@ -273,6 +275,7 @@ export default function ModelManager() {
                     {(SOURCES.find((s) => s.value === m.source) || SOURCES[0]).label} · {m.modelId}
                   </p>
                   {m.note && <p className="text-[11px] text-muted-foreground truncate">{m.note}</p>}
+                  <ModelStrengthNote chips={modelStrength(m).chips} hint={modelStrength(m).hint} />
                   <ModelTags kind="BILD" model={m} editable className="mt-1.5" onSave={(t) => saveTags(m, t)} />
                   <ModelExplainBox model={m} kind="BILD" onSave={(d) => saveDescription(m, d)} />
                 </div>

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { suggestModel, usableModels } from "@/lib/assistant";
+import { modelStrength } from "@/lib/modelStrengths";
+import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
 
 const TARGETS = [
   { id: "BILD", label: "Bild" },
@@ -19,7 +21,13 @@ export default function AssistantModelStep({ creator, imageModels, videoModels, 
 
   const options =
     target === "BILD"
-      ? imageEntries.map((e) => ({ key: e.model.id, name: e.model.name, note: e.preset.label, preset: e.preset }))
+      ? imageEntries.map((e) => ({
+          key: e.model.id,
+          name: e.model.name,
+          note: e.preset.label,
+          preset: e.preset,
+          strength: modelStrength(e.model),
+        }))
       : (target === "VIDEO" ? videoModels : textModels)
           .filter((m) => m.enabled !== false)
           .map((m) => ({ key: m.id, name: m.name, note: m.modelId, preset: null }));
@@ -75,6 +83,7 @@ export default function AssistantModelStep({ creator, imageModels, videoModels, 
                   {o.name}
                 </p>
                 <p className="text-[13px] font-semibold text-muted-foreground">{o.note}</p>
+                {o.strength && <ModelStrengthNote chips={o.strength.chips} hint={o.strength.hint} />}
                 {isSuggested && (
                   <p className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-bold uppercase tracking-wider">
                     <Sparkles className="w-3 h-3" /> Empfohlen

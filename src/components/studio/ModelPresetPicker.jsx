@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { PRESETS, presetById, presetFor } from "@/lib/modelPrompts";
+import { modelStrength } from "@/lib/modelStrengths";
+import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
 
 // Modell wählen — der Generator benutzt dann dessen eigene Syntax. Was hier
 // erkannt wird, merkt sich das Modell als Grundsetting.
@@ -9,7 +11,10 @@ export default function ModelPresetPicker({ value, onChange }) {
   const [models, setModels] = useState([]);
 
   useEffect(() => {
-    base44.entities.ImageModel.filter({ enabled: { $ne: false } }, { sort: "name", limit: 200, fields: ["name", "modelId", "preset"] })
+    base44.entities.ImageModel.filter(
+        { enabled: { $ne: false } },
+        { sort: "name", limit: 200, fields: ["name", "modelId", "preset", "style", "explicit", "note", "description"] }
+      )
       .then((page) => setModels(page.items || []))
       .catch(() => setModels([]));
   }, []);
@@ -78,6 +83,7 @@ export default function ModelPresetPicker({ value, onChange }) {
           </span>
         )}
       </p>
+      {model && <ModelStrengthNote chips={modelStrength(model).chips} hint={modelStrength(model).hint} />}
     </div>
   );
 }

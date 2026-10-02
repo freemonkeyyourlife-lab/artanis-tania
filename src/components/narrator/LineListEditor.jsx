@@ -1,6 +1,7 @@
 import React from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { inputCls, labelCls, btnCls } from "@/lib/narratorUi";
+import VoiceInput from "@/components/VoiceInput";
 
 // Eine Liste von Sätzen: jeder Satz eine Zeile, die sie so sagen kann.
 export default function LineListEditor({ label, hint, lines = [], onChange, placeholder }) {
@@ -21,6 +22,10 @@ export default function LineListEditor({ label, hint, lines = [], onChange, plac
               onChange={(e) => change(i, e.target.value)}
               placeholder={placeholder}
               className={inputCls}
+            />
+            <VoiceInput
+              onResult={(text) => change(i, [line, text].filter(Boolean).join(line.trim() ? " " : ""))}
+              title="Zeile sprechen"
             />
             <button
               onClick={() => remove(i)}

@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image as ImageIcon, Type, Power, Loader2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { modelStrength } from "@/lib/modelStrengths";
+import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
 
 const SOURCE_LABELS = {
   HUGGING_FACE: "Hugging Face",
@@ -15,6 +17,7 @@ function ModelRow({ model, onToggle }) {
         <p className="text-sm font-medium text-foreground truncate">{model.name}</p>
         <p className="text-[11px] text-muted-foreground truncate">{model.modelId}</p>
         {model.note && <p className="text-[11px] text-muted-foreground truncate">{model.note}</p>}
+        <ModelStrengthNote chips={modelStrength(model).chips} hint={modelStrength(model).hint} />
       </div>
       <button
         onClick={() => onToggle(model)}

@@ -4,7 +4,8 @@ import { Check, Loader2, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BETWEEN_LINES, RECALL_LINES, RECALL_TIPS } from "@/lib/introStory";
 import LineListEditor from "@/components/narrator/LineListEditor";
-import { inputCls, labelCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
+import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import { labelCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
 
 // Text: was sie sagt. {narrator} wird beim Sprechen durch ihren Namen ersetzt.
 export default function NarratorTextBlock({ narrator, onSaved }) {
@@ -44,12 +45,11 @@ export default function NarratorTextBlock({ narrator, onSaved }) {
       <label className={labelCls}>
         Begrüßung <span className="font-semibold normal-case tracking-normal opacity-70">der erste Satz, wenn sie kommt</span>
       </label>
-      <textarea
+      <VoiceTextArea
         value={form.greeting}
-        onChange={(e) => set({ greeting: e.target.value })}
+        onChange={(greeting) => set({ greeting })}
         rows={3}
         placeholder="Ich hab schon auf dich gewartet. Wir werden eine Menge Spaß haben."
-        className={cn(inputCls, "resize-none")}
       />
 
       <LineListEditor
