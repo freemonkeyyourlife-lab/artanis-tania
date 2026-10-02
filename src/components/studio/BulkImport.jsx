@@ -4,6 +4,7 @@ import { Loader2, RefreshCw, Sparkles, Check, Power } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import ModelKindTag from "@/components/studio/ModelKindTag";
+import BulkMediaImport from "@/components/studio/BulkMediaImport";
 
 const KIND_FILTERS = [
   { id: "ALLE", label: "Alle" },
@@ -42,7 +43,7 @@ const idFromUrl = (url) => {
 };
 
 // Alles aus allen Quellen auf einer Liste: Häkchen setzen, prüfen lassen, gesammelt übernehmen.
-export default function BulkImport() {
+export default function BulkImport({ creators = [] }) {
   const { toast } = useToast();
   const [rows, setRows] = useState([]);
   const [selected, setSelected] = useState(() => new Set());
@@ -292,10 +293,17 @@ export default function BulkImport() {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+    return (
+      <div>
+        <BulkMediaImport creators={creators} />
+        <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+      </div>
+    );
   }
 
   return (
+    <div>
+    <BulkMediaImport creators={creators} />
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <ModelKindTag kind="BILD" />
@@ -457,6 +465,7 @@ export default function BulkImport() {
           )}
         </div>
       )}
+    </div>
     </div>
   );
 }

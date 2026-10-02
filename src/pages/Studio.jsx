@@ -36,6 +36,7 @@ import ModelOverview from "@/components/studio/ModelOverview";
 import AiLogbook from "@/components/studio/AiLogbook";
 import RequestLog from "@/components/studio/RequestLog";
 import ExternalStudio from "@/components/studio/ExternalStudio";
+import PromptGenerator from "@/components/studio/PromptGenerator";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -53,6 +54,7 @@ const TAB_GROUPS = [
       { id: "voiceeditor", label: "Stimmen-Editor" },
       { id: "voiceprofiles", label: "Stimmen-Profile" },
       { id: "generator", label: "Generator" },
+      { id: "promptgen", label: "Prompt-Generator" },
       { id: "content", label: "Inhalte & Preise" },
     ],
   },
@@ -229,7 +231,8 @@ export default function Studio() {
       {tab === "models" && <ModelManager />}
       {tab === "textmodels" && <TextModelManager />}
       {tab === "videomodels" && <VideoModelManager />}
-      {tab === "bulk" && <BulkImport />}
+      {tab === "bulk" && <BulkImport creators={creators} />}
+      {tab === "promptgen" && <PromptGenerator />}
       {tab === "plan" && (
         <div>
           <p className="font-display text-2xl text-foreground mb-1">Content-Planer</p>
