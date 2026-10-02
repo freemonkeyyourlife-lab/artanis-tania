@@ -27,6 +27,8 @@ import VoiceTuner from "@/components/studio/VoiceTuner";
 import VoiceProfilesPanel from "@/components/voice/VoiceProfilesPanel";
 import CharacterTransfer from "@/components/studio/CharacterTransfer";
 import ServiceListManager from "@/components/studio/ServiceListManager";
+import ModelOverview from "@/components/studio/ModelOverview";
+import AiLogbook from "@/components/studio/AiLogbook";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -62,8 +64,10 @@ const TAB_GROUPS = [
     tabs: [
       { id: "guide", label: "Anleitung" },
       { id: "services", label: "Dienste" },
+      { id: "overview", label: "Modell-Übersicht" },
       { id: "textmodels", label: "Text-KI" },
       { id: "models", label: "Bild-KI" },
+      { id: "logbook", label: "KI-Logbuch" },
       { id: "members", label: "Mitglieder" },
     ],
   },
@@ -161,6 +165,8 @@ export default function Studio() {
 
       {tab === "guide" && <GuideManager />}
       {tab === "services" && <ServiceListManager />}
+      {tab === "overview" && <ModelOverview onOpenTab={setTab} />}
+      {tab === "logbook" && <AiLogbook />}
       {tab === "dock" && <DockManager />}
       {tab === "voices" && <VoiceManager />}
       {tab === "voiceeditor" && (

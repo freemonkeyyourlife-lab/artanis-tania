@@ -4,6 +4,7 @@ import { Image } from "@/components/ui/image";
 import { Upload, X, Star, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { addGalleryItems } from "@/lib/gallery";
 
 // Bilder direkt am Charakter: hochladen, zuweisen, fertig — ohne Umweg übers Formular.
 export default function CharacterQuickImages({ creator, onClose, onChanged }) {
@@ -29,6 +30,7 @@ export default function CharacterQuickImages({ creator, onClose, onChanged }) {
         const res = await base44.integrations.Core.UploadPublicFile({ file: f });
         urls.push(res.file_url);
       }
+      await addGalleryItems({ urls, creatorId: creator.id, creatorName: creator.stageName });
       const rest = [...urls];
       let nextAvatar = avatar;
       if (!nextAvatar && rest.length) nextAvatar = rest.shift();
@@ -36,7 +38,7 @@ export default function CharacterQuickImages({ creator, onClose, onChanged }) {
       setAvatar(nextAvatar);
       setRefs(nextRefs);
       await persist(nextAvatar, nextRefs);
-      toast({ title: "Zugewiesen", description: `${urls.length} Bild(er) bei „${creator.stageName}" gespeichert.` });
+      toast({ title: "Zugewiesen", description: `${urls.length} Bild(er) bei „${creator.stageName}" gespeichert — sie stehen jetzt auch in der Galerie des Profils.` });
     } catch (err) {
       toast({ title: "Upload fehlgeschlagen", variant: "destructive" });
     } finally {

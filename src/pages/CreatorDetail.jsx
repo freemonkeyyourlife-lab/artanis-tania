@@ -6,6 +6,7 @@ import { MessageSquare, ArrowLeft, Pencil, Video } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import CharacterForm from "@/components/studio/CharacterForm";
 import StreamLinkCard from "@/components/creator/StreamLinkCard";
+import CharacterGallery from "@/components/creator/CharacterGallery";
 
 export default function CreatorDetail() {
   const { id } = useParams();
@@ -94,6 +95,8 @@ export default function CreatorDetail() {
           </div>
         </div>
       </div>
+
+      <CharacterGallery creatorId={creator.id} />
     </div>
   );
 }

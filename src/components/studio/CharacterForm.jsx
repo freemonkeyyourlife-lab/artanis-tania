@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
 import CharacterVoiceBox from "@/components/studio/CharacterVoiceBox";
 import CharacterImageStudio from "@/components/studio/CharacterImageStudio";
+import { addGalleryItems } from "@/lib/gallery";
 
 const PERSONA_TYPES = [
   { value: "SOLO_FEMALE", label: "Frau (solo)" },
@@ -35,6 +36,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [galleryQueue, setGalleryQueue] = useState([]); // hochgeladene Bilder, die noch als Galerie-Eintrag angelegt werden
   const [form, setForm] = useState({
     stageName: initial?.stageName || "",
     personaType: initial?.personaType || "SOLO_FEMALE",
@@ -60,6 +62,8 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
 
   const uploadFile = async (file) => {
     const res = await base44.integrations.Core.UploadPublicFile({ file });
+    // Jedes hochgeladene Bild wird gleich auch ein Galerie-Eintrag im Profil.
+    setGalleryQueue((q) => [...q, res.file_url]);
     return res.file_url;
   };
 
@@ -131,8 +135,11 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         referenceImages: form.referenceImages,
       };
       if (form.age !== "" && form.age !== null) data.age = Number(form.age);
-      if (initial?.id) await base44.entities.Creator.update(initial.id, data);
-      else await base44.entities.Creator.create(data);
+      let creatorId = initial?.id;
+      if (creatorId) await base44.entities.Creator.update(creatorId, data);
+      else creatorId = (await base44.entities.Creator.create(data))?.id;
+      await addGalleryItems({ urls: galleryQueue, creatorId, creatorName: form.stageName.trim() });
+      setGalleryQueue([]);
       toast({ title: initial?.id ? "Charakter gespeichert" : "Charakter erstellt" });
       onSaved?.();
     } catch (e) {
