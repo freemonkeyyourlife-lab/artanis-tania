@@ -5,6 +5,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import HfModelSearch from "@/components/studio/HfModelSearch";
 import ModelKindTag from "@/components/studio/ModelKindTag";
+import ModelTags from "@/components/studio/ModelTags";
+import ModelTagsPicker from "@/components/studio/ModelTagsPicker";
+import ModelFilterBar from "@/components/studio/ModelFilterBar";
+import { emptyTags, matchesFilter } from "@/lib/modelTags";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -23,6 +27,8 @@ export default function ModelManager() {
   const [form, setForm] = useState({ name: "", modelId: "", note: "" });
   const [source, setSource] = useState("HUGGING_FACE");
   const [account, setAccount] = useState(null);
+  const [tags, setTags] = useState(emptyTags());
+  const [filter, setFilter] = useState({ style: "", explicit: "", moods: [] });
 
   useEffect(() => { load(); }, []);
 
@@ -49,8 +55,10 @@ export default function ModelManager() {
         note: form.note.trim(),
         source,
         enabled: true,
+        ...tags,
       });
       setForm({ name: "", modelId: "", note: "" });
+      setTags(emptyTags());
       await load();
       toast({ title: "Modell drin", description: "Im Generator jetzt als Quelle wählbar." });
     } catch (e) {
@@ -60,6 +68,12 @@ export default function ModelManager() {
 
   const toggle = async (m) => {
     await base44.entities.ImageModel.update(m.id, { enabled: !m.enabled });
+    load();
+  };
+
+  // Kategorien direkt am Modell festhalten — Stil, Freizügigkeit, Stimmung.
+  const saveTags = async (m, next) => {
+    await base44.entities.ImageModel.update(m.id, next);
     load();
   };
 
@@ -73,6 +87,8 @@ export default function ModelManager() {
     await base44.entities.ImageModel.delete(m.id);
     load();
   };
+
+  const visible = models.filter((m) => matchesFilter(m, filter));
 
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -147,6 +163,13 @@ export default function ModelManager() {
           className={cn(inputCls, "mb-5")}
         />
 
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+          Kategorien
+        </p>
+        <div className="mb-5">
+          <ModelTagsPicker kind="BILD" value={tags} onChange={setTags} />
+        </div>
+
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={add}
@@ -170,16 +193,22 @@ export default function ModelManager() {
 
       <div className="rounded-2xl border border-border bg-card p-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-          Deine Modelle ({models.length})
+          Deine Modelle ({visible.length} von {models.length})
         </p>
+
+        <ModelFilterBar kind="BILD" models={models} value={filter} onChange={setFilter} />
 
         {models.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">
             Noch keine Modelle hinterlegt — füge links dein erstes hinzu.
           </p>
+        ) : visible.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            Kein Modell passt zu dieser Kategorie — setz den Filter zurück.
+          </p>
         ) : (
           <div className="space-y-2">
-            {models.map((m) => (
+            {visible.map((m) => (
               <div key={m.id} className={cn("flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border", !m.enabled && "opacity-60")}>
                 <button
                   onClick={() => toggleFavorite(m)}
@@ -197,6 +226,7 @@ export default function ModelManager() {
                     {(SOURCES.find((s) => s.value === m.source) || SOURCES[0]).label} · {m.modelId}
                   </p>
                   {m.note && <p className="text-[11px] text-muted-foreground truncate">{m.note}</p>}
+                  <ModelTags kind="BILD" model={m} editable className="mt-1.5" onSave={(t) => saveTags(m, t)} />
                 </div>
                 <button
                   onClick={() => toggle(m)}

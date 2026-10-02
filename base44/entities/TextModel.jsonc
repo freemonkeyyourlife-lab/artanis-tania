@@ -8,6 +8,32 @@
     "modelId": {
       "type": "string"
     },
+    "style": {
+      "type": "string",
+      "enum": [
+        "ERZAEHLEND",
+        "DIALOG",
+        "ROLLENSPIEL",
+        "ANALYTISCH",
+        "SACHLICH"
+      ]
+    },
+    "explicit": {
+      "type": "string",
+      "enum": [
+        "ZAHM",
+        "ANZUEGLICH",
+        "SINNLICH",
+        "EXPLIZIT",
+        "HART"
+      ]
+    },
+    "moods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "note": {
       "type": "string"
     },

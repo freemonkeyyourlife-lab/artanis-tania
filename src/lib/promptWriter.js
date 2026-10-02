@@ -11,7 +11,7 @@ const PERSON = {
 
 // Aus rohen Stichworten wird ein fertiger Prompt — in der Syntax des gewählten
 // Modells, mit dem passenden Negativ-Prompt und LoRA-Zusatz dazu.
-export async function writePrompt({ rough, target = "BILD", style = "FOTO", character = null, preset = null }) {
+export async function writePrompt({ rough, target = "BILD", style = "FOTO", character = null, preset = null, mood = "", explicit = "" }) {
   const kind = target === "VIDEO" ? "Video" : target === "TEXT" ? "Text" : "Bild";
   const isImage = target !== "TEXT";
   const recipe = isImage ? preset : null;
@@ -23,6 +23,11 @@ export async function writePrompt({ rough, target = "BILD", style = "FOTO", char
   const personLine = character
     ? `\nDIE PERSON (muss in jedem Bild erkennbar dieselbe bleiben): Name "${character.stageName}", ${PERSON[character.personaType] || "eine Frau"}${character.age ? `, ${character.age} Jahre` : ""}${character.tagline ? `, ${character.tagline}` : ""}.`
     : "";
+
+  const moodLine =
+    mood || explicit
+      ? `\nSTIMMUNG & FREIZÜGIGKEIT: Stimmung „${mood || "neutral"}“.${explicit ? ` Das Modell geht bis „${explicit}“ — bleib innerhalb dieser Grenze, nichts darüber hinaus.` : ""}`
+      : "";
 
   const syntaxLine = recipe
     ? `
@@ -43,7 +48,7 @@ REGELN:
 - Jede Vorgabe übernehmen: Ort, Pose, Kleidung, Handlung, Licht, Stimmung. Nichts dazu erfinden, was widerspricht.
 - Reich an Details: Körperhaltung, Blickrichtung, Hände, Stoffe, Lichtführung, Hintergrund. Nichts doppelt nennen.
 - Kein Vorwort, keine Erklärungen, keine Anführungszeichen, keine Überschriften. Nur der Prompt.
-${styleLine}${personLine}${syntaxLine}
+${styleLine}${personLine}${moodLine}${syntaxLine}
 
 STICHWORTE (Deutsch, ungeordnet):
 """${rough.trim()}"""`,

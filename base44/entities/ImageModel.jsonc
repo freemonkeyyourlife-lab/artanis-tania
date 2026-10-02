@@ -27,6 +27,33 @@
       ],
       "default": "ALLGEMEIN"
     },
+    "style": {
+      "type": "string",
+      "enum": [
+        "FOTOREAL",
+        "ANIME",
+        "ILLUSTRATION",
+        "COMIC",
+        "RENDER_3D",
+        "GEMISCHT"
+      ]
+    },
+    "explicit": {
+      "type": "string",
+      "enum": [
+        "ZAHM",
+        "ANZUEGLICH",
+        "SINNLICH",
+        "EXPLIZIT",
+        "HART"
+      ]
+    },
+    "moods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "note": {
       "type": "string"
     },

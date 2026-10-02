@@ -4,6 +4,9 @@ import { Search, Loader2, Plus, Check, Power, Trash2, Sparkles } from "lucide-re
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import ModelKindTag from "@/components/studio/ModelKindTag";
+import ModelTags from "@/components/studio/ModelTags";
+import ModelFilterBar from "@/components/studio/ModelFilterBar";
+import { matchesFilter } from "@/lib/modelTags";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -19,6 +22,7 @@ export default function VideoModelManager() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(null);
+  const [filter, setFilter] = useState({ style: "", explicit: "", moods: [] });
 
   useEffect(() => { load(); search(""); }, []);
 
@@ -89,11 +93,19 @@ export default function VideoModelManager() {
     load();
   };
 
+  // Kategorien direkt am Modell festhalten — Stil, Freizügigkeit, Stimmung.
+  const saveTags = async (m, next) => {
+    await base44.entities.VideoModel.update(m.id, next);
+    load();
+  };
+
   const remove = async (m) => {
     if (!window.confirm(`"${m.name}" entfernen?`)) return;
     await base44.entities.VideoModel.delete(m.id);
     load();
   };
+
+  const visible = models.filter((m) => matchesFilter(m, filter));
 
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -167,21 +179,28 @@ export default function VideoModelManager() {
 
       <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-          Deine Video-Modelle ({models.length})
+          Deine Video-Modelle ({visible.length} von {models.length})
         </p>
+
+        <ModelFilterBar kind="VIDEO" models={models} value={filter} onChange={setFilter} />
 
         {models.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">
             Noch keine Video-Modelle — nimm oben welche dazu.
           </p>
+        ) : visible.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            Kein Modell passt zu dieser Kategorie — setz den Filter zurück.
+          </p>
         ) : (
           <div className="space-y-2">
-            {models.map((m) => (
+            {visible.map((m) => (
               <div key={m.id} className={cn("flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border", !m.enabled && "opacity-60")}>
                 <Check className="w-4 h-4 text-violet-300 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
                   <p className="text-[11px] text-muted-foreground truncate">{m.modelId}{m.note ? ` · ${m.note}` : ""}</p>
+                  <ModelTags kind="VIDEO" model={m} editable className="mt-1.5" onSave={(t) => saveTags(m, t)} />
                 </div>
                 <button
                   onClick={() => toggle(m)}

@@ -6,7 +6,9 @@ import VoiceInput from "@/components/VoiceInput";
 import ModelPresetPicker from "@/components/studio/ModelPresetPicker";
 import PromptResult from "@/components/studio/PromptResult";
 import { writePrompt } from "@/lib/promptWriter";
-import { presetById } from "@/lib/modelPrompts";
+import { presetById, presetFor } from "@/lib/modelPrompts";
+import MoodModelPicker from "@/components/studio/MoodModelPicker";
+import { explicitLabel, moodLabel } from "@/lib/modelTags";
 
 const TARGETS = [
   { id: "BILD", label: "Bild" },
@@ -29,6 +31,15 @@ export default function PromptGenerator({ onResult }) {
   const [choice, setChoice] = useState({ modelId: "", presetId: "ALLGEMEIN" });
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [need, setNeed] = useState([]);
+  const [picked, setPicked] = useState(null);
+
+  // Die Stimmung bestimmt die Richtung — und mit ihr das Modell, das dafür taugt.
+  const handlePick = (model, moods) => {
+    setNeed(moods || []);
+    setPicked(model);
+    if (model && target !== "TEXT") setChoice({ modelId: model.id, presetId: presetFor(model).id });
+  };
 
   // Sprechen ist der kurze Weg: das Gesagte wird sofort zum fertigen Prompt.
   const speak = (text) => {
@@ -48,6 +59,8 @@ export default function PromptGenerator({ onResult }) {
         target,
         style,
         preset: target === "TEXT" ? null : presetById(choice.presetId),
+        mood: need.map(moodLabel).join(", "),
+        explicit: picked?.explicit ? explicitLabel(picked.explicit) : "",
       });
       setResult(written);
       // Wer mithört — etwa die Sandbox — bekommt Prompt und Idee zugleich.
@@ -101,6 +114,8 @@ export default function PromptGenerator({ onResult }) {
           </>
         )}
       </div>
+
+      <MoodModelPicker target={target} onPick={handlePick} />
 
       <div className="flex items-start gap-2 mb-3">
         <textarea

@@ -4,6 +4,9 @@ import { Search, Loader2, Plus, Check, Power, Trash2, Pencil, Sparkles, Star } f
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import ModelKindTag from "@/components/studio/ModelKindTag";
+import ModelTags from "@/components/studio/ModelTags";
+import ModelFilterBar from "@/components/studio/ModelFilterBar";
+import { matchesFilter } from "@/lib/modelTags";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -21,6 +24,7 @@ export default function TextModelManager() {
   const [editingDesc, setEditingDesc] = useState(null);
   const [descDraft, setDescDraft] = useState("");
   const [bulk, setBulk] = useState(null); // { added, failed, remaining }
+  const [filter, setFilter] = useState({ style: "", explicit: "", moods: [] });
   const bulkStop = useRef(false);
 
   useEffect(() => { load(); search(); }, []);
@@ -126,6 +130,14 @@ export default function TextModelManager() {
     await base44.entities.TextModel.delete(m.id);
     load();
   };
+
+  // Kategorien direkt am Modell festhalten — Stil, Freizügigkeit, Stimmung.
+  const saveTags = async (m, next) => {
+    await base44.entities.TextModel.update(m.id, next);
+    load();
+  };
+
+  const visible = models.filter((m) => matchesFilter(m, filter));
 
   const saveDescription = async (m) => {
     await base44.entities.TextModel.update(m.id, { description: descDraft.trim() });
@@ -245,16 +257,22 @@ export default function TextModelManager() {
 
       <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-          Deine Text-Modelle ({models.length})
+          Deine Text-Modelle ({visible.length} von {models.length})
         </p>
+
+        <ModelFilterBar kind="TEXT" models={models} value={filter} onChange={setFilter} />
 
         {models.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">
             Noch keine Modelle — nimm oben eines mit einem Klick dazu.
           </p>
+        ) : visible.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            Kein Modell passt zu dieser Kategorie — setz den Filter zurück.
+          </p>
         ) : (
           <div className="space-y-2">
-            {models.map((m) => (
+            {visible.map((m) => (
               <div key={m.id} className={cn("flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border", !m.enabled && "opacity-60")}>
                 <button
                   onClick={() => toggleFavorite(m)}
@@ -291,6 +309,9 @@ export default function TextModelManager() {
                         {m.description || "Noch keine Beschreibung — trag selbst ein, wofür es sich lohnt."}
                       </p>
                     </>
+                  )}
+                  {editingDesc !== m.id && (
+                    <ModelTags kind="TEXT" model={m} editable className="mt-1.5" onSave={(t) => saveTags(m, t)} />
                   )}
                 </div>
                 {editingDesc !== m.id && (
