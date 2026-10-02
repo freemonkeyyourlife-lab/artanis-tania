@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import NavGroup from "@/components/nav/NavGroup";
 import { getStructure, subscribeStructure, loadStructure } from "@/lib/onboarding";
 import { getInfoMode, subscribeInfoMode } from "@/lib/infoMode";
-import { FIXED_AREAS, ALWAYS_IN_MENU, MENU_AREA_LABEL } from "@/lib/modules";
+import { FIXED_AREAS, ALWAYS_IN_MENU, MENU_AREA_LABEL, groupNavItems } from "@/lib/modules";
 
 // Die Kopfzeile hat vier Bereiche statt acht einzelner Knöpfe. Die festen
 // Bereiche kommen aus der Seitenübersicht, damit es nur eine Quelle gibt.
@@ -30,14 +30,14 @@ export function buildNavGroups(menuItems = []) {
     { label: "Verwaltung", items: ADMIN_ITEMS },
   ];
   return groups
-    .map((group) => ({
-      label: group.label,
-      items: group.items.filter((item) => {
+    .map((group) => {
+      const items = group.items.filter((item) => {
         if (seen.has(item.path)) return false;
         seen.add(item.path);
         return true;
-      }),
-    }))
+      });
+      return { label: group.label, items, groups: groupNavItems(items) };
+    })
     .filter((group) => group.items.length > 0);
 }
 

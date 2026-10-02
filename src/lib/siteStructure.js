@@ -2,7 +2,7 @@
 // — Reihenfolge, Namen, Ziele, ganze Bereiche. Gespeichert wird sie in
 // SiteLayout, gelesen von der Kopfzeile und von der Struktur-Übersicht.
 
-import { FIXED_AREAS, ALWAYS_IN_MENU, MENU_AREA_LABEL } from "@/lib/modules";
+import { FIXED_AREAS, ALWAYS_IN_MENU, MENU_AREA_LABEL, groupNavItems } from "@/lib/modules";
 import { DEFAULT_MENU } from "@/lib/siteLayout";
 
 const slug = (value) =>
@@ -75,14 +75,14 @@ export function structureOf(record) {
 export function structureGroups(structure) {
   const seen = new Set();
   return (structure?.areas || [])
-    .map((area) => ({
-      label: area.label,
-      items: (area.items || []).filter((it) => {
+    .map((area) => {
+      const items = (area.items || []).filter((it) => {
         if (!it || !it.path || it.hidden || seen.has(it.path)) return false;
         seen.add(it.path);
         return true;
-      }),
-    }))
+      });
+      return { label: area.label, items, groups: groupNavItems(items) };
+    })
     .filter((group) => group.items.length > 0);
 }
 

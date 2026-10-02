@@ -85,6 +85,87 @@ export function diffModules(saved = [], draft = []) {
   return changes;
 }
 
+// Damit oben keine lange Liste aufklappt, bekommt jeder Punkt eine Untergruppe.
+// Ein Punkt ohne Eintrag landet unter „Mehr" — nichts fällt weg.
+export const NAV_GROUPS = {
+  "/artanis": "Die drei",
+  "/triania": "Die drei",
+  "/couple": "Die drei",
+
+  "/studio": "Bauen",
+  "/stimmen": "Bauen",
+  "/baukasten": "Bauen",
+  "/dock": "Bauen",
+  "/prompt": "Bauen",
+
+  "/paylinks": "Verkaufen",
+  "/verkauf": "Verkaufen",
+  "/planung": "Verkaufen",
+
+  "/explore": "Ansehen",
+  "/videos": "Ansehen",
+  "/photos": "Ansehen",
+  "/stories": "Ansehen",
+  "/topics": "Ansehen",
+  "/live": "Ansehen",
+
+  "/interactive": "Mitmachen",
+  "/groups": "Mitmachen",
+  "/community": "Mitmachen",
+  "/contests": "Mitmachen",
+
+  "/messages": "Miteinander",
+  "/therapy": "Miteinander",
+  "/request": "Miteinander",
+
+  "/library": "Für mich",
+  "/coins": "Für mich",
+  "/account": "Für mich",
+  "/tutorial": "Für mich",
+  "/anleitung": "Für mich",
+  "/archiv": "Für mich",
+
+  "/admin": "Verwalten",
+  "/leitstand": "Verwalten",
+  "/owner": "Verwalten",
+  "/sandbox": "Verwalten",
+  "/vorschau": "Verwalten",
+};
+
+export const NAV_GROUP_FALLBACK = "Mehr";
+
+// Die Reihenfolge der Untergruppen — einmal festgelegt, gilt sie überall.
+export const NAV_GROUP_ORDER = [
+  "Die drei",
+  "Bauen",
+  "Verkaufen",
+  "Ansehen",
+  "Mitmachen",
+  "Miteinander",
+  "Für mich",
+  "Verwalten",
+  "Mehr",
+];
+
+export const groupForPath = (path) => NAV_GROUPS[path] || NAV_GROUP_FALLBACK;
+
+// Aus einer flachen Liste werden Blöcke mit Überschrift. Die Reihenfolge
+// innerhalb eines Blocks bleibt genau so, wie sie eingestellt ist.
+export function groupNavItems(items = [], order = NAV_GROUP_ORDER) {
+  const byLabel = new Map();
+  (items || []).forEach((it) => {
+    if (!it || !it.path) return;
+    const label = it.group || groupForPath(it.path);
+    if (!byLabel.has(label)) byLabel.set(label, { label, items: [] });
+    byLabel.get(label).items.push(it);
+  });
+  const rank = (label) => {
+    const i = order.indexOf(label);
+    return i === -1 ? order.length : i;
+  };
+  return [...byLabel.values()].sort((a, b) => rank(a.label) - rank(b.label));
+}
+
 // Die festen Bereiche der Kopfzeile. Sie stehen immer — nur „Erleben" wird aus
 // den eigenen Menüpunkten bestückt.
 export const FIXED_AREAS = [

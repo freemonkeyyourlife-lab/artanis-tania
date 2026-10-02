@@ -9,12 +9,26 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-// Ein Block der Kopfzeile — mit Erklärung zum Aufklappen, wenn die
-// Erklärungen eingeschaltet sind.
+const NavLink = ({ item, waitingChats }) => (
+  <DropdownMenuItem asChild>
+    <Link to={item.path} className="text-sm font-semibold cursor-pointer">
+      {item.label}
+      {item.path === "/leitstand" && waitingChats > 0 && (
+        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+          {waitingChats}
+        </span>
+      )}
+    </Link>
+  </DropdownMenuItem>
+);
+
+// Ein Block der Kopfzeile. Klappt er auf, stehen die Punkte nach Untergruppen
+// sortiert unter einer kurzen Überschrift — statt einer langen Liste.
 export default function NavGroup({ group, waitingChats = 0, showInfo = false, info = "" }) {
   const location = useLocation();
   const [showText, setShowText] = useState(false);
   const active = group.items.some((l) => l.path === location.pathname);
+  const subGroups = group.groups || [];
 
   return (
     <DropdownMenu>
@@ -28,7 +42,13 @@ export default function NavGroup({ group, waitingChats = 0, showInfo = false, in
           {group.label} <ChevronDown className="w-3.5 h-3.5" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="glass-strong border-border max-h-[70vh] overflow-y-auto min-w-[240px]">
+      <DropdownMenuContent
+        align="center"
+        className={cn(
+          "glass-strong border-border max-h-[70vh] overflow-y-auto",
+          subGroups.length > 1 ? "min-w-[440px]" : "min-w-[240px]"
+        )}
+      >
         {showInfo && info && (
           <div className="px-2 pt-2 pb-1">
             <button
@@ -43,18 +63,23 @@ export default function NavGroup({ group, waitingChats = 0, showInfo = false, in
             )}
           </div>
         )}
-        {group.items.map((l) => (
-          <DropdownMenuItem key={l.path} asChild>
-            <Link to={l.path} className="text-sm font-semibold cursor-pointer">
-              {l.label}
-              {l.path === "/leitstand" && waitingChats > 0 && (
-                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">
-                  {waitingChats}
-                </span>
-              )}
-            </Link>
-          </DropdownMenuItem>
-        ))}
+
+        {subGroups.length > 1 ? (
+          <div className="grid grid-cols-2 gap-x-4 pb-1">
+            {subGroups.map((sub) => (
+              <div key={sub.label} className="min-w-[190px]">
+                <p className="px-2 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {sub.label}
+                </p>
+                {sub.items.map((l) => (
+                  <NavLink key={l.path} item={l} waitingChats={waitingChats} />
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          group.items.map((l) => <NavLink key={l.path} item={l} waitingChats={waitingChats} />)
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
