@@ -356,7 +356,7 @@ export default function OwnerConsole() {
           >
             Hier siehst du die ganze App auf einen Blick: welche Bereiche es gibt, was in deiner Leiste steht und was noch nicht.
           </GuideBox>
-          <StructureMap items={items} />
+          <StructureMap items={items} onChange={setItems} />
           <div className="mt-5">
             <PageDirectory items={items} />
           </div>

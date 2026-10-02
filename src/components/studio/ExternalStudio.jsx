@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { addGalleryItems } from "@/lib/gallery";
 import { promptList } from "@/lib/externalPrompt";
 import ExternalCharacterRow from "@/components/studio/ExternalCharacterRow";
+import KeywordPromptBox from "@/components/studio/KeywordPromptBox";
 
 const FIELDS = ["stageName", "avatar", "personaType", "artStyle", "age", "tagline", "shortStory", "bio", "referenceImages"];
 const NO_IMAGE = { $or: [{ avatar: "" }, { avatar: { $exists: false } }] };
@@ -125,6 +126,8 @@ export default function ExternalStudio({ onChanged }) {
           </div>
         ))}
       </div>
+
+      <KeywordPromptBox />
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <button

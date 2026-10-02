@@ -80,6 +80,7 @@ export default function BulkMediaImport({ creators = [] }) {
       title: `${todo.length} Dateien werden hochgeladen`,
       tasks: todo.map((r) => ({
         label: r.title || r.file.name,
+        note: `Kategorie: ${(KINDS.find((k) => k.id === r.kind) || KINDS[0]).label}`,
         run: async () => {
           const up = await base44.integrations.Core.UploadPublicFile({ file: r.file });
           const url = up.file_url;

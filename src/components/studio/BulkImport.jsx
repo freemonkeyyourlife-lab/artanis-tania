@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import ModelKindTag from "@/components/studio/ModelKindTag";
 import BulkMediaImport from "@/components/studio/BulkMediaImport";
+import ImportProgressBar from "@/components/studio/ImportProgressBar";
 import { getImportState, subscribeImport, runInBackground } from "@/lib/importRunner";
 
 const KIND_FILTERS = [
@@ -22,6 +23,7 @@ const SOURCES = [
 ];
 
 const KIND_ENTITY = { BILD: "ImageModel", TEXT: "TextModel", VIDEO: "VideoModel" };
+const KIND_LABEL = { BILD: "Bild", TEXT: "Text", VIDEO: "Video" };
 const LINK_KINDS = ["BILD", "TEXT", "VIDEO"];
 
 const PROMPT_IMAGE = "portrait photo of a woman, soft natural light, plain background";
@@ -166,6 +168,10 @@ export default function BulkImport({ creators = [] }) {
   const fresh = rows.filter((r) => !r.taken);
   const chosen = rows.filter((r) => selected.has(r.key) && !r.taken);
   const chosenTaken = rows.filter((r) => selected.has(r.key) && r.taken);
+  // Was in der Auswahl steckt — die Trennung nach Bild, Video und Text sofort sichtbar.
+  const chosenSplit = ["BILD", "VIDEO", "TEXT"]
+    .map((k) => ({ k, n: chosen.filter((r) => r.kind === k).length }))
+    .filter((x) => x.n);
   const shown = showAll ? visible : visible.slice(0, 150);
 
   const selectAll = (on) =>
@@ -295,6 +301,7 @@ export default function BulkImport({ creators = [] }) {
   if (loading) {
     return (
       <div>
+        <ImportProgressBar />
         <BulkMediaImport creators={creators} />
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       </div>
@@ -303,6 +310,7 @@ export default function BulkImport({ creators = [] }) {
 
   return (
     <div>
+    <ImportProgressBar />
     <BulkMediaImport creators={creators} />
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -389,6 +397,11 @@ export default function BulkImport({ creators = [] }) {
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
           An-/ausschalten ({chosenTaken.length})
         </button>
+        {chosenSplit.length > 0 && (
+          <p className="text-[11px] font-bold text-foreground">
+            Auswahl wird getrennt: {chosenSplit.map((x) => `${x.n} ${KIND_LABEL[x.k]}`).join(" · ")}
+          </p>
+        )}
         <p className="text-[11px] text-muted-foreground">
           {fresh.length} neu · {rows.length - fresh.length} schon drin
         </p>

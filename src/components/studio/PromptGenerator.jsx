@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { Sparkles, Loader2, Copy, Check, Mic } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
-import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
+import { writePrompt } from "@/lib/promptWriter";
 
 const TARGETS = [
   { id: "BILD", label: "Bild" },
@@ -32,33 +31,7 @@ export default function PromptGenerator() {
     setBusy(true);
     setResult("");
     try {
-      const styleLine =
-        target === "TEXT"
-          ? ""
-          : `AUSSEHEN & STIL (immer mit einbauen): ${
-              style === "ANIMIERT" ? CARTOON_STYLE : PHOTOREAL
-            }${IMAGE_SAFE_RULES}`;
-
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `Du schreibst Prompts für ${target === "TEXT" ? "Text-KI" : `${target === "VIDEO" ? "Video" : "Bild"}-KI-Modelle`}.
-
-AUFGABE: Mach aus der rohen Beschreibung unten EINEN einzigen, perfekten Prompt.
-
-REGELN:
-- Sprache: Englisch. Bei Bild und Video knapp und konkret, kommagetrennt, mit Kamerawinkel, Licht und Stimmung. Bei Text in ganzen Sätzen, als klare Anweisung an das Modell.
-- Jede inhaltliche Vorgabe übernehmen: Ort, Pose, Kleidung, Handlung, Licht, Stimmung. Nichts dazu erfinden, was widerspricht.
-- Kein Vorwort, keine Erklärungen, keine Anführungszeichen, keine Überschriften. Nur der Prompt.
-${styleLine}
-
-ROHE BESCHREIBUNG (Deutsch, ungeordnet):
-"""${rough.trim()}"""`,
-        response_json_schema: {
-          type: "object",
-          properties: { prompt: { type: "string" } },
-          required: ["prompt"],
-        },
-      });
-      setResult(res?.prompt || "");
+      setResult(await writePrompt({ rough, target, style }));
     } catch (e) {
       console.error(e);
       toast({ title: "Hat nicht geklappt", description: "Versuch es noch einmal.", variant: "destructive" });

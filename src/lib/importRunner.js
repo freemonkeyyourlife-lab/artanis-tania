@@ -2,7 +2,7 @@ import { toast } from "@/components/ui/use-toast";
 
 // Ein Import läuft hier weiter, auch wenn du die Seite verlässt: der Fortschritt
 // hängt nicht an der Ansicht, sondern an diesem Modul.
-let state = { running: false, title: "", done: 0, total: 0, failed: 0, current: "" };
+let state = { running: false, title: "", done: 0, total: 0, failed: 0, current: "", note: "" };
 const listeners = new Set();
 let stopRequested = false;
 
@@ -30,13 +30,13 @@ export async function runInBackground({ title, tasks }) {
   }
 
   stopRequested = false;
-  state = { running: true, title, done: 0, total: tasks.length, failed: 0, current: "" };
+  state = { running: true, title, done: 0, total: tasks.length, failed: 0, current: "", note: "" };
   emit();
 
   let failed = 0;
   for (const task of tasks) {
     if (stopRequested) break;
-    state = { ...state, current: task.label || "" };
+    state = { ...state, current: task.label || "", note: task.note || "" };
     emit();
     try {
       await task.run();
@@ -48,7 +48,7 @@ export async function runInBackground({ title, tasks }) {
   }
 
   const result = { done: state.done, failed, stopped: stopRequested, total: tasks.length };
-  state = { running: false, title: "", done: 0, total: 0, failed: 0, current: "" };
+  state = { running: false, title: "", done: 0, total: 0, failed: 0, current: "", note: "" };
   emit();
   return result;
 }
