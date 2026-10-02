@@ -10,7 +10,7 @@ import { addGalleryItems } from "@/lib/gallery";
 
 // Bilder direkt im Charakter erzeugen — seine eigenen Bilder sind dabei die Vorlage,
 // damit das Gesicht in jedem neuen Bild gleich bleibt.
-export default function CharacterImageStudio({ creatorId, name, avatar, referenceImages, onAvatar, onAddReference }) {
+export default function CharacterImageStudio({ creatorId, name, avatar, referenceImages, onAvatar, onAddReference, onQueue }) {
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [animated, setAnimated] = useState(false);
@@ -50,7 +50,10 @@ export default function CharacterImageStudio({ creatorId, name, avatar, referenc
 
   // Was hier entsteht, landet genauso in der Galerie des Profils wie ein Upload.
   const keep = async (url) => {
-    await addGalleryItems({ urls: [url], creatorId, creatorName: name });
+    // Bei einem noch nicht gespeicherten Charakter gibt es das Profil noch nicht —
+    // dann wandert das Bild in die Warteschlange und wird beim Speichern zum Galerie-Eintrag.
+    if (creatorId) await addGalleryItems({ urls: [url], creatorId, creatorName: name });
+    else onQueue?.(url);
   };
 
   const keepAsAvatar = async () => {

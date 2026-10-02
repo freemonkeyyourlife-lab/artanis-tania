@@ -20,6 +20,7 @@ import GeneratorManager from "@/components/studio/GeneratorManager";
 import ModelManager from "@/components/studio/ModelManager";
 import TextModelManager from "@/components/studio/TextModelManager";
 import VideoModelManager from "@/components/studio/VideoModelManager";
+import BulkImport from "@/components/studio/BulkImport";
 import PlanManager from "@/components/studio/PlanManager";
 import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
@@ -67,6 +68,7 @@ const TAB_GROUPS = [
     label: "Einrichten & Hilfe",
     tabs: [
       { id: "guide", label: "Anleitung" },
+      { id: "bulk", label: "Massen-Import" },
       { id: "services", label: "Dienste" },
       { id: "modellinks", label: "Modell-Links" },
       { id: "overview", label: "Modell-Übersicht" },
@@ -223,6 +225,7 @@ export default function Studio() {
       {tab === "models" && <ModelManager />}
       {tab === "textmodels" && <TextModelManager />}
       {tab === "videomodels" && <VideoModelManager />}
+      {tab === "bulk" && <BulkImport />}
       {tab === "plan" && (
         <div>
           <p className="font-display text-2xl text-foreground mb-1">Content-Planer</p>

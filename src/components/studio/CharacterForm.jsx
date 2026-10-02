@@ -280,6 +280,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
             referenceImages={form.referenceImages}
             onAvatar={(url) => set("avatar", url)}
             onAddReference={(url) => set("referenceImages", [...form.referenceImages, url])}
+            onQueue={(url) => setGalleryQueue((q) => [...q, url])}
           />
         </div>
 
