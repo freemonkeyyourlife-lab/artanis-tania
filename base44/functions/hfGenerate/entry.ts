@@ -13,6 +13,8 @@ function toBase64(bytes) {
   return btoa(binary);
 }
 
+// Welcher Dienst das Modell gerade wirklich anbietet. fal-ai kann als Einziger
+// Bilder über den Router erzeugen, die Haus-Schnittstelle nur die eigenen Modelle.
 async function resolveProvider(modelId, token) {
   const res = await fetch(`${HF_API}/${modelId}?expand[]=inferenceProviderMapping`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -21,9 +23,11 @@ async function resolveProvider(modelId, token) {
   const data = await res.json();
   const map = data.inferenceProviderMapping || {};
   const live = Object.entries(map).filter(([, v]) => v && v.status === 'live');
-  if (!live.length) return null;
-  const pick = live.find(([name]) => name === 'fal-ai') || live[0];
-  return { provider: pick[0], providerId: pick[1].providerId };
+  const fal = live.find(([name]) => name === 'fal-ai');
+  if (fal) return { provider: 'fal-ai', providerId: fal[1].providerId };
+  const hf = live.find(([name]) => name === 'hf-inference');
+  if (hf) return { provider: 'hf-inference', providerId: hf[1].providerId };
+  return null;
 }
 
 async function readImage(res) {
@@ -34,7 +38,8 @@ async function readImage(res) {
   }
   const text = await res.text();
   try {
-    const first = JSON.parse(text)?.data?.[0];
+    const parsed = JSON.parse(text);
+    const first = parsed?.data?.[0] || parsed?.images?.[0];
     if (first?.b64_json) return { imageUrl: `data:image/png;base64,${first.b64_json}` };
     if (first?.url) return { imageUrl: first.url };
   } catch (parseError) {
@@ -65,13 +70,16 @@ async function generatePollinations(modelId, prompt) {
 async function generateHuggingFace(modelId, prompt, accessToken) {
   const auth = { Authorization: `Bearer ${accessToken}` };
   const target = await resolveProvider(modelId, accessToken);
+  if (!target) {
+    return { error: 'Für dieses Modell ist gerade kein Bild-Dienst verfügbar.' };
+  }
 
   const res =
-    target && target.provider !== 'hf-inference'
-      ? await fetch(`https://router.huggingface.co/${target.provider}/v1/images/generations`, {
+    target.provider === 'fal-ai'
+      ? await fetch(`https://router.huggingface.co/fal-ai/${target.providerId}`, {
           method: 'POST',
           headers: { ...auth, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: target.providerId, prompt }),
+          body: JSON.stringify({ prompt }),
         })
       : await fetch(`${HF_CLASSIC}/${modelId}`, {
           method: 'POST',
