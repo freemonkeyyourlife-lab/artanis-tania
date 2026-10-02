@@ -16,13 +16,20 @@ export default function HostLiveAlert() {
 
   useEffect(() => {
     let unsubscribe;
+    let alive = true;
     (async () => {
-      setRoom(await fetchLiveRoom());
+      try {
+        const current = await fetchLiveRoom();
+        if (alive) setRoom(current);
+      } catch (error) {
+        // Zu viele Anfragen — der Hinweis kommt später über die Live-Verbindung.
+      }
       unsubscribe = base44.entities.LiveRoom.subscribe((event) => {
         if (event.data) setRoom(event.data);
       });
+      if (!alive) unsubscribe?.();
     })();
-    return () => unsubscribe?.();
+    return () => { alive = false; unsubscribe?.(); };
   }, []);
 
   const dismiss = () => {
