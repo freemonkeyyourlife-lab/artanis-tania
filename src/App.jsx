@@ -32,6 +32,7 @@ import Groups from '@/pages/Groups';
 import StartCall from '@/pages/StartCall';
 import VideoCall from '@/pages/VideoCall';
 import Studio from '@/pages/Studio';
+import ExternalStudioPage from '@/pages/ExternalStudioPage';
 import Community from '@/pages/Community';
 import Coins from '@/pages/Coins';
 import InviteClaim from '@/components/InviteClaim';
@@ -128,6 +129,7 @@ const AuthenticatedApp = () => {
         <Route path="/community" element={<Community />} />
         <Route path="/coins" element={<Coins />} />
         <Route path="/studio" element={<Studio />} />
+        <Route path="/externes-studio" element={<ExternalStudioPage />} />
         <Route path="/dock" element={<Dock />} />
         <Route path="/leitstand" element={<Leitstand />} />
         <Route path="/owner" element={<OwnerConsole />} />

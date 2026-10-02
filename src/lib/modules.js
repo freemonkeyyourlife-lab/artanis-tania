@@ -22,6 +22,7 @@ export const MODULE_TYPES = [
   { path: "/verkauf", label: "Verkaufs-Dashboard", description: "Umsatz, offene Beträge, Abos und die letzten Zahlungen." },
   { path: "/contests", label: "Wettbewerbe", description: "Wettbewerbe und ihre Beiträge." },
   { path: "/studio", label: "Studio", description: "Hier legst du Charaktere, Stimmen und Inhalte an." },
+  { path: "/externes-studio", label: "Externes Studio", description: "Der Arbeitsplatz für Bilder: Inhalte, Vorlagen und Modelle auf einen Blick." },
   { path: "/stimmen", label: "Stimmen", description: "Die Stimmbank mit allen Stimmen." },
   { path: "/baukasten", label: "Baukasten", description: "Bausteine und fertige Pakete." },
   { path: "/dock", label: "Dockingstation", description: "Charaktere aus fremden Vorlagen anlegen." },
@@ -93,6 +94,7 @@ export const NAV_GROUPS = {
   "/couple": "Die drei",
 
   "/studio": "Bauen",
+  "/externes-studio": "Bauen",
   "/stimmen": "Bauen",
   "/baukasten": "Bauen",
   "/dock": "Bauen",
@@ -181,6 +183,7 @@ export const FIXED_AREAS = [
     label: "Selbst erstellen",
     items: [
       { label: "Studio", path: "/studio" },
+      { label: "Externes Studio", path: "/externes-studio" },
       { label: "Stimmen", path: "/stimmen" },
       { label: "Baukasten", path: "/baukasten" },
       { label: "Dockingstation", path: "/dock" },
