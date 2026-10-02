@@ -8,7 +8,7 @@ const hostOf = (url) => {
   }
 };
 
-const modelKind = (url) => {
+export const modelKindOf = (url) => {
   if (/openrouter\.ai/i.test(url)) return "TEXT";
   if (/video/i.test(url)) return "VIDEO";
   return "BILD";
@@ -37,8 +37,10 @@ export async function saveHarvest({ items, creators = [], creatorId }) {
         fresh.map((m) => ({
           name: m.label,
           url: m.url,
-          kind: modelKind(m.url),
-          note: `Gefunden auf ${hostOf(m.url)}`,
+          kind: m.modelKind || modelKindOf(m.url),
+          image: m.image || "",
+          io: m.modelId || "",
+          note: m.note || `Gefunden auf ${hostOf(m.url)}`,
         }))
       );
       saved.MODELL = fresh.length;
@@ -54,10 +56,10 @@ export async function saveHarvest({ items, creators = [], creatorId }) {
       taken.add(name.toLowerCase());
       fresh.push({
         stageName: name,
-        personaType: "SOLO_FEMALE",
+        personaType: c.personaType || "SOLO_FEMALE",
         creatorCategory: "AI_MODEL",
-        tagline: hostOf(c.url),
-        bio: `Gefunden auf ${hostOf(c.url)}`,
+        tagline: c.tagline || hostOf(c.url),
+        bio: c.bio || `Gefunden auf ${hostOf(c.url)}`,
       });
     }
     skipped.CHARAKTER = characters.length - fresh.length;
@@ -73,7 +75,12 @@ export async function saveHarvest({ items, creators = [], creatorId }) {
     skipped.LINK = links.length - fresh.length;
     if (fresh.length) {
       await base44.entities.ExternalService.bulkCreate(
-        fresh.map((l) => ({ name: l.label, url: l.url, category: hostOf(l.url) }))
+        fresh.map((l) => ({
+          name: l.label,
+          url: l.url,
+          category: l.category || hostOf(l.url),
+          note: l.note || "",
+        }))
       );
       saved.LINK = fresh.length;
     }

@@ -22,6 +22,7 @@ import TextModelManager from "@/components/studio/TextModelManager";
 import VideoModelManager from "@/components/studio/VideoModelManager";
 import BulkImport from "@/components/studio/BulkImport";
 import SammelImport from "@/components/studio/SammelImport";
+import HarvestSandbox from "@/components/studio/HarvestSandbox";
 import LinkUpload from "@/components/studio/LinkUpload";
 import PlanManager from "@/components/studio/PlanManager";
 import GalleryManager from "@/components/studio/GalleryManager";
@@ -81,6 +82,7 @@ const TAB_GROUPS = [
     tabs: [
       { id: "guide", label: "Anleitung" },
       { id: "sammel", label: "Sammel-Import" },
+      { id: "harvestsandbox", label: "Import-Sandbox" },
       { id: "linkupload", label: "Link-Upload" },
       { id: "bulk", label: "Massen-Import" },
       { id: "services", label: "Dienste" },
@@ -240,7 +242,10 @@ export default function Studio() {
       {tab === "models" && <ModelManager />}
       {tab === "textmodels" && <TextModelManager />}
       {tab === "videomodels" && <VideoModelManager />}
-      {tab === "sammel" && <SammelImport creators={creators} />}
+      {tab === "sammel" && (
+        <SammelImport creators={creators} onOpenSandbox={() => setTab("harvestsandbox")} />
+      )}
+      {tab === "harvestsandbox" && <HarvestSandbox creators={creators} />}
       {tab === "linkupload" && <LinkUpload />}
       {tab === "bulk" && <BulkImport creators={creators} />}
       {tab === "promptgen" && <PromptGenerator />}

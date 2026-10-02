@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Radar, Loader2, ArrowDownToLine } from "lucide-react";
+import { Radar, Loader2, ArrowDownToLine, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import HarvestGroup from "@/components/studio/HarvestGroup";
 import { saveHarvest } from "@/lib/harvestImport";
@@ -20,7 +20,7 @@ const MEDIA_KINDS = ["BILD", "VIDEO", "AUDIO"];
 
 // Eine Adresse eingeben — die Seite wird gelesen und alles Brauchbare
 // herausgezogen. Anschließend Häkchen setzen und gesammelt übernehmen.
-export default function SammelImport({ creators = [] }) {
+export default function SammelImport({ creators = [], onOpenSandbox }) {
   const { toast } = useToast();
   const [url, setUrl] = useState("");
   const [deep, setDeep] = useState(false);
@@ -108,10 +108,19 @@ export default function SammelImport({ creators = [] }) {
   return (
     <div className="glass rounded-2xl border-2 border-border p-6">
       <p className="font-display text-2xl text-foreground mb-1">Sammel-Import</p>
-      <p className="text-[15px] font-semibold text-muted-foreground mb-5 max-w-3xl">
+      <p className="text-[15px] font-semibold text-muted-foreground mb-4 max-w-3xl">
         Nur die erste Adresse eintragen — die Seite wird gelesen und alles selbst herausgesucht: Modelle, Charaktere,
         Bilder, Videos, Audio und Links. Auf Wunsch geht es einen Schritt weiter und liest auch die Unterseiten.
       </p>
+
+      {onOpenSandbox && (
+        <button
+          onClick={onOpenSandbox}
+          className="mb-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-foreground"
+        >
+          <SlidersHorizontal className="w-4 h-4" /> In der Sandbox vorher bearbeiten
+        </button>
+      )}
 
       <div className="rounded-2xl border border-border bg-card p-4 mb-5">
         <div className="flex flex-wrap gap-2">
