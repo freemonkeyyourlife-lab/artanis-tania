@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Lock, Compass, ArrowRight, GripVertical } from "lucide-react";
+import { Lock, Compass, ArrowRight, GripVertical, Pencil, Check, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { buildNavGroups } from "@/components/nav/HeaderNav";
-import { MENU_AREA_LABEL, moduleFor } from "@/lib/modules";
+import { MENU_AREA_LABEL, MODULE_TYPES, moduleFor } from "@/lib/modules";
 import { cn } from "@/lib/utils";
 
 const NOTE = {
@@ -15,36 +16,88 @@ const NOTE = {
 
 const isFree = (label) => label === MENU_AREA_LABEL;
 
-const PageChip = ({ item, handleProps }) => {
+// Ein Knopf in der Karte. Im eigenen Bereich klappt er auf: Name ändern,
+// Ziel wählen, ausblenden — alles direkt hier, ohne woanders hinzugehen.
+const PageChip = ({ item, handleProps, onPatch }) => {
+  const [editing, setEditing] = useState(false);
   const page = moduleFor(item.path);
+
   return (
-    <div className="rounded-xl border border-border bg-elevated px-3 py-2.5 flex items-start gap-2">
-      {handleProps && (
-        <span
-          {...handleProps}
-          title="Ziehen zum Verschieben"
-          className="cursor-grab text-muted-foreground pt-0.5 flex-shrink-0"
-        >
-          <GripVertical className="w-4 h-4" />
-        </span>
+    <div className="rounded-xl border border-border bg-elevated px-3 py-2.5">
+      <div className="flex items-start gap-2">
+        {handleProps && (
+          <span
+            {...handleProps}
+            title="Ziehen zum Verschieben"
+            className="cursor-grab text-muted-foreground pt-0.5 flex-shrink-0"
+          >
+            <GripVertical className="w-4 h-4" />
+          </span>
+        )}
+        <Link to={item.path} title="Seite ansehen" className="min-w-0 flex-1">
+          <span className="flex items-center gap-2 flex-wrap">
+            <span className="text-[14px] font-bold text-foreground">{item.label}</span>
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+            <span className="text-[12px] font-bold text-primary">{page?.label || item.path}</span>
+          </span>
+          <span className="block text-[12px] font-semibold text-muted-foreground mt-1 leading-snug">
+            {page?.description || "Kein bekanntes Ziel — hier umstellen."}
+          </span>
+        </Link>
+        {onPatch && (
+          <button
+            onClick={() => setEditing((v) => !v)}
+            title={editing ? "Fertig" : "Diesen Knopf ändern"}
+            className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors",
+              editing ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {editing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+          </button>
+        )}
+      </div>
+
+      {editing && onPatch && (
+        <div className="mt-3 pt-3 border-t border-border space-y-2.5">
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Name in der Leiste</label>
+            <Input
+              value={item.label}
+              onChange={(e) => onPatch({ label: e.target.value })}
+              className="mt-1.5 h-10 text-[15px] font-semibold"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Wohin der Klick führt</label>
+            <select
+              value={page ? item.path : ""}
+              onChange={(e) => onPatch({ path: e.target.value })}
+              className="mt-1.5 w-full h-10 rounded-xl border border-input bg-transparent px-3 text-[14px] font-semibold text-foreground"
+            >
+              {!page && <option value="">{item.path} (unbekannte Adresse)</option>}
+              {MODULE_TYPES.map((m) => (
+                <option key={m.path} value={m.path}>
+                  {m.label} — {m.path}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={() => onPatch({ hidden: true })}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-btn text-[12px] font-bold text-foreground"
+          >
+            <EyeOff className="w-3.5 h-3.5" /> Aus der Leiste nehmen
+          </button>
+        </div>
       )}
-      <Link to={item.path} title="Seite ansehen" className="min-w-0 flex-1">
-        <span className="flex items-center gap-2 flex-wrap">
-          <span className="text-[14px] font-bold text-foreground">{item.label}</span>
-          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-          <span className="text-[12px] font-bold text-primary">{page?.label || item.path}</span>
-        </span>
-        <span className="block text-[12px] font-semibold text-muted-foreground mt-1 leading-snug">
-          {page?.description || "Kein bekanntes Ziel — unten im Menü umstellen."}
-        </span>
-      </Link>
     </div>
   );
 };
 
 // Die App als Bild: die Leiste oben, darunter ihre vier Bereiche mit jedem
 // Knopf und der Seite, auf die er führt. Der eigene Bereich lässt sich direkt
-// hier ziehen — die Reihenfolge ist die Reihenfolge oben.
+// hier ziehen und umbenennen — die Reihenfolge ist die Reihenfolge oben.
 export default function StructureMap({ items = [], onChange }) {
   const groups = buildNavGroups(items.filter((i) => i && i.path && !i.hidden));
 
@@ -56,6 +109,15 @@ export default function StructureMap({ items = [], onChange }) {
   const freePaths = freeGroup?.items.map((i) => i.path) || [];
   const draggablePaths = freePaths.filter((p) => indexByPath.has(p));
   const extraPaths = freePaths.filter((p) => !indexByPath.has(p));
+
+  const patchItem = (item, patch) => {
+    if (!onChange) return;
+    onChange(
+      items.map((it) =>
+        it === item || (it.id && item.id && it.id === item.id) ? { ...it, ...patch } : it
+      )
+    );
+  };
 
   const onDragEnd = (result) => {
     if (!onChange || !result.destination) return;
@@ -73,7 +135,8 @@ export default function StructureMap({ items = [], onChange }) {
       <p className="font-display text-xl text-foreground mb-1">So ist die App aufgebaut</p>
       <p className="text-[15px] font-semibold text-muted-foreground mb-6 max-w-3xl">
         Oben die Leiste, darunter ihre vier Bereiche. Jeder Knopf sitzt in einem Bereich und führt auf genau eine Seite —
-        darunter steht, was dort passiert. Im Bereich „{MENU_AREA_LABEL}“ ziehst du am Griff und ordnest damit die Leiste.
+        darunter steht, was dort passiert. Im Bereich „{MENU_AREA_LABEL}" ziehst du am Griff und ordnest die Leiste; mit dem
+        Stift änderst du den Namen oder das Ziel, ohne die Ansicht zu verlassen. Danach unten speichern.
       </p>
 
       <div className="rounded-2xl border-2 border-border bg-elevated px-4 py-3 text-center max-w-md mx-auto">
@@ -111,7 +174,11 @@ export default function StructureMap({ items = [], onChange }) {
                           <Draggable key={item.id || path} draggableId={item.id || path} index={index}>
                             {(p) => (
                               <div ref={p.innerRef} {...p.draggableProps}>
-                                <PageChip item={item} handleProps={p.dragHandleProps} />
+                                <PageChip
+                                  item={item}
+                                  handleProps={p.dragHandleProps}
+                                  onPatch={(patch) => patchItem(item, patch)}
+                                />
                               </div>
                             )}
                           </Draggable>
