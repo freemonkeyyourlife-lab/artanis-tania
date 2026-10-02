@@ -11,6 +11,7 @@ import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import WishButton from "@/components/wish/WishButton";
+import HelpAssistant from "@/components/help/HelpAssistant";
 import { useCallSession } from "@/lib/CallContext";
 import { getRooms } from "@/lib/callRooms";
 import { publicName } from "@/lib/displayName";
@@ -219,6 +220,7 @@ export default function Layout() {
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
+            <HelpAssistant />
           </div>
         </div>
 

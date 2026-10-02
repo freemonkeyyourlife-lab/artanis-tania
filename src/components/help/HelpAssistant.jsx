@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { HelpCircle, Loader2, Send, X } from "lucide-react";
+import { HelpCircle, Loader2, Send } from "lucide-react";
+import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
 import HelpAnswer from "@/components/help/HelpAnswer";
 import { askHelp } from "@/lib/helpAssistant";
@@ -35,11 +36,19 @@ export default function HelpAssistant() {
 
   return (
     <>
-      <button onClick={() => setOpen((o) => !o)} title="Hilfe fragen" className="fixed top-20 right-5 z-[90] w-14 h-14 rounded-full glass-btn glass-btn-accent flex items-center justify-center accent-glow-strong">
-        {open ? <X className="w-6 h-6" /> : <HelpCircle className="w-7 h-7" />}
+      {/* Steht ganz rechts in der Kopfzeile und ist von jeder Seite aus erreichbar. */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        title="Hilfe fragen"
+        className={cn(
+          "w-9 h-9 rounded-full glass-btn flex items-center justify-center transition-colors",
+          open ? "text-primary" : "hover:text-primary"
+        )}
+      >
+        <HelpCircle className="w-4 h-4" />
       </button>
       {open && (
-        <div className="fixed top-36 right-5 z-[90] w-[min(420px,calc(100vw-2.5rem))] h-[min(600px,70vh)] glass-strong rounded-3xl border-2 border-border flex flex-col overflow-hidden">
+        <div className="fixed top-[80px] right-3 lg:right-6 z-[95] w-[min(420px,calc(100vw-1.5rem))] h-[min(600px,70vh)] glass-strong rounded-3xl border-2 border-border flex flex-col overflow-hidden">
           <div className="px-5 py-4 border-b border-border">
             <p className="font-display text-lg text-foreground">Frag mich</p>
             <p className="text-xs text-muted-foreground">Tippen oder aufs Mikro drücken und reinsprechen.</p>

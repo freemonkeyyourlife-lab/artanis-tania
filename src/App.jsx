@@ -57,7 +57,6 @@ import Archive from '@/pages/Archive';
 import ContentPlan from '@/pages/ContentPlan';
 import SalesDashboard from '@/pages/SalesDashboard';
 import VoiceStudio from '@/pages/VoiceStudio';
-import HelpAssistant from '@/components/help/HelpAssistant';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 
@@ -92,7 +91,6 @@ const AuthenticatedApp = () => {
       <HostLiveAlert />
       <OnboardingIntro />
       <TutorialPlayer />
-      <HelpAssistant />
       <FloatingCall />
       <Routes>
       {/* Add your page Route elements here */}
