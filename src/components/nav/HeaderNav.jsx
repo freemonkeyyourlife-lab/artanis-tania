@@ -3,6 +3,7 @@ import NavGroup from "@/components/nav/NavGroup";
 import { getStructure, subscribeStructure, loadStructure } from "@/lib/onboarding";
 import { getInfoMode, subscribeInfoMode } from "@/lib/infoMode";
 import { FIXED_AREAS, ALWAYS_IN_MENU, MENU_AREA_LABEL, groupNavItems } from "@/lib/modules";
+import { tierForPath, TIER } from "@/lib/accessTiers";
 
 // Die Kopfzeile hat vier Bereiche statt acht einzelner Knöpfe. Die festen
 // Bereiche kommen aus der Seitenübersicht, damit es nur eine Quelle gibt.
@@ -23,21 +24,32 @@ const exploreItems = (menuItems) =>
 // der schon in einem anderen Block steht.
 export function buildNavGroups(menuItems = []) {
   const seen = new Set();
+  const take = (items) =>
+    (items || []).filter((item) => {
+      if (!item || !item.path || seen.has(item.path)) return false;
+      seen.add(item.path);
+      return true;
+    });
+
+  // Was nur mit Rechten erreichbar ist, wird aus dem offenen Bereich
+  // herausgezogen und gesammelt hinter „Verwaltung" gestellt — dort trägt es
+  // den gelben Rand.
+  const menu = exploreItems(menuItems);
+  const userItems = menu.filter((i) => tierForPath(i.path) === TIER.USER);
+  const restricted = menu.filter((i) => tierForPath(i.path) !== TIER.USER);
+
   const groups = [
-    { label: "Charaktere", items: CHARACTER_ITEMS },
-    { label: "Selbst erstellen", items: CREATE_ITEMS },
-    { label: MENU_AREA_LABEL, items: exploreItems(menuItems) },
-    { label: "Verwaltung", items: ADMIN_ITEMS },
+    { label: "Charaktere", items: take(CHARACTER_ITEMS), tier: TIER.USER },
+    { label: MENU_AREA_LABEL, items: take(userItems), tier: TIER.USER },
+    {
+      label: "Verwaltung",
+      items: take([...ADMIN_ITEMS, ...CREATE_ITEMS, ...restricted]),
+      tier: TIER.ADMIN,
+    },
   ];
+
   return groups
-    .map((group) => {
-      const items = group.items.filter((item) => {
-        if (seen.has(item.path)) return false;
-        seen.add(item.path);
-        return true;
-      });
-      return { label: group.label, items, groups: groupNavItems(items) };
-    })
+    .map((group) => ({ ...group, groups: groupNavItems(group.items) }))
     .filter((group) => group.items.length > 0);
 }
 

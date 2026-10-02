@@ -11,6 +11,7 @@ import { getViewAs, setViewAs, subscribeViewAs } from "@/lib/viewAs";
 import { loadLayout, layoutFont } from "@/lib/siteLayout";
 import { structureOf, structureGroups } from "@/lib/siteStructure";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
+import TierFrame from "@/components/tier/TierFrame";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import WishButton from "@/components/wish/WishButton";
 import HelpAssistant from "@/components/help/HelpAssistant";
@@ -280,7 +281,9 @@ export default function Layout() {
       </header>
 
       <main className="relative z-10 pt-[72px] pb-24 lg:pb-0">
-        <Outlet />
+        <TierFrame>
+          <Outlet />
+        </TierFrame>
       </main>
 
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">

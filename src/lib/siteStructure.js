@@ -3,6 +3,7 @@
 // SiteLayout, gelesen von der Kopfzeile und von der Struktur-Übersicht.
 
 import { FIXED_AREAS, ALWAYS_IN_MENU, MENU_AREA_LABEL, groupNavItems } from "@/lib/modules";
+import { tierForPath, TIER } from "@/lib/accessTiers";
 import { DEFAULT_MENU } from "@/lib/siteLayout";
 
 const slug = (value) =>
@@ -74,15 +75,37 @@ export function structureOf(record) {
 // Genau das rendert die Kopfzeile: leere Bereiche fallen weg, doppelte Ziele auch.
 export function structureGroups(structure) {
   const seen = new Set();
-  return (structure?.areas || [])
-    .map((area) => {
-      const items = (area.items || []).filter((it) => {
-        if (!it || !it.path || it.hidden || seen.has(it.path)) return false;
-        seen.add(it.path);
-        return true;
-      });
-      return { label: area.label, items, groups: groupNavItems(items) };
-    })
+  const areas = (structure?.areas || []).map((area) => ({
+    id: area.id,
+    label: area.label,
+    tier: area.id === "admin" ? TIER.ADMIN : TIER.USER,
+    items: (area.items || []).filter((it) => {
+      if (!it || !it.path || it.hidden || seen.has(it.path)) return false;
+      seen.add(it.path);
+      return true;
+    }),
+  }));
+
+  // Alles, was nur mit Rechten erreichbar ist, wandert gesammelt in den
+  // Verwaltungs-Bereich — egal, wo es eingetragen wurde.
+  const adminArea = areas.find((a) => a.tier === TIER.ADMIN);
+  const moved = [];
+  areas.forEach((area) => {
+    if (area === adminArea) return;
+    area.items = area.items.filter((it) => {
+      if (tierForPath(it.path) === TIER.USER) return true;
+      // Ohne Verwaltungs-Bereich (Blick als Nutzer) fällt es ganz weg.
+      if (adminArea) moved.push(it);
+      return false;
+    });
+  });
+  if (adminArea) {
+    const have = new Set(adminArea.items.map((i) => i.path));
+    adminArea.items = [...adminArea.items, ...moved.filter((i) => !have.has(i.path))];
+  }
+
+  return areas
+    .map((area) => ({ label: area.label, tier: area.tier, items: area.items, groups: groupNavItems(area.items) }))
     .filter((group) => group.items.length > 0);
 }
 

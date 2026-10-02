@@ -8,9 +8,10 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { isRestricted, isRestrictedTier, TIER_RING } from "@/lib/accessTiers";
 
 const NavLink = ({ item, waitingChats }) => (
-  <DropdownMenuItem asChild>
+  <DropdownMenuItem asChild className={cn(isRestricted(item.path) && "ring-2 ring-yellow-400 rounded-lg")}>
     <Link to={item.path} className="text-sm font-semibold cursor-pointer">
       {item.label}
       {item.path === "/leitstand" && waitingChats > 0 && (
@@ -24,11 +25,13 @@ const NavLink = ({ item, waitingChats }) => (
 
 // Ein Block der Kopfzeile. Klappt er auf, stehen die Punkte nach Untergruppen
 // sortiert unter einer kurzen Überschrift — statt einer langen Liste.
+// Alles, was nur mit Rechten erreichbar ist, trägt einen gelben Rand.
 export default function NavGroup({ group, waitingChats = 0, showInfo = false, info = "" }) {
   const location = useLocation();
   const [showText, setShowText] = useState(false);
   const active = group.items.some((l) => l.path === location.pathname);
   const subGroups = group.groups || [];
+  const restricted = isRestrictedTier(group.tier);
 
   return (
     <DropdownMenu>
@@ -36,6 +39,7 @@ export default function NavGroup({ group, waitingChats = 0, showInfo = false, in
         <button
           className={cn(
             "px-4 py-2 rounded-full whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
+            restricted && TIER_RING[group.tier],
             active ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
           )}
         >
