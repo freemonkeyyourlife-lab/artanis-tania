@@ -1,148 +1,283 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Check, Loader2, Sparkles, Upload } from "lucide-react";
+import { Check, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { composeImagePrompt } from "@/lib/composeImagePrompt";
+import { emptyDirection } from "@/lib/imageDirection";
+import { generateWithModel } from "@/lib/imageGen";
+import { uploadDataUrl } from "@/lib/mediaUpload";
+import ImageDirectionPanel from "@/components/studio/ImageDirectionPanel";
+import FinalPromptPreview from "@/components/studio/FinalPromptPreview";
+import NarratorModelPicker from "@/components/narrator/NarratorModelPicker";
+import NarratorRefStrip from "@/components/narrator/NarratorRefStrip";
+import NarratorImageResult from "@/components/narrator/NarratorImageResult";
 import { inputCls, labelCls, chipCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
 
-// Bild-Creator: Aussehen beschreiben, entwerfen lassen, das Beste behalten.
-// Sie wird als ganze Figur entworfen — später wird sie freigestellt und läuft.
+const rows = (res) => (Array.isArray(res) ? res : res?.items || []);
+const unique = (list) => list.filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
+
+// Foto-Kreation wie im Studio: Modell wählen, Prompt schreiben, Vorlagebild
+// nehmen und daraus umbauen. Dieselbe Maschine, derselbe Prompt — kein Nebenweg.
 export default function NarratorImageBlock({ narrator, onSaved }) {
-  const [form, setForm] = useState({
-    appearance: narrator?.appearance || "",
-    artStyle: narrator?.artStyle || "PHOTOREAL",
-    imagePrompt: narrator?.imagePrompt || "",
-    avatar: narrator?.avatar || "",
-    gallery: narrator?.gallery || [],
-  });
+  const { toast } = useToast();
+  const [models, setModels] = useState([]);
+  const [loadingModels, setLoadingModels] = useState(true);
+  const [modelKeys, setModelKeys] = useState([]);
+  const [appearance, setAppearance] = useState(narrator?.appearance || "");
+  const [prompt, setPrompt] = useState("");
+  const [animated, setAnimated] = useState(narrator?.artStyle === "CARTOON");
+  const [direction, setDirection] = useState(emptyDirection());
+  const [refs, setRefs] = useState(narrator?.referenceImages || []);
+  const [gallery, setGallery] = useState(narrator?.gallery || []);
+  const [face, setFace] = useState(narrator?.avatar || "");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [results, setResults] = useState([]);
 
-  const set = (patch) => setForm((f) => ({ ...f, ...patch }));
+  // Alle Bildmodelle, die im Studio freigeschaltet sind — Favoriten oben.
+  useEffect(() => {
+    base44.entities.ImageModel.filter({ enabled: true }, { sort: "-created_date", limit: 200 })
+      .then((res) => {
+        const items = rows(res);
+        setModels([...items].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0)));
+      })
+      .catch(() => setModels([]))
+      .finally(() => setLoadingModels(false));
+  }, []);
 
-  const prompt = () =>
-    form.imagePrompt.trim() ||
-    `${form.artStyle === "CARTOON" ? "Gezeichnete Figur mit klaren Linien" : "Fotorealistische Aufnahme"}, ${
-      form.appearance || "eine erwachsene Frau"
-    }. ${narrator?.personality ? `${narrator.personality}. ` : ""}Ganzkörper von Kopf bis Fuß, freigestellt vor einfarbigem Hintergrund, weiches Licht, Blick in die Kamera.`;
+  const allRefs = () => unique([face, ...refs]).slice(0, 6);
 
-  const draft = async () => {
+  const buildPrompt = () => {
+    const scene = [appearance.trim() ? `Her look: ${appearance.trim()}.` : "", prompt.trim()]
+      .filter(Boolean)
+      .join(" ");
+    return composeImagePrompt({
+      animated,
+      name: narrator?.name?.trim(),
+      subject: narrator?.gender === "MAENNLICH" ? "man" : "woman",
+      withRefs: allRefs().length > 0,
+      prompt: scene,
+      direction,
+    });
+  };
+
+  const targets = () => (modelKeys.length ? models.filter((m) => modelKeys.includes(m.id)) : [null]);
+
+  const generate = async () => {
+    if (!prompt.trim() && !appearance.trim()) return;
     setBusy(true);
-    setNote("");
-    try {
-      const res = await base44.integrations.Core.GenerateImage({ prompt: prompt() });
-      if (!res?.url) throw new Error("kein Bild");
-      set({ gallery: [res.url, ...form.gallery].slice(0, 8), avatar: form.avatar || res.url });
-    } catch (e) {
-      setNote("Das Bild kam nicht zurück — nochmal versuchen.");
-    } finally {
-      setBusy(false);
+    setResults([]);
+    const refList = allRefs();
+    const out = await Promise.all(
+      targets().map(async (m) => {
+        const label = m?.name || "Standard-Generator";
+        try {
+          if (m) {
+            const url = await generateWithModel(m, buildPrompt(), "portrait", refList[0]);
+            return { key: m.id, label, url };
+          }
+          const res = await base44.integrations.Core.GenerateImage({
+            prompt: buildPrompt(),
+            existing_image_urls: refList.length ? refList : undefined,
+          });
+          return { key: "standard", label, url: res.url };
+        } catch (e) {
+          return { key: m?.id || "standard", label, error: e.message || "Hat nicht geklappt" };
+        }
+      })
+    );
+    setResults(out);
+    setBusy(false);
+    if (out.length && out.every((r) => r.error)) {
+      toast({
+        title: "Kein Modell hat geantwortet",
+        description: "Anderes Modell oder anderen Prompt versuchen.",
+        variant: "destructive",
+      });
     }
   };
 
-  const upload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const keep = async (patch, message) => {
+    const rec = await base44.entities.Narrator.update(narrator.id, patch);
+    onSaved?.(rec);
+    toast({ title: message });
+  };
+
+  const saveFace = async (url) => {
+    const stored = await uploadDataUrl(url, `${narrator?.name || "figur"}-bild.png`);
+    setFace(stored);
+    setGallery((g) => unique([stored, ...g]));
+    await keep({ avatar: stored, gallery: unique([stored, ...gallery]).slice(0, 24) }, "Das ist jetzt ihr Bild");
+  };
+
+  const saveGallery = async (url) => {
+    const stored = await uploadDataUrl(url, `${narrator?.name || "figur"}-${Date.now()}.png`);
+    setGallery((g) => unique([stored, ...g]));
+    await keep({ gallery: unique([stored, ...gallery]).slice(0, 24) }, "Liegt in ihrer Sammlung");
+  };
+
+  const saveRef = async (url) => {
+    const stored = await uploadDataUrl(url, `${narrator?.name || "figur"}-vorlage.png`);
+    const next = unique([stored, ...refs]);
+    setRefs(next);
+    await keep({ referenceImages: next }, "Als Vorlage gemerkt");
+  };
+
+  const uploadRefs = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setUploading(true);
     try {
-      const res = await base44.integrations.Core.UploadPublicFile({ file });
-      set({ avatar: res.file_url });
+      const urls = [];
+      for (const file of files) {
+        const res = await base44.integrations.Core.UploadPublicFile({ file });
+        urls.push(res.file_url);
+      }
+      const next = unique([...urls, ...refs]).slice(0, 8);
+      setRefs(next);
+      await keep({ referenceImages: next }, "Vorlage dazu");
     } catch (err) {
-      setNote("Hochladen hat nicht geklappt.");
+      toast({ title: "Upload fehlgeschlagen", variant: "destructive" });
     } finally {
       setUploading(false);
       e.target.value = "";
     }
   };
 
-  const save = async () => {
-    setBusy(true);
+  const removeRef = async (url) => {
+    const next = refs.filter((u) => u !== url);
+    setRefs(next);
+    await keep({ referenceImages: next }, "Vorlage entfernt");
+  };
+
+  const saveLook = async () => {
+    setSaving(true);
     try {
-      const rec = await base44.entities.Narrator.update(narrator.id, form);
-      onSaved?.(rec);
-      setNote("Gespeichert.");
+      await keep({ appearance, artStyle: animated ? "CARTOON" : "PHOTOREAL" }, "Gespeichert");
     } finally {
-      setBusy(false);
+      setSaving(false);
     }
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-5">
-      <div>
-        <div className="rounded-2xl overflow-hidden border-2 border-border bg-elevated aspect-[3/4]">
-          {form.avatar ? (
-            <Image src={form.avatar} fittingType="fit" className="w-full h-full" />
-          ) : (
-            <span className="w-full h-full flex items-center justify-center text-[12px] font-bold text-muted-foreground">
-              noch kein Bild
-            </span>
-          )}
+    <div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="space-y-5">
+          <NarratorModelPicker
+            models={models}
+            loading={loadingModels}
+            selected={modelKeys}
+            onToggle={(id) => setModelKeys((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))}
+            onClear={() => setModelKeys([])}
+          />
+          <NarratorRefStrip
+            face={face}
+            refs={refs}
+            onUpload={uploadRefs}
+            onRemove={removeRef}
+            uploading={uploading}
+          />
         </div>
-        <label className={cn(btnCls, "mt-3 w-full justify-center cursor-pointer")}>
-          {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Eigenes Bild
-          <input type="file" accept="image/*" onChange={upload} className="hidden" />
-        </label>
 
-        {form.gallery.length > 0 && (
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {form.gallery.map((url) => (
+        <div className="space-y-4">
+          <div>
+            <label className={labelCls}>Wie sie aussieht</label>
+            <textarea
+              value={appearance}
+              onChange={(e) => setAppearance(e.target.value)}
+              rows={3}
+              placeholder="Haare, Augen, Figur, was sie trägt — damit sie auch so gezeichnet wird."
+              className={cn(inputCls, "resize-none")}
+            />
+          </div>
+
+          <div>
+            <label className={labelCls}>Prompt</label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={5}
+              placeholder="Was soll zu sehen sein? Pose, Perspektive, Ort, Outfit, Licht …"
+              className={cn(inputCls, "resize-none")}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button onClick={() => setAnimated(false)} className={chipCls(!animated)}>
+              Fotoreal
+            </button>
+            <button onClick={() => setAnimated(true)} className={chipCls(animated)}>
+              Gezeichnet
+            </button>
+            <button onClick={saveLook} disabled={saving} className={cn(btnCls, "ml-auto")}>
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Aussehen speichern
+            </button>
+          </div>
+
+          <ImageDirectionPanel value={direction} onChange={setDirection} title="Regie: Stil, Inhalt, Stimmung, Freizügigkeit, Klamotte" />
+          <FinalPromptPreview text={buildPrompt()} />
+
+          <button
+            onClick={generate}
+            disabled={busy || (!prompt.trim() && !appearance.trim())}
+            className={cn(btnAccentCls, "w-full justify-center py-3")}
+          >
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {busy
+              ? "Wird erzeugt …"
+              : modelKeys.length > 1
+                ? `Bild × ${modelKeys.length}`
+                : "Bild erzeugen"}
+          </button>
+        </div>
+      </div>
+
+      {busy && (
+        <div className="flex flex-col items-center justify-center gap-3 py-10 text-muted-foreground">
+          <Loader2 className="w-7 h-7 animate-spin text-primary" />
+          <p className="text-[14px] font-semibold">
+            {targets().length > 1 ? `${targets().length} Modelle arbeiten gleichzeitig …` : "Wird erzeugt …"}
+          </p>
+        </div>
+      )}
+
+      {!busy && results.length > 0 && (
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-5">
+          {results.map((r) => (
+            <NarratorImageResult
+              key={r.key}
+              item={r}
+              onAvatar={saveFace}
+              onGallery={saveGallery}
+              onRef={saveRef}
+            />
+          ))}
+        </div>
+      )}
+
+      {gallery.length > 0 && (
+        <div className="mt-5">
+          <label className={labelCls}>Ihre Sammlung · {gallery.length}</label>
+          <div className="flex flex-wrap gap-2">
+            {gallery.map((url) => (
               <button
                 key={url}
-                onClick={() => set({ avatar: url })}
-                title="Dieses Bild nehmen"
+                onClick={() => saveFace(url)}
+                title="Als ihr Bild nehmen"
                 className={cn(
-                  "rounded-xl overflow-hidden border-2 aspect-[3/4]",
-                  form.avatar === url ? "border-primary" : "border-border"
+                  "rounded-xl overflow-hidden border-2 aspect-[3/4] w-20",
+                  face === url ? "border-primary" : "border-border"
                 )}
               >
                 <Image src={url} fittingType="fill" className="w-full h-full" />
               </button>
             ))}
           </div>
-        )}
-      </div>
-
-      <div>
-        <label className={labelCls}>Wie sieht sie aus?</label>
-        <textarea
-          value={form.appearance}
-          onChange={(e) => set({ appearance: e.target.value })}
-          rows={3}
-          placeholder="Haare, Augen, Figur, was sie trägt — damit sie auch so gezeichnet wird."
-          className={cn(inputCls, "resize-none")}
-        />
-
-        <label className={cn(labelCls, "mt-3")}>Art</label>
-        <div className="flex flex-wrap gap-1.5">
-          {["PHOTOREAL", "CARTOON"].map((a) => (
-            <button key={a} onClick={() => set({ artStyle: a })} className={chipCls(form.artStyle === a)}>
-              {a === "PHOTOREAL" ? "Fotoreal" : "Gezeichnet"}
-            </button>
-          ))}
         </div>
-
-        <label className={cn(labelCls, "mt-3")}>
-          Bild-Vorgabe <span className="font-semibold normal-case tracking-normal opacity-70">leer lassen, dann wird sie aus dem Aussehen gebaut</span>
-        </label>
-        <textarea
-          value={form.imagePrompt}
-          onChange={(e) => set({ imagePrompt: e.target.value })}
-          rows={3}
-          placeholder="Eigene Vorgabe für das Bild — Stimmung, Licht, Hintergrund."
-          className={cn(inputCls, "resize-none")}
-        />
-
-        <div className="flex flex-wrap items-center gap-2 mt-4">
-          <button onClick={draft} disabled={busy} className={btnAccentCls}>
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Bild entwerfen
-          </button>
-          <button onClick={save} disabled={busy} className={btnCls}>
-            <Check className="w-4 h-4" /> Speichern
-          </button>
-          {note && <span className="text-[12px] font-semibold text-muted-foreground">{note}</span>}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

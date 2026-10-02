@@ -180,7 +180,7 @@ export default function NarratorWorkbench() {
         ))}
       </div>
 
-      <div className="glass rounded-2xl border-2 border-border p-5">
+      <div key={current.id} className="glass rounded-2xl border-2 border-border p-5">
         {tab === "bild" && <NarratorImageBlock narrator={current} onSaved={onSaved} />}
         {tab === "stimme" && <NarratorVoiceBlock narrator={current} onSaved={onSaved} />}
         {tab === "text" && <NarratorTextBlock narrator={current} onSaved={onSaved} />}

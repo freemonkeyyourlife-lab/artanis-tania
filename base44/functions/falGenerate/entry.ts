@@ -33,6 +33,11 @@ export default async function (req) {
           enable_safety_checker: false,
         };
 
+    // Vorlagebild: nur die Bild-zu-Bild-Modelle bauen daraus um — allen anderen
+    // würde die Vorlage nichts sagen, also bekommen sie sie auch nicht.
+    const refImage = (body?.imageUrl || '').trim();
+    if (refImage && modelId.includes('image-to-image')) payload.image_url = refImage;
+
     const res = await fetch(`https://fal.run/${modelId}`, {
       method: 'POST',
       headers: { Authorization: `Key ${key}`, 'Content-Type': 'application/json' },
