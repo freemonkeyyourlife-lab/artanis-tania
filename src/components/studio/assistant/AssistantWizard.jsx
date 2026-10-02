@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Loader2, ArrowLeft, ArrowRight, Wand2, ListChecks, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AssistantImportStep from "@/components/studio/assistant/AssistantImportStep";
 import AssistantCharacterStep from "@/components/studio/assistant/AssistantCharacterStep";
 import AssistantImageStep from "@/components/studio/assistant/AssistantImageStep";
 import AssistantModelStep from "@/components/studio/assistant/AssistantModelStep";
@@ -16,6 +17,7 @@ const MODES = [
 ];
 
 const STEPS = [
+  { id: "import", label: "Import" },
   { id: "character", label: "Charakter" },
   { id: "images", label: "Bilder" },
   { id: "model", label: "Modell" },
@@ -65,7 +67,7 @@ export default function AssistantWizard() {
     load();
   }, []);
 
-  const ready = [!!creator, true, !!model, true, true, true][step];
+  const ready = [true, !!creator, true, !!model, true, true, true][step];
   const last = step === STEPS.length - 1;
 
   if (loading) {
@@ -118,9 +120,18 @@ export default function AssistantWizard() {
         <AssistantMoodMode creators={data.creators} voices={data.voices} onChanged={load} />
       ) : (
         <>
-      {step === 0 && <AssistantCharacterStep creators={data.creators} value={creator} onChange={setCreator} />}
-      {step === 1 && <AssistantImageStep creators={data.creators} onReloaded={load} />}
-      {step === 2 && (
+      {step === 0 && (
+        <AssistantImportStep
+          onImported={(c) => {
+            setCreator(c);
+            setStep(2);
+            load();
+          }}
+        />
+      )}
+      {step === 1 && <AssistantCharacterStep creators={data.creators} value={creator} onChange={setCreator} />}
+      {step === 2 && <AssistantImageStep creators={data.creators} onReloaded={load} />}
+      {step === 3 && (
         <AssistantModelStep
           creator={creator}
           imageModels={data.imageModels}
@@ -130,10 +141,10 @@ export default function AssistantWizard() {
           onChange={setModel}
         />
       )}
-      {step === 3 && (
+      {step === 4 && (
         <AssistantBlockStep blocks={data.blocks} creator={creator} value={pickedBlocks} onChange={setPickedBlocks} />
       )}
-      {step === 4 && (
+      {step === 5 && (
         <AssistantVoiceStep
           voices={data.voices}
           creators={data.creators}
@@ -143,7 +154,7 @@ export default function AssistantWizard() {
           onChanged={load}
         />
       )}
-      {step === 5 && (
+      {step === 6 && (
         <AssistantPromptStep creator={creator} model={model} blocks={pickedBlocks} voice={voice} />
       )}
 

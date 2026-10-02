@@ -93,7 +93,7 @@ const TAB_GROUPS = [
 
 export default function Studio() {
   const { toast } = useToast();
-  const [tab, setTab] = useState("guide");
+  const [tab, setTab] = useState("assistant");
   const synced = useRef(false); // Nachfassen läuft einmal pro Öffnen
   const [creators, setCreators] = useState([]);
   const [voices, setVoices] = useState([]);
