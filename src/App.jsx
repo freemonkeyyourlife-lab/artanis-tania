@@ -60,6 +60,7 @@ import VoiceStudio from '@/pages/VoiceStudio';
 import CreatorStudio from '@/pages/CreatorStudio';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
+import ImportStatusPill from '@/components/import/ImportStatusPill';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -93,6 +94,7 @@ const AuthenticatedApp = () => {
       <OnboardingIntro />
       <TutorialPlayer />
       <FloatingCall />
+      <ImportStatusPill />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />

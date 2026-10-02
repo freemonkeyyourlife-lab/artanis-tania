@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Upload, Loader2, Trash2, Film, Image as ImageIcon, Music, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { getImportState, subscribeImport, runInBackground } from "@/lib/importRunner";
 
 const KINDS = [
   { id: "PHOTO", label: "Foto", icon: ImageIcon },
@@ -40,8 +41,9 @@ export default function BulkMediaImport({ creators = [] }) {
   const [price, setPrice] = useState(0);
   const [visibility, setVisibility] = useState("REGISTERED");
   const [published, setPublished] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState(null);
+  const [job, setJob] = useState(getImportState());
+
+  useEffect(() => subscribeImport(setJob), []);
 
   const add = (event) => {
     const picked = Array.from(event.target.files || []);
@@ -67,46 +69,53 @@ export default function BulkMediaImport({ creators = [] }) {
       return prev.filter((_, n) => n !== i);
     });
 
+  // Läuft im Hintergrund weiter — du kannst in der Zeit woanders hingehen.
   const upload = async () => {
-    if (!rows.length) return;
-    setBusy(true);
-    setProgress({ done: 0, total: rows.length });
+    const todo = rows;
+    if (!todo.length) return;
     const creator = creators.find((c) => c.id === creatorId);
+    const records = [];
+
+    const started = await runInBackground({
+      title: `${todo.length} Dateien werden hochgeladen`,
+      tasks: todo.map((r) => ({
+        label: r.title || r.file.name,
+        run: async () => {
+          const up = await base44.integrations.Core.UploadPublicFile({ file: r.file });
+          const url = up.file_url;
+          records.push({
+            title: r.title.trim() || r.file.name,
+            contentType: r.kind,
+            creatorId: creatorId || undefined,
+            creatorName: creator?.stageName || undefined,
+            fullAsset: url,
+            previewAsset: url,
+            thumbnail: url,
+            price: Number(price) || 0,
+            currency: "EUR",
+            isFree: (Number(price) || 0) === 0,
+            visibility,
+            published,
+            publishedAt: published ? new Date().toISOString() : undefined,
+          });
+        },
+      })),
+    });
+    if (!started) return;
+
+    todo.forEach((r) => r.preview && URL.revokeObjectURL(r.preview));
+    setRows([]);
+
+    if (!records.length) return;
     try {
-      const records = [];
-      for (const r of rows) {
-        const up = await base44.integrations.Core.UploadPublicFile({ file: r.file });
-        const url = up.file_url;
-        records.push({
-          title: r.title.trim() || r.file.name,
-          contentType: r.kind,
-          creatorId: creatorId || undefined,
-          creatorName: creator?.stageName || undefined,
-          fullAsset: url,
-          previewAsset: url,
-          thumbnail: url,
-          price: Number(price) || 0,
-          currency: "EUR",
-          isFree: (Number(price) || 0) === 0,
-          visibility,
-          published,
-          publishedAt: published ? new Date().toISOString() : undefined,
-        });
-        setProgress((p) => ({ ...p, done: p.done + 1 }));
-      }
       await base44.entities.Content.bulkCreate(records);
       toast({
         title: `${records.length} Dateien drin`,
         description: "Jede steht in der Kategorie, die zu ihrer Datei passt.",
       });
-      rows.forEach((r) => r.preview && URL.revokeObjectURL(r.preview));
-      setRows([]);
     } catch (e) {
       console.error(e);
       toast({ title: "Hat nicht geklappt", description: "Versuch es noch einmal.", variant: "destructive" });
-    } finally {
-      setBusy(false);
-      setProgress(null);
     }
   };
 
@@ -188,16 +197,16 @@ export default function BulkMediaImport({ creators = [] }) {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={upload}
-              disabled={busy}
+              disabled={job.running}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
             >
-              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-              {busy ? `Lädt … ${progress?.done || 0} / ${progress?.total || rows.length}` : `Alle ${rows.length} hochladen`}
+              {job.running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {job.running ? "Läuft im Hintergrund …" : `Alle ${rows.length} hochladen`}
             </button>
             <label className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
               <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="w-4 h-4 accent-primary" /> Sofort live
             </label>
-            <button onClick={() => setRows([])} disabled={busy} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-elevated border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50">
+            <button onClick={() => setRows([])} disabled={job.running} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-elevated border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50">
               <Trash2 className="w-3.5 h-3.5" /> Liste leeren
             </button>
           </div>

@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import ModelKindTag from "@/components/studio/ModelKindTag";
 import BulkMediaImport from "@/components/studio/BulkMediaImport";
+import { getImportState, subscribeImport, runInBackground } from "@/lib/importRunner";
 
 const KIND_FILTERS = [
   { id: "ALLE", label: "Alle" },
@@ -52,10 +53,10 @@ export default function BulkImport({ creators = [] }) {
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState(null); // { done, total, ok, fail, current }
-  const stop = useRef(false);
+  const [job, setJob] = useState(getImportState());
 
   useEffect(() => { load(); }, []);
+  useEffect(() => subscribeImport(setJob), []);
 
   const load = async () => {
     setLoading(true);
@@ -178,42 +179,41 @@ export default function BulkImport({ creators = [] }) {
     });
 
   // Kurze Prüfung, dann gesammelt hinein: nur was antwortet, wird übernommen.
+  // Das läuft im Hintergrund weiter — du kannst in der Zeit woanders hingehen.
   const checkAndImport = async () => {
     const todo = chosen;
     if (!todo.length) return;
-    stop.current = false;
-    setProgress({ done: 0, total: todo.length, ok: 0, fail: 0, current: "" });
 
     const passed = { BILD: [], TEXT: [], VIDEO: [] };
     const failed = {};
-    let ok = 0;
-    let fail = 0;
 
-    for (const r of todo) {
-      if (stop.current) break;
-      setProgress((p) => ({ ...p, current: r.label }));
-      try {
-        if (r.kind === "BILD") {
-          const res = await base44.functions.invoke("hfGenerate", {
-            modelId: r.id,
-            source: "HUGGING_FACE",
-            prompt: PROMPT_IMAGE,
-          });
-          if (res.data?.error) throw new Error(res.data.error);
-        } else if (r.kind === "TEXT") {
-          const res = await base44.functions.invoke("hfChat", { modelId: r.id, prompt: PROMPT_TEXT });
-          if (res.data?.error) throw new Error(res.data.error);
-          if (!res.data?.text) throw new Error("Keine Antwort erhalten.");
-        }
-        // Video: kein Probelauf — ein Testvideo dauert zu lang, geprüft ist der aktive Anbieter.
-        passed[r.kind].push(r);
-        ok += 1;
-      } catch (e) {
-        failed[r.key] = e.message || "Hat nicht geantwortet.";
-        fail += 1;
-      }
-      setProgress((p) => ({ ...p, done: p.done + 1, ok, fail }));
-    }
+    const started = await runInBackground({
+      title: "Modelle werden geprüft",
+      tasks: todo.map((r) => ({
+        label: r.label,
+        run: async () => {
+          try {
+            if (r.kind === "BILD") {
+              const res = await base44.functions.invoke("hfGenerate", {
+                modelId: r.id,
+                source: "HUGGING_FACE",
+                prompt: PROMPT_IMAGE,
+              });
+              if (res.data?.error) throw new Error(res.data.error);
+            } else if (r.kind === "TEXT") {
+              const res = await base44.functions.invoke("hfChat", { modelId: r.id, prompt: PROMPT_TEXT });
+              if (res.data?.error) throw new Error(res.data.error);
+              if (!res.data?.text) throw new Error("Keine Antwort erhalten.");
+            }
+            // Video: kein Probelauf — ein Testvideo dauert zu lang, geprüft ist der aktive Anbieter.
+            passed[r.kind].push(r);
+          } catch (e) {
+            failed[r.key] = e.message || "Hat nicht geantwortet.";
+          }
+        },
+      })),
+    });
+    if (!started) return;
 
     const asRow = (r) => ({
       name: (r.id.split("/").pop() || r.label || "").slice(0, 80),
@@ -247,10 +247,10 @@ export default function BulkImport({ creators = [] }) {
       done.forEach((k) => next.delete(k));
       return next;
     });
-    setProgress(null);
+    const failCount = Object.keys(failed).length;
     toast({
-      title: `${ok} übernommen`,
-      description: fail ? `${fail} liefen nicht und blieben draußen.` : "Alle haben die Prüfung bestanden.",
+      title: `${done.size} übernommen`,
+      description: failCount ? `${failCount} liefen nicht und blieben draußen.` : "Alle haben die Prüfung bestanden.",
     });
   };
 
@@ -365,7 +365,7 @@ export default function BulkImport({ creators = [] }) {
         </button>
         <button
           onClick={load}
-          disabled={!!progress || busy}
+          disabled={job.running || busy}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-elevated border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Neu laden
@@ -375,15 +375,15 @@ export default function BulkImport({ creators = [] }) {
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <button
           onClick={checkAndImport}
-          disabled={!!progress || busy || chosen.length === 0}
+          disabled={job.running || busy || chosen.length === 0}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
         >
-          {progress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          {job.running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
           Prüfen &amp; übernehmen ({chosen.length})
         </button>
         <button
           onClick={toggleEnabled}
-          disabled={!!progress || busy || chosenTaken.length === 0}
+          disabled={job.running || busy || chosenTaken.length === 0}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-elevated border border-border text-sm font-semibold text-foreground disabled:opacity-50"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
@@ -394,19 +394,10 @@ export default function BulkImport({ creators = [] }) {
         </p>
       </div>
 
-      {progress && (
-        <div className="mb-5 rounded-xl border border-primary/30 bg-elevated p-4">
-          <p className="text-sm text-foreground">
-            Läuft … {progress.done} / {progress.total} geprüft — {progress.ok} laufen, {progress.fail} nicht
-          </p>
-          {progress.current && <p className="text-[11px] text-muted-foreground mt-1 truncate">Gerade dran: {progress.current}</p>}
-          <button
-            onClick={() => { stop.current = true; }}
-            className="mt-3 px-4 py-1.5 rounded-full bg-background border border-border text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Stoppen
-          </button>
-        </div>
+      {job.running && (
+        <p className="mb-5 text-[13px] font-semibold text-muted-foreground">
+          Läuft im Hintergrund weiter — der Fortschritt steht unten rechts in der Ecke.
+        </p>
       )}
 
       {visible.length === 0 ? (
