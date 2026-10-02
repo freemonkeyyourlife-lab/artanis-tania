@@ -6,10 +6,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { uploadDataUrl } from "@/lib/mediaUpload";
+import { addGalleryItems } from "@/lib/gallery";
 
 // Bilder direkt im Charakter erzeugen — seine eigenen Bilder sind dabei die Vorlage,
 // damit das Gesicht in jedem neuen Bild gleich bleibt.
-export default function CharacterImageStudio({ name, avatar, referenceImages, onAvatar, onAddReference }) {
+export default function CharacterImageStudio({ creatorId, name, avatar, referenceImages, onAvatar, onAddReference }) {
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [animated, setAnimated] = useState(false);
@@ -47,16 +48,23 @@ export default function CharacterImageStudio({ name, avatar, referenceImages, on
     }
   };
 
+  // Was hier entsteht, landet genauso in der Galerie des Profils wie ein Upload.
+  const keep = async (url) => {
+    await addGalleryItems({ urls: [url], creatorId, creatorName: name });
+  };
+
   const keepAsAvatar = async () => {
     const url = await uploadDataUrl(result, `${name || "charakter"}-hauptbild.png`);
     onAvatar(url);
-    toast({ title: "Hauptbild gesetzt" });
+    await keep(url);
+    toast({ title: "Hauptbild gesetzt", description: "Liegt jetzt auch in der Galerie des Profils." });
   };
 
   const keepAsReference = async () => {
     const url = await uploadDataUrl(result, `${name || "charakter"}-${Date.now()}.png`);
     onAddReference(url);
-    toast({ title: "Als Referenz gemerkt", description: "Neue Bilder treffen sie damit noch genauer." });
+    await keep(url);
+    toast({ title: "Als Referenz gemerkt", description: "Liegt jetzt auch in der Galerie des Profils." });
   };
 
   return (

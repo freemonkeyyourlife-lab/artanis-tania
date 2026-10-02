@@ -62,8 +62,17 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
 
   const uploadFile = async (file) => {
     const res = await base44.integrations.Core.UploadPublicFile({ file });
-    // Jedes hochgeladene Bild wird gleich auch ein Galerie-Eintrag im Profil.
-    setGalleryQueue((q) => [...q, res.file_url]);
+    // Jedes hochgeladene Bild wird sofort ein Galerie-Eintrag im Profil.
+    // Bei einem neuen Charakter gibt es das Profil noch nicht — dann kommt es beim Speichern dazu.
+    if (initial?.id) {
+      await addGalleryItems({
+        urls: [res.file_url],
+        creatorId: initial.id,
+        creatorName: form.stageName.trim() || initial.stageName,
+      });
+    } else {
+      setGalleryQueue((q) => [...q, res.file_url]);
+    }
     return res.file_url;
   };
 
@@ -265,6 +274,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
 
         <div className="sm:col-span-2">
           <CharacterImageStudio
+            creatorId={initial?.id}
             name={form.stageName}
             avatar={form.avatar}
             referenceImages={form.referenceImages}
