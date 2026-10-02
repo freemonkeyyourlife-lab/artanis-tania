@@ -28,11 +28,12 @@ export default function ExperiencePlayer() {
   const [displayName, setDisplayName] = useState(() => {
     try { return localStorage.getItem("display_name") || "Guest"; } catch { return "Guest"; }
   });
-  const [concierge, setConcierge] = useState(null);
+  const [concierges, setConcierges] = useState([]);
   const [tips, setTips] = useState({});
   const [speaking, setSpeaking] = useState(false);
   const audioRef = useRef(null);
   const askedRef = useRef(new Set());
+  const runRef = useRef(0);
 
   useEffect(() => { load(); return () => audioRef.current?.pause(); }, [id]);
   useEffect(() => {
@@ -58,8 +59,9 @@ export default function ExperiencePlayer() {
       });
       Object.keys(map).forEach(k => map[k].sort((a, b) => (a.order || 0) - (b.order || 0)));
       setChoices(map);
-      const narrators = await base44.entities.Narrator.filter({ active: true }, "order", 1).catch(() => ({ items: [] }));
-      setConcierge(narrators.items?.[0] || null);
+      // Bis zu zwei Erzählerinnen begleiten die Story — sie wechseln sich ab.
+      const found = await base44.entities.Narrator.filter({ active: { $ne: false } }, "order", 2).catch(() => ({ items: [] }));
+      setConcierges(found.items || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -68,7 +70,7 @@ export default function ExperiencePlayer() {
   const stageChoices = currentStage ? (choices[currentStage.id] || []) : [];
   const progress = stages.length > 0 ? ((currentStageIdx + 1) / stages.length) * 100 : 0;
 
-  // Der Concierge meldet sich einmal pro Station — danach steht sein Satz fest.
+  // Die Erzählerinnen melden sich einmal pro Station — danach steht ihr Satz fest.
   useEffect(() => {
     const key = currentStage?.id;
     if (!key || askedRef.current.has(key)) return;
@@ -76,7 +78,7 @@ export default function ExperiencePlayer() {
     setTips((t) => ({ ...t, [key]: { loading: true } }));
     let alive = true;
     conciergeTip({
-      narrator: concierge,
+      narrators: concierges,
       experience,
       stage: currentStage,
       index: currentStageIdx,
@@ -86,24 +88,38 @@ export default function ExperiencePlayer() {
       .then((res) => { if (alive) setTips((t) => ({ ...t, [key]: { ...res, loading: false } })); })
       .catch(() => { if (alive) setTips((t) => ({ ...t, [key]: { loading: false } })); });
     return () => { alive = false; };
-  }, [currentStage?.id, concierge]);
-
-  const speakTip = async (text) => {
-    if (!text) return;
-    try {
-      const res = await base44.integrations.Core.GenerateSpeech({ text, voice: concierge?.voice || "honey" });
-      const audio = new Audio(res.url);
-      audioRef.current = audio;
-      setSpeaking(true);
-      audio.onended = () => setSpeaking(false);
-      audio.onerror = () => setSpeaking(false);
-      await audio.play();
-    } catch (e) { setSpeaking(false); }
-  };
+  }, [currentStage?.id, concierges]);
 
   const stopSpeak = () => {
+    runRef.current += 1;
     audioRef.current?.pause();
     setSpeaking(false);
+  };
+
+  // Jede Zeile mit ihrer eigenen Stimme — erst sie, dann die andere.
+  const playLines = async (lines) => {
+    if (!lines?.length) return;
+    stopSpeak();
+    const run = runRef.current;
+    setSpeaking(true);
+    for (const line of lines) {
+      if (runRef.current !== run) return;
+      const person = concierges[line.who] || concierges[0];
+      try {
+        const res = await base44.integrations.Core.GenerateSpeech({ text: line.text, voice: person?.voice || "honey" });
+        if (runRef.current !== run) return;
+        await new Promise((resolve) => {
+          const audio = new Audio(res.url);
+          audioRef.current = audio;
+          audio.onended = resolve;
+          audio.onerror = resolve;
+          audio.play().catch(resolve);
+        });
+      } catch (e) {
+        /* weiter mit der nächsten Zeile */
+      }
+    }
+    if (runRef.current === run) setSpeaking(false);
   };
 
   const goToStage = (stageId) => {
@@ -236,12 +252,12 @@ export default function ExperiencePlayer() {
       {/* Der Concierge schaut über die Schulter */}
       <div className="absolute top-32 lg:top-36 left-4 lg:left-6 z-20 pointer-events-auto">
         <ConciergeTip
-          narrator={concierge}
-          tip={tips[currentStage.id]?.tip}
+          narrators={concierges}
+          lines={tips[currentStage.id]?.lines || []}
           nudge={tips[currentStage.id]?.nudge}
           loading={!!tips[currentStage.id]?.loading}
           speaking={speaking}
-          onSpeak={() => speakTip(tips[currentStage.id]?.tip)}
+          onSpeak={() => playLines(tips[currentStage.id]?.lines)}
           onStop={stopSpeak}
         />
       </div>

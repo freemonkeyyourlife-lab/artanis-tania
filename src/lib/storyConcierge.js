@@ -1,28 +1,39 @@
 import { base44 } from "@/api/base44Client";
-import { kindOf } from "@/lib/narratorStyle";
+import { narratorBriefing } from "@/lib/narratorStyle";
 
 const SCHEMA = {
   type: "object",
   properties: {
-    tip: { type: "string" },
+    lines: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          who: { type: "number" },
+          text: { type: "string" },
+        },
+      },
+    },
     nudge: { type: "string" },
   },
-  required: ["tip", "nudge"],
+  required: ["lines", "nudge"],
 };
 
 // Der Concierge sieht, wo die Spielerin gerade steht, und sagt etwas dazu.
-export async function conciergeTip({ narrator, experience, stage, index, count, history = [] }) {
-  const kind = narrator ? kindOf(narrator.kind) : null;
+// Sind zwei Erzählerinnen dabei, spielen sie sich den Ball zu.
+export async function conciergeTip({ narrators = [], experience, stage, index, count, history = [] }) {
+  const two = narrators.length > 1;
 
   const prompt = [
-    narrator
-      ? `Du bist ${narrator.name}, ${kind.label} in einem Story-Spiel. ${kind.prompt}`
-      : "Du bist der Concierge eines Story-Spiels und begleitest die Spielerin.",
-    narrator?.personality ? `Deine Art: ${narrator.personality}` : "",
+    "Du begleitest eine Spielerin durch ein Story-Spiel und schaust ihr über die Schulter.",
+    `# Deine Erzählerinnen\n${narratorBriefing(narrators)}`,
     `Die Geschichte heißt „${experience?.title || "ohne Titel"}".`,
     `Du bist bei Station ${index + 1} von ${count}: ${stage?.title || "ohne Titel"} — ${stage?.overlayText || ""}`.trim(),
     history.length ? `Bisher hat sie: ${history.join(", ")}.` : "",
-    "Sag ihr in 1 bis 2 kurzen Sätzen, was du siehst und worauf du sie neugierig machst. Sprich sie direkt an und duze sie.",
+    two
+      ? 'Sag in 2 bis 3 kurzen Zeilen, was du siehst und worauf du sie neugierig machst. "who" ist die Nummer der Erzählerin von oben. Sie wechseln sich ab und greifen einander auf — wie zwei, die sich den Ball zuspielen, ohne sich zu wiederholen.'
+      : 'Sag in 1 bis 2 kurzen Zeilen, was du siehst und worauf du sie neugierig machst. "who" ist immer 0.',
+    "Sprich sie direkt an und duze sie.",
     '"nudge" ist ein Hinweis in höchstens 6 Wörtern, was sie jetzt tun soll.',
     "Keine Beschreibung, keine Anführungszeichen, keine Regieanweisungen.",
   ]
