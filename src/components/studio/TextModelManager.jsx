@@ -16,6 +16,7 @@ export default function TextModelManager() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(null);
+  const [manualId, setManualId] = useState("");
   const [editingDesc, setEditingDesc] = useState(null);
   const [descDraft, setDescDraft] = useState("");
 
@@ -66,6 +67,7 @@ export default function TextModelManager() {
         enabled: true,
       });
       await load();
+      setManualId("");
       toast({ title: "Läuft — übernommen", description: "Im Chat jetzt als Modell wählbar." });
     } catch (e) {
       toast({ title: "Läuft nicht", description: e.message, variant: "destructive" });
@@ -150,6 +152,28 @@ export default function TextModelManager() {
               </button>
             </div>
           ))}
+        </div>
+        <div className="mt-5 pt-5 border-t border-border">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Eigenes Modell eintragen</p>
+          <p className="text-[11px] text-muted-foreground mb-3">
+            Kennst du die Modell-ID schon? Trag sie direkt ein — wir machen denselben Probelauf, bevor sie übernommen wird.
+          </p>
+          <div className="flex gap-2">
+            <input
+              value={manualId}
+              onChange={(e) => setManualId(e.target.value)}
+              placeholder="z. B. Qwen/Qwen3-8B"
+              className={inputCls}
+            />
+            <button
+              onClick={() => add({ id: manualId.trim() })}
+              disabled={!manualId.trim() || adding === manualId.trim()}
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold whitespace-nowrap disabled:opacity-50"
+            >
+              {adding === manualId.trim() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              {adding === manualId.trim() ? "Probiert …" : "Prüfen & übernehmen"}
+            </button>
+          </div>
         </div>
       </div>
 

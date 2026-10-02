@@ -1,17 +1,56 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 
-// Aus einer fremden Seite nur den lesbaren Text holen.
-function stripHtml(html: string) {
-  return String(html)
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
+// Zeichen wieder lesbar machen und Leerraum zusammenziehen.
+function clean(s: string) {
+  return String(s)
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// Aus einer fremden Seite nur den lesbaren Text holen.
+function stripHtml(html: string) {
+  return clean(
+    String(html)
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+  );
+}
+
+// Charakterseiten wie Soulkyn bauen ihren Text erst im Browser auf. In der
+// Rohdatei steht der Charakter trotzdem — in den Meta-Angaben, im Titel und in
+// den JSON-LD-Blöcken. Genau die lesen wir mit aus, sonst käme fast nichts an.
+function readPage(html: string) {
+  const parts: string[] = [];
+
+  const meta = (key: string) => {
+    const a = new RegExp(`<meta[^>]+(?:name|property)=["']${key}["'][^>]*content=["']([^"']+)["']`, 'i');
+    const b = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]*(?:name|property)=["']${key}["']`, 'i');
+    return clean(html.match(a)?.[1] || html.match(b)?.[1] || '');
+  };
+  for (const key of ['og:title', 'og:description', 'twitter:description', 'description', 'keywords']) {
+    const value = meta(key);
+    if (value) parts.push(value);
+  }
+
+  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  if (title) parts.push(clean(title));
+
+  const blocks = html.match(/<script[^>]+application\/ld\+json[^>]*>[\s\S]*?<\/script>/gi) || [];
+  for (const block of blocks) {
+    const inner = stripHtml(block);
+    if (inner) parts.push(inner.slice(0, 3000));
+  }
+
+  parts.push(stripHtml(html));
+
+  return [...new Set(parts.filter(Boolean))].join('\n\n').slice(0, 16000);
 }
 
 export default async function (req: Request): Promise<Response> {
@@ -32,16 +71,36 @@ export default async function (req: Request): Promise<Response> {
     let material = text;
     if (sourceUrl) {
       try {
-        const res = await fetch(sourceUrl);
+        const res = await fetch(sourceUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36',
+            'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
+          },
+        });
         if (res.ok) {
           const raw = await res.text();
-          material += (material ? '\n\n' : '') + stripHtml(raw).slice(0, 14000);
+          material += (material ? '\n\n' : '') + readPage(raw);
         }
       } catch (e) {
         console.error('Link nicht erreichbar:', sourceUrl);
       }
     }
     const fileUrls = fileUrl ? [fileUrl] : [];
+
+    // Seiten wie Soulkyn wehren Bots ab — direkt kommt da nichts an. Dann holen
+    // wir den Charakter über die Web-Suche, wo die Seite längst erfasst ist.
+    if (!material && sourceUrl) {
+      try {
+        const looked = await base44.integrations.Core.InvokeLLM({
+          prompt: `Rufe die Seite ${sourceUrl} auf und gib alles wieder, was dort über diesen Charakter steht: Name, Aussehen, Wesen, Vorgeschichte, Vorlieben, Sprache, Eigenheiten und den Begrüßungssatz. Nur das, was wirklich auf der Seite steht — nichts dazuerfinden.`,
+          add_context_from_internet: true,
+          model: 'gemini_3_flash',
+        });
+        material = typeof looked === 'string' ? looked.trim() : '';
+      } catch (e) {
+        console.error('Web-Suche nach dem Link fehlgeschlagen:', e.message);
+      }
+    }
 
     if (!material && fileUrls.length === 0) {
       return Response.json({ error: 'Es kam nichts an, was wir lesen konnten. Füg Text ein oder leg eine Datei rein.' }, { status: 400 });

@@ -158,10 +158,13 @@ export default function DockForm({ onDone }) {
         <input
           value={sourceUrl}
           onChange={(e) => setSourceUrl(e.target.value)}
-          placeholder="oder ein Link von woanders"
+          placeholder="Link einfügen — z. B. https://soulkyn.com/l/de-DE/@name"
           className={cn(inputCls, "flex-1 min-w-[220px]")}
         />
       </div>
+      <p className="text-[11px] text-muted-foreground mb-3">
+        Auch Seiten, die ihren Text erst im Browser aufbauen (Soulkyn, Character-Karten und ähnliche) — wir holen Name, Beschreibung und Wesen direkt von dort.
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <div>
