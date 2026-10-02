@@ -12,7 +12,8 @@
       "type": "string",
       "enum": [
         "GRUNDSTIMME",
-        "ELEVENLABS"
+        "ELEVENLABS",
+        "VIBE_TTS"
       ],
       "default": "GRUNDSTIMME"
     },

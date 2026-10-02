@@ -12,6 +12,13 @@ import HelpButton from "@/components/HelpButton";
 
 const input = "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
 
+// Die Engines, aus denen eine Stimme sprechen kann.
+const ENGINES = [
+  { id: "GRUNDSTIMME", label: "Grundstimme", hint: "spricht direkt im Browser" },
+  { id: "ELEVENLABS", label: "ElevenLabs", hint: "geklonte Stimme" },
+  { id: "VIBE_TTS", label: "Vibe TTS", hint: "Soulkyn-Engine" },
+];
+
 // Das Modul: eine Stimme einsprechen oder hochladen — und mit den Reglern
 // zur passenden Stimme machen.
 export default function VoiceForm({ initial, onSaved, onCancel }) {
@@ -193,6 +200,25 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
       <div>
         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Woher hast du sie?</label>
         <input value={form.originNote} onChange={(e) => set("originNote", e.target.value)} placeholder="z. B. selbst eingesprochen, von Kollegin X bekommen, gekauft bei …" className={input} />
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground mb-2">Sprach-Engine</p>
+        <div className="flex flex-wrap gap-2">
+          {ENGINES.map((e) => (
+            <button
+              key={e.id}
+              type="button"
+              onClick={() => set("provider", e.id)}
+              className={cn(
+                "px-4 py-2 rounded-full text-xs font-semibold border transition-colors",
+                form.provider === e.id ? "bg-primary text-primary-foreground border-primary" : "bg-elevated border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {e.label} <span className="font-normal opacity-70">· {e.hint}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
