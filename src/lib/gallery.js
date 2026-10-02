@@ -62,3 +62,35 @@ export async function addGalleryItems({ urls = [], creatorId, creatorName = "" }
     }))
   );
 }
+
+// Nachfassen: Hauptbild und Referenzen eines Charakters werden nachgetragen,
+// wenn sie noch nicht in seiner Galerie stehen.
+export async function syncCreatorGalleries(creators = []) {
+  const list = creators.filter((c) => c.id && (c.avatar || (c.referenceImages || []).length));
+  if (!list.length) return 0;
+
+  const page = await base44.entities.Content.filter(
+    { creatorId: { $in: list.map((c) => c.id) } },
+    { fields: ["creatorId", "fullAsset", "thumbnail"], limit: 2000 }
+  );
+  const have = new Set((page.items || []).map((c) => `${c.creatorId}|${c.fullAsset || c.thumbnail}`));
+
+  const byCreator = new Map();
+  for (const c of list) {
+    for (const url of [c.avatar, ...(c.referenceImages || [])]) {
+      if (!url) continue;
+      const key = `${c.id}|${url}`;
+      if (have.has(key)) continue;
+      have.add(key);
+      if (!byCreator.has(c.id)) byCreator.set(c.id, { name: c.stageName || "", urls: [] });
+      byCreator.get(c.id).urls.push(url);
+    }
+  }
+
+  let added = 0;
+  for (const [creatorId, entry] of byCreator) {
+    await addGalleryItems({ urls: entry.urls, creatorId, creatorName: entry.name });
+    added += entry.urls.length;
+  }
+  return added;
+}

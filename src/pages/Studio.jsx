@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Plus, Pencil, Trash2, BookOpen, Mic, ImagePlus, Maximize } from "lucide-react";
@@ -8,6 +8,8 @@ import CharacterForm from "@/components/studio/CharacterForm";
 import CharacterQuickImages from "@/components/studio/CharacterQuickImages";
 import CharacterVoiceBox from "@/components/studio/CharacterVoiceBox";
 import { assignVoiceToCreator } from "@/lib/voiceAssign";
+import { syncCreatorGalleries } from "@/lib/gallery";
+import { useToast } from "@/components/ui/use-toast";
 import StoryManager from "@/components/studio/StoryManager";
 import TopicManager from "@/components/studio/TopicManager";
 import ContentManager from "@/components/studio/ContentManager";
@@ -76,7 +78,9 @@ const TAB_GROUPS = [
 ];
 
 export default function Studio() {
+  const { toast } = useToast();
   const [tab, setTab] = useState("guide");
+  const synced = useRef(false); // Nachfassen läuft einmal pro Öffnen
   const [creators, setCreators] = useState([]);
   const [voices, setVoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +89,20 @@ export default function Studio() {
   const [imagesFor, setImagesFor] = useState(null); // Charakter, dessen Bilder gerade offen sind
 
   useEffect(() => { load(); }, []);
+
+  // Nachfassen: was ein Charakter an Bildern schon hat, aber noch nicht in der
+  // Galerie steht, kommt automatisch dazu.
+  const syncGalleries = async (data) => {
+    try {
+      const added = await syncCreatorGalleries(data);
+      if (added) {
+        toast({ title: `${added} Bilder nachgetragen`, description: "Stehen jetzt in den Galerien der Profile." });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const load = async () => {
     try {
       const [data, v] = await Promise.all([
@@ -93,6 +111,7 @@ export default function Studio() {
       ]);
       setCreators(data.sort((a, b) => (a.active === false ? 1 : 0) - (b.active === false ? 1 : 0)));
       setVoices(v);
+      if (!synced.current) { synced.current = true; syncGalleries(data); }
     }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
