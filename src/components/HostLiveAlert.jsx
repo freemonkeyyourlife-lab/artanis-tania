@@ -44,7 +44,7 @@ export default function HostLiveAlert() {
   if (room.startedAt && room.startedAt === seen) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md">
+    <div className="fixed bottom-24 lg:bottom-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md">
       {/* Die ganze Meldung ist der Weg hinein — kein Umweg über die Navigation. */}
       <Link
         to={`/call/${room.token}`}

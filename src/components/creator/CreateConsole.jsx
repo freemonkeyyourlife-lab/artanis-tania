@@ -69,7 +69,7 @@ export default function CreateConsole() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-40 lg:bottom-24 left-4 z-[70] inline-flex items-center gap-2 pl-3 pr-5 py-2.5 rounded-full glass-strong border-2 border-primary/40 text-[14px] font-bold text-foreground accent-glow"
+          className="fixed bottom-64 lg:bottom-48 left-4 z-[70] inline-flex items-center gap-2 pl-3 pr-5 py-2.5 rounded-full glass-strong border-2 border-primary/40 text-[14px] font-bold text-foreground accent-glow"
         >
           <Wand2 className="w-4 h-4 text-primary" /> Kreieren
         </button>

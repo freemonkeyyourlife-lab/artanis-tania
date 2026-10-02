@@ -52,7 +52,7 @@ export default function FloatingCall() {
 
   if (collapsed) {
     return (
-      <div className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 px-3 py-2 rounded-full glass-strong border border-border shadow-2xl">
+      <div className="fixed bottom-24 lg:bottom-4 right-4 z-[60] flex items-center gap-2 px-3 py-2 rounded-full glass-strong border border-border shadow-2xl">
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
         <span className="text-xs font-semibold text-foreground">Chatraum {roomNumber}</span>
         <span className="text-[11px] text-muted-foreground">{count} dabei</span>
@@ -68,7 +68,7 @@ export default function FloatingCall() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl glass-strong border border-border shadow-2xl overflow-hidden">
+    <div className="fixed bottom-24 lg:bottom-4 right-4 z-[60] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl glass-strong border border-border shadow-2xl overflow-hidden">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
         <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
         <span className="text-xs font-semibold text-foreground flex-1 truncate">Chatraum {roomNumber}</span>
