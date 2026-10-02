@@ -19,6 +19,7 @@ export const MODULE_TYPES = [
   { path: "/request", label: "Wünsche", description: "Wünsche eintragen und abstimmen." },
   { path: "/planung", label: "Content-Planer", description: "Wünsche übernehmen und den Plan für die nächsten Inhalte ziehen." },
   { path: "/paylinks", label: "Kasse", description: "Zahlungen anfordern und bezahlen." },
+  { path: "/verkauf", label: "Verkaufs-Dashboard", description: "Umsatz, offene Beträge, Abos und die letzten Zahlungen." },
   { path: "/contests", label: "Wettbewerbe", description: "Wettbewerbe und ihre Beiträge." },
   { path: "/studio", label: "Studio", description: "Hier legst du Charaktere, Stimmen und Inhalte an." },
   { path: "/stimmen", label: "Stimmen", description: "Die Stimmbank mit allen Stimmen." },

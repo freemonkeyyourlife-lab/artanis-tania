@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 // ausblenden und eigene dazulegen — gespeichert wird das in SiteLayout.
 export const DEFAULT_MENU = [
   { id: "paylinks", label: "Kasse", path: "/paylinks", hidden: false },
+  { id: "verkauf", label: "Verkaufs-Dashboard", path: "/verkauf", hidden: false },
   { id: "therapy", label: "Sprechstunde", path: "/therapy", hidden: false },
   { id: "request", label: "Wünsche", path: "/request", hidden: false },
   { id: "explore", label: "Entdecken", path: "/explore", hidden: false },

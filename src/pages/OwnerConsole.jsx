@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic, Terminal, Map as MapIcon, CalendarRange } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic, Terminal, Map as MapIcon, CalendarRange, Receipt } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -21,6 +21,7 @@ import ModuleEditor from "@/components/owner/ModuleEditor";
 import SiteOverview from "@/components/owner/SiteOverview";
 import WindowLayoutEditor from "@/components/owner/WindowLayoutEditor";
 import PlanManager from "@/components/studio/PlanManager";
+import SalesOverview from "@/components/sales/SalesOverview";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -36,6 +37,7 @@ const TABS = [
   { id: "baukasten", label: "Baukasten", icon: Blocks },
   { id: "voices", label: "Stimmen", icon: Mic },
   { id: "plan", label: "Content-Plan", icon: CalendarRange },
+  { id: "sales", label: "Verkauf", icon: Receipt },
   { id: "programmierer", label: "Programmierer", icon: BookOpen },
   { id: "data", label: "Sichern", icon: Database },
 ];
@@ -569,6 +571,24 @@ export default function OwnerConsole() {
               Aktuell drin: {counts ? Math.max(0, (c.users || 0) - 1) : "…"} außer dir.
             </p>
           </div>
+        </>
+      )}
+
+      {tab === "sales" && (
+        <>
+          <GuideBox
+            title="Was hereinkommt"
+            steps={[
+              "Oben siehst du, was bezahlt wurde und was noch offen steht.",
+              "Der Balkenverlauf zeigt Monat für Monat, was eingegangen ist.",
+              "Top-Kunden stehen rechts — nach Summe der bezahlten Links.",
+              "Unten die letzten Zahlungen: ein Klick öffnet den Link.",
+              "Dieselbe Ansicht findest du auf der Seite Verkaufs-Dashboard.",
+            ]}
+          >
+            Hier laufen alle Zahlungen zusammen — pro Kunde und pro Abo.
+          </GuideBox>
+          <SalesOverview />
         </>
       )}
 

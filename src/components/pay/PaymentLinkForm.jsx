@@ -216,7 +216,7 @@ export default function PaymentLinkForm({ defaultAmount = "", defaultTitle = "",
         <input
           value={targetName}
           onChange={(e) => setTargetName(e.target.value)}
-          placeholder="Für wen? (optional, nur als Notiz)"
+          placeholder="Für welchen Kunden? (optional — erscheint im Dashboard)"
           className="w-full px-4 py-2.5 rounded-full bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
         />
       )}

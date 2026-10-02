@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { MessageSquare, Sparkles, ArrowRight, Crown, Bot, Calendar, Link2, CalendarRange } from "lucide-react";
+import { MessageSquare, Sparkles, ArrowRight, Crown, Bot, Calendar, Link2, CalendarRange, Receipt } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import PersonaCard from "@/components/PersonaCard";
 import CharacterStoryCard from "@/components/CharacterStoryCard";
@@ -344,18 +344,28 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Content-Planer — derselbe Planer wie im Studio und in der Konsole. */}
+            {/* Besitzer-Werkzeuge — dieselben Ansichten wie im Studio und in der Konsole. */}
             {isAdmin && (
               <div className="rounded-2xl border border-border bg-card p-5">
-                <h3 className="font-display text-lg text-foreground mb-2 flex items-center gap-2">
-                  <CalendarRange className="w-4 h-4 text-primary" /> Content-Planer
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Wünsche übernehmen und den Plan für die nächsten Inhalte ziehen — dieselbe Ansicht wie im Studio.
-                </p>
-                <Link to="/planung" className="block w-full py-2.5 rounded-full glass-btn text-sm font-semibold text-center text-foreground text-gloss">
-                  Planer öffnen
-                </Link>
+                <h3 className="font-display text-lg text-foreground mb-4">Werkzeuge</h3>
+                <div className="space-y-3">
+                  <Link to="/planung" className="flex items-center gap-3 p-3 rounded-xl bg-elevated hover:bg-popover transition-colors">
+                    <CalendarRange className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Content-Planer</p>
+                      <p className="text-[11px] text-muted-foreground">Wünsche in den Plan übernehmen</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </Link>
+                  <Link to="/verkauf" className="flex items-center gap-3 p-3 rounded-xl bg-elevated hover:bg-popover transition-colors">
+                    <Receipt className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Verkaufs-Dashboard</p>
+                      <p className="text-[11px] text-muted-foreground">Umsatz, offene Beträge und Abos</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </Link>
+                </div>
               </div>
             )}
 

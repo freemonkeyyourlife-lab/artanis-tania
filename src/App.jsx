@@ -55,6 +55,7 @@ import Baukasten from '@/pages/Baukasten';
 import Anleitung from '@/pages/Anleitung';
 import Archive from '@/pages/Archive';
 import ContentPlan from '@/pages/ContentPlan';
+import SalesDashboard from '@/pages/SalesDashboard';
 import VoiceStudio from '@/pages/VoiceStudio';
 import HelpAssistant from '@/components/help/HelpAssistant';
 import { CallProvider } from '@/lib/CallContext';
@@ -137,6 +138,7 @@ const AuthenticatedApp = () => {
         <Route path="/anleitung" element={<Anleitung />} />
         <Route path="/archiv" element={<Archive />} />
         <Route path="/planung" element={<ContentPlan />} />
+        <Route path="/verkauf" element={<SalesDashboard />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>
