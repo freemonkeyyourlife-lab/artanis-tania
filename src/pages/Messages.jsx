@@ -24,6 +24,7 @@ import { speechPrompt, styleFor, SPEECH_STYLES } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
 import { splitScene, playScene } from "@/lib/sceneVoice";
 import VoiceChatBar from "@/components/voice/VoiceChatBar";
+import VoiceEditorDialog from "@/components/voice/VoiceEditorDialog";
 import SpeakerBar from "@/components/chat/SpeakerBar";
 import { playLevelFor, setPlayLevelFor, playPrompt } from "@/lib/playStyle";
 import VoiceConvertButton from "@/components/voice/VoiceConvertButton";
@@ -1612,6 +1613,7 @@ export default function Messages() {
                     voices={voices}
                     onVoiceSaved={load}
                   />
+                  <VoiceEditorDialog title="Stimmen-Editor — Stimme zuordnen und fein einstellen" />
                 </div>
               )}
 

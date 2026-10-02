@@ -14,6 +14,7 @@ import { onUiCommand, takePendingUiCommand, clearUiCommand } from "@/lib/ownerUi
 import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
 import { readPreferredCamera, savePreferredCamera, phoneCameraUrl } from "@/lib/videoSource";
 import VideoSourceDialog from "@/components/call/VideoSourceDialog";
+import VoiceEditorDialog from "@/components/voice/VoiceEditorDialog";
 import { getRooms, addRoom } from "@/lib/callRooms";
 import { publicName } from "@/lib/displayName";
 
@@ -29,8 +30,9 @@ export default function VideoCall() {
   const [isOwner, setIsOwner] = useState(false);
   const [windows, setWindows] = useState(() => loadWindows());
   const [rooms, setRooms] = useState(() => getRooms());
-  // Beim Start einer neuen Video-Session einmal nach der Videoquelle fragen.
-  const [sourceOpen, setSourceOpen] = useState(true);
+  // Beim Start einer neuen Video-Session einmal nach der Videoquelle fragen —
+  // nicht, wenn du nur in einen schon laufenden Call zurückkommst.
+  const [sourceOpen, setSourceOpen] = useState(() => !(call.joined && call.session?.token === token));
   const [camChoice, setCamChoice] = useState(() => readPreferredCamera());
 
   useEffect(() => subscribeWindows(() => setWindows(loadWindows())), []);
@@ -263,6 +265,15 @@ export default function VideoCall() {
           >
             <Bot className="w-4 h-4" /> <span className="hidden sm:inline">Bot</span>
           </button>
+          {/* Mitten in der Sitzung: Kamera wechseln oder die Stimmen aufmachen. */}
+          <button
+            onClick={() => setSourceOpen(true)}
+            title="Videoquelle wechseln — Kamera am Gerät oder das Handy"
+            className="inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold bg-elevated text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <VideoIcon className="w-4 h-4" /> <span className="hidden sm:inline">Quelle</span>
+          </button>
+          <VoiceEditorDialog />
           {isOwner && (
             <button
               onClick={() => toggleWindow("share")}
@@ -356,6 +367,18 @@ export default function VideoCall() {
           )}
         </div>
       )}
+
+      {/* Auch mitten in der Sitzung: Kamera umschalten, das Handy dazuholen. */}
+      <VideoSourceDialog
+        open={sourceOpen}
+        onOpenChange={setSourceOpen}
+        devices={devices}
+        activeId={camChoice}
+        onPick={(id) => { savePreferredCamera(id); setCamChoice(id); switchDevice(id); }}
+        onListDevices={listDevices}
+        phoneUrl={phoneCameraUrl(token, roomNumber)}
+        roomNumber={roomNumber}
+      />
 
       <CallControls
         micOn={micOn}

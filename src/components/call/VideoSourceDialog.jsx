@@ -75,20 +75,23 @@ export default function VideoSourceDialog({ open, onOpenChange, devices, activeI
           )}
         </div>
 
-        <div className="pt-2 border-t border-border">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 mt-3">Handy als Kamera</p>
-          <p className="text-xs text-muted-foreground mb-3">
-            Diesen Code mit dem Handy scannen oder den Link öffnen. Das Handy kommt mit seiner Kamera in {roomNumber ? `Chatraum ${roomNumber}` : "den Raum"} — sein Bild ist für alle sichtbar.
-          </p>
-          {phoneUrl && <CallQr value={phoneUrl} size={150} />}
-          <button
-            onClick={copy}
-            className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-elevated text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
-            {copied ? "Link kopiert" : "Link kopieren"}
-          </button>
-        </div>
+        {/* Das Handy als zweite Kamera gibt es nur dort, wo es einen Raum gibt. */}
+        {phoneUrl && (
+          <div className="pt-2 border-t border-border">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 mt-3">Handy als Kamera</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Diesen Code mit dem Handy scannen oder den Link öffnen. Das Handy kommt mit seiner Kamera in {roomNumber ? `Chatraum ${roomNumber}` : "den Raum"} — sein Bild ist für alle sichtbar.
+            </p>
+            <CallQr value={phoneUrl} size={150} />
+            <button
+              onClick={copy}
+              className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-elevated text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Link kopiert" : "Link kopieren"}
+            </button>
+          </div>
+        )}
 
         <button
           onClick={() => onOpenChange?.(false)}

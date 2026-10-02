@@ -21,6 +21,7 @@ import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
 import DockManager from "@/components/studio/DockManager";
 import VoiceManager from "@/components/studio/VoiceManager";
+import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
 import VoiceTuner from "@/components/studio/VoiceTuner";
 import VoiceProfilesPanel from "@/components/voice/VoiceProfilesPanel";
 import CharacterTransfer from "@/components/studio/CharacterTransfer";
@@ -38,6 +39,7 @@ const TAB_GROUPS = [
       { id: "dock", label: "Dockingstation" },
       { id: "baukasten", label: "Baukasten" },
       { id: "voices", label: "Stimmbank" },
+      { id: "voiceeditor", label: "Stimmen-Editor" },
       { id: "voiceprofiles", label: "Stimmen-Profile" },
       { id: "generator", label: "Generator" },
       { id: "content", label: "Inhalte & Preise" },
@@ -159,6 +161,15 @@ export default function Studio() {
       {tab === "services" && <ServiceListManager />}
       {tab === "dock" && <DockManager />}
       {tab === "voices" && <VoiceManager />}
+      {tab === "voiceeditor" && (
+        <div className="glass rounded-2xl border-2 border-border p-6">
+          <p className="font-display text-2xl text-foreground">Stimmen-Editor</p>
+          <p className="text-xs text-muted-foreground mb-5">
+            Jeder Charakter mit seiner Stimme — darunter die Regler für Tonlage, Tempo und Intensität. Gilt sofort im Chat und in der Sitzung.
+          </p>
+          <VoiceByCharacter />
+        </div>
+      )}
       {tab === "voiceprofiles" && (
         <div className="glass rounded-2xl border-2 border-border p-6">
           <p className="font-display text-2xl text-foreground">Stimmen-Profile</p>

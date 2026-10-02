@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Mic, Square, PhoneOff, Loader2, Lock, SlidersHorizontal } from "lucide-react";
+import { Mic, Square, PhoneOff, Loader2, Lock, SlidersHorizontal, Camera } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import VoiceFeelControl from "@/components/voice/VoiceFeelControl";
 import { cn } from "@/lib/utils";
 import { hasProAccess } from "@/lib/proAccess";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { speakAsVoice } from "@/lib/voiceChat";
+import { readPreferredCamera, savePreferredCamera } from "@/lib/videoSource";
+import VideoSourceDialog from "@/components/call/VideoSourceDialog";
 
 const LANGUAGE_RULE = (audioOnly) =>
   `Du bist in einem ${audioOnly ? "TELEFONAT (nur Ton, kein Bild)" : "VIDEOCHAT"} und sprichst laut. Antworte deshalb IMMER auf Deutsch, in der Du-Form, kurz und gesprochen — 1 bis 3 Sätze, wie ein echter Mensch am Telefon. Keine Aufzählungen, keine Regieanweisungen, kein Sternchen-Text, keine Emojis. Nur das, was du wirklich sagen würdest.`;
@@ -45,6 +47,10 @@ export default function AiVideoCall() {
   const [camReady, setCamReady] = useState(false);
   const [voice, setVoice] = useState(null);
   const [voices, setVoices] = useState([]);
+  // Welche Kamera hier sendet — die gemerkte Wahl, umschaltbar über den Dialog.
+  const [camChoice, setCamChoice] = useState(() => readPreferredCamera());
+  const [cams, setCams] = useState([]);
+  const [sourceOpen, setSourceOpen] = useState(false);
 
   const selfRef = useRef(null);
   const streamRef = useRef(null);
@@ -73,13 +79,24 @@ export default function AiVideoCall() {
     }
   };
 
+  // Die Kameras am Gerät — für die Auswahl im Dialog.
+  const listCams = async () => {
+    try {
+      const all = await navigator.mediaDevices.enumerateDevices();
+      setCams(all.filter((d) => d.kind === "videoinput"));
+    } catch (e) { /* ohne Freigabe bleibt die Liste leer */ }
+  };
+
   // Eigene Kamera als kleines Fenster — sie sieht dich.
   useEffect(() => {
     if (audioOnly) return;
     let cancelled = false;
     (async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: camChoice ? { deviceId: { ideal: camChoice } } : true,
+          audio: false,
+        });
         if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
         streamRef.current = stream;
         if (selfRef.current) selfRef.current.srcObject = stream;
@@ -91,7 +108,7 @@ export default function AiVideoCall() {
       streamRef.current?.getTracks().forEach((t) => t.stop());
       audioRef.current?.pause();
     };
-  }, []);
+  }, [audioOnly, camChoice]);
 
   useEffect(() => {
     const t = setInterval(() => setSeconds((s) => s + 1), 1000);
@@ -292,6 +309,23 @@ export default function AiVideoCall() {
           onKeyDown={(e) => e.key === "Enter" && sendText()}
           placeholder="Oder schreiben …"
           className="flex-1 px-4 py-2.5 rounded-full bg-white/10 border border-white/15 text-sm text-white placeholder:text-white/40 focus:outline-none"
+        />
+        {!audioOnly && (
+          <button
+            onClick={() => setSourceOpen(true)}
+            title="Videoquelle wählen — welche Kamera sendet"
+            className="w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center flex-shrink-0 hover:bg-white/20 transition-colors"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
+        )}
+        <VideoSourceDialog
+          open={sourceOpen}
+          onOpenChange={setSourceOpen}
+          devices={{ video: cams }}
+          activeId={camChoice}
+          onPick={(id) => { savePreferredCamera(id); setCamChoice(id); }}
+          onListDevices={listCams}
         />
         <Dialog>
           <DialogTrigger asChild>
