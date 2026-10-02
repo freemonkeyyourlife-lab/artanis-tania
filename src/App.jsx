@@ -57,6 +57,7 @@ import Archive from '@/pages/Archive';
 import ContentPlan from '@/pages/ContentPlan';
 import SalesDashboard from '@/pages/SalesDashboard';
 import VoiceStudio from '@/pages/VoiceStudio';
+import CreatorStudio from '@/pages/CreatorStudio';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 
@@ -99,6 +100,7 @@ const AuthenticatedApp = () => {
       <Route path="/call" element={<StartCall />} />
       <Route path="/call/:token" element={<VideoCall />} />
       <Route path="/pay/:token" element={<Pay />} />
+      <Route path="/creator-studio" element={<CreatorStudio />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/artanis" element={<Artanis />} />

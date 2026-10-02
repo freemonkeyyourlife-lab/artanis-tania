@@ -1,0 +1,25 @@
+{
+  "name": "ModelSet",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "modelIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "note": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
