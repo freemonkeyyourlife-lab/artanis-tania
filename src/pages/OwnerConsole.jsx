@@ -19,6 +19,8 @@ import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
 import OwnerCommandBar from "@/components/owner/OwnerCommandBar";
 import ModuleEditor from "@/components/owner/ModuleEditor";
 import SiteOverview from "@/components/owner/SiteOverview";
+import StructureMap from "@/components/owner/StructureMap";
+import PageDirectory from "@/components/owner/PageDirectory";
 import WindowLayoutEditor from "@/components/owner/WindowLayoutEditor";
 import PlanManager from "@/components/studio/PlanManager";
 import SalesOverview from "@/components/sales/SalesOverview";
@@ -343,6 +345,8 @@ export default function OwnerConsole() {
           <GuideBox
             title="Deine App als Karte"
             steps={[
+              "Oben das Bild der App: die Leiste, ihre vier Bereiche und jeder Knopf mit der Seite, auf die er führt.",
+              "Darunter steht jede Seite mit ihrer Aufgabe — das ist die Beschreibung, was wo ist.",
               "„Erleben“ ist der Bereich, den du selbst bestückst. Ziehen am Griff oder die Zahl links ändern — so verschiebst du einen Knopf.",
               "Der Name in der Mitte ist die Beschriftung oben in der Leiste, die Liste daneben bestimmt, wohin der Klick führt.",
               "Das Auge blendet nur aus — nichts wird gelöscht. Der Papierkorb nimmt einen Knopf heraus, unten bindest du ihn wieder ein.",
@@ -352,7 +356,13 @@ export default function OwnerConsole() {
           >
             Hier siehst du die ganze App auf einen Blick: welche Bereiche es gibt, was in deiner Leiste steht und was noch nicht.
           </GuideBox>
-          <SiteOverview items={items} onChange={setItems} />
+          <StructureMap items={items} />
+          <div className="mt-5">
+            <PageDirectory items={items} />
+          </div>
+          <div className="mt-5">
+            <SiteOverview items={items} onChange={setItems} />
+          </div>
         </>
       )}
 
