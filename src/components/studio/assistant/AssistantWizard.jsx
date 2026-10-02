@@ -30,7 +30,7 @@ const STEPS = [
 
 // Der Assistent führt einmal von vorne bis hinten: Charakter, Bilder, Modell,
 // Bausteine, Stimme, Prompt. Jeder Schritt fragt — du entscheidest.
-export default function AssistantWizard() {
+export default function AssistantWizard({ origin } = {}) {
   const [mode, setMode] = useState("WISH");
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -87,9 +87,16 @@ export default function AssistantWizard() {
   return (
     <div className="glass rounded-2xl border-2 border-border p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <p className="font-display text-2xl text-foreground inline-flex items-center gap-2">
-          <Wand2 className="w-5 h-5 text-primary" /> Assistent
-        </p>
+        <div>
+          <p className="font-display text-2xl text-foreground inline-flex items-center gap-2">
+            <Wand2 className="w-5 h-5 text-primary" /> Assistent
+          </p>
+          {origin && (
+            <p className="text-[13px] font-semibold text-muted-foreground mt-1">
+              Du bist im {origin} — was soll hier entstehen?
+            </p>
+          )}
+        </div>
         <div className="flex flex-wrap gap-1.5">
           {MODES.map((m) => (
             <button

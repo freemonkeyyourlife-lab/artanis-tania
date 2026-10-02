@@ -6,7 +6,7 @@ import { Volume2, VolumeX, Square, X, MessageCircle, Wand2 } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { speakAsVoice } from "@/lib/voiceChat";
 import { fillLine, BETWEEN_LINES, RECALL_LINES, RECALL_TIPS } from "@/lib/introStory";
-import { introOpen, subscribeIntroOpen } from "@/lib/onboarding";
+import { isQuiet, subscribeQuiet } from "@/lib/onboarding";
 
 // Sie ist immer da: unten im Eck, mit Bild und Namen. Antippen heißt rückrufen —
 // sie liest vor und gibt Tipps. Und sie meldet sich zwischendurch von selbst,
@@ -22,7 +22,7 @@ export default function NarratorCompanion() {
   const [open, setOpen] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [line, setLine] = useState("");
-  const [intro, setIntro] = useState(() => introOpen());
+  const [quiet, setQuiet] = useState(() => isQuiet());
   const [muted, setMuted] = useState(() => {
     try {
       return localStorage.getItem(VOICE_KEY) === "off";
@@ -57,7 +57,7 @@ export default function NarratorCompanion() {
     })();
   }, []);
 
-  useEffect(() => subscribeIntroOpen(setIntro), []);
+  useEffect(() => subscribeQuiet(setQuiet), []);
 
   useEffect(() => {
     narratorRef.current = narrator;
@@ -109,7 +109,7 @@ export default function NarratorCompanion() {
 
   // Zwischendurch meldet sie sich — aber nur, wenn er wirklich hinschaut.
   useEffect(() => {
-    if (intro) return undefined;
+    if (quiet) return undefined;
     const call = () => {
       if (document.hidden) return;
       const text = BETWEEN_LINES[Math.floor(Math.random() * BETWEEN_LINES.length)];
@@ -123,7 +123,7 @@ export default function NarratorCompanion() {
       clearTimeout(first);
       clearInterval(every);
     };
-  }, [intro]);
+  }, [quiet]);
 
   useEffect(
     () => () => {
@@ -147,7 +147,7 @@ export default function NarratorCompanion() {
 
   const name = narrator?.name || "Erzählerin";
 
-  if (intro) return null;
+  if (quiet) return null;
 
   const face = (size) => (
     <span

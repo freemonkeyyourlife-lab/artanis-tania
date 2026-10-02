@@ -172,22 +172,27 @@ export const openIntroPreview = () => {
   window.dispatchEvent(new CustomEvent("artanis:intro-preview"));
 };
 
-// Läuft die Begrüßung gerade? Die Begleiterin im Eck hält sich dann raus —
-// sonst würden zwei Erzählerinnen gleichzeitig reden.
-let introOpenFlag = false;
-let introOpenListeners = [];
+// Braucht gerade etwas die volle Aufmerksamkeit (Begrüßung, Kreieren)? Dann
+// hält sich die Begleiterin im Eck raus — sonst redet sie dazwischen.
+const quietReasons = new Set();
+let quietFlag = false;
+let quietListeners = [];
 
-export const introOpen = () => introOpenFlag;
+export const isQuiet = () => quietFlag;
 
-export const setIntroOpen = (open) => {
-  introOpenFlag = !!open;
-  introOpenListeners.forEach((fn) => fn(introOpenFlag));
+export const holdQuiet = (reason, on) => {
+  if (on) quietReasons.add(reason);
+  else quietReasons.delete(reason);
+  const next = quietReasons.size > 0;
+  if (next === quietFlag) return;
+  quietFlag = next;
+  quietListeners.forEach((fn) => fn(quietFlag));
 };
 
-export const subscribeIntroOpen = (fn) => {
-  introOpenListeners.push(fn);
+export const subscribeQuiet = (fn) => {
+  quietListeners.push(fn);
   return () => {
-    introOpenListeners = introOpenListeners.filter((x) => x !== fn);
+    quietListeners = quietListeners.filter((x) => x !== fn);
   };
 };
 

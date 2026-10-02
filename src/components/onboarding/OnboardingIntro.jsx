@@ -8,7 +8,7 @@ import {
   saveIntroProfile,
   introSeen,
   markIntroSeen,
-  setIntroOpen,
+  holdQuiet,
 } from "@/lib/onboarding";
 
 // Das Intro beim ersten Besuch: sie kommt näher, fragt nach dem Modus und
@@ -35,8 +35,8 @@ export default function OnboardingIntro() {
 
   // Solange sie führt, bleibt die Begleiterin im Eck still.
   useEffect(() => {
-    setIntroOpen(visible);
-    return () => setIntroOpen(false);
+    holdQuiet("intro", visible);
+    return () => holdQuiet("intro", false);
   }, [visible]);
 
   const finish = async (profile = {}, goTo) => {
