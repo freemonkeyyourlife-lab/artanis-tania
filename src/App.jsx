@@ -62,6 +62,7 @@ import CreatorStudio from '@/pages/CreatorStudio';
 import PromptStudio from '@/pages/PromptStudio';
 import Sandbox from '@/pages/Sandbox';
 import UserPreview from '@/pages/UserPreview';
+import Legal from '@/pages/Legal';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import ImportStatusPill from '@/components/import/ImportStatusPill';
@@ -149,6 +150,8 @@ const AuthenticatedApp = () => {
         <Route path="/prompt" element={<PromptStudio />} />
         <Route path="/sandbox" element={<Sandbox />} />
         <Route path="/vorschau" element={<UserPreview />} />
+        <Route path="/recht" element={<Legal />} />
+        <Route path="/recht/:section" element={<Legal />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>
