@@ -33,6 +33,7 @@ export default function ExperiencePlayer() {
   const [castOpen, setCastOpen] = useState(false);
   const [tips, setTips] = useState({});
   const [speaking, setSpeaking] = useState(false);
+  const [speakingWho, setSpeakingWho] = useState(null);
   const audioRef = useRef(null);
   const askedRef = useRef(new Set());
   const runRef = useRef(0);
@@ -96,6 +97,7 @@ export default function ExperiencePlayer() {
     runRef.current += 1;
     audioRef.current?.pause();
     setSpeaking(false);
+    setSpeakingWho(null);
   };
 
   // Andere Erzählerinnen gewählt: sie fangen an dieser Station nochmal neu an.
@@ -121,6 +123,7 @@ export default function ExperiencePlayer() {
     for (const line of lines) {
       if (runRef.current !== run) return;
       const person = concierges[line.who] || concierges[0];
+      setSpeakingWho(line.who ?? 0);
       try {
         const res = await base44.integrations.Core.GenerateSpeech({ text: line.text, voice: person?.voice || "honey" });
         if (runRef.current !== run) return;
@@ -135,7 +138,7 @@ export default function ExperiencePlayer() {
         /* weiter mit der nächsten Zeile */
       }
     }
-    if (runRef.current === run) setSpeaking(false);
+    if (runRef.current === run) { setSpeaking(false); setSpeakingWho(null); }
   };
 
   const goToStage = (stageId) => {
@@ -284,6 +287,7 @@ export default function ExperiencePlayer() {
           stageCount={stages.length}
           loading={!!tips[currentStage.id]?.loading}
           speaking={speaking}
+          speakingWho={speakingWho}
           onSpeak={() => playLines(tips[currentStage.id]?.lines)}
           onStop={stopSpeak}
         />

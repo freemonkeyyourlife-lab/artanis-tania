@@ -5,6 +5,14 @@
     "name": {
       "type": "string"
     },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "WEIBLICH",
+        "MAENNLICH"
+      ],
+      "default": "WEIBLICH"
+    },
     "kind": {
       "type": "string",
       "enum": [

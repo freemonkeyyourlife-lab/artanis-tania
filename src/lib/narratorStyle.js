@@ -11,6 +11,14 @@ export const NARRATOR_KINDS = [
 
 export const NARRATOR_VOICES = BASE_VOICES;
 
+// Erzählerin oder Erzähler — jeder darf sich selbst eine Stimme geben.
+export const NARRATOR_GENDERS = [
+  { id: "WEIBLICH", label: "Erzählerin" },
+  { id: "MAENNLICH", label: "Erzähler" },
+];
+
+export const genderNoun = (gender) => (gender === "MAENNLICH" ? "Erzähler" : "Erzählerin");
+
 export const kindOf = (id) => NARRATOR_KINDS.find((k) => k.id === id) || NARRATOR_KINDS[0];
 
 export const voiceLabel = (id) => {

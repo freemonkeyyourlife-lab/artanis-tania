@@ -1,10 +1,11 @@
 import React from "react";
-import { Image } from "@/components/ui/image";
 import { Loader2, Volume2, VolumeX, Lightbulb } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { kindOf } from "@/lib/narratorStyle";
+import NarratorStatusCard from "@/components/story/NarratorStatusCard";
 
-// Das Feld, in dem der Concierge auf den Fortschritt reagiert:
-// was sie sieht, wo du gerade stehst, was jetzt dran ist.
+// Das Feld, in dem beide Erzählerinnen gleichzeitig stehen — jede mit Bild und
+// Status — und darunter, was sie zu deinem Fortschritt sagen.
 export default function ConciergeTip({
   narrators = [],
   lines = [],
@@ -13,42 +14,36 @@ export default function ConciergeTip({
   stageCount = 0,
   loading,
   speaking,
+  speakingWho = null,
   onSpeak,
   onStop,
 }) {
-  const two = narrators.length > 1;
+  const list = narrators.slice(0, 2);
+  const statusOf = (i) => (!speaking ? "bereit" : speakingWho === i ? "spricht" : "hört zu");
 
   return (
     <div className="w-full rounded-3xl glass-strong border-2 border-primary/30 p-4">
-      <div className="flex items-center gap-2.5 mb-2.5">
-        <div className="flex -space-x-2.5 flex-shrink-0">
-          {(narrators.length ? narrators : [null]).map((n, i) =>
-            n?.avatar ? (
-              <Image key={i} src={n.avatar} fittingType="fill" className="w-10 h-10 rounded-full ring-2 ring-background" />
-            ) : (
-              <span key={i} className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center ring-2 ring-background">
-                <Lightbulb className="w-5 h-5 text-primary" />
-              </span>
-            )
-          )}
-        </div>
-        <div className="min-w-0">
-          <p className="text-[14px] font-bold text-foreground leading-tight truncate">
-            {two ? narrators.map((n) => n.name).join(" & ") : narrators[0]?.name || "Dein Concierge"}
-          </p>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-primary">
-            {two ? "Die Erzählerinnen" : narrators[0] ? kindOf(narrators[0].kind).label : "Concierge"}
-          </p>
-        </div>
+      <div className="flex items-center gap-2 mb-3">
+        <p className="flex-1 text-[11px] font-bold uppercase tracking-wider text-primary truncate">
+          {list.length > 1 ? "Die Erzählerinnen" : list[0] ? kindOf(list[0].kind).label : "Dein Concierge"}
+        </p>
         <button
           onClick={() => (speaking ? onStop() : onSpeak())}
           disabled={loading || !lines.length}
-          className="ml-auto w-9 h-9 rounded-full glass-btn flex items-center justify-center flex-shrink-0 disabled:opacity-40"
+          className="w-9 h-9 rounded-full glass-btn flex items-center justify-center flex-shrink-0 disabled:opacity-40"
           title={speaking ? "Verstummen" : "Vorlesen"}
         >
           {speaking ? <VolumeX className="w-4 h-4 text-foreground" /> : <Volume2 className="w-4 h-4 text-foreground" />}
         </button>
       </div>
+
+      {list.length > 0 && (
+        <div className="flex gap-2 mb-3">
+          {list.map((n, i) => (
+            <NarratorStatusCard key={n.id || i} narrator={n} status={statusOf(i)} />
+          ))}
+        </div>
+      )}
 
       {stageCount > 0 && (
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
@@ -61,12 +56,13 @@ export default function ConciergeTip({
           <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /> Sie überlegen …
         </p>
       ) : lines.length ? (
-        <div className="space-y-2.5">
+        <div className="space-y-1.5">
           {lines.map((line, i) => {
-            const person = narrators[line.who] || narrators[0];
+            const person = list[line.who] || list[0];
+            const active = speaking && speakingWho === (line.who ?? 0);
             return (
-              <div key={i}>
-                {two && (
+              <div key={i} className={cn("rounded-xl px-2.5 py-2 transition-colors", active && "bg-primary/10")}>
+                {list.length > 1 && (
                   <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-0.5">{person?.name}</p>
                 )}
                 <p className="text-[14px] font-semibold text-foreground leading-relaxed italic">„{line.text}“</p>

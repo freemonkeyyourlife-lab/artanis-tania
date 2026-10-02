@@ -9,7 +9,7 @@ export default function BrandWordmark({ className }) {
       <span className="font-serif font-black text-[1.45em] leading-none align-baseline">A</span>
       RTANIS <span className="text-primary">×</span>{" "}
       <span className="font-serif italic font-black text-[1.3em] leading-none align-baseline">T</span>
-      RIANIA
+      ANIA
     </span>
   );
 }
