@@ -7,14 +7,12 @@ import { cn } from "@/lib/utils";
 import { speakAsVoice } from "@/lib/voiceChat";
 import { fillLine, BETWEEN_LINES, RECALL_LINES, RECALL_TIPS } from "@/lib/introStory";
 import { isQuiet, subscribeQuiet } from "@/lib/onboarding";
+import FloatingSlot from "@/components/floating/FloatingSlot";
 
 // Sie ist immer da: unten im Eck, mit Bild und Namen. Antippen heißt rückrufen —
 // sie liest vor und gibt Tipps. Und sie meldet sich zwischendurch von selbst,
 // sonst sitzt er vor einer stummen Seite und niemand animiert ihn.
 const VOICE_KEY = "artanis_narrator_voice";
-const FIRST_AFTER = 45000;
-const GAP = 150000;
-const BUBBLE_MS = 14000;
 
 export default function NarratorCompanion() {
   const [narrator, setNarrator] = useState(null);
@@ -74,7 +72,8 @@ export default function NarratorCompanion() {
   const showBubble = (text) => {
     clearTimeout(bubbleRef.current);
     setLine(text);
-    bubbleRef.current = setTimeout(() => setLine(""), BUBBLE_MS);
+    const secs = Math.max(4, Number(narratorRef.current?.regie?.bubble ?? 14));
+    bubbleRef.current = setTimeout(() => setLine(""), secs * 1000);
   };
 
   // Sie sagt ihre Sätze nacheinander — und was sie sagt, steht auch da.
@@ -107,23 +106,24 @@ export default function NarratorCompanion() {
   const speakRef = useRef(speak);
   speakRef.current = speak;
 
-  // Zwischendurch meldet sie sich — aber nur, wenn er wirklich hinschaut.
+  // Zwischendurch meldet sie sich — nach ihrer Regie, aber nur, wenn er
+  // wirklich hinschaut. Die Zeiten stehen in ihrem Profil.
   useEffect(() => {
-    if (quiet) return undefined;
+    if (quiet || narrator?.regie?.autoSpeak === false) return undefined;
+    const between = narrator?.lines?.between?.length ? narrator.lines.between : BETWEEN_LINES;
+    const firstAfter = Math.max(5, Number(narrator?.regie?.firstAfter ?? 45)) * 1000;
+    const gap = Math.max(15, Number(narrator?.regie?.gap ?? 150)) * 1000;
     const call = () => {
       if (document.hidden) return;
-      const text = BETWEEN_LINES[Math.floor(Math.random() * BETWEEN_LINES.length)];
-      speakRef.current([text]);
+      speakRef.current([between[Math.floor(Math.random() * between.length)]]);
     };
-    const first = setTimeout(() => {
-      call();
-    }, FIRST_AFTER);
-    const every = setInterval(call, GAP);
+    const first = setTimeout(call, firstAfter);
+    const every = setInterval(call, gap);
     return () => {
       clearTimeout(first);
       clearInterval(every);
     };
-  }, [quiet]);
+  }, [quiet, narrator]);
 
   useEffect(
     () => () => {
@@ -142,10 +142,15 @@ export default function NarratorCompanion() {
       /* egal */
     }
     if (next) halt();
-    else speak(RECALL_LINES);
+    else speak(recall);
   };
 
-  const name = narrator?.name || "Erzählerin";
+  // Was sie sagt und wie sie auftritt — alles aus ihrem Profil, sonst die Vorgabe.
+  const lines = narrator?.lines || {};
+  const recall = lines.recall?.length ? lines.recall : RECALL_LINES;
+  const tips = lines.tips?.length ? lines.tips : RECALL_TIPS;
+  const showName = narrator?.regie?.showName !== false;
+  const name = narrator?.name?.trim() || "Sie";
 
   if (quiet) return null;
 
@@ -167,7 +172,8 @@ export default function NarratorCompanion() {
   );
 
   return (
-    <div className="fixed bottom-24 lg:bottom-6 left-4 z-[70] flex flex-col items-start gap-2">
+    <FloatingSlot zone="bottom-left">
+      <div className="pointer-events-auto flex flex-col items-start gap-2">
       {line && !open && (
         <button
           onClick={() => setOpen(true)}
@@ -184,7 +190,7 @@ export default function NarratorCompanion() {
           className="flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full glass-strong border-2 border-border hover:border-primary/60 transition-colors"
         >
           {face("w-9 h-9")}
-          <span className="text-[13px] font-bold text-foreground">{name}</span>
+          {showName && <span className="text-[13px] font-bold text-foreground">{name}</span>}
         </button>
       )}
 
@@ -205,7 +211,7 @@ export default function NarratorCompanion() {
           </div>
 
           <div className="space-y-2">
-            {RECALL_LINES.map((l, i) => (
+            {recall.map((l, i) => (
               <p key={i} className="text-[14px] font-semibold text-foreground leading-relaxed">
                 „{fillLine(l, { narrator: name })}"
               </p>
@@ -215,7 +221,7 @@ export default function NarratorCompanion() {
           <div className="mt-3 pt-3 border-t-2 border-border">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Ihre Tipps</p>
             <div className="space-y-1.5">
-              {RECALL_TIPS.map((t, i) => (
+              {tips.map((t, i) => (
                 <p key={i} className="text-[13px] font-semibold text-muted-foreground leading-relaxed">
                   „{t}"
                 </p>
@@ -225,7 +231,7 @@ export default function NarratorCompanion() {
 
           <div className="flex flex-wrap items-center gap-2 mt-3">
             <button
-              onClick={speaking ? halt : () => speak(RECALL_LINES)}
+              onClick={speaking ? halt : () => speak(recall)}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-btn text-[13px] font-bold text-foreground"
             >
               {speaking ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
@@ -248,6 +254,7 @@ export default function NarratorCompanion() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </FloatingSlot>
   );
 }

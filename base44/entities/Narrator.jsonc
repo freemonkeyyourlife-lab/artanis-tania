@@ -55,10 +55,70 @@
     "avatar": {
       "type": "string"
     },
+    "imagePrompt": {
+      "type": "string"
+    },
+    "gallery": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "referenceImages": {
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "lines": {
+      "type": "object",
+      "properties": {
+        "greeting": {
+          "type": "string"
+        },
+        "between": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recall": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "regie": {
+      "type": "object",
+      "properties": {
+        "autoSpeak": {
+          "type": "boolean",
+          "default": true
+        },
+        "firstAfter": {
+          "type": "number",
+          "default": 45
+        },
+        "gap": {
+          "type": "number",
+          "default": 150
+        },
+        "bubble": {
+          "type": "number",
+          "default": 14
+        },
+        "showName": {
+          "type": "boolean",
+          "default": true
+        }
       }
     },
     "active": {

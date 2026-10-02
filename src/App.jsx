@@ -70,6 +70,7 @@ import FloatingCall from '@/components/call/FloatingCall';
 import NarratorCompanion from '@/components/narrator/NarratorCompanion';
 import CreateConsole from '@/components/creator/CreateConsole';
 import ImportStatusPill from '@/components/import/ImportStatusPill';
+import FloatingZones from '@/components/floating/FloatingZones';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -102,6 +103,7 @@ const AuthenticatedApp = () => {
       <HostLiveAlert />
       <OnboardingIntro />
       <TutorialPlayer />
+      <FloatingZones />
       <FloatingCall />
       <NarratorCompanion />
       <CreateConsole />

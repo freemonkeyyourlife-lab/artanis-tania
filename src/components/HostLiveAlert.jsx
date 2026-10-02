@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Radio, X } from "lucide-react";
 import { fetchLiveRoom } from "@/lib/liveRoom";
+import FloatingSlot from "@/components/floating/FloatingSlot";
 
 const KEY = "liveAlertSeen";
 
@@ -44,7 +45,8 @@ export default function HostLiveAlert() {
   if (room.startedAt && room.startedAt === seen) return null;
 
   return (
-    <div className="fixed bottom-24 lg:bottom-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md">
+    <FloatingSlot zone="bottom-center">
+      <div className="pointer-events-auto w-full">
       {/* Die ganze Meldung ist der Weg hinein — kein Umweg über die Navigation. */}
       <Link
         to={`/call/${room.token}`}
@@ -71,6 +73,7 @@ export default function HostLiveAlert() {
           <X className="w-4 h-4" />
         </button>
       </Link>
-    </div>
+      </div>
+    </FloatingSlot>
   );
 }

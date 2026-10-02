@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TutorialInterests from "@/components/tutorial/TutorialInterests";
+import FloatingSlot from "@/components/floating/FloatingSlot";
 import TutorialChapterMenu from "@/components/tutorial/TutorialChapterMenu";
 import {
   getTutorialState, subscribeTutorial, loadTutorial, currentChapter, visibleChapters,
@@ -44,18 +45,20 @@ export default function TutorialPlayer() {
   if (!state.open) {
     if (state.finished || !state.done.length) return null;
     return (
-      <button
-        onClick={resumeTutorial}
-        className="fixed bottom-24 lg:bottom-4 right-4 z-[60] inline-flex items-center gap-2 px-5 py-3 rounded-full glass-strong border-2 border-primary/40 text-[14px] font-bold text-foreground accent-glow"
-      >
-        <Play className="w-4 h-4 text-primary" />
-        Tutorial fortsetzen · {chapter.title}
-      </button>
+      <FloatingSlot zone="bottom-right">
+        <button
+          onClick={resumeTutorial}
+          className="pointer-events-auto inline-flex items-center gap-2 px-5 py-3 rounded-full glass-strong border-2 border-primary/40 text-[14px] font-bold text-foreground accent-glow"
+        >
+          <Play className="w-4 h-4 text-primary" />
+          Tutorial fortsetzen · {chapter.title}
+        </button>
+      </FloatingSlot>
     );
   }
 
   return (
-    <div className="fixed bottom-24 lg:bottom-4 inset-x-4 lg:inset-x-auto lg:right-6 lg:w-[460px] z-[60]">
+    <div className="fixed bottom-24 lg:bottom-6 right-4 z-[80] w-[min(92vw,460px)]">
       <div className="glass-strong rounded-3xl border-2 border-border max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 border-b border-border">
           <div className="flex items-center gap-2 min-w-0">
