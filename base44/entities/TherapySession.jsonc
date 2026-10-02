@@ -171,6 +171,16 @@
     "liveToken": {
       "type": "string"
     },
+    "summary": {
+      "type": "string"
+    },
+    "summaryBy": {
+      "type": "string"
+    },
+    "summaryAt": {
+      "type": "string",
+      "format": "date-time"
+    },
     "lastMessageAt": {
       "type": "string",
       "format": "date-time"

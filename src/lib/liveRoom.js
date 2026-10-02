@@ -13,6 +13,19 @@ export async function setLiveState(token, hostName, isLive) {
   return base44.entities.LiveRoom.create(data);
 }
 
+// Läuft eine Aufnahme, sehen es alle im Raum. Der Status steht am Raum,
+// nicht am Gerät — deshalb reicht ein Schalter für alle.
+export async function setRecordingState(token, by, on) {
+  const existing = await base44.entities.LiveRoom.filter({ token });
+  const data = {
+    recording: !!on,
+    recordingBy: on ? (by || "Gastgeber") : "",
+    recordingSince: on ? new Date().toISOString() : null,
+  };
+  if (existing[0]) return base44.entities.LiveRoom.update(existing[0].id, data);
+  return base44.entities.LiveRoom.create({ token, ...data });
+}
+
 // Kurz merken, was zuletzt galt — dann muss der Hinweis nicht bei jedem
 // Seitenaufbau erneut fragen. Änderungen kommen über die Live-Verbindung.
 const CACHE_KEY = "liveRoomCache";

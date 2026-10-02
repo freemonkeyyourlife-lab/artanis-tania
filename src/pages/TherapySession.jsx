@@ -9,6 +9,7 @@ import TherapyThread from "@/components/therapy/TherapyThread";
 import { buildTherapyPrompt, THERAPY_MODES, INTENSITIES, ROLE_SETUPS, FREILAUF_PROMPT, roleLabel, therapistName } from "@/lib/therapyPrompts";
 import SessionControls from "@/components/therapy/SessionControls";
 import SessionPlan from "@/components/therapy/SessionPlan";
+import TherapySummaryCard from "@/components/therapy/TherapySummaryCard";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import TherapyReadButton from "@/components/therapy/TherapyReadButton";
@@ -311,6 +312,13 @@ export default function TherapySession() {
       </Link>
 
       <SessionPlan session={session} />
+
+      <TherapySummaryCard
+        session={session}
+        messages={messages}
+        isOwner={isOwner}
+        onSaved={(updated) => setSession(updated)}
+      />
 
       <div className="rounded-2xl border border-border bg-card p-4 mb-4">
         <div className="flex items-center gap-2 flex-wrap">

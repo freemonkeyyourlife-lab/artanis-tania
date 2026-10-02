@@ -27,6 +27,20 @@
         "PRIVATE"
       ],
       "default": "OPEN"
+    },
+    "recording": {
+      "type": "boolean",
+      "default": false
+    },
+    "recordingBy": {
+      "type": "string"
+    },
+    "recordingSince": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recordingUrl": {
+      "type": "string"
     }
   },
   "required": [

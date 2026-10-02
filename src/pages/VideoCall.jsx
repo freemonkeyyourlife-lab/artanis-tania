@@ -9,6 +9,7 @@ import CallControls from "@/components/call/CallControls";
 import CallInvite from "@/components/call/CallInvite";
 import CallWindows from "@/components/call/CallWindows";
 import LiveToggle from "@/components/call/LiveToggle";
+import RecordingBadge from "@/components/call/RecordingBadge";
 import { loadWindows, subscribeWindows, toggleWindow, openWindow, closeWindow, setDock, setTextSize, setStageSplit } from "@/lib/callWindows";
 import { onUiCommand, takePendingUiCommand, clearUiCommand } from "@/lib/ownerUi";
 import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
@@ -298,6 +299,7 @@ export default function VideoCall() {
             </button>
           )}
           {isHost && <LiveToggle token={token} hostName={myName} />}
+          <RecordingBadge token={token} myName={myName} isOwner={isOwner} />
           {isHost && (
             <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold uppercase tracking-wider flex-shrink-0">
               Gastgeber
