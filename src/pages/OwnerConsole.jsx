@@ -20,6 +20,7 @@ import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
 import OwnerCommandBar from "@/components/owner/OwnerCommandBar";
 import ModuleEditor from "@/components/owner/ModuleEditor";
 import SiteOverview from "@/components/owner/SiteOverview";
+import ViewAsSwitch from "@/components/owner/ViewAsSwitch";
 import StructureMap from "@/components/owner/StructureMap";
 import PageDirectory from "@/components/owner/PageDirectory";
 import WindowLayoutEditor from "@/components/owner/WindowLayoutEditor";
@@ -370,6 +371,7 @@ export default function OwnerConsole() {
           >
             Hier siehst du die ganze App auf einen Blick: welche Bereiche es gibt, was in deiner Leiste steht und was noch nicht.
           </GuideBox>
+          <ViewAsSwitch />
           <StructureMap
             structure={layoutStructure}
             onChange={(next) => {

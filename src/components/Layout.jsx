@@ -141,7 +141,12 @@ export default function Layout() {
 
   // Die Kopfzeile zeigt genau die Struktur, die der Besitzer in der Übersicht
   // festgelegt hat — Bereiche und Knöpfe in seiner Reihenfolge.
-  const groups = layout ? structureGroups(structureOf(layout)) : buildNavGroups(MORE_LINKS);
+  // Beim Blick als normaler Nutzer fällt die Verwaltung weg — genau so sieht
+  // die Leiste aus, wenn jemand ohne Rechte hereinkommt.
+  const structure = layout ? structureOf(layout) : null;
+  const groups = structure
+    ? structureGroups({ areas: structure.areas.filter((a) => !(viewAs && a.id === "admin")) })
+    : buildNavGroups(MORE_LINKS);
   const mobileLinks = groups.flatMap((g) => g.items);
   const navFont = layoutFont(layout);
 
