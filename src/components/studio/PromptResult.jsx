@@ -5,7 +5,12 @@ import { cn } from "@/lib/utils";
 const BLOCKS = [
   { key: "prompt", label: "Prompt", hint: "In das Prompt-Feld deines externen Studios einfügen." },
   { key: "negative", label: "Negativ-Prompt", hint: "In das Feld „Negative Prompt“ — blockiert, was du nicht willst." },
-  { key: "lora", label: "LoRA-Zusatz", hint: "Ans Ende des Prompts hängen. 1.5 bis 2.5 drückt kräftig in Richtung unzensiert." },
+  {
+    key: "lora",
+    label: "LoRA-Zusatz",
+    hint:
+      "Ans Ende des Prompts hängen. 1.5 bis 2.5 drückt kräftig in Richtung unzensiert. Kennt dein Studio das <lora:…> im Text nicht, lass den Tag weg und such dort den Bereich „LoRAs“ oder „Add-ons“ — dort den Regler auf 1.5 bis 2.5 ziehen, das bewirkt dasselbe.",
+  },
 ];
 
 function CopyButton({ text, small }) {
