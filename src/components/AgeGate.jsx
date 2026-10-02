@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { ShieldCheck, AlertTriangle } from "lucide-react";
 import BrandWordmark from "@/components/BrandWordmark";
+import { isGodMode } from "@/lib/godMode";
 
 export default function AgeGate() {
   const [verified, setVerified] = useState(() => {
     try { return localStorage.getItem("age_verified") === "true"; } catch { return false; }
   });
 
-  if (verified) return null;
+  // Im God-Mode wird der Betreiber nicht gefragt — die Sperre richtet sich an Besucher.
+  if (verified || isGodMode()) return null;
 
   const handleConfirm = () => {
     try { localStorage.setItem("age_verified", "true"); } catch {}

@@ -59,6 +59,7 @@ import ContentPlan from '@/pages/ContentPlan';
 import SalesDashboard from '@/pages/SalesDashboard';
 import VoiceStudio from '@/pages/VoiceStudio';
 import CreatorStudio from '@/pages/CreatorStudio';
+import BetreiberStudio from '@/pages/BetreiberStudio';
 import PromptStudio from '@/pages/PromptStudio';
 import Sandbox from '@/pages/Sandbox';
 import UserPreview from '@/pages/UserPreview';
@@ -109,6 +110,7 @@ const AuthenticatedApp = () => {
       <Route path="/call/:token" element={<VideoCall />} />
       <Route path="/pay/:token" element={<Pay />} />
       <Route path="/creator-studio" element={<CreatorStudio />} />
+      <Route path="/betreiber" element={<BetreiberStudio />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/artanis" element={<Artanis />} />

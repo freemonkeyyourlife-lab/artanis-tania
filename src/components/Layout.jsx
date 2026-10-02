@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut, Video } from "lucide-react";
+import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut, Video, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import HeaderNav, { buildNavGroups } from "@/components/nav/HeaderNav";
 import { base44 } from "@/api/base44Client";
@@ -8,6 +8,7 @@ import InviteShareButton from "@/components/InviteShareButton";
 import { hasProAccess, localProActive } from "@/lib/proAccess";
 import { ownerHeartbeat, HEARTBEAT_MS } from "@/lib/presence";
 import { getViewAs, setViewAs, subscribeViewAs } from "@/lib/viewAs";
+import { isGodMode, subscribeGodMode } from "@/lib/godMode";
 import { loadLayout, layoutFont } from "@/lib/siteLayout";
 import { structureOf, structureGroups } from "@/lib/siteStructure";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
@@ -54,6 +55,7 @@ export default function Layout() {
   const [me, setMe] = useState(null);
   const [memberStatus, setMemberStatus] = useState(null);
   const [viewAs, setViewAsState] = useState(null);
+  const [godMode, setGodModeState] = useState(isGodMode);
   const [incomingCount, setIncomingCount] = useState(0);
   const [waitingChats, setWaitingChats] = useState(0);
   const [layout, setLayout] = useState(null);
@@ -86,6 +88,9 @@ export default function Layout() {
     setViewAsState(getViewAs());
     return subscribeViewAs(() => setViewAsState(getViewAs()));
   }, []);
+
+  // God-Mode: der Meister-Schalter für die eigene Ansicht.
+  useEffect(() => subscribeGodMode(() => setGodModeState(isGodMode())), []);
 
   useEffect(() => {
     base44.auth.me()
@@ -148,7 +153,7 @@ export default function Layout() {
   // die Leiste aus, wenn jemand ohne Rechte hereinkommt.
   const structure = layout ? structureOf(layout) : null;
   const groups = structure
-    ? structureGroups({ areas: structure.areas.filter((a) => !(viewAs && a.id === "admin")) })
+    ? structureGroups({ areas: structure.areas.filter((a) => !(viewAs && !godMode && a.id === "admin")) })
     : buildNavGroups(MORE_LINKS);
   const mobileLinks = groups.flatMap((g) => g.items);
   const navFont = layoutFont(layout);
@@ -164,6 +169,20 @@ export default function Layout() {
             </Link>
             {memberStatus === "GOLD" && (
               <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wider">Gold</span>
+            )}
+            {godMode && (
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-yellow-400 text-black text-[10px] font-bold uppercase tracking-wider">
+                <Crown className="w-3 h-3" /> God Mode
+              </span>
+            )}
+            {memberStatus === "OWNER" && (
+              <Link
+                to="/betreiber"
+                title="Betreiber-Studio — Seiten, Leiste, God-Mode"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-btn text-[11px] font-bold text-foreground hover:text-primary transition-colors"
+              >
+                <Crown className="w-3.5 h-3.5 text-primary" /> Studio
+              </Link>
             )}
             {viewAs && (
               <button

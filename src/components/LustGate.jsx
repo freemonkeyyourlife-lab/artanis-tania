@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Flame, X, MessageSquare, Sparkles, Image as ImageIcon, Users } from "lucide-react";
+import { isGodMode } from "@/lib/godMode";
 
 const KEY = "artanis_lust_gate_seen";
 
@@ -17,6 +18,7 @@ export default function LustGate() {
 
   useEffect(() => {
     const check = () => {
+      if (isGodMode()) return false;
       try {
         if (localStorage.getItem("age_verified") === "true" && !localStorage.getItem(KEY)) {
           setOpen(true);
