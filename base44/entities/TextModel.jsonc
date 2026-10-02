@@ -17,6 +17,10 @@
     "enabled": {
       "type": "boolean",
       "default": true
+    },
+    "favorite": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

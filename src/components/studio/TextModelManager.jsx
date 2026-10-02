@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, Loader2, Plus, Check, Power, Trash2, Pencil, Sparkles } from "lucide-react";
+import { Search, Loader2, Plus, Check, Power, Trash2, Pencil, Sparkles, Star } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import ModelKindTag from "@/components/studio/ModelKindTag";
@@ -26,7 +26,11 @@ export default function TextModelManager() {
   useEffect(() => { load(); search(); }, []);
 
   const load = async () => {
-    try { setModels(await base44.entities.TextModel.list("created_date")); }
+    try {
+      const list = await base44.entities.TextModel.list("created_date");
+      // Favoriten stehen oben — die besten Modelle sind sofort zur Hand.
+      setModels([...list].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0)));
+    }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -109,6 +113,11 @@ export default function TextModelManager() {
 
   const toggle = async (m) => {
     await base44.entities.TextModel.update(m.id, { enabled: !m.enabled });
+    load();
+  };
+
+  const toggleFavorite = async (m) => {
+    await base44.entities.TextModel.update(m.id, { favorite: !m.favorite });
     load();
   };
 
@@ -247,6 +256,16 @@ export default function TextModelManager() {
           <div className="space-y-2">
             {models.map((m) => (
               <div key={m.id} className={cn("flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border", !m.enabled && "opacity-60")}>
+                <button
+                  onClick={() => toggleFavorite(m)}
+                  title={m.favorite ? "Favorit entfernen" : "Als Favorit merken"}
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors",
+                    m.favorite ? "bg-amber-500/20 text-amber-400" : "bg-background border border-border text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Star className={cn("w-3.5 h-3.5", m.favorite && "fill-current")} />
+                </button>
                 <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{m.name}</p>

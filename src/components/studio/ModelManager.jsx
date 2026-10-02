@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, Power, ExternalLink, Loader2 } from "lucide-react";
+import { Plus, Trash2, Power, ExternalLink, Loader2, Star } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import HfModelSearch from "@/components/studio/HfModelSearch";
@@ -27,7 +27,11 @@ export default function ModelManager() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    try { setModels(await base44.entities.ImageModel.list("created_date")); }
+    try {
+      const list = await base44.entities.ImageModel.list("created_date");
+      // Favoriten stehen oben — die besten Modelle sind sofort zur Hand.
+      setModels([...list].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0)));
+    }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -56,6 +60,11 @@ export default function ModelManager() {
 
   const toggle = async (m) => {
     await base44.entities.ImageModel.update(m.id, { enabled: !m.enabled });
+    load();
+  };
+
+  const toggleFavorite = async (m) => {
+    await base44.entities.ImageModel.update(m.id, { favorite: !m.favorite });
     load();
   };
 
@@ -172,6 +181,16 @@ export default function ModelManager() {
           <div className="space-y-2">
             {models.map((m) => (
               <div key={m.id} className={cn("flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border", !m.enabled && "opacity-60")}>
+                <button
+                  onClick={() => toggleFavorite(m)}
+                  title={m.favorite ? "Favorit entfernen" : "Als Favorit merken"}
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors",
+                    m.favorite ? "bg-amber-500/20 text-amber-400" : "bg-background border border-border text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Star className={cn("w-3.5 h-3.5", m.favorite && "fill-current")} />
+                </button>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
                   <p className="text-[11px] text-muted-foreground truncate">

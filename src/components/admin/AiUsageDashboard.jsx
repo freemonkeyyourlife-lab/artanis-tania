@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import { base44 } from "@/api/base44Client";
-import { Activity, Coins, Cpu, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Activity, Coins, Cpu, RefreshCw, Sparkles, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMoodModel, setMoodModel } from "@/lib/aiGateway";
+import UsageCharts from "@/components/admin/UsageCharts";
 
 const RANGES = [
   { id: "today", label: "Heute" },
@@ -21,6 +22,8 @@ const count = (v) => (Number(v) || 0).toLocaleString("de-DE");
 export default function AiUsageDashboard() {
   const [range, setRange] = useState("7");
   const [rows, setRows] = useState([]);
+  const [timeline, setTimeline] = useState([]);
+  const [favOnly, setFavOnly] = useState(false);
   const [recent, setRecent] = useState([]);
   const [models, setModels] = useState([]);
   const [moodModel, setMood] = useState(() => getMoodModel());
@@ -36,7 +39,7 @@ export default function AiUsageDashboard() {
     setLoading(true);
     try {
       const query = buildQuery();
-      const [agg, page] = await Promise.all([
+      const [agg, bucket, page] = await Promise.all([
         base44.entities.AiUsage.aggregate({
           query,
           groupBy: "modelId",
@@ -44,9 +47,16 @@ export default function AiUsageDashboard() {
           sort: "-count",
           limit: 100,
         }),
+        base44.entities.AiUsage.aggregate({
+          query,
+          dateBucket: { field: "created_date", unit: "day" },
+          sum: ["costUsd"],
+          limit: 400,
+        }),
         base44.entities.AiUsage.filter(query, { sort: "-created_date", limit: 20 }),
       ]);
       setRows(agg.rows || []);
+      setTimeline(bucket.rows || []);
       setRecent(page.items || []);
     } catch (e) {
       console.error(e);
@@ -62,7 +72,9 @@ export default function AiUsageDashboard() {
       { enabled: true, note: { $regex: "^OpenRouter" } },
       { sort: "name", limit: 500 }
     )
-      .then((page) => setModels(page.items || []))
+      .then((page) => setModels(
+        (page.items || []).slice().sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0))
+      ))
       .catch(() => setModels([]));
   }, []);
 
@@ -79,7 +91,8 @@ export default function AiUsageDashboard() {
     [rows]
   );
 
-  const busiest = rows[0]?.count || 1;
+  // Favoriten stehen oben — und lassen sich auf Wunsch allein anzeigen.
+  const moodOptions = favOnly ? models.filter((m) => m.favorite) : models;
 
   const chooseMood = (id) => {
     setMoodModel(id);
@@ -139,50 +152,32 @@ export default function AiUsageDashboard() {
         </div>
       </div>
 
-      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
-        Am häufigsten genutzt
-      </p>
-      {loading ? (
-        <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">
-          In diesem Zeitraum lief noch keine Abfrage über OpenRouter.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {rows.map((r) => (
-            <div key={r.modelId} className="rounded-2xl border border-border bg-elevated p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <span className="text-sm font-bold text-foreground truncate">{r.modelId}</span>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {count(r.count)}× · {money(r.sum_costUsd)}
-                </span>
-              </div>
-              <div className="h-2 rounded-full bg-background overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${Math.max(6, Math.round(((r.count || 0) / busiest) * 100))}%` }}
-                />
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-2">
-                {count((r.sum_promptTokens || 0) + (r.sum_completionTokens || 0))} Tokens
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      <UsageCharts rows={rows} timeline={timeline} loading={loading} />
 
       <div className="rounded-2xl border border-border bg-elevated p-4 mt-6">
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2 inline-flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5" /> Modell für die Stimmungserkennung
         </p>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <button
+            onClick={() => setFavOnly((v) => !v)}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors",
+              favOnly ? "bg-amber-500/20 text-amber-400" : "bg-background border border-border text-muted-foreground"
+            )}
+          >
+            <Star className={cn("w-3 h-3", favOnly && "fill-current")} /> Nur Favoriten
+          </button>
+          <span className="text-[11px] text-muted-foreground">Favoriten stehen oben.</span>
+        </div>
         <select
           value={moodModel}
           onChange={(e) => chooseMood(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground"
         >
           <option value="">Standard-KI (ohne OpenRouter)</option>
-          {models.map((m) => (
+          {moodOptions.length === 0 && <option value="" disabled>Keine Favoriten markiert</option>}
+          {moodOptions.map((m) => (
             <option key={m.id} value={m.modelId}>{m.name}</option>
           ))}
         </select>

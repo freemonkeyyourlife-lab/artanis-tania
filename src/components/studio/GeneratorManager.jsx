@@ -30,7 +30,11 @@ export default function GeneratorManager({ creators }) {
   // Zusätzliche Modelle, die im Studio unter "Modelle" freigeschaltet sind.
   useEffect(() => {
     base44.entities.ImageModel.filter({ enabled: true }, "created_date", 100)
-      .then(setModels)
+      .then((res) => {
+        const items = Array.isArray(res) ? res : res?.items || [];
+        // Favoriten zuerst — die guten Modelle stehen gleich oben.
+        setModels([...items].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0)));
+      })
       .catch(() => setModels([]));
     loadKits();
   }, []);
