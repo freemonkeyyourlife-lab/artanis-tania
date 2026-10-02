@@ -14,6 +14,9 @@ import NarratorModelPicker from "@/components/narrator/NarratorModelPicker";
 import NarratorRefStrip from "@/components/narrator/NarratorRefStrip";
 import NarratorImageResult from "@/components/narrator/NarratorImageResult";
 import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import PromptRefiner from "@/components/studio/PromptRefiner";
+import { characterFromNarrator } from "@/lib/promptSharpen";
+import { presetFor } from "@/lib/modelPrompts";
 import { labelCls, chipCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
 
 const rows = (res) => (Array.isArray(res) ? res : res?.items || []);
@@ -66,6 +69,9 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
   };
 
   const targets = () => (modelKeys.length ? models.filter((m) => modelKeys.includes(m.id)) : [null]);
+
+  // Ist genau ein Modell gewählt, schreibt der Feinschliff in dessen Sprache.
+  const oneModel = modelKeys.length === 1 ? models.find((m) => m.id === modelKeys[0]) : null;
 
   const generate = async () => {
     if (!prompt.trim() && !appearance.trim()) return;
@@ -202,6 +208,16 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
               rows={5}
               placeholder="Was soll zu sehen sein? Pose, Perspektive, Ort, Outfit, Licht …"
             />
+            <div className="mt-2">
+              <PromptRefiner
+                value={prompt}
+                onChange={setPrompt}
+                target="BILD"
+                style={animated ? "ANIMIERT" : "FOTO"}
+                character={characterFromNarrator(narrator)}
+                preset={oneModel ? presetFor(oneModel) : null}
+              />
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">

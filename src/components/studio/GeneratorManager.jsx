@@ -12,6 +12,7 @@ import { composeImagePrompt } from "@/lib/composeImagePrompt";
 import { generateWithModel } from "@/lib/imageGen";
 import { modelStrength, STANDARD_STRENGTH, STANDARD_VIDEO_STRENGTH } from "@/lib/modelStrengths";
 import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import PromptRefiner from "@/components/studio/PromptRefiner";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
 // Mehrere Modelle dürfen gleichzeitig ran — und als Kombi abgespeichert werden.
@@ -276,8 +277,27 @@ export default function GeneratorManager({ creators }) {
           onChange={(e) => setPrompt(e.target.value)}
           rows={6}
           placeholder="Was soll zu sehen sein? Ort, Pose, Outfit, Licht …"
-          className="w-full px-4 py-3 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground resize-none mb-4"
+          className="w-full px-4 py-3 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground resize-none mb-2"
         />
+
+        <div className="mb-4">
+          <PromptRefiner
+            value={prompt}
+            onChange={setPrompt}
+            target="BILD"
+            style={animated ? "ANIMIERT" : "FOTO"}
+            character={
+              creator
+                ? {
+                    stageName: creator.stageName,
+                    personaType: creator.personaType,
+                    age: creator.age,
+                    tagline: creator.tagline,
+                  }
+                : null
+            }
+          />
+        </div>
 
         <div className="mb-4">
           <ImageDirectionPanel

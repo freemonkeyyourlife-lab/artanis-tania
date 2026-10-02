@@ -8,6 +8,8 @@ import { emptyDirection } from "@/lib/imageDirection";
 import ImageDirectionPanel from "@/components/studio/ImageDirectionPanel";
 import VoiceTextArea from "@/components/voice/VoiceTextArea";
 import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import PromptRefiner from "@/components/studio/PromptRefiner";
+import { characterFromNarrator } from "@/lib/promptSharpen";
 import { STANDARD_VIDEO_STRENGTH } from "@/lib/modelStrengths";
 import { labelCls, chipCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
 
@@ -98,6 +100,15 @@ export default function NarratorVideoBlock({ narrator, onSaved }) {
               rows={4}
               placeholder="Sie dreht sich zur Kamera, das Haar fällt, das Licht wandert über die Haut …"
             />
+            <div className="mt-2">
+              <PromptRefiner
+                value={prompt}
+                onChange={setPrompt}
+                target="VIDEO"
+                style={narrator?.artStyle === "CARTOON" ? "ANIMIERT" : "FOTO"}
+                character={characterFromNarrator(narrator)}
+              />
+            </div>
           </div>
 
           <div>
