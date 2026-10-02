@@ -6,6 +6,7 @@ import HeaderNav, { buildNavGroups } from "@/components/nav/HeaderNav";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
 import { hasProAccess, localProActive } from "@/lib/proAccess";
+import { ownerHeartbeat, HEARTBEAT_MS } from "@/lib/presence";
 import { getViewAs, setViewAs, subscribeViewAs } from "@/lib/viewAs";
 import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
@@ -120,6 +121,21 @@ export default function Layout() {
       } catch (e) { /* nicht angemeldet */ }
     })();
     return () => { clearTimeout(timer); unsubscribe?.(); };
+  }, []);
+
+  // Lebenszeichen: solange dein Fenster offen ist, weiß die App, dass du da bist.
+  // Bist du weg, springt die KI in den Gäste-Chats sofort ein.
+  useEffect(() => {
+    let id;
+    let cancelled = false;
+    (async () => {
+      const me = await base44.auth.me().catch(() => null);
+      if (!me || me.role !== "admin") return;
+      const tick = () => { if (!cancelled) ownerHeartbeat(); };
+      tick();
+      id = setInterval(tick, HEARTBEAT_MS);
+    })();
+    return () => { cancelled = true; clearInterval(id); };
   }, []);
 
   const menuItems = layout ? layoutMenu(layout) : MORE_LINKS;

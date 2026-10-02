@@ -1,11 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { buildHandoverPrompt } from '../../shared/handoverPrompt.ts';
+import { ownerIsPresent } from '../../shared/presence.ts';
 
-// So lange darf der echte Charakter selbst antworten, bevor die KI einspringt.
+// Bist du da, bekommst du diesen Vorsprung. Bist du weg, springt die KI sofort ein.
 const OVERDUE_MS = 3 * 60 * 1000;
 const MAX_PER_RUN = 5;
 
 // Springt ein, wenn ein Gast wartet und niemand antwortet — auch wenn sein Tab längst zu ist.
+// Bist du nicht da, übernimmt die KI sofort statt nach dem Vorsprung.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -14,9 +16,12 @@ export default async function (req) {
     if (user && user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const now = Date.now();
+    // Bist du weg, wartet kein Gast: dann übernimmt die KI ohne Verzögerung.
+    const ownerThere = await ownerIsPresent(base44);
+    const overdueMs = ownerThere ? OVERDUE_MS : 0;
     const convs = await base44.asServiceRole.entities.Conversation.filter({ conversationType: 'AI' }, '-lastMessageAt', 50);
     const due = convs
-      .filter((c) => c.waitingSince && c.handledBy !== 'HUMAN' && now - new Date(c.waitingSince).getTime() >= OVERDUE_MS)
+      .filter((c) => c.waitingSince && (c.handledBy !== 'HUMAN' || !ownerThere) && now - new Date(c.waitingSince).getTime() >= overdueMs)
       .slice(0, MAX_PER_RUN);
 
     const taken = [];

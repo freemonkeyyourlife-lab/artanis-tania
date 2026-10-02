@@ -22,7 +22,7 @@
       }
     ]
   },
-  "description": "Springt in wartenden Gast-Chats ein, wenn nach zwei Minuten niemand geantwortet hat \u2014 auch bei geschlossenem Tab.",
+  "description": "Sicherheitsnetz f\u00fcr geschlossene Tabs: \u00fcbernimmt wartende Gast-Chats. Ist der Besitzer nicht da, antwortet die KI sofort statt nach kurzem Vorsprung.",
   "name": "KI-\u00dcbernahme",
   "trigger": {
     "condition": null,

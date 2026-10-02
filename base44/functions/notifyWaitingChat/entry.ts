@@ -31,7 +31,7 @@ export default async function (req) {
     const body =
       who + " will mit " + with_whom + " chatten und wartet auf dich.\n\n" +
       "Übernehmen: " + link + "\n\n" +
-      "Antwortest du nicht, übernimmt die KI nach 2 Minuten von selbst.";
+      "Antwortest du nicht, übernimmt die KI von selbst — bist du nicht da, sofort.";
 
     let sent = 0;
     for (const admin of admins) {

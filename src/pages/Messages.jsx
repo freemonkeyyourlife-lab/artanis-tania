@@ -43,6 +43,7 @@ import ChatText from "@/components/chat/ChatText";
 import QuickPayButton from "@/components/pay/QuickPayButton";
 import { hasProAccess } from "@/lib/proAccess";
 import { publicName } from "@/lib/displayName";
+import { ownerIsPresent } from "@/lib/presence";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
 const TEXT_MODEL_KEY = "artanis_text_model";
@@ -1042,7 +1043,7 @@ export default function Messages() {
     return list[0]?.created_date || null;
   };
 
-  // Erst der Mensch, dann die KI: zwei Minuten Vorsprung, dann übernimmt sie selbst.
+  // Erst der Mensch, dann die KI: kurzer Vorsprung, dann übernimmt sie selbst.
   const waitForHuman = async (conv) => {
     if (!conv) return false;
     // Der Admin ist selbst der Mensch — in seinen eigenen Chats wartet niemand.
@@ -1056,6 +1057,13 @@ export default function Messages() {
       const lastHuman = baseline ? new Date(baseline).getTime() : 0;
       if (lastHuman && Date.now() - lastHuman < HUMAN_WINDOW_MS) return true;
       await base44.entities.Conversation.update(conv.id, { handledBy: "AI", waitingSince: null }).catch(() => {});
+      return false;
+    }
+
+    // Der Besitzer ist nicht da — dann wartet hier niemand: die KI antwortet sofort,
+    // damit kein Gast weggeht, weil es still bleibt.
+    if (!(await ownerIsPresent())) {
+      base44.entities.Conversation.update(conv.id, { waitingSince: null }).catch(() => {});
       return false;
     }
 

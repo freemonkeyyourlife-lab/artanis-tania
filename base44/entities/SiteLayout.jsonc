@@ -45,6 +45,10 @@
     },
     "infoTexts": {
       "type": "object"
+    },
+    "ownerLastSeenAt": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "rls": {
