@@ -2,6 +2,7 @@ import React from "react";
 import { Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, Monitor, MonitorOff, MonitorUp, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PaymentLinkDialog from "@/components/pay/PaymentLinkDialog";
+import DevicePicker from "@/components/call/DevicePicker";
 
 const ROOM_MODES = [
   { id: "OPEN", label: "Offen", hint: "Alle mit dem Link kommen rein" },
@@ -12,6 +13,7 @@ const ROOM_MODES = [
 export default function CallControls({
   micOn, camOn, toggleMic, toggleCam, onEnd,
   isHost, sharing, onToggleShare, onAddScreen, onRemoveScreen, screens, mode, setMode,
+  devices, activeDevice, onPickDevice, onListDevices,
 }) {
   return (
     <div className="border-t border-border">
@@ -91,6 +93,13 @@ export default function CallControls({
             <MonitorUp className="w-5 h-5" />
           </button>
         )}
+        <DevicePicker
+          devices={devices}
+          activeDevice={activeDevice}
+          onPick={onPickDevice}
+          onOpen={onListDevices}
+          className="w-12 h-12"
+        />
         <PaymentLinkDialog className="w-12 h-12" />
         <button
           onClick={onEnd}

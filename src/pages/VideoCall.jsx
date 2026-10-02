@@ -64,6 +64,7 @@ export default function VideoCall() {
     attachLocal, toggleCam, toggleMic,
     messages, sendChat, sendChatVoice, sharing, toggleShare, addScreen, removeScreen, screens, mySeat,
     getLocalVideo, myScreen,
+    devices, activeDevice, listDevices, switchDevice,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
     stage, stageLines, openStage, closeStage, sayOnStage,
@@ -337,6 +338,10 @@ export default function VideoCall() {
         onAddScreen={addScreen}
         onRemoveScreen={removeScreen}
         screens={screens}
+        devices={devices}
+        activeDevice={activeDevice}
+        onPickDevice={switchDevice}
+        onListDevices={listDevices}
         mode={mode}
         setMode={setMode}
         onEnd={() => { call.leave(); navigate("/live"); }}

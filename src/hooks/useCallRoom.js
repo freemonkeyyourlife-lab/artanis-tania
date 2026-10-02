@@ -28,6 +28,9 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
   // Die Bühne: der Plattform-Chat, den gerade alle im Call zusammen lesen.
   const [stage, setStage] = useState(null);
   const [stageLines, setStageLines] = useState([]);
+  // Was am Gerät hängt: Kameras und Mikrofone — auch eine externe Cam.
+  const [devices, setDevices] = useState({ video: [], audio: [] });
+  const [activeDevice, setActiveDevice] = useState({ video: "", audio: "" });
 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -416,6 +419,11 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     return onStageRequest(apply);
   }, [joined, token]);
 
+  // Sobald der Zugriff läuft, stehen die Gerätenamen bereit.
+  useEffect(() => {
+    if (joined) listDevices();
+  }, [joined, listDevices]);
+
   // Ein neuer Track braucht eine frische Aushandlung mit jeder Gegenseite.
   const negotiate = useCallback(async (seat, pc) => {
     if (!pc || pc.signalingState !== "stable") return;
@@ -450,6 +458,52 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
       return null;
     }
   }, [setPreview, negotiate]);
+
+  // Welche Kameras und Mikrofone dranhängen — auch eine externe Cam oder das
+  // Handy als Webcam. Namen gibt es erst, wenn der Zugriff erlaubt ist.
+  const listDevices = useCallback(async () => {
+    try {
+      const all = await navigator.mediaDevices.enumerateDevices();
+      setDevices({
+        video: all.filter((d) => d.kind === "videoinput").map((d) => ({ id: d.deviceId, label: d.label || "Kamera" })),
+        audio: all.filter((d) => d.kind === "audioinput").map((d) => ({ id: d.deviceId, label: d.label || "Mikrofon" })),
+      });
+      setActiveDevice({
+        video: localStreamRef.current?.getVideoTracks()[0]?.getSettings?.().deviceId || "",
+        audio: localStreamRef.current?.getAudioTracks()[0]?.getSettings?.().deviceId || "",
+      });
+    } catch (e) {
+      setDevices({ video: [], audio: [] });
+    }
+  }, []);
+
+  // Auf eine andere Kamera oder ein anderes Mikrofon umschalten. Die Gegenseite
+  // sieht sofort das neue Bild — nichts reißt ab, der Call läuft weiter.
+  const switchDevice = useCallback(async (kind, deviceId) => {
+    setError("");
+    try {
+      const s = await navigator.mediaDevices.getUserMedia(
+        kind === "video" ? { video: { deviceId: { exact: deviceId } } } : { audio: { deviceId: { exact: deviceId } } }
+      );
+      const track = kind === "video" ? s.getVideoTracks()[0] : s.getAudioTracks()[0];
+      if (!track) return;
+      track.enabled = kind === "video" ? camRef.current : micRef.current;
+      if (!localStreamRef.current) localStreamRef.current = new MediaStream();
+      const stream = localStreamRef.current;
+      const old = kind === "video" ? stream.getVideoTracks()[0] : stream.getAudioTracks()[0];
+      if (old) { old.stop(); stream.removeTrack(old); }
+      stream.addTrack(track);
+      for (const [seat, pc] of pcsRef.current.entries()) {
+        const sender = pc.getSenders().find((sn) => sn.track && sn.track.kind === kind);
+        if (sender) await sender.replaceTrack(track);
+        else { pc.addTrack(track, stream); negotiate(seat, pc); }
+      }
+      if (kind === "video") setPreview(stream);
+      await listDevices();
+    } catch (e) {
+      setError("Diese Kamera ließ sich nicht öffnen.");
+    }
+  }, [listDevices, negotiate, setPreview]);
 
   const toggleMic = useCallback(async () => {
     setError("");
@@ -621,6 +675,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     attachLocal, toggleCam, toggleMic,
     messages, sendChat, sendChatVoice, sharing, toggleShare, addScreen, removeScreen, screens, mySeat,
     getLocalVideo, myScreen,
+    devices, activeDevice, listDevices, switchDevice,
     mode, setMode, watchers, closed,
     invites, createInvite, revokeInvite,
     stage, stageLines, openStage, closeStage, sayOnStage,
