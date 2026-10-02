@@ -33,6 +33,7 @@ export const MODULE_TYPES = [
   { path: "/admin", label: "Verwaltung", description: "Nutzer und Freigaben." },
   { path: "/tutorial", label: "Tutorial", description: "Die Einführung Schritt für Schritt." },
   { path: "/anleitung", label: "Anleitung", description: "Nachschlagewerk zum Weiterbauen." },
+  { path: "/modellplan", label: "Modell-Plan", description: "Welche Bild-Modelle es gibt, was fehlt und was es kostet." },
   { path: "/call", label: "Video-Call", description: "Der Video-Raum für Gespräche." },
   { path: "/account", label: "Konto", description: "Eigenes Profil und Einstellungen." },
   { path: "/prompt", label: "Prompt-Generator", description: "Idee sprechen oder tippen — heraus kommt ein fertiger Prompt fürs externe Studio." },
@@ -203,6 +204,7 @@ export const FIXED_AREAS = [
       { label: "Besitzer-Konsole", path: "/owner" },
       { label: "Testsandbox", path: "/sandbox" },
       { label: "Vorschau als Nutzer", path: "/vorschau" },
+      { label: "Modell-Plan", path: "/modellplan" },
     ],
   },
 ];

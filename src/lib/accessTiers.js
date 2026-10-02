@@ -42,6 +42,7 @@ const ADMIN_PATHS = new Set([
   "/leitstand",
   "/archiv",
   "/anleitung",
+  "/modellplan",
 ]);
 
 // Nur für dich: hier wird nichts veröffentlicht, hier wird geprüft und gesteuert.

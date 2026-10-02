@@ -54,6 +54,7 @@ import Tutorial from '@/pages/Tutorial';
 import TutorialPlayer from '@/components/tutorial/TutorialPlayer';
 import Baukasten from '@/pages/Baukasten';
 import Anleitung from '@/pages/Anleitung';
+import ModelPlan from '@/pages/ModelPlan';
 import Archive from '@/pages/Archive';
 import ContentPlan from '@/pages/ContentPlan';
 import SalesDashboard from '@/pages/SalesDashboard';
@@ -153,6 +154,7 @@ const AuthenticatedApp = () => {
         <Route path="/baukasten" element={<Baukasten />} />
         <Route path="/stimmen" element={<VoiceStudio />} />
         <Route path="/anleitung" element={<Anleitung />} />
+        <Route path="/modellplan" element={<ModelPlan />} />
         <Route path="/archiv" element={<Archive />} />
         <Route path="/planung" element={<ContentPlan />} />
         <Route path="/verkauf" element={<SalesDashboard />} />
