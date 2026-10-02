@@ -35,6 +35,7 @@ import ModelLinkList from "@/components/studio/ModelLinkList";
 import ModelOverview from "@/components/studio/ModelOverview";
 import AiLogbook from "@/components/studio/AiLogbook";
 import RequestLog from "@/components/studio/RequestLog";
+import ExternalStudio from "@/components/studio/ExternalStudio";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -45,6 +46,7 @@ const TAB_GROUPS = [
     label: "Selbst erstellen",
     tabs: [
       { id: "characters", label: "Charaktere" },
+      { id: "external", label: "Externes Studio" },
       { id: "dock", label: "Dockingstation" },
       { id: "baukasten", label: "Baukasten" },
       { id: "voices", label: "Stimmbank" },
@@ -261,6 +263,8 @@ export default function Studio() {
           </Link>
         </div>
       )}
+
+      {tab === "external" && <ExternalStudio onChanged={load} />}
 
       {tab === "characters" && (
       <>
