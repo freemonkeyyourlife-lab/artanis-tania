@@ -6,12 +6,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { uploadDataUrl } from "@/lib/mediaUpload";
+import ImageDirectionPanel from "@/components/studio/ImageDirectionPanel";
+import { directionPrompt, emptyDirection } from "@/lib/imageDirection";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
 // Mehrere Modelle dürfen gleichzeitig ran — und als Kombi abgespeichert werden.
 export default function GeneratorManager({ creators }) {
   const [creatorId, setCreatorId] = useState("");
   const [prompt, setPrompt] = useState("");
+  const [direction, setDirection] = useState(emptyDirection());
   const [animated, setAnimated] = useState(false);
   const [extraRefs, setExtraRefs] = useState([]);
   const [models, setModels] = useState([]);
@@ -55,6 +58,7 @@ export default function GeneratorManager({ creators }) {
       p += `The woman in the reference images is ${creator.stageName}. Keep her face, hair colour, hair length, body and skin tone EXACTLY as in her reference images — she must be recognisable. `;
     }
     p += prompt;
+    p += " " + directionPrompt(direction);
     return p;
   };
 
@@ -277,6 +281,15 @@ export default function GeneratorManager({ creators }) {
           placeholder="Was soll zu sehen sein? Ort, Pose, Outfit, Licht …"
           className="w-full px-4 py-3 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground resize-none mb-4"
         />
+
+        <div className="mb-4">
+          <ImageDirectionPanel
+            value={direction}
+            onChange={setDirection}
+            fields={["inhalt", "klamotte", "stimmung", "freizuegigkeit"]}
+            title="Regie: Inhalt, Stimmung, Freizügigkeit, Klamotte"
+          />
+        </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <button
