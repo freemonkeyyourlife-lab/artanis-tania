@@ -277,20 +277,26 @@ export default function ExperiencePlayer() {
       </div>
 
       {/* Fortschritt und Concierge — sie schaut über die Schulter */}
-      <div className="absolute top-32 lg:top-36 left-4 right-4 lg:right-auto lg:w-[340px] z-20 space-y-3 max-h-[52vh] overflow-y-auto scrollbar-hide">
-        <StoryProgress stages={stages} currentIndex={currentStageIdx} />
-        <ConciergeTip
-          narrators={concierges}
-          lines={tips[currentStage.id]?.lines || []}
-          nudge={tips[currentStage.id]?.nudge}
-          stageIndex={currentStageIdx}
-          stageCount={stages.length}
-          loading={!!tips[currentStage.id]?.loading}
-          speaking={speaking}
-          speakingWho={speakingWho}
-          onSpeak={() => playLines(tips[currentStage.id]?.lines)}
-          onStop={stopSpeak}
-        />
+      <div className="absolute top-32 lg:top-36 left-4 right-4 lg:right-auto z-20 max-h-[52vh] overflow-y-auto scrollbar-hide">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-3">
+          <div className="lg:w-[300px] lg:flex-shrink-0">
+            <StoryProgress stages={stages} currentIndex={currentStageIdx} />
+          </div>
+          <div className="lg:w-[380px] lg:flex-shrink-0">
+            <ConciergeTip
+              narrators={concierges}
+              lines={tips[currentStage.id]?.lines || []}
+              nudge={tips[currentStage.id]?.nudge}
+              stageIndex={currentStageIdx}
+              stageCount={stages.length}
+              loading={!!tips[currentStage.id]?.loading}
+              speaking={speaking}
+              speakingWho={speakingWho}
+              onSpeak={() => playLines(tips[currentStage.id]?.lines)}
+              onStop={stopSpeak}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Overlay Content */}

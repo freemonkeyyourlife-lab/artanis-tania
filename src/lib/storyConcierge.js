@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { narratorBriefing } from "@/lib/narratorStyle";
+import { getStructure } from "@/lib/onboarding";
 
 const SCHEMA = {
   type: "object",
@@ -23,10 +24,12 @@ const SCHEMA = {
 // Sind zwei Erzählerinnen dabei, spielen sie sich den Ball zu.
 export async function conciergeTip({ narrators = [], experience, stage, index, count, history = [] }) {
   const two = narrators.length > 1;
+  const behavior = getStructure().guideBehavior;
 
   const prompt = [
     "Du begleitest eine Spielerin durch ein Story-Spiel und schaust ihr über die Schulter.",
     `# Deine Erzählerinnen\n${narratorBriefing(narrators)}`,
+    behavior ? `# Wie du es sagst (Benehmen, Sprache, Wortwahl)\n${behavior}` : "",
     `Die Geschichte heißt „${experience?.title || "ohne Titel"}".`,
     `Du bist bei Station ${index + 1} von ${count}: ${stage?.title || "ohne Titel"} — ${stage?.overlayText || ""}`.trim(),
     history.length ? `Bisher hat sie: ${history.join(", ")}.` : "",

@@ -60,6 +60,43 @@
     "infoTexts": {
       "type": "object"
     },
+    "askGender": {
+      "type": "boolean",
+      "default": true
+    },
+    "askOrientation": {
+      "type": "boolean",
+      "default": true
+    },
+    "genderOptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "orientationOptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "greetingText": {
+      "type": "string"
+    },
+    "guideBehavior": {
+      "type": "string"
+    },
+    "guideVoice": {
+      "type": "string",
+      "enum": [
+        "river",
+        "honey",
+        "sunny",
+        "storm",
+        "spark"
+      ],
+      "default": "honey"
+    },
     "ownerLastSeenAt": {
       "type": "string",
       "format": "date-time"

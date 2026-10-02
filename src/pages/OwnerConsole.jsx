@@ -12,7 +12,7 @@ import GoldmutAccess from "@/components/owner/GoldmutAccess";
 import UserSwitcher from "@/components/owner/UserSwitcher";
 import { DEFAULT_MENU, DEFAULT_FONT, loadLayout, saveLayout } from "@/lib/siteLayout";
 import { defaultStructure, structureOf, structureMenu, applyMenu } from "@/lib/siteStructure";
-import { DEFAULT_STRUCTURE, DEFAULT_INTRO_STEPS, DEFAULT_INTERESTS, DEFAULT_INFO, clearStructureCache, loadStructure } from "@/lib/onboarding";
+import { DEFAULT_STRUCTURE, DEFAULT_INTRO_STEPS, DEFAULT_INTERESTS, DEFAULT_INFO, DEFAULT_GENDERS, DEFAULT_ORIENTATIONS, DEFAULT_GREETING, DEFAULT_GUIDE_BEHAVIOR, clearStructureCache, loadStructure } from "@/lib/onboarding";
 import StructureEditor from "@/components/owner/StructureEditor";
 import ChannelHub from "@/components/owner/ChannelHub";
 import InfoTextEditor from "@/components/owner/InfoTextEditor";
@@ -95,6 +95,13 @@ export default function OwnerConsole() {
         introSteps: Array.isArray(row?.introSteps) && row.introSteps.length ? row.introSteps : DEFAULT_INTRO_STEPS,
         interestOptions: Array.isArray(row?.interestOptions) && row.interestOptions.length ? row.interestOptions : DEFAULT_INTERESTS,
         infoTexts: { ...DEFAULT_INFO, ...(row?.infoTexts || {}) },
+        askGender: row?.askGender !== false,
+        askOrientation: row?.askOrientation !== false,
+        genderOptions: Array.isArray(row?.genderOptions) && row.genderOptions.length ? row.genderOptions : DEFAULT_GENDERS,
+        orientationOptions: Array.isArray(row?.orientationOptions) && row.orientationOptions.length ? row.orientationOptions : DEFAULT_ORIENTATIONS,
+        greetingText: row?.greetingText || DEFAULT_GREETING,
+        guideBehavior: row?.guideBehavior || DEFAULT_GUIDE_BEHAVIOR,
+        guideVoice: row?.guideVoice || "honey",
       });
     });
   }, [me]);

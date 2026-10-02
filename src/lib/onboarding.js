@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 
 export const DEFAULT_INTRO_STEPS = [
   {
-    title: "Willkommen bei Artanis × Triania",
+    title: "Willkommen bei Artanis × Tania",
     text: "Das hier ist kein Katalog zum Durchklicken. Es sind Figuren, die mit dir reden, auf dich reagieren und sich an dich erinnern. Du redest mit ihnen — sie antworten dir.",
   },
   {
@@ -33,10 +33,21 @@ export const DEFAULT_INTERESTS = [
 
 // Wie jemand anfangen will. Das ist die Weiche am Ende der Begrüßung.
 export const START_PATHS = [
-  { id: "characters", label: "Figuren kennenlernen", hint: "Artanis, Triania und das Paar", to: "/artanis" },
+  { id: "characters", label: "Figuren kennenlernen", hint: "Artanis, Tania und das Paar", to: "/artanis" },
   { id: "create", label: "Selbst etwas erschaffen", hint: "Eigene Figur, eigene Story", to: "/studio" },
   { id: "watch", label: "Erstmal nur schauen", hint: "Umsehen, nichts tun", to: "/explore" },
 ];
+
+// Ganz am Anfang: wer bist du, und worauf stehst du. Danach wissen die
+// Erzählerinnen, wie sie dich ansprechen dürfen.
+export const DEFAULT_GENDERS = ["Mann", "Frau", "Divers"];
+export const DEFAULT_ORIENTATIONS = ["Frauen", "Männer", "Beides", "Noch offen"];
+
+export const DEFAULT_GREETING =
+  "Schön, dass du da bist. Ich bin {narrator} — und wir zwei gehen ab jetzt mit dir. Sag mir, wer du bist und was dich herführt, dann rede ich mit dir so, wie du es magst.";
+
+export const DEFAULT_GUIDE_BEHAVIOR =
+  "Warm und direkt, duzt den Gast, keine Floskeln. Führt durch die Auswahl statt sie nur abzufragen: greift einen Punkt auf, macht neugierig, gibt ein Beispiel und lässt die Wahl offen. Fragt nach, wenn etwas unklar ist. Wird es persönlich, bleibt sie diskret und lässt das Tempo beim Gast.";
 
 export const DEFAULT_INFO = {
   group_characters:
@@ -65,6 +76,13 @@ export const DEFAULT_STRUCTURE = {
   introSteps: DEFAULT_INTRO_STEPS,
   interestOptions: DEFAULT_INTERESTS,
   infoTexts: DEFAULT_INFO,
+  askGender: true,
+  askOrientation: true,
+  genderOptions: DEFAULT_GENDERS,
+  orientationOptions: DEFAULT_ORIENTATIONS,
+  greetingText: DEFAULT_GREETING,
+  guideBehavior: DEFAULT_GUIDE_BEHAVIOR,
+  guideVoice: "honey",
 };
 
 const SEEN_KEY = "artanis_intro_seen_v1";
@@ -88,6 +106,17 @@ export async function loadStructure() {
         interestOptions:
           Array.isArray(row.interestOptions) && row.interestOptions.length ? row.interestOptions : DEFAULT_INTERESTS,
         infoTexts: { ...DEFAULT_INFO, ...(row.infoTexts || {}) },
+        askGender: row.askGender !== false,
+        askOrientation: row.askOrientation !== false,
+        genderOptions:
+          Array.isArray(row.genderOptions) && row.genderOptions.length ? row.genderOptions : DEFAULT_GENDERS,
+        orientationOptions:
+          Array.isArray(row.orientationOptions) && row.orientationOptions.length
+            ? row.orientationOptions
+            : DEFAULT_ORIENTATIONS,
+        greetingText: row.greetingText || DEFAULT_GREETING,
+        guideBehavior: row.guideBehavior || DEFAULT_GUIDE_BEHAVIOR,
+        guideVoice: row.guideVoice || "honey",
       };
     } catch (e) {
       cached = { ...DEFAULT_STRUCTURE };
@@ -153,6 +182,8 @@ export const saveIntroProfile = async (profile) => {
     const me = await base44.auth.me();
     if (!me?.id) return;
     const data = { userId: me.id };
+    if (profile.gender) data.gender = profile.gender;
+    if (profile.orientation) data.orientation = profile.orientation;
     if (profile.interests?.length) data.interests = profile.interests;
     if (profile.path) data.topicsToDiscuss = [profile.path];
     if (profile.wish) data.whatTheyWantToSee = profile.wish;

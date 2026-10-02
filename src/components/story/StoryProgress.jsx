@@ -18,7 +18,10 @@ export default function StoryProgress({ stages = [], currentIndex = 0 }) {
       </div>
 
       <div className="h-2.5 rounded-full bg-background/70 overflow-hidden mb-2">
-        <div className="h-full rounded-full bg-primary accent-glow transition-all duration-500" style={{ width: `${pct}%` }} />
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-primary to-secondary accent-glow transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
       </div>
 
       <p className="text-[12px] font-bold text-muted-foreground mb-3">

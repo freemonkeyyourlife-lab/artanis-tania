@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ArrowRight, ArrowLeft, Check, Mic } from "lucide-react";
+import { X, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
+import IntroChoiceStep from "@/components/onboarding/IntroChoiceStep";
+import IntroGreeting from "@/components/onboarding/IntroGreeting";
 import {
   loadStructure,
   getStructure,
@@ -13,17 +15,29 @@ import {
   markIntroSeen,
 } from "@/lib/onboarding";
 
-// Die Begrüßung beim ersten Besuch. Sie erklärt, was hier los ist, fragt nach
-// Interessen und schickt den Gast an die richtige Stelle. Überspringen geht immer.
+// Die Begrüßung beim ersten Besuch: erst wer du bist und worauf du stehst,
+// dann stellen sich die Erzählerinnen vor, dann die Einweisung. Überspringen
+// geht immer.
 export default function OnboardingIntro() {
   const navigate = useNavigate();
   const [structure, setStructure] = useState(getStructure());
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
+  const [gender, setGender] = useState("");
+  const [orientation, setOrientation] = useState("");
   const [interests, setInterests] = useState([]);
   const [path, setPath] = useState("");
   const [wish, setWish] = useState("");
   const [busy, setBusy] = useState(false);
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    try {
+      setName(localStorage.getItem("display_name") || "");
+    } catch (e) {
+      /* egal */
+    }
+  }, []);
 
   useEffect(() => {
     loadStructure().then((s) => {
@@ -43,17 +57,28 @@ export default function OnboardingIntro() {
     return () => window.removeEventListener("artanis:intro-preview", open);
   }, []);
 
-  const steps = structure.introSteps || [];
-  const total = steps.length + 2;
-  const isLast = step === total - 1;
+  const flow = useMemo(() => {
+    const list = [];
+    if (structure.askGender !== false) list.push({ kind: "gender" });
+    if (structure.askOrientation !== false) list.push({ kind: "orientation" });
+    list.push({ kind: "greeting" });
+    (structure.introSteps || []).forEach((s) => list.push({ kind: "intro", step: s }));
+    list.push({ kind: "interests" });
+    list.push({ kind: "start" });
+    return list;
+  }, [structure]);
+
+  const total = flow.length;
+  const current = flow[Math.min(step, total - 1)] || { kind: "start" };
+  const isLast = current.kind === "start";
 
   const finish = async (goTo) => {
     if (busy) return;
     setBusy(true);
     markIntroSeen();
     const chosen = START_PATHS.find((p) => p.id === path);
-    if (interests.length || wish || chosen) {
-      await saveIntroProfile({ interests, path: chosen?.label || "", wish });
+    if (gender || orientation || interests.length || wish || chosen) {
+      await saveIntroProfile({ gender, orientation, interests, path: chosen?.label || "", wish });
     }
     setVisible(false);
     setBusy(false);
@@ -97,21 +122,45 @@ export default function OnboardingIntro() {
         </div>
 
         <div className="px-6 py-6 min-h-[300px]">
-          {step < steps.length && (
+          {current.kind === "gender" && (
+            <IntroChoiceStep
+              eyebrow="Schritt 1"
+              title="Wer bist du?"
+              hint="Damit wir dich richtig ansprechen. Du kannst es jederzeit ändern."
+              options={structure.genderOptions || []}
+              value={gender}
+              onToggle={(v) => setGender((g) => (g === v ? "" : v))}
+            />
+          )}
+
+          {current.kind === "orientation" && (
+            <IntroChoiceStep
+              eyebrow="Schritt 2"
+              title="Worauf stehst du?"
+              hint="Nur damit die Figuren wissen, in welche Richtung sie mit dir gehen dürfen. Sonst nichts."
+              options={structure.orientationOptions || []}
+              value={orientation}
+              onToggle={(v) => setOrientation((o) => (o === v ? "" : v))}
+            />
+          )}
+
+          {current.kind === "greeting" && (
+            <IntroGreeting text={structure.greetingText} voice={structure.guideVoice} name={name} />
+          )}
+
+          {current.kind === "intro" && (
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-3">
-                Schritt {step + 1} von {steps.length}
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Was hier abgeht</p>
               <h2 className="font-display text-3xl lg:text-4xl text-foreground text-gloss mb-4">
-                {steps[step].title}
+                {current.step?.title}
               </h2>
               <p className="text-[16px] font-semibold text-muted-foreground leading-relaxed max-w-xl">
-                {steps[step].text}
+                {current.step?.text}
               </p>
             </div>
           )}
 
-          {step === steps.length && (
+          {current.kind === "interests" && (
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Kurz zu dir</p>
               <h2 className="font-display text-3xl lg:text-4xl text-foreground text-gloss mb-3">
@@ -176,7 +225,7 @@ export default function OnboardingIntro() {
                   value={wish}
                   onChange={(e) => setWish(e.target.value)}
                   rows={2}
-                  placeholder="Zum Beispiel: Ich will mit Triania reden und dabei zuschauen, wie sie sich verhält."
+                  placeholder="Zum Beispiel: Ich will mit Tania reden und dabei zuschauen, wie sie sich verhält."
                   className="flex-1 rounded-2xl border-2 border-input bg-transparent px-4 py-3 text-[15px] font-semibold text-foreground resize-none focus:outline-none focus:border-primary"
                 />
                 <VoiceInput onResult={(text) => setWish((w) => (w ? `${w} ${text}` : text))} className="w-12 h-12" />
