@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic, Terminal, Map as MapIcon } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic, Terminal, Map as MapIcon, CalendarRange } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -20,6 +20,7 @@ import OwnerCommandBar from "@/components/owner/OwnerCommandBar";
 import ModuleEditor from "@/components/owner/ModuleEditor";
 import SiteOverview from "@/components/owner/SiteOverview";
 import WindowLayoutEditor from "@/components/owner/WindowLayoutEditor";
+import PlanManager from "@/components/studio/PlanManager";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -34,6 +35,7 @@ const TABS = [
   { id: "channels", label: "Kanäle", icon: Link2 },
   { id: "baukasten", label: "Baukasten", icon: Blocks },
   { id: "voices", label: "Stimmen", icon: Mic },
+  { id: "plan", label: "Content-Plan", icon: CalendarRange },
   { id: "programmierer", label: "Programmierer", icon: BookOpen },
   { id: "data", label: "Sichern", icon: Database },
 ];
@@ -52,6 +54,7 @@ export default function OwnerConsole() {
   const [font, setFont] = useState(DEFAULT_FONT);
   const [structure, setStructure] = useState(DEFAULT_STRUCTURE);
   const [counts, setCounts] = useState(null);
+  const [creators, setCreators] = useState([]);
   const [saving, setSaving] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
@@ -99,6 +102,7 @@ export default function OwnerConsole() {
           base44.entities.Contest.list(),
           base44.entities.User.list(),
         ]);
+        setCreators(creators);
         setCounts({
           creators: creators.filter((c) => c.active !== false).length,
           voices: voices.length,
@@ -565,6 +569,24 @@ export default function OwnerConsole() {
               Aktuell drin: {counts ? Math.max(0, (c.users || 0) - 1) : "…"} außer dir.
             </p>
           </div>
+        </>
+      )}
+
+      {tab === "plan" && (
+        <>
+          <GuideBox
+            title="Wünsche zu Inhalten machen"
+            steps={[
+              "Links stehen die Wünsche der Community — die beliebtesten oben.",
+              "Merken heißt: im Blick behalten. Übernehmen schreibt den Wunsch in deinen Plan.",
+              "Rechts ziehst du den Status weiter, bis der Eintrag fertig ist.",
+              "„Post anlegen“ macht daraus einen Entwurf, den du im Studio noch freigibst.",
+              "Dieselbe Anordnung findest du auf der Seite Content-Planer und im Studio.",
+            ]}
+          >
+            Derselbe Planer wie im Studio — hier direkt neben den anderen Werkzeugen.
+          </GuideBox>
+          <PlanManager creators={creators} />
         </>
       )}
 

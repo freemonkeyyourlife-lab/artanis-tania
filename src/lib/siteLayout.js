@@ -17,6 +17,7 @@ export const DEFAULT_MENU = [
   { id: "community", label: "Community", path: "/community", hidden: false },
   { id: "coins", label: "Börse", path: "/coins", hidden: false },
   { id: "library", label: "Bibliothek", path: "/library", hidden: false },
+  { id: "planung", label: "Content-Planer", path: "/planung", hidden: false },
   { id: "owner", label: "Besitzer-Konsole", path: "/owner", hidden: false },
 ];
 

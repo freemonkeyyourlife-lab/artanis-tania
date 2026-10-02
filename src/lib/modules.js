@@ -17,6 +17,7 @@ export const MODULE_TYPES = [
   { path: "/messages", label: "Nachrichten", description: "Die Chats mit Charakteren und echten Leuten." },
   { path: "/therapy", label: "Sprechstunde", description: "Sitzungen mit Triania." },
   { path: "/request", label: "Wünsche", description: "Wünsche eintragen und abstimmen." },
+  { path: "/planung", label: "Content-Planer", description: "Wünsche übernehmen und den Plan für die nächsten Inhalte ziehen." },
   { path: "/paylinks", label: "Kasse", description: "Zahlungen anfordern und bezahlen." },
   { path: "/contests", label: "Wettbewerbe", description: "Wettbewerbe und ihre Beiträge." },
   { path: "/studio", label: "Studio", description: "Hier legst du Charaktere, Stimmen und Inhalte an." },

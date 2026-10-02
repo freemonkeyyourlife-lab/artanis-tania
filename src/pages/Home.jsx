@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { MessageSquare, Sparkles, ArrowRight, Crown, Bot, Calendar, Link2 } from "lucide-react";
+import { MessageSquare, Sparkles, ArrowRight, Crown, Bot, Calendar, Link2, CalendarRange } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import PersonaCard from "@/components/PersonaCard";
 import CharacterStoryCard from "@/components/CharacterStoryCard";
@@ -44,9 +44,15 @@ export default function Home() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [isAdmin, setIsAdmin] = useState(false);
   const { userId, vote } = useRequestVotes();
 
   useEffect(() => { loadData(); }, []);
+
+  // Der Content-Planer ist ein Besitzer-Werkzeug — deshalb nur für den Admin sichtbar.
+  useEffect(() => {
+    base44.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => setIsAdmin(false));
+  }, []);
 
   // Eine Stimme für einen Community-Wunsch — zählt genau einmal pro Person.
   const voteRequest = async (request) => {
@@ -337,6 +343,21 @@ export default function Home() {
                 Raumlink erstellen
               </Link>
             </div>
+
+            {/* Content-Planer — derselbe Planer wie im Studio und in der Konsole. */}
+            {isAdmin && (
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <h3 className="font-display text-lg text-foreground mb-2 flex items-center gap-2">
+                  <CalendarRange className="w-4 h-4 text-primary" /> Content-Planer
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Wünsche übernehmen und den Plan für die nächsten Inhalte ziehen — dieselbe Ansicht wie im Studio.
+                </p>
+                <Link to="/planung" className="block w-full py-2.5 rounded-full glass-btn text-sm font-semibold text-center text-foreground text-gloss">
+                  Planer öffnen
+                </Link>
+              </div>
+            )}
 
             {/* Topics */}
             {topics.length > 0 && (
