@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Loader2, ArrowLeft, ArrowRight, Wand2 } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, Wand2, ListChecks, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AssistantCharacterStep from "@/components/studio/assistant/AssistantCharacterStep";
 import AssistantImageStep from "@/components/studio/assistant/AssistantImageStep";
@@ -8,6 +8,12 @@ import AssistantModelStep from "@/components/studio/assistant/AssistantModelStep
 import AssistantBlockStep from "@/components/studio/assistant/AssistantBlockStep";
 import AssistantVoiceStep from "@/components/studio/assistant/AssistantVoiceStep";
 import AssistantPromptStep from "@/components/studio/assistant/AssistantPromptStep";
+import AssistantMoodMode from "@/components/studio/assistant/AssistantMoodMode";
+
+const MODES = [
+  { id: "GUIDED", label: "Schritt für Schritt", icon: ListChecks },
+  { id: "MOOD", label: "Stimmung", icon: Flame },
+];
 
 const STEPS = [
   { id: "character", label: "Charakter" },
@@ -21,6 +27,7 @@ const STEPS = [
 // Der Assistent führt einmal von vorne bis hinten: Charakter, Bilder, Modell,
 // Bausteine, Stimme, Prompt. Jeder Schritt fragt — du entscheidest.
 export default function AssistantWizard() {
+  const [mode, setMode] = useState("GUIDED");
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
@@ -76,21 +83,41 @@ export default function AssistantWizard() {
           <Wand2 className="w-5 h-5 text-primary" /> Assistent
         </p>
         <div className="flex flex-wrap gap-1.5">
-          {STEPS.map((s, i) => (
+          {MODES.map((m) => (
             <button
-              key={s.id}
-              onClick={() => setStep(i)}
+              key={m.id}
+              onClick={() => setMode(m.id)}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors",
-                i === step ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-muted-foreground"
+                "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition-colors",
+                mode === m.id ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-muted-foreground"
               )}
             >
-              {i + 1}. {s.label}
+              <m.icon className="w-3.5 h-3.5" /> {m.label}
             </button>
           ))}
         </div>
+        {mode === "GUIDED" && (
+          <div className="flex flex-wrap gap-1.5 w-full">
+            {STEPS.map((s, i) => (
+              <button
+                key={s.id}
+                onClick={() => setStep(i)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors",
+                  i === step ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-muted-foreground"
+                )}
+              >
+                {i + 1}. {s.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
+      {mode === "MOOD" ? (
+        <AssistantMoodMode creators={data.creators} voices={data.voices} onChanged={load} />
+      ) : (
+        <>
       {step === 0 && <AssistantCharacterStep creators={data.creators} value={creator} onChange={setCreator} />}
       {step === 1 && <AssistantImageStep creators={data.creators} onReloaded={load} />}
       {step === 2 && (
@@ -138,6 +165,8 @@ export default function AssistantWizard() {
           </button>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

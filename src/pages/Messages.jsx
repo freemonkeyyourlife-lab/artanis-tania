@@ -21,7 +21,8 @@ import ChatPromptButton from "@/components/chat/ChatPromptButton";
 import ChatCastMenu from "@/components/chat/ChatCastMenu";
 import MoodQuickMenu from "@/components/chat/MoodQuickMenu";
 import { moodFor, setMoodFor, moodPrompt } from "@/lib/moodStyle";
-import { speechPrompt, styleFor, SPEECH_STYLES } from "@/lib/speechStyle";
+import { takePendingMood, setSceneNote, sceneNotePrompt } from "@/lib/moodMode";
+import { speechPrompt, styleFor, setStyleFor, SPEECH_STYLES } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
 import { splitScene, playScene } from "@/lib/sceneVoice";
 import VoiceChatBar from "@/components/voice/VoiceChatBar";
@@ -309,8 +310,16 @@ export default function Messages() {
   useEffect(() => {
     setExtraCharacters([]);
     setPendingFiles([]);
-    setPlayLevel(playLevelFor(activeChat));
-    setMoods(moodFor(activeChat));
+    // Was der Stimmungs-Modus eingestellt hat, gilt für dieses eine Erlebnis.
+    const pending = activeChat ? takePendingMood() : null;
+    if (pending?.creatorId) {
+      setMoodFor(activeChat, pending.moodIds || []);
+      setPlayLevelFor(activeChat, pending.playLevel || "NORMAL");
+      setSceneNote(activeChat, pending.sceneNote || "");
+      setStyleFor(activeChat, pending.creatorId, { preset: pending.styleId || null, note: pending.styleNote || "" });
+    }
+    setPlayLevel(pending?.creatorId ? pending.playLevel || "NORMAL" : playLevelFor(activeChat));
+    setMoods(pending?.creatorId ? pending.moodIds || [] : moodFor(activeChat));
     const savedRole = roleFor(activeChat);
     setRole(savedRole || DEFAULT_ROLE);
     setRoleReady(!!savedRole);
@@ -576,6 +585,7 @@ export default function Messages() {
     ctx += playPrompt(playLevel);
     ctx += moodPrompt(moods);
     ctx += speechPrompt(activeChat, [activeCreator, ...extraCharacters]);
+    ctx += sceneNotePrompt(activeChat);
     ctx += "\n\n⚠️ SPRACHE: Antworte ausschließlich auf Deutsch (Du-Form) — auch wenn der Nutzer englisch schreibt. Kein Sprachwechsel.";
     return ctx;
   };
