@@ -19,7 +19,7 @@ export default function DockManager() {
 
   const load = async () => {
     try {
-      const data = await base44.entities.Dock.list("-created_date", 100);
+      const data = await base44.entities.Dock.list("-created_date", 500);
       setDocks(data.sort((a, b) => (a.status === "PENDING" ? 0 : 1) - (b.status === "PENDING" ? 0 : 1)));
     } catch (e) {
       console.error(e);
