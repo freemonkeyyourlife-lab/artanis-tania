@@ -20,8 +20,9 @@ export default async function (req) {
     }
     const auth = token ? { Authorization: `Bearer ${token}` } : {};
 
+    // Bild oder Video — dieselbe Suche, nur ein anderer Modell-Typ.
     const params = new URLSearchParams({
-      pipeline_tag: 'text-to-image',
+      pipeline_tag: body.kind === 'video' ? 'text-to-video' : 'text-to-image',
       sort: 'downloads',
       direction: '-1',
       limit: '40',

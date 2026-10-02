@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Search, Loader2, Plus, Check, Power, Trash2, Pencil, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import ModelKindTag from "@/components/studio/ModelKindTag";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -137,6 +138,7 @@ export default function TextModelManager() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5">
+        <ModelKindTag kind="TEXT" className="mb-3" />
         <h2 className="font-display text-xl text-foreground mb-1">Text-Modelle bei Hugging Face</h2>
         <p className="text-xs text-muted-foreground mb-4">
           Das sind die Modelle, die über dein verbundenes Konto wirklich antworten. Beim Übernehmen machen wir einen kurzen

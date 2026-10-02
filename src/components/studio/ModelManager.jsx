@@ -4,6 +4,7 @@ import { Plus, Trash2, Power, ExternalLink, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import HfModelSearch from "@/components/studio/HfModelSearch";
+import ModelKindTag from "@/components/studio/ModelKindTag";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -71,6 +72,7 @@ export default function ModelManager() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="lg:col-span-2 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4">
+        <ModelKindTag kind="BILD" />
         <span className={cn("w-2 h-2 rounded-full", account ? "bg-emerald-400" : "bg-amber-400")} />
         <p className="text-sm text-foreground">
           Hugging Face: {account ? `verbunden als ${account}` : "Verbindung wird geprüft …"}

@@ -19,6 +19,7 @@ import ContestManager from "@/components/studio/ContestManager";
 import GeneratorManager from "@/components/studio/GeneratorManager";
 import ModelManager from "@/components/studio/ModelManager";
 import TextModelManager from "@/components/studio/TextModelManager";
+import VideoModelManager from "@/components/studio/VideoModelManager";
 import PlanManager from "@/components/studio/PlanManager";
 import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
@@ -70,6 +71,7 @@ const TAB_GROUPS = [
       { id: "modellinks", label: "Modell-Links" },
       { id: "overview", label: "Modell-Übersicht" },
       { id: "textmodels", label: "Text-KI" },
+      { id: "videomodels", label: "Video-KI" },
       { id: "models", label: "Bild-KI" },
       { id: "logbook", label: "KI-Logbuch" },
       { id: "members", label: "Mitglieder" },
@@ -220,6 +222,7 @@ export default function Studio() {
       {tab === "generator" && <GeneratorManager creators={creators} />}
       {tab === "models" && <ModelManager />}
       {tab === "textmodels" && <TextModelManager />}
+      {tab === "videomodels" && <VideoModelManager />}
       {tab === "plan" && (
         <div>
           <p className="font-display text-2xl text-foreground mb-1">Content-Planer</p>

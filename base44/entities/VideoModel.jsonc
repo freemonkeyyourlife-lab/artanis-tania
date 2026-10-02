@@ -1,0 +1,26 @@
+{
+  "name": "VideoModel",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "modelId": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "modelId"
+  ]
+}
