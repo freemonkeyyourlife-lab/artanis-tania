@@ -349,6 +349,14 @@ export default function Home() {
               <div className="rounded-2xl border border-border bg-card p-5">
                 <h3 className="font-display text-lg text-foreground mb-4">Werkzeuge</h3>
                 <div className="space-y-3">
+                  <Link to="/studio" className="flex items-center gap-3 p-3 rounded-xl bg-elevated hover:bg-popover transition-colors">
+                    <Sparkles className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Sag was du willst 2.0</p>
+                      <p className="text-[11px] text-muted-foreground">Import, Bilder, Stimme und Prompt in einem Zug</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </Link>
                   <Link to="/planung" className="flex items-center gap-3 p-3 rounded-xl bg-elevated hover:bg-popover transition-colors">
                     <CalendarRange className="w-5 h-5 text-primary flex-shrink-0" />
                     <div className="flex-1 min-w-0">
