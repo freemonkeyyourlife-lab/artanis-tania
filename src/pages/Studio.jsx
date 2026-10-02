@@ -23,6 +23,7 @@ import VideoModelManager from "@/components/studio/VideoModelManager";
 import BulkImport from "@/components/studio/BulkImport";
 import SammelImport from "@/components/studio/SammelImport";
 import HarvestSandbox from "@/components/studio/HarvestSandbox";
+import BotTrainingSandbox from "@/components/studio/BotTrainingSandbox";
 import LinkUpload from "@/components/studio/LinkUpload";
 import PlanManager from "@/components/studio/PlanManager";
 import GalleryManager from "@/components/studio/GalleryManager";
@@ -62,6 +63,7 @@ const TAB_GROUPS = [
       { id: "generator", label: "Generator" },
       { id: "promptgen", label: "Prompt-Generator" },
       { id: "sandbox", label: "Prompt-Sandbox" },
+      { id: "bottraining", label: "Bot-Training" },
       { id: "content", label: "Inhalte & Preise" },
     ],
   },
@@ -250,6 +252,7 @@ export default function Studio() {
       {tab === "bulk" && <BulkImport creators={creators} />}
       {tab === "promptgen" && <PromptGenerator />}
       {tab === "sandbox" && <PromptSandbox />}
+      {tab === "bottraining" && <BotTrainingSandbox />}
       {tab === "plan" && (
         <div>
           <p className="font-display text-2xl text-foreground mb-1">Content-Planer</p>

@@ -1,0 +1,80 @@
+{
+  "name": "BotTraining",
+  "type": "object",
+  "properties": {
+    "persona": {
+      "type": "string",
+      "enum": [
+        "ARTANIS_AI",
+        "TRIANIA_AI",
+        "COUPLE_AI"
+      ]
+    },
+    "moods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "explicit": {
+      "type": "string",
+      "enum": [
+        "ZAHM",
+        "ANZUEGLICH",
+        "SINNLICH",
+        "EXPLIZIT",
+        "HART"
+      ]
+    },
+    "style": {
+      "type": "string",
+      "enum": [
+        "ERZAEHLEND",
+        "DIALOG",
+        "ROLLENSPIEL",
+        "ANALYTISCH",
+        "SACHLICH"
+      ]
+    },
+    "tone": {
+      "type": "number",
+      "default": 5
+    },
+    "length": {
+      "type": "number",
+      "default": 3
+    },
+    "instruction": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "persona"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
