@@ -80,9 +80,23 @@ export default async function (req: Request): Promise<Response> {
     if (!token) return Response.json({ ok: true, skipped: "kein Schlüssel" });
 
     const chatId = handle.slice(PREFIX.length);
-    // Von Hand als Sprachnachricht geschickt: dann bleibt der Text weg.
-    const voiceOnly = msg.voiceNote === true;
-    const withVoice = voiceOnly || conv.voiceNotes === true;
+    // Der Chat steht auf Stimme — oder du hast von Hand eine Sprachnachricht
+    // geschickt. Beides geht raus: erst der Text, dann die Stimme.
+    const withVoice = conv.voiceNotes === true || msg.voiceNote === true;
+
+    // Der Text geht immer mit — auch wenn gleich die Stimme folgt.
+    if (msg.text) {
+      const res = await fetch(`${API}/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text: msg.text }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        console.error("telegramForward: " + (data.description || "unbekannt"));
+        return Response.json({ ok: false, error: data.description || "Senden hat nicht geklappt." });
+      }
+    }
 
     // Deine eigene Aufnahme, schon umgewandelt — sie klingt wie der Charakter.
     if (ownVoice) {
@@ -108,22 +122,9 @@ export default async function (req: Request): Promise<Response> {
       }
     }
 
-    if (!voiceOnly && msg.text) {
-      const res = await fetch(`${API}/bot${token}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text: msg.text }),
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        console.error("telegramForward: " + (data.description || "unbekannt"));
-        return Response.json({ ok: false, error: data.description || "Senden hat nicht geklappt." });
-      }
-    }
-
     let spoken = false;
     let voiceError = "";
-    if (withVoice) {
+    if (withVoice && msg.text) {
       try {
         spoken = await sendSpoken(base44, token, chatId, conv, msg.text);
       } catch (error) {
