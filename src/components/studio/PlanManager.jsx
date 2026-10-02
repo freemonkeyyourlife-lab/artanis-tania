@@ -152,7 +152,7 @@ export default function PlanManager({ creators = [] }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="glass rounded-2xl border border-border p-5">
         <h2 className="font-display text-xl text-foreground mb-1">Wünsche aus der Community</h2>
         <p className="text-xs text-muted-foreground mb-4">
           Beliebte oben. Merken, was du machen willst — einzeln oder mehrere auf einmal in den Plan.
@@ -208,7 +208,7 @@ export default function PlanManager({ creators = [] }) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="glass rounded-2xl border border-border p-5">
         <h2 className="font-display text-xl text-foreground mb-1">Dein Content-Plan</h2>
         <p className="text-xs text-muted-foreground mb-5">
           {plans.length} {plans.length === 1 ? "Eintrag" : "Einträge"} — Status weiterziehen und mit einem Klick einen Post anlegen.
