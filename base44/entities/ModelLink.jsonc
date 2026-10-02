@@ -12,7 +12,12 @@
       "type": "string",
       "enum": [
         "BILD",
-        "TEXT"
+        "TEXT",
+        "VIDEO",
+        "AUDIO",
+        "3D",
+        "REALTIME",
+        "EMBEDDING"
       ],
       "default": "BILD"
     },

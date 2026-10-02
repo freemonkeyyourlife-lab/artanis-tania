@@ -5,8 +5,16 @@ import { useToast } from "@/components/ui/use-toast";
 import { ExternalLink, Plus, Trash2, Search, Star, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const KINDS = ["BILD", "TEXT"];
-const KIND_LABEL = { BILD: "Bildmodelle", TEXT: "Textmodelle" };
+const KINDS = ["BILD", "TEXT", "VIDEO", "AUDIO", "3D", "REALTIME", "EMBEDDING"];
+const KIND_LABEL = {
+  BILD: "Bildmodelle",
+  TEXT: "Textmodelle",
+  VIDEO: "Videomodelle",
+  AUDIO: "Audio & Stimme",
+  "3D": "3D-Modelle",
+  REALTIME: "Echtzeit",
+  EMBEDDING: "Embeddings",
+};
 
 const hostOf = (url) => {
   try {
@@ -231,6 +239,9 @@ export default function ModelLinkList() {
                       <p className="text-[12px] font-semibold text-muted-foreground truncate flex items-center gap-1.5 mt-0.5">
                         <ExternalLink className="w-3 h-3 flex-shrink-0" /> {hostOf(l.url)}
                       </p>
+                      {l.note && (
+                        <p className="text-[12px] font-semibold text-muted-foreground/80 line-clamp-2 mt-1">{l.note}</p>
+                      )}
                     </a>
                     <button
                       onClick={() => toggleFavorite(l)}
