@@ -70,7 +70,7 @@ export default function StoryCastPanel({ onClose, onChanged }) {
             <p className="font-display text-2xl text-foreground">Erzählerinnen dieser Geschichte</p>
             <p className="text-[14px] font-semibold text-muted-foreground">
               Zwei Plätze — beide begleiten dich durch die Stationen und wechseln sich ab. Jede mit eigenem Aussehen,
-              eigener Persönlichkeit und eigenem Stimm-Typ.
+              eigener Persönlichkeit und eigenem Stimm-Typ. Du kannst auch eigene Erzählerinnen und Erzähler anlegen.
             </p>
           </div>
           <button

@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Loader2, Upload, Check, Volume2, Square, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NARRATOR_VOICES, kindOf } from "@/lib/narratorStyle";
+import { NARRATOR_VOICES, NARRATOR_GENDERS, kindOf, genderNoun } from "@/lib/narratorStyle";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -24,6 +24,7 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
       narrator
         ? {
             name: narrator.name || "",
+            gender: narrator.gender || "WEIBLICH",
             personality: narrator.personality || "",
             voice: narrator.voice || "honey",
             artStyle: narrator.artStyle || "PHOTOREAL",
@@ -34,7 +35,7 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
   }, [narrator?.id, narrator?.updated_date]);
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
-  const label = slot === 0 ? "Erzählerin 1" : "Erzählerin 2";
+  const slotName = narrator ? `${genderNoun(form?.gender)} ${slot + 1}` : `Platz ${slot + 1}`;
 
   const stopVoice = () => {
     audioRef.current?.pause();
@@ -84,7 +85,7 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
     const free = all.filter((n) => !assignedIds.includes(n.id));
     return (
       <div className="rounded-2xl border-2 border-dashed border-border bg-card p-4">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-3">{label} · Platz frei</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-3">{slotName} · Platz frei</p>
 
         {free.length > 0 ? (
           <div className="space-y-1.5 mb-3">
@@ -104,7 +105,7 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
                 <span className="min-w-0">
                   <span className="block text-[13px] font-bold text-foreground truncate">{n.name}</span>
                   <span className="block text-[11px] font-semibold text-muted-foreground truncate">
-                    {kindOf(n.kind).label}
+                    {genderNoun(n.gender)} · {kindOf(n.kind).label}
                   </span>
                 </span>
               </button>
@@ -118,7 +119,7 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Neue Erzählerin anlegen"
+            placeholder="Neue Erzählerin oder Erzähler anlegen"
             className={cn(inputCls, "flex-1")}
           />
           <button
@@ -148,7 +149,7 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
           </span>
         )}
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-primary">{label}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-primary">{slotName}</p>
           <p className="font-display text-lg text-foreground truncate">{form.name || "Ohne Namen"}</p>
         </div>
         <button
@@ -179,6 +180,22 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
             )}
           >
             {a === "PHOTOREAL" ? "Fotoreal" : "Gezeichnet"}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Erzählerin oder Erzähler</p>
+      <div className="flex flex-wrap gap-2 mb-3">
+        {NARRATOR_GENDERS.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => set({ gender: g.id })}
+            className={cn(
+              "px-3.5 py-2 rounded-full text-[12px] font-bold transition-colors",
+              form.gender === g.id ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-muted-foreground"
+            )}
+          >
+            {g.label}
           </button>
         ))}
       </div>
