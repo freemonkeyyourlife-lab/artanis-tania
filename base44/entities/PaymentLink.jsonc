@@ -26,6 +26,23 @@
       ],
       "default": "LINK"
     },
+    "billingType": {
+      "type": "string",
+      "enum": [
+        "ONE_TIME",
+        "RECURRING"
+      ],
+      "default": "ONE_TIME"
+    },
+    "interval": {
+      "type": "string",
+      "enum": [
+        "WEEK",
+        "MONTH",
+        "YEAR"
+      ],
+      "default": "MONTH"
+    },
     "creatorId": {
       "type": "string"
     },

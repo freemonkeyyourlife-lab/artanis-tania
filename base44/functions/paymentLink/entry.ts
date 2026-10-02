@@ -17,6 +17,8 @@ function publicLink(link) {
     amount: link.amount,
     currency: link.currency || 'EUR',
     kind: link.kind || 'LINK',
+    billingType: link.billingType || 'ONE_TIME',
+    interval: link.interval || 'MONTH',
     creatorName: link.creatorName || '',
     targetName: link.targetName || '',
     status: link.status || 'OPEN',
@@ -41,6 +43,10 @@ export default async function (req) {
       }
 
       const isTask = body.kind === 'TASK';
+      const isRecurring = body.billingType === 'RECURRING';
+      const interval = ['WEEK', 'MONTH', 'YEAR'].includes(String(body.interval))
+        ? String(body.interval)
+        : 'MONTH';
       const link = await base44.entities.PaymentLink.create({
         token: makeToken(),
         title,
@@ -48,6 +54,8 @@ export default async function (req) {
         amount,
         currency: 'EUR',
         kind: isTask ? 'TASK' : 'LINK',
+        billingType: isRecurring ? 'RECURRING' : 'ONE_TIME',
+        interval,
         creatorId: user.id,
         creatorName: user.full_name || user.email,
         targetName: String(body.targetName || '').slice(0, 120),
@@ -83,21 +91,33 @@ export default async function (req) {
         contentId: link.id,
       });
 
+      const appId = secrets.get('BASE44_APP_ID') || '';
+      const recurring = link.billingType === 'RECURRING';
+
       const origin = req.headers.get('origin') || 'https://artanis-triania-live.base44.app';
       const params = new URLSearchParams();
-      params.set('mode', 'payment');
+      params.set('mode', recurring ? 'subscription' : 'payment');
       params.set('line_items[0][price_data][currency]', 'eur');
       params.set('line_items[0][price_data][product_data][name]', link.title.slice(0, 120));
       params.set('line_items[0][price_data][unit_amount]', String(Math.round(link.amount * 100)));
       params.set('line_items[0][quantity]', '1');
+      if (recurring) {
+        params.set('line_items[0][price_data][recurring][interval]', (link.interval || 'MONTH').toLowerCase());
+      }
       params.set('success_url', origin + '/pay/' + link.token + '?checkout=success');
       params.set('cancel_url', origin + '/pay/' + link.token + '?checkout=cancel');
-      params.set('metadata[base44_app_id]', secrets.get('BASE44_APP_ID') || '');
+      params.set('metadata[base44_app_id]', appId);
       params.set('metadata[kind]', 'payment_link');
+      params.set('metadata[billing_type]', recurring ? 'RECURRING' : 'ONE_TIME');
       params.set('metadata[link_id]', link.id);
       params.set('metadata[payer_id]', user.id);
       params.set('metadata[payer_name]', (user.full_name || user.email || '').slice(0, 120));
       params.set('metadata[transaction_id]', tx.id);
+      if (recurring) {
+        params.set('subscription_data[metadata][base44_app_id]', appId);
+        params.set('subscription_data[metadata][link_id]', link.id);
+        params.set('subscription_data[metadata][payer_id]', user.id);
+      }
 
       const resp = await fetch('https://api.stripe.com/v1/checkout/sessions', {
         method: 'POST',

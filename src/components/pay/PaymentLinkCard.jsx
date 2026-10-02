@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Copy, Check, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { isRecurring, priceLabel } from "@/lib/billing";
 
 export default function PaymentLinkCard({ link, own, onChanged }) {
   const [copied, setCopied] = useState(false);
@@ -39,10 +40,10 @@ export default function PaymentLinkCard({ link, own, onChanged }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold">
-              {link.amount.toFixed(2).replace(".", ",")} €
+              {priceLabel(link)}
             </span>
             <span className="px-2.5 py-1 rounded-full bg-elevated text-muted-foreground text-[11px]">
-              {link.kind === "TASK" ? "Aufgabe" : "Link"}
+              {link.kind === "TASK" ? "Aufgabe" : isRecurring(link) ? "Abo" : "Fester Betrag"}
             </span>
             {link.status === "PAID" && (
               <span className="px-2.5 py-1 rounded-full bg-emerald-600/20 text-emerald-400 text-[11px] font-semibold flex items-center gap-1">

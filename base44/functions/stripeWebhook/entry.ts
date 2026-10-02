@@ -32,16 +32,24 @@ export default async function (req) {
         }
       }
 
-      // Zahlungslink oder Aufgabe: als bezahlt markieren.
+      // Einmaliger Zahlungslink oder Aufgabe: als bezahlt markieren.
+      // Ein Abo bleibt offen — es wiederholt sich, also muss der Link nutzbar bleiben.
       if (meta.kind === 'payment_link' && meta.link_id) {
-        await base44.asServiceRole.entities.PaymentLink.update(meta.link_id, {
-          status: 'PAID',
+        const lastPayer = {
           paidBy: meta.payer_id || '',
           paidByName: meta.payer_name || '',
           paidAt: new Date().toISOString(),
           transactionId: meta.transaction_id || '',
-          active: false,
-        });
+        };
+        if (meta.billing_type === 'RECURRING') {
+          await base44.asServiceRole.entities.PaymentLink.update(meta.link_id, lastPayer);
+        } else {
+          await base44.asServiceRole.entities.PaymentLink.update(meta.link_id, {
+            ...lastPayer,
+            status: 'PAID',
+            active: false,
+          });
+        }
       }
 
       if (meta.transaction_id) {

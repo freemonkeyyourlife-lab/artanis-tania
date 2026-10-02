@@ -3,9 +3,12 @@ import { base44 } from "@/api/base44Client";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { BILLING_TYPES, INTERVALS, intervalLabel, priceLabel } from "@/lib/billing";
 
 export default function PaymentLinkForm({ defaultAmount = "", defaultTitle = "", onCreated }) {
   const [kind, setKind] = useState("LINK");
+  const [billingType, setBillingType] = useState("ONE_TIME");
+  const [interval, setInterval] = useState("MONTH");
   const [amount, setAmount] = useState(defaultAmount ? String(defaultAmount) : "");
   const [title, setTitle] = useState(defaultTitle);
   const [description, setDescription] = useState("");
@@ -38,6 +41,8 @@ export default function PaymentLinkForm({ defaultAmount = "", defaultTitle = "",
         description: description.trim(),
         targetName: targetName.trim(),
         kind,
+        billingType,
+        interval,
       });
       if (res.data?.error) throw new Error(res.data.error);
       setCreated(res.data.link);
@@ -67,9 +72,7 @@ export default function PaymentLinkForm({ defaultAmount = "", defaultTitle = "",
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
             {created.kind === "TASK" ? "Aufgabe steht" : "Link ist fertig"}
           </p>
-          <p className="font-display text-3xl text-foreground mb-1">
-            {created.amount.toFixed(2).replace(".", ",")} €
-          </p>
+          <p className="font-display text-3xl text-foreground mb-1">{priceLabel(created)}</p>
           <p className="text-sm text-foreground">{created.title}</p>
         </div>
 
@@ -140,6 +143,50 @@ export default function PaymentLinkForm({ defaultAmount = "", defaultTitle = "",
         ))}
       </div>
 
+      <div>
+        <div className="flex gap-2">
+          {BILLING_TYPES.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => setBillingType(o.value)}
+              className={cn(
+                "px-3.5 py-2 rounded-full border text-sm transition-colors",
+                billingType === o.value
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-elevated border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">
+          {BILLING_TYPES.find((o) => o.value === billingType)?.hint}
+        </p>
+      </div>
+
+      {billingType === "RECURRING" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[13px] font-semibold text-muted-foreground">Wiederholt sich</span>
+          {INTERVALS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => setInterval(o.value)}
+              className={cn(
+                "px-3.5 py-2 rounded-full border text-sm transition-colors",
+                interval === o.value
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-elevated border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-2">
         <input
           value={amount}
@@ -181,7 +228,13 @@ export default function PaymentLinkForm({ defaultAmount = "", defaultTitle = "",
         disabled={saving}
         className="w-full py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
       >
-        {saving ? "Wird erstellt …" : kind === "TASK" ? "Aufgabe anlegen" : "Link erstellen"}
+        {saving
+          ? "Wird erstellt …"
+          : kind === "TASK"
+          ? "Aufgabe anlegen"
+          : billingType === "RECURRING"
+          ? `Abo-Link erstellen (${intervalLabel(interval)})`
+          : "Link erstellen"}
       </button>
     </div>
   );

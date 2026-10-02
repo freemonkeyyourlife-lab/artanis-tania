@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { intervalLabel, isRecurring } from "@/lib/billing";
 
 export default function Pay() {
   const { token } = useParams();
@@ -33,21 +34,29 @@ export default function Pay() {
   }, [token]);
 
   const pay = async () => {
-    if (window.self !== window.top) {
+    // Im Vorschau-Rahmen muss das Fenster noch im Klick selbst aufgehen —
+    // sonst blockt der Browser die Zahlung weg.
+    const isFramed = window.self !== window.top;
+    const checkoutTab = isFramed ? window.open("", "_blank") : null;
+    if (isFramed && !checkoutTab) {
       toast({
-        title: "Bezahlen nur in der App",
-        description: "Öffne die App in einem eigenen Tab, um zu bezahlen.",
+        title: "Popups erlauben",
+        description: "Erlaub kurz Popups, damit die Zahlung aufgeht.",
         variant: "destructive",
       });
       return;
     }
+    if (checkoutTab) checkoutTab.opener = null;
+
     setPaying(true);
     try {
       const res = await base44.functions.invoke("paymentLink", { action: "checkout", token });
       const url = res.data?.url;
       if (!url) throw new Error(res.data?.error || "Kein Checkout-Link");
-      window.location.href = url;
+      if (checkoutTab) checkoutTab.location.replace(url);
+      else window.location.assign(url);
     } catch (e) {
+      checkoutTab?.close();
       console.error(e);
       toast({ title: "Zahlung nicht gestartet", description: "Versuch es nochmal.", variant: "destructive" });
       setPaying(false);
@@ -87,11 +96,16 @@ export default function Pay() {
         ) : (
           <>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-primary mb-3">
-              {link.kind === "TASK" ? "Aufgabe" : "Zahlung angefordert"}
+              {link.kind === "TASK" ? "Aufgabe" : isRecurring(link) ? "Abo abschließen" : "Zahlung angefordert"}
             </p>
             <p className="font-display text-5xl text-gradient-warm mb-2">
-              {link.amount.toFixed(2).replace(".", ",")} €
+              {Number(link.amount).toFixed(2).replace(".", ",")} €
             </p>
+            {isRecurring(link) && (
+              <p className="text-sm text-muted-foreground mb-1">
+                {intervalLabel(link.interval)} — läuft, bis du kündigst
+              </p>
+            )}
             <p className="text-[15px] text-foreground mb-1">{link.title}</p>
             {link.description && <p className="text-sm text-muted-foreground mb-1">{link.description}</p>}
             <p className="text-xs text-muted-foreground mb-6">
@@ -105,7 +119,7 @@ export default function Pay() {
               className="w-full py-3.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {paying ? "Weiterleitung …" : "Jetzt bezahlen"}
+              {paying ? "Weiterleitung …" : isRecurring(link) ? "Abo abschließen" : "Jetzt bezahlen"}
             </button>
 
             <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground mt-4">
