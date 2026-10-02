@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Camera } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -7,6 +7,15 @@ import { cn } from "@/lib/utils";
 // Handy, das als Webcam am Rechner hängt.
 export default function DevicePicker({ devices, activeDevice, onPick, onOpen, className }) {
   const [open, setOpen] = useState(false);
+
+  // Kamera anstecken oder Bluetooth-Headset verbinden: die Liste zieht sofort nach,
+  // ohne dass der Dialog geschlossen und wieder geöffnet werden muss.
+  useEffect(() => {
+    if (!open || !navigator.mediaDevices?.addEventListener) return;
+    const refresh = () => onOpen?.();
+    navigator.mediaDevices.addEventListener("devicechange", refresh);
+    return () => navigator.mediaDevices.removeEventListener("devicechange", refresh);
+  }, [open, onOpen]);
 
   const list = (items, kind) => (
     <div className="space-y-1.5">
@@ -46,6 +55,7 @@ export default function DevicePicker({ devices, activeDevice, onPick, onOpen, cl
           <DialogTitle className="font-display text-lg">Kamera & Mikrofon</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
             Alles, was am Gerät hängt — auch eine externe Kamera oder das Handy als Webcam. Umschalten wirkt sofort für alle im Call.
+            Steck eine Kamera an oder verbinde ein Bluetooth-Headset: es erscheint sofort in der Liste.
           </DialogDescription>
 
           <div>

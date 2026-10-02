@@ -29,6 +29,14 @@ export default function VideoSourceDialog({ open, onOpenChange, devices, activeI
     return () => { alive = false; };
   }, [open]);
 
+  // Neu angesteckte Kameras und Bluetooth-Geräte sollen sofort in der Liste stehen.
+  useEffect(() => {
+    if (!open || !navigator.mediaDevices?.addEventListener) return;
+    const refresh = () => onListDevices?.();
+    navigator.mediaDevices.addEventListener("devicechange", refresh);
+    return () => navigator.mediaDevices.removeEventListener("devicechange", refresh);
+  }, [open, onListDevices]);
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(phoneUrl);
