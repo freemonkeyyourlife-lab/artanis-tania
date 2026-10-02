@@ -14,6 +14,16 @@ const readSecret = (name: string) => {
   }
 };
 
+// Text nach Telegram — auch als Notnagel, wenn die Stimme nicht rausgeht.
+const sendText = async (token: string, chatId: string, text: string) => {
+  const res = await fetch(`${API}/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text }),
+  });
+  return res.json();
+};
+
 // Die im Chat gewählte Stimme sprechen lassen und nach Telegram schicken.
 async function sendSpoken(base44: any, token: string, chatId: string, conv: any, text: string) {
   const voiceId = String(conv?.voiceProfileId || "");
@@ -81,21 +91,22 @@ export default async function (req: Request): Promise<Response> {
 
     const chatId = handle.slice(PREFIX.length);
     // Der Chat steht auf Stimme — oder du hast von Hand eine Sprachnachricht
-    // geschickt. Beides geht raus: erst der Text, dann die Stimme.
+    // geschickt. Dann geht die Stimme raus, der Text nur ab und zu.
     const withVoice = conv.voiceNotes === true || msg.voiceNote === true;
+    const willSpeak = withVoice && Boolean(msg.text);
 
-    // Der Text geht immer mit — auch wenn gleich die Stimme folgt.
-    if (msg.text) {
-      const res = await fetch(`${API}/bot${token}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text: msg.text }),
-      });
-      const data = await res.json();
+    // Jede dritte Nachricht kommt der Text mit — sonst bleibt er weg.
+    const sentCount = willSpeak
+      ? await base44.asServiceRole.entities.Message.count({ conversationId: msg.conversationId })
+      : 0;
+    let textSent = false;
+    if (msg.text && (!willSpeak || sentCount % 3 === 0)) {
+      const data = await sendText(token, chatId, msg.text);
       if (!data.ok) {
         console.error("telegramForward: " + (data.description || "unbekannt"));
         return Response.json({ ok: false, error: data.description || "Senden hat nicht geklappt." });
       }
+      textSent = true;
     }
 
     // Deine eigene Aufnahme, schon umgewandelt — sie klingt wie der Charakter.
@@ -124,12 +135,16 @@ export default async function (req: Request): Promise<Response> {
 
     let spoken = false;
     let voiceError = "";
-    if (withVoice && msg.text) {
+    if (willSpeak) {
       try {
         spoken = await sendSpoken(base44, token, chatId, conv, msg.text);
       } catch (error) {
         voiceError = error && error.message;
         console.error("telegramForward voice: " + voiceError);
+      }
+      // Geht die Stimme nicht raus, kommt wenigstens der Text an.
+      if (!spoken && !textSent && msg.text) {
+        await sendText(token, chatId, msg.text);
       }
     }
 
