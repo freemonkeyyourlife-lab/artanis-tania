@@ -225,6 +225,98 @@ export const JUNK = [
   "SDXL-LoRA-slider.sexy — ein Regler, kein eigenes Modell",
 ];
 
+// ── Was freizügig heißt ───────────────────────────────────────
+export const EXPLICIT_LEVELS = [
+  {
+    level: "ZAHM",
+    shows: "Nichts Nacktes, nichts Andeutendes. Ein Bikini ist schon zu viel, ein Ausschnitt wird weggefiltert.",
+    use: "Porträts, Mode, alles Öffentliche",
+  },
+  {
+    level: "ANZÜGLICH",
+    shows: "Knappe Kleidung, Dessous, tiefe Ausschnitte, nasse Shirts — aber kein nackter Körper.",
+    use: "Der Teaser, das Vorspiel, das, was Appetit macht",
+  },
+  {
+    level: "SINNLICH",
+    shows: "Nacktheit ist möglich, aber weich und verhüllt: im Halbdunkel, von hinten, mit Laken davor. Nichts offen Gezeigtes.",
+    use: "Sinnliche Szenen, Kunst, alles, was Stil haben soll",
+  },
+  {
+    level: "EXPLIZIT",
+    shows: "Nackt und offen: Brust, Po, Schoß zu sehen. Sexuelle Handlungen sind darstellbar.",
+    use: "Das eigentliche Geschäft",
+  },
+  {
+    level: "HART",
+    shows: "Alles offen, auch Nahaufnahmen, mehrere Personen, harte Praktiken.",
+    use: "Die harte Schiene für die, die sie suchen",
+  },
+];
+
+export const EXPLICIT_NOTE =
+  "„Freizügig“ heißt ANZÜGLICH bis SINNLICH. „Nackt“ heißt EXPLIZIT. „Ganz nackt, auf den Knien“ ist EXPLIZIT bis HART. " +
+  "Genau diese fünf Stufen kennt die App schon — sie stehen an jedem Modell als Etikett. " +
+  "Bisher waren sie leer, deshalb wusste die App nicht, was sie nehmen darf. Jetzt sind sie gesetzt.";
+
+// ── Warum Hochladen allein nicht reicht ───────────────────────
+export const SERVICE_NOTE =
+  "Ein Modell ist eine Datei, kein Dienst. Hugging Face verkauft dir rechnen, aber nur für die Modelle, " +
+  "die dort auch laufen — und das sind wenige. Die berühmten unzensierten fotorealen Checkpoints " +
+  "(RealVisXL, Juggernaut, CyberRealistic, LUSTIFY, BigAsp) liegen dort zum Herunterladen, " +
+  "aber sie haben keinen Dienst: geprüft, alle „kein Dienst“. Sie laufen nur bei fal.ai oder auf einer eigenen Maschine. " +
+  "Deshalb nützt es nichts, sie einfach einzutragen — die App würde bei jedem Bild einen Fehler bekommen.";
+
+// ── Wo du suchst ──────────────────────────────────────────────
+export const WHERE_TO_LOOK = [
+  {
+    platform: "fal.ai",
+    search: "realism, photoreal, uncensored, NSFW, body type",
+    gets: "Die Modelle, die sonst nirgends laufen — plus Gesichtstreue und Training",
+    cost: "Nur Verbrauch",
+  },
+  {
+    platform: "CivitAI",
+    search: "Filter setzen auf Base model = SDXL oder Flux, dann nach „Most Downloaded“ sortieren. Begriffe: realistic, photoreal, NSFW",
+    gets: "Die berühmten unzensierten Checkpoints — als Datei zum Herunterladen",
+    cost: "Gratis",
+  },
+  {
+    platform: "Hugging Face",
+    search: "RealVisXL, Juggernaut, CyberRealistic, LUSTIFY, epiCRealism",
+    gets: "Dieselben Dateien, nur anders sortiert — gut zum Hosten, nicht zum Rechnen",
+    cost: "Guthaben, das du noch hast",
+  },
+  {
+    platform: "Replicate",
+    search: "realism, photoreal, face swap, upscale",
+    gets: "Dieselbe Klasse wie fal.ai, andere Auswahl",
+    cost: "Nur Verbrauch",
+  },
+];
+
+// ── Was bei uns wirklich läuft (geprüft) ──────────────────────
+export const RUNS_HERE = [
+  { model: "FLUX.1 dev", via: "fal-ai, replicate", status: "Läuft" },
+  { model: "FLUX.1 schnell", via: "fal-ai, nscale", status: "Läuft" },
+  { model: "FLUX.1 Krea dev", via: "fal-ai, replicate", status: "Läuft" },
+  { model: "FLUX.2 klein 4B", via: "fal-ai", status: "Läuft" },
+  { model: "Qwen-Image", via: "fal-ai, replicate", status: "Läuft" },
+  { model: "Qwen-Image-Lightning", via: "fal-ai", status: "Läuft" },
+  { model: "Z-Image-Turbo", via: "fal-ai, replicate", status: "Läuft" },
+  { model: "Stable Diffusion 3.5 Large", via: "fal-ai, replicate", status: "Läuft" },
+  { model: "stable-diffusion-xl-base-1.0", via: "fal-ai", status: "Läuft" },
+  { model: "SD3 Medium", via: "hf-inference", status: "Läuft (als einziges über die Haus-Schnittstelle)" },
+  { model: "Ideogram 4", via: "fal-ai", status: "Läuft" },
+  { model: "Krea 2 Turbo", via: "fal-ai", status: "Läuft" },
+  { model: "RealVisXL V5.0", via: "—", status: "Kein Dienst: nur Datei" },
+  { model: "Juggernaut XL v9", via: "—", status: "Kein Dienst: nur Datei" },
+  { model: "CyberRealistic XL", via: "—", status: "Kein Dienst: nur Datei" },
+  { model: "LUSTIFY v2.0", via: "—", status: "Kein Dienst: nur Datei" },
+  { model: "Pony Diffusion V6 XL", via: "—", status: "Gezeichnet — ausgeschaltet" },
+  { model: "Illustrious XL", via: "—", status: "Gezeichnet — ausgeschaltet" },
+];
+
 // ── Die Seitenstruktur ────────────────────────────────────────
 export const PLAN_SECTIONS = [
   {
@@ -321,6 +413,51 @@ export const PLAN_SECTIONS = [
     note: PIPELINE_NOTE,
   },
   {
+    key: "explicit",
+    title: "Was freizügig heißt — die fünf Stufen",
+    icon: Ban,
+    intro: "Genau diese fünf Wörter stehen an jedem Modell. Damit du weißt, was du bestellst.",
+    columns: [
+      { key: "level", label: "Stufe" },
+      { key: "shows", label: "Was zu sehen ist" },
+      { key: "use", label: "Wofür" },
+    ],
+    rows: EXPLICIT_LEVELS,
+    note: EXPLICIT_NOTE,
+  },
+  {
+    key: "service",
+    title: "Warum Hochladen allein nicht reicht",
+    icon: Box,
+    intro: "Das ist der Grund, warum es bisher nicht voranging.",
+    note: SERVICE_NOTE,
+  },
+  {
+    key: "where",
+    title: "Wo du suchst — und was du dort eingibst",
+    icon: ShoppingCart,
+    intro: "Für jede Plattform die richtigen Suchwörter. fal.ai ist der Ort, an dem die guten Modelle wirklich laufen.",
+    columns: [
+      { key: "platform", label: "Plattform" },
+      { key: "search", label: "Was du eingibst" },
+      { key: "gets", label: "Was du bekommst" },
+      { key: "cost", label: "Kosten" },
+    ],
+    rows: WHERE_TO_LOOK,
+  },
+  {
+    key: "runs",
+    title: "Was bei uns wirklich läuft — geprüft",
+    icon: ListChecks,
+    intro: "Ich habe jedes Modell bei Hugging Face abgefragt. Das ist dabei herausgekommen.",
+    columns: [
+      { key: "model", label: "Modell" },
+      { key: "via", label: "Läuft über" },
+      { key: "status", label: "Status" },
+    ],
+    rows: RUNS_HERE,
+  },
+  {
     key: "junk",
     title: "Was aussortiert gehört",
     icon: Film,
@@ -331,13 +468,14 @@ export const PLAN_SECTIONS = [
     key: "box",
     title: "Was ich sofort machen kann",
     icon: Box,
-    intro: "Sag einfach, was davon zuerst.",
+    intro: "Das habe ich schon erledigt, das kann ich als Nächstes tun.",
     bullets: [
-      "Alle Modelle mit Familie und Freizügigkeit etikettieren — dann weiß die App, was sie nehmen darf.",
-      "Die Modellwahl an den Stil der Figur binden — kein Sprung mehr zwischen echt und gezeichnet.",
-      "Alles Gezeichnete und alle Fremdfunde ausschalten.",
-      "Nano Banana und Flux Kontext als Werkzeuge einbinden: Vorlage rein, dieselbe Frau raus, neue Pose.",
-      "Die Kette für die Filme vorbereiten: Bild → Bewegung → Schnitt.",
+      "Erledigt: 18 Modelle ausgeschaltet — gezeichnet, Grafik, Video und die kaputten Einträge.",
+      "Erledigt: alle 66 übrigen mit Familie und Freizügigkeit etikettiert.",
+      "Als Nächstes: die Modellwahl an den Stil der Figur binden — kein Sprung mehr zwischen echt und gezeichnet.",
+      "Als Nächstes: Nano Banana und Flux Kontext als Werkzeuge einbinden — Vorlage rein, dieselbe Frau raus, neue Pose.",
+      "Als Nächstes: die unzensierten fotorealen Modelle über fal.ai anbinden, sobald du dort Guthaben hast.",
+      "Als Nächstes: die Kette für die Filme vorbereiten — Bild, Bewegung, Schnitt.",
     ],
   },
 ];
