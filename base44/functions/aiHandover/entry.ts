@@ -66,6 +66,8 @@ export default async function (req) {
       await base44.asServiceRole.entities.Conversation.update(conv.id, {
         lastMessageAt: new Date().toISOString(),
         waitingSince: null,
+        // Bist du weg, ist die KI wieder der Standard für diesen Chat.
+        ...(ownerThere ? {} : { handledBy: 'AI' }),
       });
       taken.push(conv.id);
     }

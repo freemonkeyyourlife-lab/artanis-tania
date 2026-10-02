@@ -1063,7 +1063,8 @@ export default function Messages() {
     // Der Besitzer ist nicht da — dann wartet hier niemand: die KI antwortet sofort,
     // damit kein Gast weggeht, weil es still bleibt.
     if (!(await ownerIsPresent())) {
-      base44.entities.Conversation.update(conv.id, { waitingSince: null }).catch(() => {});
+      // Standard ist dann die KI — auch wenn der Chat vorher auf "Ich übernehme" stand.
+      base44.entities.Conversation.update(conv.id, { waitingSince: null, handledBy: "AI" }).catch(() => {});
       return false;
     }
 
