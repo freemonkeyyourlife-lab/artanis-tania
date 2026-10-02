@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, Loader2, Plus, Check } from "lucide-react";
+import { Search, Loader2, Plus, Check, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,8 @@ export default function HfModelSearch({ existingIds = [], onAdded, onAccount }) 
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(null);
   const [failed, setFailed] = useState({});
+  const [bulk, setBulk] = useState(null); // { total, done, ok, fail, current }
+  const bulkStop = useRef(false);
 
   const search = async (q = "") => {
     setBusy(true);
@@ -62,6 +64,53 @@ export default function HfModelSearch({ existingIds = [], onAdded, onAccount }) 
     }
   };
 
+  // Alle auf einmal: jedes Modell kurz probieren, die laufenden übernehmen.
+  const importAll = async () => {
+    const todo = results.filter((m) => !existingIds.includes(m.id));
+    if (!todo.length) return;
+    bulkStop.current = false;
+    setBulk({ total: todo.length, done: 0, ok: 0, fail: 0, current: "" });
+    const passed = [];
+    let ok = 0;
+    let fail = 0;
+    for (const m of todo) {
+      if (bulkStop.current) break;
+      setBulk((b) => ({ ...b, current: m.id }));
+      try {
+        const res = await base44.functions.invoke("hfGenerate", {
+          modelId: m.id,
+          source: "HUGGING_FACE",
+          prompt: "portrait photo of a woman, soft natural light, plain background",
+        });
+        if (res.data?.error) throw new Error(res.data.error);
+        passed.push(m);
+        ok += 1;
+      } catch (e) {
+        fail += 1;
+        setFailed((f) => ({ ...f, [m.id]: e.message || "Hat kein Bild geliefert." }));
+      }
+      setBulk((b) => ({ ...b, done: b.done + 1, ok, fail }));
+    }
+
+    if (passed.length) {
+      await base44.entities.ImageModel.bulkCreate(
+        passed.map((m) => ({
+          name: m.id.split("/").pop(),
+          modelId: m.id,
+          source: "HUGGING_FACE",
+          note: `Läuft über ${m.providers.join(", ")}`,
+          enabled: true,
+        }))
+      );
+    }
+    onAdded?.();
+    setBulk(null);
+    toast({
+      title: `${ok} übernommen`,
+      description: fail ? `${fail} liefen nicht und blieben draußen.` : "Alle haben ein Bild geliefert.",
+    });
+  };
+
   return (
     <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5">
       <h2 className="font-display text-xl text-foreground mb-1">Bei Hugging Face suchen</h2>
@@ -69,22 +118,44 @@ export default function HfModelSearch({ existingIds = [], onAdded, onAccount }) 
         Nur Modelle mit aktivem Anbieter. Beim Übernehmen machen wir einen kurzen Probelauf — läuft es nicht, bleibt es draußen. Was drin ist, steht im Generator unter „Quelle“.
       </p>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && search(query)}
           placeholder="z. B. flux, sdxl, realistic"
-          className={inputCls}
+          className={cn(inputCls, "flex-1 min-w-[220px]")}
         />
         <button
           onClick={() => search(query)}
-          disabled={busy}
+          disabled={busy || !!bulk}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Suchen
         </button>
+        <button
+          onClick={importAll}
+          disabled={busy || !!bulk || results.length === 0}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
+        >
+          {bulk ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Alle prüfen &amp; übernehmen
+        </button>
       </div>
+
+      {bulk && (
+        <div className="mb-4 rounded-xl border border-primary/30 bg-elevated p-4">
+          <p className="text-sm text-foreground">
+            Läuft … {bulk.done} / {bulk.total} geprüft — {bulk.ok} laufen, {bulk.fail} nicht
+          </p>
+          {bulk.current && <p className="text-[11px] text-muted-foreground mt-1 truncate">Gerade dran: {bulk.current}</p>}
+          <button
+            onClick={() => { bulkStop.current = true; }}
+            className="mt-3 px-4 py-1.5 rounded-full bg-background border border-border text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Stoppen
+          </button>
+        </div>
+      )}
 
       {results.length === 0 && !busy && (
         <p className="text-sm text-muted-foreground py-6 text-center">Nichts gefunden — versuch einen anderen Begriff.</p>

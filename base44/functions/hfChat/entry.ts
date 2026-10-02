@@ -24,6 +24,71 @@ export default async function (req) {
       return Response.json({ models });
     }
 
+    // Massen-Übernahme: alles, was über das Konto wirklich antwortet, kommt in die Liste.
+    // Läuft in Wellen und hört rechtzeitig auf — der Rest kommt beim nächsten Aufruf.
+    if (body.action === 'importAll') {
+      const listRes = await fetch(`${ROUTER}/models`, { headers: auth });
+      if (!listRes.ok) return Response.json({ error: `Hugging Face (${listRes.status})` }, { status: 502 });
+      const data = await listRes.json();
+      const all = (data.data || []).map((m) => ({ id: m.id, provider: m.owned_by || '' }));
+
+      const existing = await base44.entities.TextModel.list('created_date', 2000);
+      const taken = new Set(existing.map((m) => m.modelId));
+      const todo = all.filter((m) => !taken.has(m.id));
+
+      const started = Date.now();
+      const BUDGET = 95000;
+      const WAVE = 6;
+      const toRecord = (m) => ({
+        name: m.id.split('/').pop(),
+        modelId: m.id,
+        note: m.provider ? `Läuft über ${m.provider}` : '',
+        enabled: true,
+      });
+      let added = 0;
+      let failed = 0;
+      let index = 0;
+
+      // Nach jeder Welle speichern — so ist alles Gefundene auch dann drin,
+      // wenn der Funktion zwischendurch die Zeit ausgeht.
+      while (index < todo.length && Date.now() - started < BUDGET) {
+        const wave = todo.slice(index, index + WAVE);
+        index += wave.length;
+        const tested = await Promise.all(wave.map(async (m) => {
+          try {
+            const res = await fetch(`${ROUTER}/chat/completions`, {
+              method: 'POST',
+              headers: { ...auth, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: m.id,
+                messages: [{ role: 'user', content: 'Antworte mit genau einem Wort: Bereit.' }],
+                max_tokens: 60,
+              }),
+            });
+            if (!res.ok) {
+              console.log('hfChat importAll: läuft nicht', m.id, res.status);
+              return null;
+            }
+            const d = await res.json();
+            const text = String(d.choices?.[0]?.message?.content || '').trim();
+            return text ? m : null;
+          } catch (e) {
+            console.log('hfChat importAll: Fehler', m.id, e.message);
+            return null;
+          }
+        }));
+        const ok = tested.filter(Boolean);
+        failed += wave.length - ok.length;
+        if (ok.length) {
+          await base44.entities.TextModel.bulkCreate(ok.map(toRecord));
+          added += ok.length;
+        }
+      }
+
+      const remaining = todo.length - index;
+      return Response.json({ tested: index, added, failed, remaining, done: remaining === 0 });
+    }
+
     const modelId = (body.modelId || '').trim();
     const prompt = (body.prompt || '').trim();
     if (!modelId || !prompt) return Response.json({ error: 'Modell oder Text fehlt.' }, { status: 400 });

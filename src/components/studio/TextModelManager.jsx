@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, Loader2, Plus, Check, Power, Trash2, Pencil } from "lucide-react";
+import { Search, Loader2, Plus, Check, Power, Trash2, Pencil, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,8 @@ export default function TextModelManager() {
   const [manualId, setManualId] = useState("");
   const [editingDesc, setEditingDesc] = useState(null);
   const [descDraft, setDescDraft] = useState("");
+  const [bulk, setBulk] = useState(null); // { added, failed, remaining }
+  const bulkStop = useRef(false);
 
   useEffect(() => { load(); search(); }, []);
 
@@ -39,6 +41,34 @@ export default function TextModelManager() {
       toast({ title: "Liste kam nicht an", description: e.message, variant: "destructive" });
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Alle auf einmal: jedes Modell kurz ansprechen, die laufenden übernehmen.
+  const importAll = async () => {
+    bulkStop.current = false;
+    setBulk({ added: 0, failed: 0, remaining: null });
+    let added = 0;
+    let failed = 0;
+    try {
+      for (let round = 0; round < 40; round += 1) {
+        if (bulkStop.current) break;
+        const res = await base44.functions.invoke("hfChat", { action: "importAll" });
+        if (res.data?.error) throw new Error(res.data.error);
+        added += res.data.added || 0;
+        failed += res.data.failed || 0;
+        setBulk({ added, failed, remaining: res.data.remaining ?? 0 });
+        if (res.data.done) break;
+      }
+      await load();
+      toast({
+        title: `${added} Modelle übernommen`,
+        description: failed ? `${failed} haben nicht geantwortet und blieben draußen.` : "Alle haben geantwortet.",
+      });
+    } catch (e) {
+      toast({ title: "Massen-Übernahme abgebrochen", description: e.message, variant: "destructive" });
+    } finally {
+      setBulk(null);
     }
   };
 
@@ -113,21 +143,46 @@ export default function TextModelManager() {
           Probelauf — läuft es nicht, bleibt es draußen. Was drin ist, ist im Chat als Modell wählbar.
         </p>
 
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Suchen, z. B. qwen, deepseek, llama"
-            className={inputCls}
+            className={cn(inputCls, "flex-1 min-w-[220px]")}
           />
           <button
             onClick={search}
-            disabled={busy}
+            disabled={busy || !!bulk}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Aktualisieren
           </button>
+          <button
+            onClick={importAll}
+            disabled={busy || !!bulk}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
+          >
+            {bulk ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Alle prüfen &amp; übernehmen
+          </button>
         </div>
+
+        {bulk && (
+          <div className="mb-4 rounded-xl border border-primary/30 bg-elevated p-4">
+            <p className="text-sm text-foreground">
+              Läuft … {bulk.added} übernommen, {bulk.failed} ohne Antwort
+              {bulk.remaining ? ` — ${bulk.remaining} noch offen` : ""}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Jedes Modell wird einmal kurz angesprochen. Du kannst jederzeit stoppen — was schon läuft, bleibt drin.
+            </p>
+            <button
+              onClick={() => { bulkStop.current = true; }}
+              className="mt-3 px-4 py-1.5 rounded-full bg-background border border-border text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Stoppen
+            </button>
+          </div>
+        )}
 
         {results.length === 0 && !busy && (
           <p className="text-sm text-muted-foreground py-6 text-center">
