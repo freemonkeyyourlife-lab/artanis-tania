@@ -12,6 +12,8 @@ import LiveToggle from "@/components/call/LiveToggle";
 import { loadWindows, subscribeWindows, toggleWindow, openWindow, closeWindow, setDock, setTextSize, setStageSplit } from "@/lib/callWindows";
 import { onUiCommand, takePendingUiCommand, clearUiCommand } from "@/lib/ownerUi";
 import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
+import { readPreferredCamera, savePreferredCamera, phoneCameraUrl } from "@/lib/videoSource";
+import VideoSourceDialog from "@/components/call/VideoSourceDialog";
 import { getRooms, addRoom } from "@/lib/callRooms";
 import { publicName } from "@/lib/displayName";
 
@@ -27,6 +29,9 @@ export default function VideoCall() {
   const [isOwner, setIsOwner] = useState(false);
   const [windows, setWindows] = useState(() => loadWindows());
   const [rooms, setRooms] = useState(() => getRooms());
+  // Beim Start einer neuen Video-Session einmal nach der Videoquelle fragen.
+  const [sourceOpen, setSourceOpen] = useState(true);
+  const [camChoice, setCamChoice] = useState(() => readPreferredCamera());
 
   useEffect(() => subscribeWindows(() => setWindows(loadWindows())), []);
 
@@ -131,6 +136,19 @@ export default function VideoCall() {
             <p className="mt-2 text-xs text-muted-foreground">Ohne Konto, ohne Anmeldung — nur dein Name.</p>
           </div>
 
+          <div className="mt-6 rounded-2xl border border-border bg-elevated/60 p-4 text-left">
+            <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Videoquelle</p>
+            <p className="mt-1 text-sm text-foreground truncate">
+              {devices.video.find((d) => d.id === camChoice)?.label || "Automatisch — die erste Kamera"}
+            </p>
+            <button
+              onClick={() => setSourceOpen(true)}
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-elevated border border-border text-xs font-semibold text-foreground hover:text-primary transition-colors"
+            >
+              <VideoIcon className="w-4 h-4" /> Quelle wählen — Kamera oder Handy
+            </button>
+          </div>
+
           <div className="flex gap-3 justify-center mt-6">
             <button
               onClick={() => call.setWantCam((v) => !v)}
@@ -162,6 +180,17 @@ export default function VideoCall() {
             </div>
           )}
         </div>
+
+        <VideoSourceDialog
+          open={sourceOpen}
+          onOpenChange={setSourceOpen}
+          devices={devices}
+          activeId={camChoice}
+          onPick={(id) => { savePreferredCamera(id); setCamChoice(id); }}
+          onListDevices={listDevices}
+          phoneUrl={phoneCameraUrl(token, roomNumber)}
+          roomNumber={roomNumber}
+        />
       </div>
     );
   }

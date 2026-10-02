@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { lineFromMessage, generateStageReply } from "@/lib/stageChat";
 import { takePendingStage, onStageRequest } from "@/lib/callStage";
 import { createScreenMixer } from "@/lib/screenShare";
+import { readPreferredCamera, savePreferredCamera } from "@/lib/videoSource";
 
 const ICE = [{ urls: "stun:stun.l.google.com:19302" }];
 
@@ -212,12 +213,27 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     const start = async () => {
       setInvites([]);
       try {
+        // Die beim Start gewählte Kamera gilt auch hier — auch eine externe.
+        const preferredCam = readPreferredCamera();
         const constraints = {};
-        if (wantCam) constraints.video = true;
+        if (wantCam) constraints.video = preferredCam ? { deviceId: { exact: preferredCam } } : true;
         if (wantMic) constraints.audio = true;
-        const stream = wantCam || wantMic
-          ? await navigator.mediaDevices.getUserMedia(constraints)
-          : new MediaStream();
+        let stream;
+        if (wantCam || wantMic) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+          } catch (err) {
+            // Die gemerkte Kamera ist gerade nicht angeschlossen — dann die Standardkamera.
+            if (preferredCam && wantCam) {
+              constraints.video = true;
+              stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } else {
+              throw err;
+            }
+          }
+        } else {
+          stream = new MediaStream();
+        }
         if (!active) { stream.getTracks().forEach((t) => t.stop()); return; }
         localStreamRef.current = stream;
         setPreview(stream);
@@ -498,7 +514,7 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
         if (sender) await sender.replaceTrack(track);
         else { pc.addTrack(track, stream); negotiate(seat, pc); }
       }
-      if (kind === "video") setPreview(stream);
+      if (kind === "video") { setPreview(stream); savePreferredCamera(deviceId); }
       await listDevices();
     } catch (e) {
       setError("Diese Kamera ließ sich nicht öffnen.");
