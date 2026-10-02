@@ -22,6 +22,7 @@ import TextModelManager from "@/components/studio/TextModelManager";
 import VideoModelManager from "@/components/studio/VideoModelManager";
 import BulkImport from "@/components/studio/BulkImport";
 import SammelImport from "@/components/studio/SammelImport";
+import LinkUpload from "@/components/studio/LinkUpload";
 import PlanManager from "@/components/studio/PlanManager";
 import GalleryManager from "@/components/studio/GalleryManager";
 import GuideManager from "@/components/studio/GuideManager";
@@ -80,6 +81,7 @@ const TAB_GROUPS = [
     tabs: [
       { id: "guide", label: "Anleitung" },
       { id: "sammel", label: "Sammel-Import" },
+      { id: "linkupload", label: "Link-Upload" },
       { id: "bulk", label: "Massen-Import" },
       { id: "services", label: "Dienste" },
       { id: "modellinks", label: "Modell-Links" },
@@ -239,6 +241,7 @@ export default function Studio() {
       {tab === "textmodels" && <TextModelManager />}
       {tab === "videomodels" && <VideoModelManager />}
       {tab === "sammel" && <SammelImport creators={creators} />}
+      {tab === "linkupload" && <LinkUpload />}
       {tab === "bulk" && <BulkImport creators={creators} />}
       {tab === "promptgen" && <PromptGenerator />}
       {tab === "sandbox" && <PromptSandbox />}

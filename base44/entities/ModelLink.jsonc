@@ -27,6 +27,9 @@
     "note": {
       "type": "string"
     },
+    "image": {
+      "type": "string"
+    },
     "favorite": {
       "type": "boolean",
       "default": false

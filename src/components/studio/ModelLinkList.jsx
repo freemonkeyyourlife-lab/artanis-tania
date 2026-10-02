@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ExternalLink, Plus, Trash2, Search, Star, Loader2, RefreshCw } from "lucide-react";
+import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 
 const KINDS = ["BILD", "TEXT", "VIDEO", "AUDIO", "3D", "REALTIME", "EMBEDDING"];
@@ -233,6 +234,11 @@ export default function ModelLinkList() {
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {g.items.map((l) => (
                   <div key={l.id} className="rounded-2xl border border-border bg-card p-3.5 flex items-start gap-3">
+                    {l.image && (
+                      <div className="w-12 h-12 rounded-xl border border-border bg-elevated overflow-hidden flex-shrink-0">
+                        <Image src={l.image} fittingType="fill" className="w-full h-full" />
+                      </div>
+                    )}
                     <a
                       href={l.url}
                       target="_blank"
