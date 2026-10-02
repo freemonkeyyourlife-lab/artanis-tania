@@ -1,12 +1,10 @@
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Link } from "react-router-dom";
-import { GripVertical, Eye, EyeOff, Trash2, Plus } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
+import MenuRow from "@/components/owner/MenuRow";
 
-// Sortieren, umbenennen, ausblenden, ergänzen — genau die Knöpfe, die man
-// selbst nicht braucht, aber ordentlich haben will.
+// Die Übersicht der Kopfzeile: jeder Eintrag mit Ziel und Funktion, verschiebbar,
+// bearbeitbar und mit dem Knopf zum Erstellen.
 export default function MenuEditor({ items, onChange }) {
   const update = (index, patch) =>
     onChange(items.map((it, i) => (i === index ? { ...it, ...patch } : it)));
@@ -36,52 +34,13 @@ export default function MenuEditor({ items, onChange }) {
               {items.map((item, index) => (
                 <Draggable key={item.id || item.path} draggableId={item.id || item.path} index={index}>
                   {(p) => (
-                    <div
-                      ref={p.innerRef}
-                      {...p.draggableProps}
-                      className={cn(
-                        "flex items-center gap-2 rounded-xl border border-border bg-card p-2",
-                        item.hidden && "opacity-50"
-                      )}
-                    >
-                      <span {...p.dragHandleProps} className="cursor-grab text-muted-foreground px-1">
-                        <GripVertical className="w-4 h-4" />
-                      </span>
-                      <Input
-                        value={item.label}
-                        onChange={(e) => update(index, { label: e.target.value })}
-                        className="h-9 flex-1"
+                    <div ref={p.innerRef} {...p.draggableProps}>
+                      <MenuRow
+                        item={item}
+                        dragHandleProps={p.dragHandleProps}
+                        onChange={(patch) => update(index, patch)}
+                        onRemove={() => remove(index)}
                       />
-                      <Input
-                        value={item.path}
-                        onChange={(e) => update(index, { path: e.target.value })}
-                        className="h-9 flex-1"
-                      />
-                      <button
-                        onClick={() => update(index, { hidden: !item.hidden })}
-                        title={item.hidden ? "Wieder einblenden" : "Ausblenden"}
-                        className={cn(
-                          "h-9 px-3 rounded-full glass-btn text-xs font-bold flex items-center justify-center gap-1.5 flex-shrink-0 whitespace-nowrap",
-                          item.hidden ? "text-destructive" : "text-emerald-400"
-                        )}
-                      >
-                        {item.hidden ? <EyeOff className="w-3.5 h-3.5" /> : null}
-                        {item.hidden ? "Aus" : "Sichtbar"}
-                      </button>
-                      <Link
-                        to={item.path || "/"}
-                        title="Anschauen"
-                        className="w-9 h-9 rounded-full glass-btn flex items-center justify-center text-muted-foreground hover:text-primary flex-shrink-0"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Link>
-                      <button
-                        onClick={() => remove(index)}
-                        title="Entfernen"
-                        className="w-9 h-9 rounded-full bg-destructive/15 text-destructive flex items-center justify-center flex-shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   )}
                 </Draggable>
@@ -94,9 +53,9 @@ export default function MenuEditor({ items, onChange }) {
 
       <button
         onClick={add}
-        className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full glass-btn text-sm font-semibold text-foreground"
+        className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-foreground"
       >
-        <Plus className="w-4 h-4" /> Eintrag hinzufügen
+        <Plus className="w-4 h-4" /> Erstellen
       </button>
     </div>
   );

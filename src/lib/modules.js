@@ -2,35 +2,35 @@
 // die Seiten, die es in der App gibt. Neue Seiten erfindet der Editor nicht.
 
 export const MODULE_TYPES = [
-  { path: "/", label: "Startseite" },
-  { path: "/explore", label: "Entdecken" },
-  { path: "/videos", label: "Videos" },
-  { path: "/photos", label: "Fotos" },
-  { path: "/stories", label: "Storys" },
-  { path: "/topics", label: "Themen" },
-  { path: "/live", label: "Live" },
-  { path: "/interactive", label: "Interaktiv" },
-  { path: "/groups", label: "Gruppen" },
-  { path: "/community", label: "Community" },
-  { path: "/coins", label: "Börse" },
-  { path: "/library", label: "Bibliothek" },
-  { path: "/messages", label: "Nachrichten" },
-  { path: "/therapy", label: "Sprechstunde" },
-  { path: "/request", label: "Wünsche" },
-  { path: "/paylinks", label: "Kasse" },
-  { path: "/contests", label: "Wettbewerbe" },
-  { path: "/studio", label: "Studio" },
-  { path: "/stimmen", label: "Stimmen" },
-  { path: "/baukasten", label: "Baukasten" },
-  { path: "/dock", label: "Dockingstation" },
-  { path: "/leitstand", label: "Leitstand" },
-  { path: "/archiv", label: "Archiv" },
-  { path: "/owner", label: "Besitzer-Konsole" },
-  { path: "/admin", label: "Verwaltung" },
-  { path: "/tutorial", label: "Tutorial" },
-  { path: "/anleitung", label: "Anleitung" },
-  { path: "/call", label: "Video-Call" },
-  { path: "/account", label: "Konto" },
+  { path: "/", label: "Startseite", description: "Das Erste, was jeder sieht: Bühne, Neues und die wichtigsten Wege." },
+  { path: "/explore", label: "Entdecken", description: "Zum Stöbern durch Charaktere und Inhalte." },
+  { path: "/videos", label: "Videos", description: "Alle Videoclips an einer Stelle." },
+  { path: "/photos", label: "Fotos", description: "Alle Bildergalerien." },
+  { path: "/stories", label: "Storys", description: "Geschichten zum Lesen." },
+  { path: "/topics", label: "Themen", description: "Inhalte nach Thema sortiert." },
+  { path: "/live", label: "Live", description: "Laufende und geplante Übertragungen." },
+  { path: "/interactive", label: "Interaktiv", description: "Mitmach-Geschichten mit Entscheidungen." },
+  { path: "/groups", label: "Gruppen", description: "Gemeinsame Chatgruppen." },
+  { path: "/community", label: "Community", description: "Beiträge und Wünsche der Nutzer." },
+  { path: "/coins", label: "Börse", description: "Münzen, Guthaben und Einsätze." },
+  { path: "/library", label: "Bibliothek", description: "Alles, was man sich gemerkt hat." },
+  { path: "/messages", label: "Nachrichten", description: "Die Chats mit Charakteren und echten Leuten." },
+  { path: "/therapy", label: "Sprechstunde", description: "Sitzungen mit Triania." },
+  { path: "/request", label: "Wünsche", description: "Wünsche eintragen und abstimmen." },
+  { path: "/paylinks", label: "Kasse", description: "Zahlungen anfordern und bezahlen." },
+  { path: "/contests", label: "Wettbewerbe", description: "Wettbewerbe und ihre Beiträge." },
+  { path: "/studio", label: "Studio", description: "Hier legst du Charaktere, Stimmen und Inhalte an." },
+  { path: "/stimmen", label: "Stimmen", description: "Die Stimmbank mit allen Stimmen." },
+  { path: "/baukasten", label: "Baukasten", description: "Bausteine und fertige Pakete." },
+  { path: "/dock", label: "Dockingstation", description: "Charaktere aus fremden Vorlagen anlegen." },
+  { path: "/leitstand", label: "Leitstand", description: "Der Schaltraum für Chats und Gäste." },
+  { path: "/archiv", label: "Archiv", description: "Alle Chats und Sitzungen im Rückblick." },
+  { path: "/owner", label: "Besitzer-Konsole", description: "Diese Konsole hier." },
+  { path: "/admin", label: "Verwaltung", description: "Nutzer und Freigaben." },
+  { path: "/tutorial", label: "Tutorial", description: "Die Einführung Schritt für Schritt." },
+  { path: "/anleitung", label: "Anleitung", description: "Nachschlagewerk zum Weiterbauen." },
+  { path: "/call", label: "Video-Call", description: "Der Video-Raum für Gespräche." },
+  { path: "/account", label: "Konto", description: "Eigenes Profil und Einstellungen." },
 ];
 
 export const MODULE_LIMITS = [
@@ -41,7 +41,9 @@ export const MODULE_LIMITS = [
   "Ganz neue Seiten kann dieser Editor nicht erfinden; die entstehen im Chat mit dem Bau-Assistenten.",
 ];
 
-export const moduleLabelFor = (path) => MODULE_TYPES.find((m) => m.path === path)?.label || path;
+export const moduleFor = (path) => MODULE_TYPES.find((m) => m.path === path) || null;
+
+export const moduleLabelFor = (path) => moduleFor(path)?.label || path;
 
 // Was ändert sich gegenüber dem gespeicherten Stand? Für die Vorschau vor dem Anwenden.
 export function diffModules(saved = [], draft = []) {

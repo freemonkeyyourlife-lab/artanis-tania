@@ -390,15 +390,17 @@ export default function OwnerConsole() {
       {tab === "menu" && (
         <>
           <GuideBox
-            title="Menü sortieren"
+            title="Menü durchgehen und umbauen"
             steps={[
+              "Jeder Eintrag zeigt, wohin der Klick führt und was auf der Seite passiert.",
               "Am Griff links ziehen — so verschiebst du einen Eintrag nach oben oder unten.",
-              "Name und Adresse kannst du direkt im Feld überschreiben.",
-              "Das Auge öffnet die Seite, damit du siehst, wohin der Eintrag führt.",
-              "Der Mülleimer löscht den Eintrag. Unten auf Speichern drücken — sonst bleibt alles wie es war.",
+              "Bearbeiten klappt den Eintrag auf: Name ändern und das Ziel aus der Liste wählen.",
+              "Erstellen legt unten einen neuen Eintrag an — er startet auf Entdecken.",
+              "Das Auge öffnet die Seite wirklich, damit du siehst, was der Klick bewirkt.",
+              "Unten auf Speichern drücken — erst dann geht es für alle los.",
             ]}
           >
-            Das ist die Leiste oben. Du musst hier nichts machen, außer dich stört etwas.
+            Das ist die Leiste oben, einmal komplett aufgelistet. Geh sie in Ruhe durch und ändere nur, was dich stört.
           </GuideBox>
           <div className="glass rounded-2xl border border-border p-5">
             <MenuEditor items={items} onChange={setItems} />
