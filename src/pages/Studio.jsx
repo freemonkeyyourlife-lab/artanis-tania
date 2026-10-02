@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Plus, Pencil, Trash2, BookOpen, Mic } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Mic, ImagePlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import CharacterForm from "@/components/studio/CharacterForm";
+import CharacterQuickImages from "@/components/studio/CharacterQuickImages";
 import CharacterVoiceBox from "@/components/studio/CharacterVoiceBox";
 import { assignVoiceToCreator } from "@/lib/voiceAssign";
 import StoryManager from "@/components/studio/StoryManager";
@@ -75,6 +76,7 @@ export default function Studio() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | "new" | creator
   const [soundFor, setSoundFor] = useState(null); // Charakter, dessen Klang gerade offen ist
+  const [imagesFor, setImagesFor] = useState(null); // Charakter, dessen Bilder gerade offen sind
 
   useEffect(() => { load(); }, []);
   const load = async () => {
@@ -256,6 +258,15 @@ export default function Studio() {
         </div>
       )}
 
+      {imagesFor && (
+        <CharacterQuickImages
+          key={imagesFor.id}
+          creator={creators.find((c) => c.id === imagesFor.id) || imagesFor}
+          onClose={() => setImagesFor(null)}
+          onChanged={load}
+        />
+      )}
+
       {creators.length === 0 ? (
         <p className="text-muted-foreground text-center py-16">Noch keine Charaktere — leg deinen ersten an.</p>
       ) : (
@@ -303,13 +314,22 @@ export default function Studio() {
                   {c.artStyle === "CARTOON" ? "Animiert ✓" : "Animiert"}
                 </button>
                 <button
-                  onClick={() => setSoundFor(soundFor?.id === c.id ? null : c)}
+                  onClick={() => { setSoundFor(soundFor?.id === c.id ? null : c); setImagesFor(null); }}
                   className={cn(
                     "w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold transition-colors",
                     soundFor?.id === c.id ? "bg-primary text-primary-foreground" : "bg-primary/15 text-primary hover:bg-primary/25"
                   )}
                 >
                   <Mic className="w-3.5 h-3.5" /> Klang & Stimme
+                </button>
+                <button
+                  onClick={() => { setImagesFor(imagesFor?.id === c.id ? null : c); setSoundFor(null); }}
+                  className={cn(
+                    "w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold transition-colors",
+                    imagesFor?.id === c.id ? "bg-primary text-primary-foreground" : "bg-primary/15 text-primary hover:bg-primary/25"
+                  )}
+                >
+                  <ImagePlus className="w-3.5 h-3.5" /> Bilder
                 </button>
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => setEditing(c)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-elevated border border-border text-xs text-muted-foreground hover:text-foreground transition-colors">
