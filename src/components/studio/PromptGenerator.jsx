@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { Sparkles, Loader2, Copy, Check, Mic } from "lucide-react";
+import { Sparkles, Loader2, Mic } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
+import ModelPresetPicker from "@/components/studio/ModelPresetPicker";
+import PromptResult from "@/components/studio/PromptResult";
 import { writePrompt } from "@/lib/promptWriter";
+import { presetById } from "@/lib/modelPrompts";
 
 const TARGETS = [
   { id: "BILD", label: "Bild" },
@@ -16,15 +19,16 @@ const STYLES = [
   { id: "ANIMIERT", label: "Animiert" },
 ];
 
-// Aus einer rohen Idee — getippt oder gesprochen — wird ein fertiger Prompt.
+// Aus einer rohen Idee — gesprochen oder getippt — wird ein fertiger Prompt in
+// der Sprache des gewählten Modells: Prompt, Negativ-Prompt und LoRA-Zusatz.
 export default function PromptGenerator() {
   const { toast } = useToast();
   const [rough, setRough] = useState("");
   const [target, setTarget] = useState("BILD");
   const [style, setStyle] = useState("FOTO");
-  const [result, setResult] = useState("");
+  const [choice, setChoice] = useState({ modelId: "", presetId: "ALLGEMEIN" });
+  const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   // Sprechen ist der kurze Weg: das Gesagte wird sofort zum fertigen Prompt.
   const speak = (text) => {
@@ -37,9 +41,16 @@ export default function PromptGenerator() {
     const text = (override ?? rough).trim();
     if (!text) return;
     setBusy(true);
-    setResult("");
+    setResult(null);
     try {
-      setResult(await writePrompt({ rough: text, target, style }));
+      setResult(
+        await writePrompt({
+          rough: text,
+          target,
+          style,
+          preset: target === "TEXT" ? null : presetById(choice.presetId),
+        })
+      );
     } catch (e) {
       console.error(e);
       toast({ title: "Hat nicht geklappt", description: "Versuch es noch einmal.", variant: "destructive" });
@@ -48,23 +59,15 @@ export default function PromptGenerator() {
     }
   };
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(result);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch (e) {
-      /* Zwischenablage verweigert. */
-    }
-  };
-
   return (
     <div className="glass rounded-2xl border-2 border-border p-6">
       <p className="font-display text-2xl text-foreground mb-1">Prompt-Generator</p>
       <p className="text-[15px] font-semibold text-muted-foreground max-w-2xl mb-5">
-        Sprich, was du willst — daraus wird ein fertiger Prompt für Bild, Video oder Text. Zum Kopieren und im externen
-        Studio einfügen.
+        Sprich, was du willst — daraus wird ein fertiger Prompt für Bild, Video oder Text. Ist ein Modell gewählt,
+        benutzt er dessen eigene Syntax und legt Negativ-Prompt und LoRA-Zusatz gleich mit dazu.
       </p>
+
+      {target !== "TEXT" && <ModelPresetPicker value={choice} onChange={setChoice} />}
 
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {TARGETS.map((t) => (
@@ -124,30 +127,15 @@ export default function PromptGenerator() {
       </button>
 
       {result && !busy && (
-        <div className="mt-5">
-          <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Fertiger Prompt</p>
-          <textarea
-            value={result}
-            onChange={(e) => setResult(e.target.value)}
-            rows={7}
-            className="w-full px-4 py-3 rounded-2xl bg-card border border-border text-[15px] font-semibold text-foreground focus:outline-none focus:border-primary/50 resize-none"
-          />
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            <button
-              onClick={copy}
-              className={cn(
-                "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-bold transition-colors",
-                copied ? "bg-emerald-600/20 text-emerald-400" : "glass-btn text-foreground"
-              )}
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Kopiert" : "Prompt kopieren"}
-            </button>
-            <button onClick={() => write()} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-muted-foreground">
-              Nochmal
-            </button>
-          </div>
-        </div>
+        <>
+          <PromptResult result={result} onChange={setResult} />
+          <button
+            onClick={() => write()}
+            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-muted-foreground"
+          >
+            Nochmal
+          </button>
+        </>
       )}
     </div>
   );

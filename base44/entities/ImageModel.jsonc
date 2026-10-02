@@ -16,6 +16,16 @@
       ],
       "default": "HUGGING_FACE"
     },
+    "preset": {
+      "type": "string",
+      "enum": [
+        "PONY",
+        "BIGASP",
+        "EPIC",
+        "ALLGEMEIN"
+      ],
+      "default": "ALLGEMEIN"
+    },
     "note": {
       "type": "string"
     },
