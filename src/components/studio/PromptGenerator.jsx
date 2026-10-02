@@ -21,7 +21,7 @@ const STYLES = [
 
 // Aus einer rohen Idee — gesprochen oder getippt — wird ein fertiger Prompt in
 // der Sprache des gewählten Modells: Prompt, Negativ-Prompt und LoRA-Zusatz.
-export default function PromptGenerator() {
+export default function PromptGenerator({ onResult }) {
   const { toast } = useToast();
   const [rough, setRough] = useState("");
   const [target, setTarget] = useState("BILD");
@@ -43,14 +43,15 @@ export default function PromptGenerator() {
     setBusy(true);
     setResult(null);
     try {
-      setResult(
-        await writePrompt({
-          rough: text,
-          target,
-          style,
-          preset: target === "TEXT" ? null : presetById(choice.presetId),
-        })
-      );
+      const written = await writePrompt({
+        rough: text,
+        target,
+        style,
+        preset: target === "TEXT" ? null : presetById(choice.presetId),
+      });
+      setResult(written);
+      // Wer mithört — etwa die Sandbox — bekommt Prompt und Idee zugleich.
+      onResult?.(written, { rough: text, target, presetId: choice.presetId });
     } catch (e) {
       console.error(e);
       toast({ title: "Hat nicht geklappt", description: "Versuch es noch einmal.", variant: "destructive" });

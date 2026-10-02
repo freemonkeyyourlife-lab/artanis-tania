@@ -37,6 +37,7 @@ import AiLogbook from "@/components/studio/AiLogbook";
 import RequestLog from "@/components/studio/RequestLog";
 import ExternalStudio from "@/components/studio/ExternalStudio";
 import PromptGenerator from "@/components/studio/PromptGenerator";
+import PromptSandbox from "@/components/studio/PromptSandbox";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -55,6 +56,7 @@ const TAB_GROUPS = [
       { id: "voiceprofiles", label: "Stimmen-Profile" },
       { id: "generator", label: "Generator" },
       { id: "promptgen", label: "Prompt-Generator" },
+      { id: "sandbox", label: "Prompt-Sandbox" },
       { id: "content", label: "Inhalte & Preise" },
     ],
   },
@@ -233,6 +235,7 @@ export default function Studio() {
       {tab === "videomodels" && <VideoModelManager />}
       {tab === "bulk" && <BulkImport creators={creators} />}
       {tab === "promptgen" && <PromptGenerator />}
+      {tab === "sandbox" && <PromptSandbox />}
       {tab === "plan" && (
         <div>
           <p className="font-display text-2xl text-foreground mb-1">Content-Planer</p>
