@@ -4,17 +4,20 @@ import { Image } from "@/components/ui/image";
 import { Loader2, Sparkles, Wand2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { addGalleryItems } from "@/lib/gallery";
+import { generateWithModel } from "@/lib/imageGen";
 import { characterPrompt } from "@/lib/externalPrompt";
 import { directionPrompt, emptyDirection, modelsForLevel } from "@/lib/imageDirection";
 import ImageDirectionPanel from "@/components/studio/ImageDirectionPanel";
 import MassCharacterPicker from "@/components/studio/MassCharacterPicker";
 import MassModelPicker from "@/components/studio/MassModelPicker";
+import MassJobPlan from "@/components/studio/MassJobPlan";
 
 const FIELDS = ["stageName", "avatar", "banner", "referenceImages", "personaType", "artStyle", "age", "tagline", "shortStory", "bio"];
 const MAX_JOBS = 12;
 
-// Viele Charaktere auf einmal: Regler stellen, Modelle wählen, laufen lassen.
-// Jedes Bild landet sofort in der Galerie — und wird Hauptbild, wenn noch keins da ist.
+// Viele Charaktere auf einmal: Regler stellen, Modelle wählen, jede Kombination
+// vor dem Start feinjustieren — dann laufen lassen. Jedes Bild landet sofort in
+// der Galerie und wird Hauptbild, wenn noch keins da ist.
 export default function MassGeneration({ onChanged }) {
   const { toast } = useToast();
   const [creators, setCreators] = useState([]);
@@ -22,6 +25,7 @@ export default function MassGeneration({ onChanged }) {
   const [dir, setDir] = useState(emptyDirection());
   const [picked, setPicked] = useState([]);
   const [modelIds, setModelIds] = useState([]);
+  const [overrides, setOverrides] = useState({});
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -48,14 +52,28 @@ export default function MassGeneration({ onChanged }) {
     await base44.entities.ImageModel.update(m.id, { explicit: value });
   };
 
-  const targets = picked.map((id) => creators.find((c) => c.id === id)).filter(Boolean);
-  const sources = modelIds.length ? models.filter((m) => modelIds.includes(m.id)) : [null];
-  const jobCount = targets.length * sources.length;
-
-  const run = async () => {
+  // Der ganze Plan steht, bevor etwas läuft — inklusive Stufe pro Kombination.
+  const jobs = useMemo(() => {
+    const targets = picked.map((id) => creators.find((c) => c.id === id)).filter(Boolean);
+    const sources = modelIds.length ? models.filter((m) => modelIds.includes(m.id)) : [null];
     const list = [];
     targets.forEach((c) => sources.forEach((m) => list.push({ creator: c, model: m })));
-    const jobs = list.slice(0, MAX_JOBS);
+    return list.slice(0, MAX_JOBS).map(({ creator, model }) => {
+      const key = `${creator.id}|${model?.id || "default"}`;
+      return {
+        key,
+        creator,
+        model,
+        creatorName: creator.stageName,
+        modelName: model?.name || "Standard-Generator",
+        level: overrides[key] ?? (model?.explicit || dir.freizuegigkeit || ""),
+      };
+    });
+  }, [picked, modelIds, creators, models, dir.freizuegigkeit, overrides]);
+
+  const setJobLevel = (key, level) => setOverrides((p) => ({ ...p, [key]: level }));
+
+  const run = async () => {
     if (!jobs.length) return;
 
     setBusy(true);
@@ -64,33 +82,27 @@ export default function MassGeneration({ onChanged }) {
 
     const out = [];
     for (let i = 0; i < jobs.length; i++) {
-      const { creator, model } = jobs[i];
-      // Was am Modell steht, gewinnt — sonst gilt die Regler-Stufe.
-      const level = model?.explicit || dir.freizuegigkeit;
-      const prompt = [characterPrompt(creator), directionPrompt({ ...dir, freizuegigkeit: level })]
+      const job = jobs[i];
+      const prompt = [characterPrompt(job.creator), directionPrompt({ ...dir, freizuegigkeit: job.level })]
         .filter(Boolean)
         .join(" ");
       try {
-        let url;
-        if (model) {
-          const res = await base44.functions.invoke("hfGenerate", { modelId: model.modelId, source: model.source, prompt });
-          if (res.data?.error) throw new Error(res.data.error);
-          url = res.data.imageUrl;
-        } else {
-          const res = await base44.integrations.Core.GenerateImage({
-            prompt,
-            existing_image_urls: creator.referenceImages?.length ? creator.referenceImages : undefined,
-          });
-          url = res.url;
-        }
-        out.push({ creatorId: creator.id, creatorName: creator.stageName, modelName: model?.name || "Standard", url });
+        const url = job.model
+          ? await generateWithModel(job.model, prompt)
+          : (
+              await base44.integrations.Core.GenerateImage({
+                prompt,
+                existing_image_urls: job.creator.referenceImages?.length ? job.creator.referenceImages : undefined,
+              })
+            ).url;
+        out.push({ creatorId: job.creator.id, creatorName: job.creatorName, modelName: job.modelName, url });
         setResults([...out]);
-        await addGalleryItems({ urls: [url], creatorId: creator.id, creatorName: creator.stageName });
-        if (!creator.avatar) {
-          await base44.entities.Creator.update(creator.id, { avatar: url, banner: creator.banner || url });
+        await addGalleryItems({ urls: [url], creatorId: job.creator.id, creatorName: job.creatorName });
+        if (!job.creator.avatar) {
+          await base44.entities.Creator.update(job.creator.id, { avatar: url, banner: job.creator.banner || url });
         }
       } catch (e) {
-        out.push({ creatorId: creator.id, creatorName: creator.stageName, modelName: model?.name || "Standard", error: e.message || "Hat nicht geklappt" });
+        out.push({ creatorId: job.creator.id, creatorName: job.creatorName, modelName: job.modelName, error: e.message || "Hat nicht geklappt" });
         setResults([...out]);
       }
       setProgress({ done: i + 1, total: jobs.length });
@@ -123,20 +135,21 @@ export default function MassGeneration({ onChanged }) {
           title="Regie: Stimmung, Stil, Freizügigkeit"
         />
         <MassModelPicker models={offered} modelIds={modelIds} onToggle={toggleModel} onLevel={setModelLevel} />
+        <MassJobPlan jobs={jobs} onLevel={setJobLevel} busy={busy} />
 
         <div className="rounded-2xl border-2 border-border bg-card p-4">
           <button
             type="button"
             onClick={run}
-            disabled={busy || !jobCount}
+            disabled={busy || !jobs.length}
             className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-[15px] font-bold disabled:opacity-50"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {jobCount ? `${Math.min(jobCount, MAX_JOBS)} Bild(er) erzeugen` : "Erst Charaktere wählen"}
+            {jobs.length ? `${jobs.length} Bild(er) erzeugen` : "Erst Charaktere wählen"}
           </button>
           <p className="text-[12px] font-semibold text-muted-foreground mt-2">
-            {targets.length} Charaktere × {sources.length} {sources.length === 1 ? "Quelle" : "Quellen"}
-            {jobCount > MAX_JOBS ? ` — es laufen die ersten ${MAX_JOBS}.` : "."}
+            {jobs.length} Kombinationen vorbereitet
+            {picked.length * (modelIds.length || 1) > MAX_JOBS ? ` — es laufen die ersten ${MAX_JOBS}.` : "."}
           </p>
           {busy && (
             <div className="mt-3">

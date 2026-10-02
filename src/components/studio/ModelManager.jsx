@@ -16,6 +16,7 @@ const inputCls =
 const SOURCES = [
   { value: "HUGGING_FACE", label: "Hugging Face", hint: "Dein Konto ist verbunden. Die großen Modelle brauchen dort Guthaben, kleine laufen sofort." },
   { value: "POLLINATIONS", label: "Pollinations", hint: "Kostenlos, ohne Anmeldung und ohne Guthaben — dafür einfachere Qualität." },
+  { value: "FAL_AI", label: "fal.ai", hint: "Höchste Bildqualität — läuft über deinen fal.ai-Schlüssel und wird pro Bild abgerechnet." },
 ];
 
 // Bildmodelle, die im Generator als Quelle wählbar sind.
@@ -151,7 +152,13 @@ export default function ModelManager() {
         <input
           value={form.modelId}
           onChange={(e) => setForm({ ...form, modelId: e.target.value })}
-          placeholder={source === "POLLINATIONS" ? "default (oder z. B. sana)" : "black-forest-labs/FLUX.1-schnell"}
+          placeholder={
+            source === "POLLINATIONS"
+              ? "default (oder z. B. sana)"
+              : source === "FAL_AI"
+                ? "fal-ai/flux/schnell"
+                : "black-forest-labs/FLUX.1-schnell"
+          }
           className={cn(inputCls, "mb-4")}
         />
 

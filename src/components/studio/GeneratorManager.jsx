@@ -8,6 +8,7 @@ import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { uploadDataUrl } from "@/lib/mediaUpload";
 import ImageDirectionPanel from "@/components/studio/ImageDirectionPanel";
 import { directionPrompt, emptyDirection } from "@/lib/imageDirection";
+import { generateWithModel } from "@/lib/imageGen";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
 // Mehrere Modelle dürfen gleichzeitig ran — und als Kombi abgespeichert werden.
@@ -72,13 +73,8 @@ export default function GeneratorManager({ creators }) {
         const label = m?.name || "Standard-Generator";
         try {
           if (m) {
-            const res = await base44.functions.invoke("hfGenerate", {
-              modelId: m.modelId,
-              source: m.source,
-              prompt: buildPrompt(),
-            });
-            if (res.data?.error) throw new Error(res.data.error);
-            return { key: m.id, label, type: "image", url: res.data.imageUrl };
+            const url = await generateWithModel(m, buildPrompt());
+            return { key: m.id, label, type: "image", url };
           }
           const res = await base44.integrations.Core.GenerateImage({
             prompt: buildPrompt(),

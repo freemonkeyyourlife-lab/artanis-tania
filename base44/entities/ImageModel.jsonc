@@ -12,7 +12,8 @@
       "type": "string",
       "enum": [
         "HUGGING_FACE",
-        "POLLINATIONS"
+        "POLLINATIONS",
+        "FAL_AI"
       ],
       "default": "HUGGING_FACE"
     },
