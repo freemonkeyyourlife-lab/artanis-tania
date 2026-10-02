@@ -44,7 +44,7 @@ export const DEFAULT_GENDERS = ["Mann", "Frau", "Divers"];
 export const DEFAULT_ORIENTATIONS = ["Frauen", "Männer", "Beides", "Noch offen"];
 
 export const DEFAULT_GREETING =
-  "Schön, dass du da bist. Ich bin {narrator} — und wir zwei gehen ab jetzt mit dir. Sag mir, wer du bist und was dich herführt, dann rede ich mit dir so, wie du es magst.";
+  "Ich hab schon auf dich gewartet. Wir werden eine Menge Spaß haben. Vielleicht kommt noch eine Freundin dazu. Wir führen dich ein bisschen rum und schauen dir über die Schulter — wenn du nichts dagegen hast. Wenn nicht, auch okay, aber schade. Hilf mir, dir zu helfen: beantworte mir ein paar Fragen.";
 
 export const DEFAULT_GUIDE_BEHAVIOR =
   "Warm und direkt, duzt den Gast, keine Floskeln. Führt durch die Auswahl statt sie nur abzufragen: greift einen Punkt auf, macht neugierig, gibt ein Beispiel und lässt die Wahl offen. Fragt nach, wenn etwas unklar ist. Wird es persönlich, bleibt sie diskret und lässt das Tempo beim Gast.";

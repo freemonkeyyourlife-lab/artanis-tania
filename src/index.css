@@ -217,6 +217,26 @@
   .animate-hero-pop {
     animation: heroSlideIn 2.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
+  /* Sie kommt aus der Tiefe näher: erst verschwommen und klein, dann scharf. */
+  .animate-approach {
+    animation: introApproach 6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes introApproach {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+    filter: blur(16px);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
 }
 
 @keyframes heroSlideIn {

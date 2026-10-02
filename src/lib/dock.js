@@ -19,7 +19,11 @@ export const DOCK_STATUS = {
   PENDING: "Wartet auf Freigabe",
   APPROVED: "Freigegeben",
   REJECTED: "Abgelehnt",
+  DEACTIVATED: "Zurückgelegt",
 };
+
+// Zurückgelegte Charaktere (noch ohne Bild) werden nirgends angezeigt.
+export const VISIBLE_STATUS = { status: { $ne: "DEACTIVATED" } };
 
 // Aus einer Andockung wird ein echter Charakter — mit unserer Persönlichkeit drin.
 export function dockToCreator(dock) {

@@ -16,7 +16,7 @@ export default function Dock() {
     try {
       const me = await base44.auth.me();
       const [own, live] = await Promise.all([
-        base44.entities.Dock.filter({ created_by_id: me.id }, "-created_date", 50),
+        base44.entities.Dock.filter({ created_by_id: me.id, status: { $ne: "DEACTIVATED" } }, "-created_date", 50),
         base44.entities.Dock.filter({ status: "APPROVED" }, "-created_date", 24),
       ]);
       setMine(own);
