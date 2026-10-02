@@ -34,6 +34,7 @@ import ServiceListManager from "@/components/studio/ServiceListManager";
 import ModelLinkList from "@/components/studio/ModelLinkList";
 import ModelOverview from "@/components/studio/ModelOverview";
 import AiLogbook from "@/components/studio/AiLogbook";
+import RequestLog from "@/components/studio/RequestLog";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -60,6 +61,7 @@ const TAB_GROUPS = [
       { id: "topics", label: "Themen" },
       { id: "gallery", label: "Galerie" },
       { id: "plan", label: "Content-Planer" },
+      { id: "requestlog", label: "Anfragen-Log" },
       { id: "live", label: "Live-Stream" },
       { id: "contests", label: "Wettbewerbe" },
     ],
@@ -236,6 +238,7 @@ export default function Studio() {
         </div>
       )}
       {tab === "gallery" && <GalleryManager creators={creators} />}
+      {tab === "requestlog" && <RequestLog />}
       {tab === "stories" && <StoryManager creators={creators} />}
       {tab === "topics" && <TopicManager />}
       {tab === "content" && <ContentManager creators={creators} />}
