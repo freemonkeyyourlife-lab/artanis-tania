@@ -1,14 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, X } from "lucide-react";
-import { getImportState, subscribeImport, stopImport } from "@/lib/importRunner";
+import { Loader2, X, CheckCircle2, AlertTriangle } from "lucide-react";
+import { getImportState, subscribeImport, stopImport, clearImportSummary } from "@/lib/importRunner";
 
-// Der Fortschrittsbalken im Studio: derselbe Lauf, der auch in der Ecke weiterläuft.
+// Der Fortschrittsbalken: derselbe Lauf, der auch in der Ecke weiterläuft.
+// Läuft gerade nichts, bleibt die Bilanz des letzten Laufs stehen, bis du sie
+// wegklickst — so hast du den Überblick, auch wenn du zwischendurch woanders warst.
 export default function ImportProgressBar() {
   const [state, setState] = useState(getImportState());
 
   useEffect(() => subscribeImport(setState), []);
 
-  if (!state.running) return null;
+  if (!state.running) {
+    const last = state.last;
+    if (!last) return null;
+    return (
+      <div className="rounded-2xl border-2 border-border bg-card px-4 py-3 mb-5 flex flex-wrap items-center justify-between gap-2">
+        <p className="inline-flex items-center gap-2 text-[13px] font-bold text-muted-foreground">
+          {last.failed ? (
+            <AlertTriangle className="w-4 h-4 text-destructive" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          )}
+          Zuletzt: {last.done} von {last.total} durch
+          {last.stopped ? " · angehalten" : ""}
+          {last.failed ? ` · ${last.failed} fehlgeschlagen` : ""}
+        </p>
+        <button
+          onClick={clearImportSummary}
+          title="Bilanz ausblenden"
+          className="w-7 h-7 rounded-full bg-elevated border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
 
   const pct = state.total ? Math.round((state.done / state.total) * 100) : 0;
 

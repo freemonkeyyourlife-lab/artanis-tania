@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import Studio from "@/pages/Studio";
+import ImportProgressBar from "@/components/studio/ImportProgressBar";
 
 // Das Studio für sich: ohne Menü, ohne Website drumherum — nur die Werkstatt.
 export default function CreatorStudio() {
@@ -32,6 +33,10 @@ export default function CreatorStudio() {
       </header>
 
       <main className="pt-[64px]">
+        {/* Der Lauf steht hier oben mittig — sichtbar in jedem Bereich des Studios. */}
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-8 pt-4 empty:hidden">
+          <ImportProgressBar />
+        </div>
         <Studio />
       </main>
     </div>

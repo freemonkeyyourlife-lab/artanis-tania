@@ -2,7 +2,7 @@ import { toast } from "@/components/ui/use-toast";
 
 // Ein Import läuft hier weiter, auch wenn du die Seite verlässt: der Fortschritt
 // hängt nicht an der Ansicht, sondern an diesem Modul.
-let state = { running: false, title: "", done: 0, total: 0, failed: 0, current: "", note: "" };
+let state = { running: false, title: "", done: 0, total: 0, failed: 0, current: "", note: "", last: null };
 const listeners = new Set();
 let stopRequested = false;
 
@@ -22,6 +22,12 @@ export const stopImport = () => {
   stopRequested = true;
 };
 
+// Der letzte Lauf verschwindet erst, wenn du ihn wegklickst.
+export const clearImportSummary = () => {
+  state = { ...state, last: null };
+  emit();
+};
+
 // tasks: [{ label, run: async () => {...} }] — läuft eins nach dem anderen durch.
 export async function runInBackground({ title, tasks }) {
   if (state.running) {
@@ -30,7 +36,7 @@ export async function runInBackground({ title, tasks }) {
   }
 
   stopRequested = false;
-  state = { running: true, title, done: 0, total: tasks.length, failed: 0, current: "", note: "" };
+  state = { running: true, title, done: 0, total: tasks.length, failed: 0, current: "", note: "", last: null };
   emit();
 
   let failed = 0;
@@ -48,7 +54,16 @@ export async function runInBackground({ title, tasks }) {
   }
 
   const result = { done: state.done, failed, stopped: stopRequested, total: tasks.length };
-  state = { running: false, title: "", done: 0, total: 0, failed: 0, current: "", note: "" };
+  state = {
+    running: false,
+    title: "",
+    done: 0,
+    total: 0,
+    failed: 0,
+    current: "",
+    note: "",
+    last: { done: result.done, failed, stopped: result.stopped, total: result.total },
+  };
   emit();
   return result;
 }
