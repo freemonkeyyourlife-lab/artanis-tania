@@ -6,6 +6,7 @@ import { Upload, X, Save, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
 import CharacterVoiceBox from "@/components/studio/CharacterVoiceBox";
+import CharacterImageStudio from "@/components/studio/CharacterImageStudio";
 
 const PERSONA_TYPES = [
   { value: "SOLO_FEMALE", label: "Frau (solo)" },
@@ -253,6 +254,16 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
               </div>
             </div>
           )}
+        </div>
+
+        <div className="sm:col-span-2">
+          <CharacterImageStudio
+            name={form.stageName}
+            avatar={form.avatar}
+            referenceImages={form.referenceImages}
+            onAvatar={(url) => set("avatar", url)}
+            onAddReference={(url) => set("referenceImages", [...form.referenceImages, url])}
+          />
         </div>
 
         <div>
