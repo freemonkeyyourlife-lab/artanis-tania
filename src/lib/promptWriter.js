@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
+import { ruleBlock, learnExample } from "@/lib/promptRules";
 
 const PERSON = {
   SOLO_MALE: "ein Mann",
@@ -15,6 +16,7 @@ export async function writePrompt({ rough, target = "BILD", style = "FOTO", char
   const kind = target === "VIDEO" ? "Video" : target === "TEXT" ? "Text" : "Bild";
   const isImage = target !== "TEXT";
   const recipe = isImage ? preset : null;
+  const { rules, examples } = await ruleBlock(target);
 
   const styleLine = isImage
     ? `AUSSEHEN & STIL (immer mit einbauen): ${style === "ANIMIERT" ? CARTOON_STYLE : PHOTOREAL}${IMAGE_SAFE_RULES}`
@@ -41,6 +43,9 @@ DIE SPRACHE DES MODELLS — „${recipe.label}“ (${recipe.family}):
   const res = await base44.integrations.Core.InvokeLLM({
     prompt: `Du schreibst Prompts für ${kind === "Text" ? "Text-KI" : `${kind}-KI-Modelle`}.
 
+SEINE FESTE REGEL — sie steht über allem und gilt immer:
+${rules}${examples ? `\n\nWIE ES BEI IHM ZULETZT GEKLUNGEN HAT (an dieser Art orientieren, nicht wörtlich kopieren):\n${examples}` : ""}
+
 AUFGABE: Mach aus den Stichworten unten EINEN einzigen, sehr detaillierten Prompt.
 
 REGELN:
@@ -58,6 +63,8 @@ STICHWORTE (Deutsch, ungeordnet):
       required: ["prompt"],
     },
   });
+
+  await learnExample(rough, res?.prompt);
 
   return {
     prompt: res?.prompt || "",

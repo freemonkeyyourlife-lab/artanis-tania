@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Blocks } from "lucide-react";
 import PromptGenerator from "@/components/studio/PromptGenerator";
+import PromptRulePanel from "@/components/studio/PromptRulePanel";
 
 // Der Prompt-Generator als eigene Seite: Idee sprechen oder tippen, fertigen
 // Prompt fürs externe Studio mitnehmen — in der Sprache des gewählten Modells.
@@ -19,6 +20,10 @@ export default function PromptStudio() {
       </div>
 
       <PromptGenerator />
+
+      <div className="mt-5">
+        <PromptRulePanel />
+      </div>
 
       <div className="glass rounded-2xl border border-border p-5 mt-5">
         <p className="text-[15px] font-bold text-foreground mb-1">Mehrere Charaktere auf einmal</p>

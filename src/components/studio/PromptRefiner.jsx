@@ -3,6 +3,7 @@ import { Check, Loader2, Sparkles, Wand2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { sharpenPrompt } from "@/lib/promptSharpen";
+import { learnExample } from "@/lib/promptRules";
 import { inputCls, labelCls, chipCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
 
 // Sprechen, schreiben lassen, nachjustieren: erst wird aus dem Gesagten ein
@@ -49,6 +50,7 @@ export default function PromptRefiner({ value, onChange, target = "BILD", style 
 
   const accept = () => {
     if (!draft.trim()) return;
+    learnExample(value, draft);
     onChange(draft.trim());
     setOpen(false);
     setDraft("");

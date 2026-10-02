@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
+import { ruleBlock } from "@/lib/promptRules";
 
 const PERSON = {
   SOLO_MALE: "ein Mann",
@@ -33,6 +34,7 @@ export async function sharpenPrompt({
 }) {
   const kind = target === "VIDEO" ? "Video" : target === "TEXT" ? "Text" : "Bild";
   const isText = target === "TEXT";
+  const { rules, examples } = await ruleBlock(target);
 
   const styleLine = isText
     ? ""
@@ -56,6 +58,12 @@ export async function sharpenPrompt({
 
   const noteLine = note.trim() ? `\nSEIN NACHWORT — das muss jetzt besser rein:\n"""${note.trim()}"""` : "";
 
+  const ruleLine = `\n\nSEINE FESTE REGEL — sie steht über allem und gilt immer:\n${rules}`;
+
+  const exampleLine = examples
+    ? `\n\nWIE ES BEI IHM ZULETZT GEKLUNGEN HAT (an dieser Art orientieren, nicht wörtlich kopieren):\n${examples}`
+    : "";
+
   const res = await base44.integrations.Core.InvokeLLM({
     prompt: `Du bist der Prompt-Meister für ${kind}-KI. Du machst aus einer rohen Beschreibung einen fertigen Prompt — und fragst danach so lange nach, bis er genau das trifft, was der Nutzer will.
 
@@ -67,7 +75,7 @@ AUFGABE:
 2. Stelle danach 2 bis 3 kurze Rückfragen auf DEUTSCH, mit denen der Prompt noch genauer wird — zum Beispiel Blickwinkel, Licht, Outfit, Ort, Stimmung, Detailtiefe. Gib zu jeder Frage 3 kurze Antworten, die man antippen kann (je 2 bis 4 Wörter).
    - Ist schon alles klar, gib eine leere Fragenliste zurück.
    - Stelle keine Frage, deren Antwort schon im Prompt steht.
-${styleLine}${personLine}${syntaxLine}${prevLine}${answerLine}${noteLine}
+${ruleLine}${exampleLine}${styleLine}${personLine}${syntaxLine}${prevLine}${answerLine}${noteLine}
 
 DAS GESAGTE (Deutsch, ungeordnet):
 """${prompt.trim()}"""`,

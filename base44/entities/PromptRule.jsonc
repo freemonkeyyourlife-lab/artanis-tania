@@ -1,0 +1,58 @@
+{
+  "name": "PromptRule",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "ALLGEMEIN",
+        "BILD",
+        "VIDEO",
+        "TEXT",
+        "STORY"
+      ],
+      "default": "ALLGEMEIN"
+    },
+    "rule": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

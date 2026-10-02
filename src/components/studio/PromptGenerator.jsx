@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
 import ModelPresetPicker from "@/components/studio/ModelPresetPicker";
 import PromptResult from "@/components/studio/PromptResult";
+import PromptRefiner from "@/components/studio/PromptRefiner";
 import { writePrompt } from "@/lib/promptWriter";
 import { presetById, presetFor } from "@/lib/modelPrompts";
 import MoodModelPicker from "@/components/studio/MoodModelPicker";
@@ -132,6 +133,16 @@ export default function PromptGenerator({ onResult }) {
         <Mic className="w-3.5 h-3.5" /> Auf das Mikrofon tippen und erzählen, was du willst — der fertige Prompt
         erscheint von selbst. Tippen geht genauso.
       </p>
+
+      <div className="mb-3">
+        <PromptRefiner
+          value={rough}
+          onChange={setRough}
+          target={target}
+          style={style}
+          preset={target === "TEXT" ? null : presetById(choice.presetId)}
+        />
+      </div>
 
       <button
         onClick={() => write()}
