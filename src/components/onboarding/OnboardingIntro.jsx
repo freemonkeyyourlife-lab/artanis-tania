@@ -8,6 +8,7 @@ import {
   saveIntroProfile,
   introSeen,
   markIntroSeen,
+  setIntroOpen,
 } from "@/lib/onboarding";
 
 // Das Intro beim ersten Besuch: sie kommt näher, fragt nach dem Modus und
@@ -31,6 +32,12 @@ export default function OnboardingIntro() {
     window.addEventListener("artanis:intro-preview", open);
     return () => window.removeEventListener("artanis:intro-preview", open);
   }, []);
+
+  // Solange sie führt, bleibt die Begleiterin im Eck still.
+  useEffect(() => {
+    setIntroOpen(visible);
+    return () => setIntroOpen(false);
+  }, [visible]);
 
   const finish = async (profile = {}, goTo) => {
     markIntroSeen();

@@ -172,6 +172,25 @@ export const openIntroPreview = () => {
   window.dispatchEvent(new CustomEvent("artanis:intro-preview"));
 };
 
+// Läuft die Begrüßung gerade? Die Begleiterin im Eck hält sich dann raus —
+// sonst würden zwei Erzählerinnen gleichzeitig reden.
+let introOpenFlag = false;
+let introOpenListeners = [];
+
+export const introOpen = () => introOpenFlag;
+
+export const setIntroOpen = (open) => {
+  introOpenFlag = !!open;
+  introOpenListeners.forEach((fn) => fn(introOpenFlag));
+};
+
+export const subscribeIntroOpen = (fn) => {
+  introOpenListeners.push(fn);
+  return () => {
+    introOpenListeners = introOpenListeners.filter((x) => x !== fn);
+  };
+};
+
 export const saveIntroProfile = async (profile) => {
   try {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));

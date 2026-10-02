@@ -67,6 +67,7 @@ import Legal from '@/pages/Legal';
 import NarratorStudio from '@/pages/NarratorStudio';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
+import NarratorCompanion from '@/components/narrator/NarratorCompanion';
 import ImportStatusPill from '@/components/import/ImportStatusPill';
 
 const AuthenticatedApp = () => {
@@ -101,6 +102,7 @@ const AuthenticatedApp = () => {
       <OnboardingIntro />
       <TutorialPlayer />
       <FloatingCall />
+      <NarratorCompanion />
       <ImportStatusPill />
       <Routes>
       {/* Add your page Route elements here */}

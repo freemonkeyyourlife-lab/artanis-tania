@@ -70,6 +70,19 @@ export const RECALL_TIPS = [
   "Frag sie doch mal das und das — ich kenne sie nämlich ganz gut, ich weiß, wie sie reagiert. Vertrau mir.",
 ];
 
+// Zwischenrufe: sie meldet sich von selbst, damit er nicht allein vor einer
+// stummen Seite sitzt. Kurz, warm, ohne ihn zuzulabern.
+export const BETWEEN_LINES = [
+  "Na? Zeig mir, was du dir anschaust.",
+  "Ich bin hier, wenn du mich brauchst.",
+  "Wenn dir was fehlt, sag's mir — ich nehm's auf.",
+  "Frag mich einfach. Ich weiß hier fast alles.",
+  "Nicht so schüchtern. Ich beiße nicht. Meistens.",
+  "Soll ich dir was zeigen? Ich kenne hier jede Ecke.",
+  "Du darfst auch mit mir reden — nicht nur mit ihnen.",
+  "Lass dir Zeit. Ich hab keine Eile.",
+];
+
 // ── Was es gibt ───────────────────────────────────────────────────────────
 // PLATZHALTER: Davids Beispiel-Wortlaut. Die exakten Texte kommen aus seinem
 // Studio (Bausteine „Themen" und „Angebote") — hier nur die Stelle dafür.
