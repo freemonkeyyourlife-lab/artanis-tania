@@ -43,6 +43,7 @@ import ExternalStudio from "@/components/studio/ExternalStudio";
 import PromptGenerator from "@/components/studio/PromptGenerator";
 import PromptSandbox from "@/components/studio/PromptSandbox";
 import AssistantWizard from "@/components/studio/assistant/AssistantWizard";
+import ConciergePanel from "@/components/studio/ConciergePanel";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -64,6 +65,7 @@ const TAB_GROUPS = [
       { id: "promptgen", label: "Prompt-Generator" },
       { id: "sandbox", label: "Prompt-Sandbox" },
       { id: "bottraining", label: "Bot-Training" },
+      { id: "concierge", label: "Concierge-Stimme" },
       { id: "content", label: "Inhalte & Preise" },
     ],
   },
@@ -253,6 +255,7 @@ export default function Studio() {
       {tab === "promptgen" && <PromptGenerator />}
       {tab === "sandbox" && <PromptSandbox />}
       {tab === "bottraining" && <BotTrainingSandbox />}
+      {tab === "concierge" && <ConciergePanel />}
       {tab === "plan" && (
         <div>
           <p className="font-display text-2xl text-foreground mb-1">Content-Planer</p>

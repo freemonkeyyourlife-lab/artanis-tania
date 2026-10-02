@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
@@ -6,6 +6,9 @@ import { ChevronRight, Lock, Coins, ArrowLeft, Check, Send, Sparkles, Zap } from
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import { getTokens, spendTokens } from "@/lib/tokens";
+import StoryProgress from "@/components/story/StoryProgress";
+import ConciergeTip from "@/components/story/ConciergeTip";
+import { conciergeTip } from "@/lib/storyConcierge";
 
 export default function ExperiencePlayer() {
   const { id } = useParams();
@@ -25,8 +28,13 @@ export default function ExperiencePlayer() {
   const [displayName, setDisplayName] = useState(() => {
     try { return localStorage.getItem("display_name") || "Guest"; } catch { return "Guest"; }
   });
+  const [concierge, setConcierge] = useState(null);
+  const [tips, setTips] = useState({});
+  const [speaking, setSpeaking] = useState(false);
+  const audioRef = useRef(null);
+  const askedRef = useRef(new Set());
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); return () => audioRef.current?.pause(); }, [id]);
   useEffect(() => {
     const u = () => setTokens(getTokens());
     window.addEventListener("tokens-changed", u);
@@ -50,6 +58,8 @@ export default function ExperiencePlayer() {
       });
       Object.keys(map).forEach(k => map[k].sort((a, b) => (a.order || 0) - (b.order || 0)));
       setChoices(map);
+      const narrators = await base44.entities.Narrator.filter({ active: true }, "order", 1).catch(() => ({ items: [] }));
+      setConcierge(narrators.items?.[0] || null);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -57,6 +67,44 @@ export default function ExperiencePlayer() {
   const currentStage = stages[currentStageIdx];
   const stageChoices = currentStage ? (choices[currentStage.id] || []) : [];
   const progress = stages.length > 0 ? ((currentStageIdx + 1) / stages.length) * 100 : 0;
+
+  // Der Concierge meldet sich einmal pro Station — danach steht sein Satz fest.
+  useEffect(() => {
+    const key = currentStage?.id;
+    if (!key || askedRef.current.has(key)) return;
+    askedRef.current.add(key);
+    setTips((t) => ({ ...t, [key]: { loading: true } }));
+    let alive = true;
+    conciergeTip({
+      narrator: concierge,
+      experience,
+      stage: currentStage,
+      index: currentStageIdx,
+      count: stages.length,
+      history: stages.slice(0, currentStageIdx).map((s) => s.title).filter(Boolean),
+    })
+      .then((res) => { if (alive) setTips((t) => ({ ...t, [key]: { ...res, loading: false } })); })
+      .catch(() => { if (alive) setTips((t) => ({ ...t, [key]: { loading: false } })); });
+    return () => { alive = false; };
+  }, [currentStage?.id, concierge]);
+
+  const speakTip = async (text) => {
+    if (!text) return;
+    try {
+      const res = await base44.integrations.Core.GenerateSpeech({ text, voice: concierge?.voice || "honey" });
+      const audio = new Audio(res.url);
+      audioRef.current = audio;
+      setSpeaking(true);
+      audio.onended = () => setSpeaking(false);
+      audio.onerror = () => setSpeaking(false);
+      await audio.play();
+    } catch (e) { setSpeaking(false); }
+  };
+
+  const stopSpeak = () => {
+    audioRef.current?.pause();
+    setSpeaking(false);
+  };
 
   const goToStage = (stageId) => {
     setTransitioning(true);
@@ -182,7 +230,20 @@ export default function ExperiencePlayer() {
         <div className="h-1 rounded-full bg-elevated/60 overflow-hidden">
           <div className="h-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">Stage {currentStageIdx + 1} of {stages.length}</p>
+        <StoryProgress stages={stages} currentIndex={currentStageIdx} />
+      </div>
+
+      {/* Der Concierge schaut über die Schulter */}
+      <div className="absolute top-32 lg:top-36 left-4 lg:left-6 z-20 pointer-events-auto">
+        <ConciergeTip
+          narrator={concierge}
+          tip={tips[currentStage.id]?.tip}
+          nudge={tips[currentStage.id]?.nudge}
+          loading={!!tips[currentStage.id]?.loading}
+          speaking={speaking}
+          onSpeak={() => speakTip(tips[currentStage.id]?.tip)}
+          onStop={stopSpeak}
+        />
       </div>
 
       {/* Overlay Content */}
