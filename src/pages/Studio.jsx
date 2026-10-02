@@ -38,6 +38,7 @@ import RequestLog from "@/components/studio/RequestLog";
 import ExternalStudio from "@/components/studio/ExternalStudio";
 import PromptGenerator from "@/components/studio/PromptGenerator";
 import PromptSandbox from "@/components/studio/PromptSandbox";
+import AssistantWizard from "@/components/studio/assistant/AssistantWizard";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -47,6 +48,7 @@ const TAB_GROUPS = [
   {
     label: "Selbst erstellen",
     tabs: [
+      { id: "assistant", label: "Assistent" },
       { id: "characters", label: "Charaktere" },
       { id: "external", label: "Externes Studio" },
       { id: "dock", label: "Dockingstation" },
@@ -204,6 +206,7 @@ export default function Studio() {
         ))}
       </div>
 
+      {tab === "assistant" && <AssistantWizard />}
       {tab === "guide" && <GuideManager />}
       {tab === "services" && <ServiceListManager />}
       {tab === "modellinks" && <ModelLinkList />}
