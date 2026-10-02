@@ -68,12 +68,28 @@ export function setMyVoiceConvertOn(creatorId, on) {
   try { localStorage.setItem(MINE_KEY, JSON.stringify(all)); } catch (e) { /* ignore */ }
 }
 
-// Text mit der Stimme des Charakters sprechen. Eine ElevenLabs-Stimme klingt
-// genau wie in der Stimmbank eingestellt, eine Grundstimme läuft über die
-// eingebaute Sprachausgabe.
-export async function speakAsVoice(profile, text) {
+// Derselbe Satz mit derselben Stimme wird nur einmal erzeugt. Wiederholen ist
+// damit sofort da — und wer zweimal dasselbe hört, wartet kein zweites Mal.
+const speechCache = new Map();
+
+function toObjectUrl(data, type) {
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return URL.createObjectURL(new Blob([bytes], { type: type || "audio/mpeg" }));
+}
+
+// Text mit der Stimme des Charakters sprechen. Fürs Chat-Erlebnis zählt die
+// Zeit: die kurze Fassung nimmt das schnellste Modell und kommt direkt zurück.
+// Eine ElevenLabs-Stimme klingt genau wie in der Stimmbank eingestellt, eine
+// Grundstimme läuft über die eingebaute Sprachausgabe.
+export async function speakAsVoice(profile, text, options = {}) {
   const t = String(text || "").trim().slice(0, 2500);
   if (!t) return null;
+
+  const key = `${profile?.externalVoiceId || profile?.baseVoice || "x"}|${profile?.mood || ""}|${t}`;
+  const known = speechCache.get(key);
+  if (known) return known;
 
   if (profile?.provider === "ELEVENLABS" && profile?.externalVoiceId) {
     const tune = cloudTuning(profile);
@@ -86,11 +102,25 @@ export async function speakAsVoice(profile, text) {
       ending: profile?.ending,
       modelId: profile?.modelId,
       tuning: fineTuning(profile),
+      inline: true,
+      fast: options.fast !== false,
     });
     if (res.data?.error) throw new Error(res.data.error);
-    return res.data?.url || null;
+    const url = res.data?.data ? toObjectUrl(res.data.data, res.data.type) : res.data?.url || null;
+    if (url) speechCache.set(key, url);
+    return url;
   }
 
   const res = await base44.integrations.Core.GenerateSpeech({ text: t, voice: resolveVoice(profile).baseVoice });
-  return res?.url || null;
+  const url = res?.url || null;
+  if (url) speechCache.set(key, url);
+  return url;
+}
+
+// Die nächsten Sätze schon vorbereiten, während die ersten noch laufen —
+// dann steht der nächste Baustein ohne Wartezeit da.
+export function prefetchSpeech(profile, lines = []) {
+  lines.forEach((line) => {
+    speakAsVoice(profile, line, { fast: true }).catch(() => {});
+  });
 }

@@ -3,12 +3,23 @@ import { Volume2, Square, Mic, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fillLine } from "@/lib/introStory";
 
-// Was sie sagt. Im Hör-Modus bleibt die Mitschrift weg — wer nichts hört,
-// kann sie sich mit einem Tipp trotzdem zeigen lassen.
-export default function IntroScriptBeat({ eyebrow, lines = [], ctx = {}, mode, speaking, onSpeak, onStop, note }) {
+// Was sie sagt — Zeile für Zeile, wie in einem Chat. Die Zeilen erscheinen im
+// Takt, während sie spricht. Im Hör-Modus bleibt die Mitschrift weg; wer nichts
+// hört, kann sie sich mit einem Tipp trotzdem zeigen lassen.
+export default function IntroScriptBeat({
+  eyebrow,
+  lines = [],
+  revealed = 0,
+  ctx = {},
+  mode,
+  speaking,
+  onSpeak,
+  onStop,
+  note,
+}) {
   const [showScript, setShowScript] = useState(false);
   const hearOnly = mode === "AUDIO" && !showScript;
-  const shown = lines.map((l) => fillLine(l, ctx));
+  const shown = lines.map((l) => fillLine(l, ctx)).slice(0, revealed);
 
   return (
     <div>
@@ -32,12 +43,25 @@ export default function IntroScriptBeat({ eyebrow, lines = [], ctx = {}, mode, s
           </button>
         </div>
       ) : (
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2 mb-4 min-h-[64px]">
           {shown.map((line, i) => (
-            <p key={i} className="text-[16px] font-semibold text-foreground leading-relaxed max-w-xl">
+            <p
+              key={i}
+              className={cn(
+                "text-[16px] font-semibold leading-relaxed max-w-xl animate-hero-pop",
+                speaking && i === shown.length - 1 ? "text-foreground" : "text-foreground/90"
+              )}
+            >
               „{line}"
             </p>
           ))}
+          {speaking && shown.length < lines.length && (
+            <span className="flex gap-1.5 pt-1">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="w-1.5 h-1.5 rounded-full bg-primary/70 animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
+              ))}
+            </span>
+          )}
         </div>
       )}
 

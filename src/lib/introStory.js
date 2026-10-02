@@ -68,6 +68,9 @@ export const RECALL_TIPS = [
   "Frag sie doch mal das und das — ich kenne sie nämlich ganz gut, ich weiß, wie sie reagiert. Vertrau mir.",
 ];
 
+// Der Takt: eine Zeile nach der anderen, wie in einem Chat — keine Textwand.
+export const INTRO_TAKT = { line: 1100, pause: 380 };
+
 export const LANDING_HINT =
   "Bevor es losgeht: du kannst dir deine eigene Erzählerin bauen — Aussehen, Persönlichkeit, Stimme. Sie führt dich danach durch alles.";
 

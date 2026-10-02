@@ -8,6 +8,16 @@ import { synthesize } from '../../shared/voiceNote.ts';
 
 const API = 'https://api.elevenlabs.io/v1';
 
+// Tondaten als Base64 — in Stücken, damit große Sätze nicht den Stapel sprengen.
+function toBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const step = 0x8000;
+  for (let i = 0; i < bytes.length; i += step) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + step));
+  }
+  return btoa(binary);
+}
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -45,6 +55,11 @@ export default async function (req) {
     const text = (body.text || '').trim();
     if (!voiceId || !text) return Response.json({ error: 'Stimme oder Text fehlt.' }, { status: 400 });
 
+    // „fast" ist fürs Chat-Erlebnis: das schnellste Modell, und der Ton geht
+    // direkt zurück — zwei Netzwerk-Runden weniger als über den Speicher.
+    const fast = body.fast === true;
+    const modelId = body.modelId || (fast ? 'eleven_flash_v2_5' : undefined);
+
     // Tempo, Stimmung und Intensität aus der Stimmbank mitgeben — sonst klingt jede Stimme gleich.
     let bytes;
     try {
@@ -56,12 +71,16 @@ export default async function (req) {
         intensity: body.intensity,
         ending: body.ending,
         speed: body.speed,
-        modelId: body.modelId,
+        modelId,
         tuning: body.tuning,
       });
     } catch (error) {
       console.log('elevenLabs speak error', voiceId, error.message);
       return Response.json({ error: error.message }, { status: 502 });
+    }
+
+    if (body.inline) {
+      return Response.json({ data: toBase64(bytes), type: 'audio/mpeg', modelId: modelId || 'eleven_multilingual_v2' });
     }
 
     // Ablegen, damit dasselbe Stück Ton nicht jedes Mal neu bezahlt wird.

@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Loader2, Sparkles, Wand2 } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Check, Sparkles, Wand2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
@@ -10,7 +10,7 @@ import IntroModeAsk from "@/components/intro/IntroModeAsk";
 import IntroScriptBeat from "@/components/intro/IntroScriptBeat";
 import IntroBranchAsk from "@/components/intro/IntroBranchAsk";
 import IntroCompanion from "@/components/intro/IntroCompanion";
-import { speakAsVoice } from "@/lib/voiceChat";
+import { speakAsVoice, prefetchSpeech } from "@/lib/voiceChat";
 import { START_PATHS } from "@/lib/onboarding";
 import {
   buildIntroFlow,
@@ -22,23 +22,28 @@ import {
   introBranch,
   INTRO_BRANCH,
   INTRO_FRIENDS,
+  INTRO_TAKT,
   LANDING_HINT,
 } from "@/lib/introStory";
 
-// Der Ablauf des Intros: sie kommt näher, fragt nach dem Modus, stellt ihre
-// Fragen und geht dann entweder ins Eck oder führt ihn durch.
+// Der Ablauf des Intros. Sie fängt sofort an zu reden — die Daten für ihre
+// Stimme werden im Hintergrund geholt, nicht davor. Jede Zeile kommt im Takt,
+// und die nächste wird schon geholt, während die vorige läuft.
 export default function IntroRunner({ structure, onFinish }) {
-  const [narrators, setNarrators] = useState([]);
-  const [voices, setVoices] = useState({});
-  const [ready, setReady] = useState(false);
+  const [lead, setLead] = useState(null);
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState(() => introMode());
   const [branch, setBranch] = useState(() => introBranch());
   const [answers, setAnswers] = useState({ gender: "", orientation: "", wish: "", interests: [], path: "" });
   const [speaking, setSpeaking] = useState(false);
+  const [revealed, setRevealed] = useState(0);
   const [name, setName] = useState("");
+
   const audioRef = useRef(null);
   const runRef = useRef(0);
+  const leadRef = useRef(null);
+  const voicesRef = useRef({});
+  const loadRef = useRef(Promise.resolve());
 
   useEffect(() => {
     try {
@@ -48,30 +53,30 @@ export default function IntroRunner({ structure, onFinish }) {
     }
   }, []);
 
-  // Wer da ist — und mit welcher Stimme sie spricht.
+  // Wer da ist und mit welcher Stimme sie spricht. Läuft im Hintergrund: das
+  // Fenster steht sofort, gesprochen wird, sobald die Stimme da ist.
   useEffect(() => {
-    (async () => {
+    loadRef.current = (async () => {
       try {
         const res = await base44.entities.Narrator.filter({ active: { $ne: false } }, "order", 2);
         const items = res?.items || [];
-        setNarrators(items);
         const ids = items.map((n) => n.voiceProfileId).filter(Boolean);
         if (ids.length) {
           const v = await base44.entities.Voice.filter({ id: { $in: ids } });
-          setVoices(Object.fromEntries((v?.items || []).map((x) => [x.id, x])));
+          voicesRef.current = Object.fromEntries((v?.items || []).map((x) => [x.id, x]));
         }
+        const chosen = pickByChance(items);
+        leadRef.current = chosen;
+        setLead(chosen);
       } catch (e) {
         /* ohne Erzählerin läuft es trotzdem */
-      } finally {
-        setReady(true);
       }
     })();
   }, []);
 
-  // Glücksprinzip: eine von ihnen kommt näher.
-  const lead = useMemo(() => pickByChance(narrators), [narrators]);
-  const flow = useMemo(() => buildIntroFlow({ structure, branch }), [structure, branch]);
+  const flow = React.useMemo(() => buildIntroFlow({ structure, branch }), [structure, branch]);
   const current = flow[Math.min(step, flow.length - 1)] || { kind: "start" };
+  const lines = current.lines || [];
 
   const ctx = {
     narrator: lead?.name,
@@ -80,56 +85,81 @@ export default function IntroRunner({ structure, onFinish }) {
     friend2: INTRO_FRIENDS[1].name,
   };
 
-  const stop = () => {
+  const profileFor = (person) =>
+    voicesRef.current[person?.voiceProfileId] || { baseVoice: person?.voice || structure.guideVoice || "honey" };
+
+  const halt = () => {
     runRef.current += 1;
     audioRef.current?.pause();
     setSpeaking(false);
   };
 
-  const speak = async (lines = []) => {
-    if (!lines.length) return;
-    stop();
+  // Alles stehen lassen, was sie gesagt hat — Stopp darf nichts verschlucken.
+  const stop = () => {
+    halt();
+    setRevealed((n) => Math.max(n, lines.length));
+  };
+
+  const speak = async (texts = [], { reveal = false } = {}) => {
+    if (!texts.length) return;
+    halt();
     const run = runRef.current;
-    const profile = voices[lead?.voiceProfileId] || { baseVoice: lead?.voice || structure.guideVoice || "honey" };
+    if (reveal) setRevealed(0);
+
+    await loadRef.current;
+    const profile = profileFor(leadRef.current);
+    const spoken = texts.map((t) => fillLine(t, ctx));
+
+    // Alle Zeilen gleichzeitig anfordern: die erste kommt zuerst, die nächsten
+    // sind längst fertig, wenn sie dran sind. Kein Loch zwischen den Sätzen.
+    const jobs = spoken.map((line) => speakAsVoice(profile, line, { fast: true }).catch(() => null));
+
     setSpeaking(true);
-    for (const line of lines) {
+    for (let i = 0; i < spoken.length; i += 1) {
+      const url = await jobs[i];
       if (runRef.current !== run) return;
-      try {
-        const url = await speakAsVoice(profile, fillLine(line, ctx));
-        if (runRef.current !== run) return;
-        if (!url) continue;
-        await new Promise((resolve) => {
-          const audio = new Audio(url);
-          audioRef.current = audio;
-          audio.onended = resolve;
-          audio.onerror = resolve;
-          audio.play().catch(resolve);
-        });
-      } catch (e) {
-        /* weiter mit der nächsten Zeile */
-      }
+      if (reveal) setRevealed(i + 1);
+      if (!url) continue;
+      await new Promise((resolve) => {
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onended = resolve;
+        audio.onerror = resolve;
+        audio.play().catch(resolve);
+      });
+      if (runRef.current !== run) return;
     }
-    if (runRef.current === run) setSpeaking(false);
+    if (runRef.current === run) {
+      setSpeaking(false);
+      // Den nächsten Baustein vorbereiten — dann ist „Weiter" sofort da.
+      const nextBeat = flow[step + 1];
+      if (nextBeat?.lines?.length) prefetchSpeech(profile, nextBeat.lines.map((l) => fillLine(l, ctx)));
+    }
   };
 
   const hearsAudio = mode === "AUDIO" || mode === "BOTH";
 
-  // Was auf dem Bildschirm steht, wird auch gesprochen.
+  // Was auf dem Bildschirm steht, wird gesprochen — und gibt den Takt vor.
   useEffect(() => {
-    const lines = current.lines || [];
-    if (!lines.length || !hearsAudio) return;
-    speak(lines);
-    return stop;
+    setRevealed(0);
+    if (!lines.length) return;
+    if (hearsAudio) {
+      speak(lines, { reveal: true });
+      return halt;
+    }
+    // Ohne Ton kommt der Takt aus der Zeit.
+    const timers = lines.map((_, i) => setTimeout(() => setRevealed(i + 1), INTRO_TAKT.line * (i + 1)));
+    return () => timers.forEach(clearTimeout);
   }, [current.id, hearsAudio, lead?.id]);
 
   const next = () => setStep((s) => Math.min(s + 1, flow.length - 1));
   const back = () => {
-    stop();
+    halt();
     setStep((s) => Math.max(0, s - 1));
   };
 
   const finish = (goTo) => {
-    stop();
+    halt();
     const chosen = START_PATHS.find((p) => p.id === answers.path);
     onFinish?.({ ...answers, path: chosen?.label || "" }, goTo || chosen?.to);
   };
@@ -158,21 +188,9 @@ export default function IntroRunner({ structure, onFinish }) {
   const branchIdx = flow.findIndex((b) => b.id === "branch");
   const showCompanion = !!branch && branchIdx >= 0 && step >= branchIdx;
 
-  if (!ready) {
-    return (
-      <div className="fixed inset-0 z-[98] flex items-center justify-center bg-background/92">
-        <Loader2 className="w-7 h-7 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const canNext = current.kind !== "mode" || !!mode;
-
   return (
     <>
-      {showCompanion && (
-        <IntroCompanion narrator={lead} speaking={speaking} onSpeak={speak} onStop={stop} />
-      )}
+      {showCompanion && <IntroCompanion narrator={lead} speaking={speaking} onSpeak={speak} onStop={stop} />}
 
       <IntroShell
         step={Math.min(step, flow.length - 1)}
@@ -181,7 +199,7 @@ export default function IntroRunner({ structure, onFinish }) {
         onBack={back}
         onNext={isLast ? () => finish(null) : next}
         nextLabel={isLast ? "Los geht's" : current.kind === "landing" ? "Zeig mir, was hier geht" : "Weiter"}
-        canNext={canNext}
+        canNext={current.kind !== "mode" || !!mode}
       >
         {current.kind === "landing" && (
           <div>
@@ -198,13 +216,14 @@ export default function IntroRunner({ structure, onFinish }) {
         )}
 
         {current.kind === "arrival" && (
-          <NarratorArrival narrator={lead} name={name} onSpeak={speak} onStop={stop} />
+          <NarratorArrival narrator={lead} name={name} onSpeak={speak} onStop={halt} />
         )}
 
         {(current.kind === "script" || current.kind === "tourStop") && (
           <IntroScriptBeat
             eyebrow={current.eyebrow}
-            lines={current.lines}
+            lines={lines}
+            revealed={revealed}
             ctx={ctx}
             mode={mode}
             speaking={speaking}
@@ -214,9 +233,7 @@ export default function IntroRunner({ structure, onFinish }) {
           />
         )}
 
-        {current.kind === "mode" && (
-          <IntroModeAsk value={mode} onPick={pickMode} narratorName={lead?.name} />
-        )}
+        {current.kind === "mode" && <IntroModeAsk value={mode} onPick={pickMode} narratorName={lead?.name} />}
 
         {current.kind === "choice" && (
           <IntroChoiceStep

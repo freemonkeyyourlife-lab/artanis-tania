@@ -1,0 +1,122 @@
+{
+  "name": "StudioDraft",
+  "type": "object",
+  "properties": {
+    "app": {
+      "type": "string",
+      "enum": [
+        "ARTANIS",
+        "FREE_MONKEYS"
+      ],
+      "default": "ARTANIS"
+    },
+    "title": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "CHARACTER",
+        "TRAITS",
+        "VOICE",
+        "TEXT",
+        "TAKT",
+        "APPEARANCE",
+        "BEHAVIOR",
+        "SCENE"
+      ],
+      "default": "TEXT"
+    },
+    "targetId": {
+      "type": "string"
+    },
+    "targetName": {
+      "type": "string"
+    },
+    "body": {
+      "type": "object"
+    },
+    "takt": {
+      "type": "object"
+    },
+    "traitValues": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "photoRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "note": {
+      "type": "string"
+    },
+    "blockName": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "READY",
+        "BUILT"
+      ],
+      "default": "DRAFT"
+    },
+    "authorName": {
+      "type": "string"
+    },
+    "builtAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "kind"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
