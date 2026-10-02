@@ -27,6 +27,7 @@ import VoiceTuner from "@/components/studio/VoiceTuner";
 import VoiceProfilesPanel from "@/components/voice/VoiceProfilesPanel";
 import CharacterTransfer from "@/components/studio/CharacterTransfer";
 import ServiceListManager from "@/components/studio/ServiceListManager";
+import ModelLinkList from "@/components/studio/ModelLinkList";
 import ModelOverview from "@/components/studio/ModelOverview";
 import AiLogbook from "@/components/studio/AiLogbook";
 
@@ -64,6 +65,7 @@ const TAB_GROUPS = [
     tabs: [
       { id: "guide", label: "Anleitung" },
       { id: "services", label: "Dienste" },
+      { id: "modellinks", label: "Modell-Links" },
       { id: "overview", label: "Modell-Übersicht" },
       { id: "textmodels", label: "Text-KI" },
       { id: "models", label: "Bild-KI" },
@@ -165,6 +167,7 @@ export default function Studio() {
 
       {tab === "guide" && <GuideManager />}
       {tab === "services" && <ServiceListManager />}
+      {tab === "modellinks" && <ModelLinkList />}
       {tab === "overview" && <ModelOverview onOpenTab={setTab} />}
       {tab === "logbook" && <AiLogbook />}
       {tab === "dock" && <DockManager />}
