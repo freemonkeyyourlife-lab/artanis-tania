@@ -24,6 +24,7 @@ import VoiceManager from "@/components/studio/VoiceManager";
 import VoiceTuner from "@/components/studio/VoiceTuner";
 import VoiceProfilesPanel from "@/components/voice/VoiceProfilesPanel";
 import CharacterTransfer from "@/components/studio/CharacterTransfer";
+import ServiceListManager from "@/components/studio/ServiceListManager";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -57,6 +58,7 @@ const TAB_GROUPS = [
     label: "Einrichten & Hilfe",
     tabs: [
       { id: "guide", label: "Anleitung" },
+      { id: "services", label: "Dienste" },
       { id: "textmodels", label: "Text-KI" },
       { id: "models", label: "Bild-KI" },
       { id: "members", label: "Mitglieder" },
@@ -154,6 +156,7 @@ export default function Studio() {
       </div>
 
       {tab === "guide" && <GuideManager />}
+      {tab === "services" && <ServiceListManager />}
       {tab === "dock" && <DockManager />}
       {tab === "voices" && <VoiceManager />}
       {tab === "voiceprofiles" && (
