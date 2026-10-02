@@ -2,40 +2,17 @@ import React, { useEffect, useState } from "react";
 import NavGroup from "@/components/nav/NavGroup";
 import { getStructure, subscribeStructure, loadStructure } from "@/lib/onboarding";
 import { getInfoMode, subscribeInfoMode } from "@/lib/infoMode";
+import { FIXED_AREAS, ALWAYS_IN_MENU, MENU_AREA_LABEL } from "@/lib/modules";
 
-// Die Kopfzeile hat vier Bereiche statt acht einzelner Knöpfe.
-// „Erleben" ist der Menüpunkt-Block, den du in der Besitzer-Konsole sortierst.
-const CHARACTER_ITEMS = [
-  { label: "Artanis", path: "/artanis" },
-  { label: "Triania", path: "/triania" },
-  { label: "Couple", path: "/couple" },
-];
+// Die Kopfzeile hat vier Bereiche statt acht einzelner Knöpfe. Die festen
+// Bereiche kommen aus der Seitenübersicht, damit es nur eine Quelle gibt.
+const areaItems = (label) => FIXED_AREAS.find((a) => a.label === label)?.items || [];
 
-const CREATE_ITEMS = [
-  { label: "Studio", path: "/studio" },
-  { label: "Stimmen", path: "/stimmen" },
-  { label: "Baukasten", path: "/baukasten" },
-  { label: "Dockingstation", path: "/dock" },
-  { label: "Kasse", path: "/paylinks" },
-];
+const CHARACTER_ITEMS = areaItems("Charaktere");
+const CREATE_ITEMS = areaItems("Selbst erstellen");
+const ADMIN_ITEMS = areaItems("Verwaltung");
 
-const ADMIN_ITEMS = [
-  { label: "Verwaltung", path: "/admin" },
-  { label: "Leitstand", path: "/leitstand" },
-  { label: "Besitzer-Konsole", path: "/owner" },
-];
-
-// Diese Punkte hängen immer unter „Erleben" — auch wenn im eigenen Menü
-// gerade keiner davon steht. Sonst verschwindet dir ein Bereich unbemerkt.
-const CORE_EXPLORE = [
-  { label: "Tutorial", path: "/tutorial" },
-  { label: "Nachrichten", path: "/messages" },
-  { label: "Sprechstunde", path: "/therapy" },
-  { label: "Wettbewerbe", path: "/contests" },
-  { label: "Live", path: "/live" },
-  { label: "Interaktiv", path: "/interactive" },
-  { label: "Entdecken", path: "/explore" },
-];
+const CORE_EXPLORE = ALWAYS_IN_MENU;
 
 const exploreItems = (menuItems) =>
   menuItems.length
@@ -49,7 +26,7 @@ export function buildNavGroups(menuItems = []) {
   const groups = [
     { label: "Charaktere", items: CHARACTER_ITEMS },
     { label: "Selbst erstellen", items: CREATE_ITEMS },
-    { label: "Erleben", items: exploreItems(menuItems) },
+    { label: MENU_AREA_LABEL, items: exploreItems(menuItems) },
     { label: "Verwaltung", items: ADMIN_ITEMS },
   ];
   return groups

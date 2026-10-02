@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic, Terminal } from "lucide-react";
+import { Save, Download, Upload, UserPlus, LayoutGrid, Type, KeyRound, Database, RefreshCw, SlidersHorizontal, Link2, Blocks, BookOpen, Mic, Terminal, Map as MapIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MenuEditor from "@/components/owner/MenuEditor";
 import GuideBox from "@/components/owner/GuideBox";
@@ -18,11 +18,13 @@ import InfoTextEditor from "@/components/owner/InfoTextEditor";
 import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
 import OwnerCommandBar from "@/components/owner/OwnerCommandBar";
 import ModuleEditor from "@/components/owner/ModuleEditor";
+import SiteOverview from "@/components/owner/SiteOverview";
 import WindowLayoutEditor from "@/components/owner/WindowLayoutEditor";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { id: "befehle", label: "Befehle", icon: Terminal },
+  { id: "overview", label: "Seitenübersicht", icon: MapIcon },
   { id: "module", label: "Module", icon: LayoutGrid },
   { id: "lage", label: "Lage", icon: LayoutGrid },
   { id: "menu", label: "Menü", icon: LayoutGrid },
@@ -327,6 +329,24 @@ export default function OwnerConsole() {
             Das ist die zentrale Eingabe. Klicken und Formulare bleiben daneben bestehen — du musst nichts umlernen.
           </GuideBox>
           <OwnerCommandBar />
+        </>
+      )}
+
+      {tab === "overview" && (
+        <>
+          <GuideBox
+            title="Deine App als Karte"
+            steps={[
+              "„Erleben“ ist der Bereich, den du selbst bestückst. Ziehen am Griff oder die Zahl links ändern — so verschiebst du einen Knopf.",
+              "Der Name in der Mitte ist die Beschriftung oben in der Leiste, die Liste daneben bestimmt, wohin der Klick führt.",
+              "Das Auge blendet nur aus — nichts wird gelöscht. Der Papierkorb nimmt einen Knopf heraus, unten bindest du ihn wieder ein.",
+              "Unten stehen alle Seiten, die es sonst noch gibt: ein Klick, und sie stehen in deiner Leiste.",
+              "Danach unten auf Speichern — erst dann sieht es jeder.",
+            ]}
+          >
+            Hier siehst du die ganze App auf einen Blick: welche Bereiche es gibt, was in deiner Leiste steht und was noch nicht.
+          </GuideBox>
+          <SiteOverview items={items} onChange={setItems} />
         </>
       )}
 

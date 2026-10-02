@@ -79,3 +79,51 @@ export function diffModules(saved = [], draft = []) {
 
   return changes;
 }
+
+// Die festen Bereiche der Kopfzeile. Sie stehen immer — nur „Erleben" wird aus
+// den eigenen Menüpunkten bestückt.
+export const FIXED_AREAS = [
+  {
+    label: "Charaktere",
+    items: [
+      { label: "Artanis", path: "/artanis" },
+      { label: "Triania", path: "/triania" },
+      { label: "Couple", path: "/couple" },
+    ],
+  },
+  {
+    label: "Selbst erstellen",
+    items: [
+      { label: "Studio", path: "/studio" },
+      { label: "Stimmen", path: "/stimmen" },
+      { label: "Baukasten", path: "/baukasten" },
+      { label: "Dockingstation", path: "/dock" },
+      { label: "Kasse", path: "/paylinks" },
+    ],
+  },
+  {
+    label: "Verwaltung",
+    items: [
+      { label: "Verwaltung", path: "/admin" },
+      { label: "Leitstand", path: "/leitstand" },
+      { label: "Besitzer-Konsole", path: "/owner" },
+    ],
+  },
+];
+
+// Der Bereich, den du selbst bestückst.
+export const MENU_AREA_LABEL = "Erleben";
+
+// Diese Punkte hängen immer unter „Erleben" — auch wenn dein Menü sie nicht
+// nennt. Sonst verschwindet dir ein Bereich unbemerkt.
+export const ALWAYS_IN_MENU = [
+  { label: "Tutorial", path: "/tutorial" },
+  { label: "Nachrichten", path: "/messages" },
+  { label: "Sprechstunde", path: "/therapy" },
+  { label: "Wettbewerbe", path: "/contests" },
+  { label: "Live", path: "/live" },
+  { label: "Interaktiv", path: "/interactive" },
+  { label: "Entdecken", path: "/explore" },
+];
+
+export const fixedAreaItems = () => FIXED_AREAS.flatMap((a) => a.items);
