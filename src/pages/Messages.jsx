@@ -46,6 +46,7 @@ import QuickPayButton from "@/components/pay/QuickPayButton";
 import { hasProAccess } from "@/lib/proAccess";
 import { publicName } from "@/lib/displayName";
 import { ownerIsPresent } from "@/lib/presence";
+import { announceToNarrator } from "@/lib/narratorHearing";
 
 const ACTIVE_CHAT_KEY = "artanis_active_chat";
 const TEXT_MODEL_KEY = "artanis_text_model";
@@ -828,6 +829,8 @@ export default function Messages() {
     // Die eigene Sprachnachricht zählt als gesagter Text — nicht als Bild.
     const visual = files.filter((f) => f.type !== "audio");
     if ((!listening && !msgText.trim() && !files.length) || !activeChat) return;
+    // Die Begleiterin hört mit: fällt eines ihrer Wörter, meldet sie sich.
+    announceToNarrator(msgText);
     if (viewMode === "dm") { return sendDmMessage(msgText, files); }
     const chatKey = activeChat;
     if (!aiNames.length) {

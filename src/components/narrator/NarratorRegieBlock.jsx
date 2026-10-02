@@ -11,6 +11,9 @@ export default function NarratorRegieBlock({ narrator, onSaved }) {
   const [form, setForm] = useState({
     autoSpeak: saved.autoSpeak !== false,
     showName: saved.showName !== false,
+    ready: saved.ready === true,
+    listenOnly: saved.listenOnly === true,
+    words: Array.isArray(saved.words) ? saved.words.join(", ") : "",
     firstAfter: Number(saved.firstAfter ?? 45),
     gap: Number(saved.gap ?? 150),
     bubble: Number(saved.bubble ?? 14),
@@ -24,7 +27,10 @@ export default function NarratorRegieBlock({ narrator, onSaved }) {
     setBusy(true);
     setNote("");
     try {
-      const rec = await base44.entities.Narrator.update(narrator.id, { regie: form });
+      const { words, ...rest } = form;
+      const rec = await base44.entities.Narrator.update(narrator.id, {
+        regie: { ...rest, words: words.split(",").map((w) => w.trim()).filter(Boolean) },
+      });
       onSaved?.(rec);
       setNote("Gespeichert.");
     } finally {
@@ -55,8 +61,23 @@ export default function NarratorRegieBlock({ narrator, onSaved }) {
   return (
     <div>
       <div className="space-y-2">
+        {switchRow("ready", "Sie ist fertig", "Erst wenn das an ist, redet sie von selbst dazwischen")}
         {switchRow("autoSpeak", "Sie meldet sich von selbst", "Zwischenrufe, damit niemand vor einer stummen Seite sitzt")}
+        {switchRow("listenOnly", "Sie hört nur auf ihre Wörter", "Aus: sie meldet sich auch nach der Uhr")}
         {switchRow("showName", "Name steht neben ihr", "Aus: nur das Bild unten im Eck")}
+      </div>
+
+      <div className="mt-4">
+        <label className={labelCls}>Ihre Hörwörter — fällt eins, meldet sie sich</label>
+        <input
+          value={form.words}
+          onChange={(e) => set({ words: e.target.value })}
+          placeholder="z. B. Angst, allein, Hilfe, weiter"
+          className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-[14px] font-semibold text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+        />
+        <p className="text-[12px] font-semibold text-muted-foreground mt-1.5">
+          Mehrere Wörter mit Komma trennen. Sie hört im Chat mit und meldet sich, sobald eines davon fällt.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
@@ -99,7 +120,9 @@ export default function NarratorRegieBlock({ narrator, onSaved }) {
       </div>
 
       <p className="text-[13px] font-semibold text-muted-foreground mt-4">
-        {form.autoSpeak
+        {!form.ready
+          ? "Sie ist noch nicht fertig: Sie sagt nichts von selbst. Antippen kannst du sie jederzeit."
+          : form.autoSpeak
           ? `Sie sagt nach ${form.firstAfter} Sekunden den ersten Satz von selbst, danach alle ${form.gap} Sekunden. Ihre Sprechblase bleibt ${form.bubble} Sekunden stehen.`
           : `Sie sagt nichts von selbst. Nur wenn du sie antippst — dann bleibt ihre Blase ${form.bubble} Sekunden stehen.`}
       </p>

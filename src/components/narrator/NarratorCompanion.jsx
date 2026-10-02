@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { speakAsVoice } from "@/lib/voiceChat";
 import { fillLine, BETWEEN_LINES, RECALL_LINES, RECALL_TIPS } from "@/lib/introStory";
 import { isQuiet, subscribeQuiet } from "@/lib/onboarding";
+import { hearsWord, subscribeNarratorHearing } from "@/lib/narratorHearing";
 import FloatingSlot from "@/components/floating/FloatingSlot";
 
 // Sie ist immer da: unten im Eck, mit Bild und Namen. Antippen heißt rückrufen —
@@ -109,7 +110,9 @@ export default function NarratorCompanion() {
   // Zwischendurch meldet sie sich — nach ihrer Regie, aber nur, wenn er
   // wirklich hinschaut. Die Zeiten stehen in ihrem Profil.
   useEffect(() => {
-    if (quiet || narrator?.regie?.autoSpeak === false) return undefined;
+    // Solange sie nicht fertig ist — oder nur auf ihre Wörter hört — redet sie
+    // nicht nach der Uhr dazwischen.
+    if (quiet || narrator?.regie?.autoSpeak === false || narrator?.regie?.ready !== true || narrator?.regie?.listenOnly) return undefined;
     const between = narrator?.lines?.between?.length ? narrator.lines.between : BETWEEN_LINES;
     const firstAfter = Math.max(5, Number(narrator?.regie?.firstAfter ?? 45)) * 1000;
     const gap = Math.max(15, Number(narrator?.regie?.gap ?? 150)) * 1000;
@@ -124,6 +127,19 @@ export default function NarratorCompanion() {
       clearInterval(every);
     };
   }, [quiet, narrator]);
+
+  // Ihre Hörwörter: fällt eines im Chat, meldet sie sich — so hat ihr Dazwischenreden
+  // einen Grund. Ist sie noch nicht fertig, bleibt sie trotzdem still.
+  useEffect(() => {
+    const words = narrator?.regie?.words || [];
+    if (!words.length) return undefined;
+    return subscribeNarratorHearing((text) => {
+      if (narratorRef.current?.regie?.ready !== true) return;
+      if (!hearsWord(text, words).length) return;
+      const between = narratorRef.current?.lines?.between?.length ? narratorRef.current.lines.between : BETWEEN_LINES;
+      speakRef.current([between[Math.floor(Math.random() * between.length)]]);
+    });
+  }, [narrator]);
 
   useEffect(
     () => () => {
