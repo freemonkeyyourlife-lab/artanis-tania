@@ -435,11 +435,6 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
     return onStageRequest(apply);
   }, [joined, token]);
 
-  // Sobald der Zugriff läuft, stehen die Gerätenamen bereit.
-  useEffect(() => {
-    if (joined) listDevices();
-  }, [joined, listDevices]);
-
   // Ein neuer Track braucht eine frische Aushandlung mit jeder Gegenseite.
   const negotiate = useCallback(async (seat, pc) => {
     if (!pc || pc.signalingState !== "stable") return;
@@ -492,6 +487,11 @@ export default function useCallRoom({ token, joined, wantCam, wantMic, name }) {
       setDevices({ video: [], audio: [] });
     }
   }, []);
+
+  // Sobald der Zugriff läuft, stehen die Gerätenamen bereit.
+  useEffect(() => {
+    if (joined) listDevices();
+  }, [joined, listDevices]);
 
   // Auf eine andere Kamera oder ein anderes Mikrofon umschalten. Die Gegenseite
   // sieht sofort das neue Bild — nichts reißt ab, der Call läuft weiter.
