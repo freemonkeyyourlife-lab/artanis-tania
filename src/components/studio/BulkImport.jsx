@@ -1,27 +1,56 @@
 import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Loader2, RefreshCw, Sparkles, Check } from "lucide-react";
+import { Loader2, RefreshCw, Sparkles, Check, Power } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import ModelKindTag from "@/components/studio/ModelKindTag";
 
-const FILTERS = [
+const KIND_FILTERS = [
   { id: "ALLE", label: "Alle" },
   { id: "BILD", label: "Bild" },
   { id: "TEXT", label: "Text" },
   { id: "VIDEO", label: "Video" },
 ];
 
+const SOURCES = [
+  { id: "ALLE", label: "Alle Quellen" },
+  { id: "HF", label: "Neu bei Hugging Face" },
+  { id: "LINK", label: "Meine Modell-Links" },
+  { id: "LISTE", label: "Meine fertigen Listen" },
+];
+
+const KIND_ENTITY = { BILD: "ImageModel", TEXT: "TextModel", VIDEO: "VideoModel" };
+const LINK_KINDS = ["BILD", "TEXT", "VIDEO"];
+
 const PROMPT_IMAGE = "portrait photo of a woman, soft natural light, plain background";
 const PROMPT_TEXT = "Antworte mit genau einem Wort: Bereit.";
 
-// Alles Gefundene auf einer Liste: Häkchen setzen, kurz prüfen lassen, gesammelt übernehmen.
+const asArray = (res) => (Array.isArray(res) ? res : res?.items || []);
+
+// Aus einem Link die Modell-Kennung holen — aus dem Model-Parameter oder aus der Hugging-Face-Adresse.
+const idFromUrl = (url) => {
+  try {
+    const u = new URL(url);
+    const fromQuery = u.searchParams.get("model");
+    if (fromQuery) return fromQuery.trim();
+    if (/(^|\.)huggingface\.co$/i.test(u.hostname)) {
+      const parts = u.pathname.split("/").filter(Boolean);
+      if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+    }
+  } catch (e) { /* kein brauchbarer Link */ }
+  return "";
+};
+
+// Alles aus allen Quellen auf einer Liste: Häkchen setzen, prüfen lassen, gesammelt übernehmen.
 export default function BulkImport() {
   const { toast } = useToast();
   const [rows, setRows] = useState([]);
   const [selected, setSelected] = useState(() => new Set());
-  const [filter, setFilter] = useState("ALLE");
+  const [kindFilter, setKindFilter] = useState("ALLE");
+  const [sourceFilter, setSourceFilter] = useState("ALLE");
+  const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(null); // { done, total, ok, fail, current }
   const stop = useRef(false);
 
@@ -30,36 +59,88 @@ export default function BulkImport() {
   const load = async () => {
     setLoading(true);
     try {
-      const [img, vid, chat, haveImg, haveTxt, haveVid] = await Promise.all([
+      const [img, vid, chat, links, imgList, txtList, vidList] = await Promise.all([
         base44.functions.invoke("hfModels", { kind: "image" }),
         base44.functions.invoke("hfModels", { kind: "video" }),
         base44.functions.invoke("hfChat", { action: "models" }),
+        base44.entities.ModelLink.list("name", 500),
         base44.entities.ImageModel.list("created_date", 500),
         base44.entities.TextModel.list("created_date", 500),
         base44.entities.VideoModel.list("created_date", 500),
       ]);
 
+      const mine = {
+        BILD: asArray(imgList),
+        TEXT: asArray(txtList),
+        VIDEO: asArray(vidList),
+      };
       const taken = {
-        BILD: new Set(haveImg.map((m) => m.modelId)),
-        TEXT: new Set(haveTxt.map((m) => m.modelId)),
-        VIDEO: new Set(haveVid.map((m) => m.modelId)),
+        BILD: new Map(mine.BILD.map((m) => [m.modelId, m])),
+        TEXT: new Map(mine.TEXT.map((m) => [m.modelId, m])),
+        VIDEO: new Map(mine.VIDEO.map((m) => [m.modelId, m])),
       };
 
-      const build = (list, kind) =>
-        (list || []).map((m) => ({
-          key: `${kind}|${m.id}`,
-          id: m.id,
-          kind,
-          provider: m.providers?.join(", ") || m.provider || "",
-          taken: taken[kind].has(m.id),
-          error: null,
-        }));
+      const seen = new Set();
+      const next = [];
+      const push = (row) => {
+        if (!row.id) return;
+        const mark = `${row.kind}|${row.id}`;
+        if (seen.has(mark)) return;
+        seen.add(mark);
+        const record = taken[row.kind].get(row.id) || null;
+        next.push({ ...row, taken: !!record, record });
+      };
 
-      const next = [
-        ...build(img.data?.models, "BILD"),
-        ...build(chat.data?.models, "TEXT"),
-        ...build(vid.data?.models, "VIDEO"),
-      ];
+      // 1) Was Hugging Face gerade anbietet.
+      const fromHf = (list, kind) =>
+        (list || []).forEach((m) =>
+          push({
+            key: `HF|${kind}|${m.id}`,
+            kind,
+            id: m.id,
+            label: m.id,
+            sub: m.providers?.join(", ") || m.provider || "",
+            origin: "HF",
+            error: null,
+          })
+        );
+      fromHf(img.data?.models, "BILD");
+      fromHf(chat.data?.models, "TEXT");
+      fromHf(vid.data?.models, "VIDEO");
+
+      // 2) Was in der Modell-Link-Sammlung steht.
+      asArray(links)
+        .filter((l) => LINK_KINDS.includes(l.kind || "BILD"))
+        .forEach((l) => {
+          const kind = l.kind || "BILD";
+          const id = idFromUrl(l.url);
+          push({
+            key: `LINK|${l.id}`,
+            kind,
+            id,
+            label: l.name || id,
+            sub: `aus deinen Modell-Links · ${id}`,
+            origin: "LINK",
+            error: null,
+          });
+        });
+
+      // 3) Was schon in den fertigen Listen steht — bleibt drin, lässt sich hier nur an- und ausschalten.
+      LINK_KINDS.forEach((kind) =>
+        mine[kind].forEach((m) =>
+          push({
+            key: `LISTE|${kind}|${m.id}`,
+            kind,
+            id: m.modelId,
+            label: m.name || m.modelId,
+            sub: `in deiner Liste · ${m.modelId}`,
+            origin: "LISTE",
+            error: null,
+            ownRecord: m,
+          })
+        )
+      );
+
       setRows(next);
       // Alles Neue ist gleich angehakt — abwählen geht genauso leicht.
       setSelected(new Set(next.filter((r) => !r.taken).map((r) => r.key)));
@@ -78,9 +159,12 @@ export default function BulkImport() {
       return next;
     });
 
-  const visible = rows.filter((r) => filter === "ALLE" || r.kind === filter);
+  const bySource = rows.filter((r) => sourceFilter === "ALLE" || r.origin === sourceFilter);
+  const visible = bySource.filter((r) => kindFilter === "ALLE" || r.kind === kindFilter);
   const fresh = rows.filter((r) => !r.taken);
   const chosen = rows.filter((r) => selected.has(r.key) && !r.taken);
+  const chosenTaken = rows.filter((r) => selected.has(r.key) && r.taken);
+  const shown = showAll ? visible : visible.slice(0, 150);
 
   const selectAll = (on) =>
     setSelected((prev) => {
@@ -106,7 +190,7 @@ export default function BulkImport() {
 
     for (const r of todo) {
       if (stop.current) break;
-      setProgress((p) => ({ ...p, current: r.id }));
+      setProgress((p) => ({ ...p, current: r.label }));
       try {
         if (r.kind === "BILD") {
           const res = await base44.functions.invoke("hfGenerate", {
@@ -131,9 +215,9 @@ export default function BulkImport() {
     }
 
     const asRow = (r) => ({
-      name: r.id.split("/").pop(),
+      name: (r.id.split("/").pop() || r.label || "").slice(0, 80),
       modelId: r.id,
-      note: r.provider ? `Läuft über ${r.provider}` : "",
+      note: r.origin === "LINK" ? "Aus deiner Modell-Link-Sammlung" : r.sub ? `Läuft über ${r.sub}` : "",
       enabled: true,
     });
 
@@ -169,6 +253,44 @@ export default function BulkImport() {
     });
   };
 
+  // Was schon drin ist: gesammelt an- oder ausschalten.
+  const toggleEnabled = async () => {
+    const todo = chosenTaken;
+    if (!todo.length) return;
+    setBusy(true);
+    try {
+      const groups = {};
+      todo.forEach((r) => {
+        const record = r.record || r.ownRecord;
+        if (!record?.id) return;
+        const entity = KIND_ENTITY[r.kind];
+        if (!groups[entity]) groups[entity] = [];
+        groups[entity].push({ id: record.id, enabled: record.enabled === false });
+      });
+      for (const [entity, items] of Object.entries(groups)) {
+        if (items.length) await base44.entities[entity].bulkUpdate(items);
+      }
+      setRows((prev) =>
+        prev.map((r) => {
+          if (!selected.has(r.key)) return r;
+          const record = r.record || r.ownRecord;
+          if (!record) return r;
+          return { ...r, record: { ...record, enabled: record.enabled === false } };
+        })
+      );
+      setSelected((prev) => {
+        const next = new Set(prev);
+        todo.forEach((r) => next.delete(r.key));
+        return next;
+      });
+      toast({ title: `${todo.length} umgeschaltet` });
+    } catch (e) {
+      toast({ title: "Umschalten hat nicht geklappt", description: e.message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
@@ -182,24 +304,42 @@ export default function BulkImport() {
       </div>
       <h2 className="font-display text-xl text-foreground mb-1">Massen-Import</h2>
       <p className="text-xs text-muted-foreground mb-5 max-w-3xl">
-        Alle gefundenen Modelle auf einer Liste. Häkchen setzen und einmal prüfen lassen — nur was läuft, kommt in dein
-        Studio. Bild und Text werden dabei wirklich angesprochen; bei Video genügt der aktive Anbieter, ein Testvideo
-        würde zu lange dauern.
+        Alles aus allen Quellen auf einer Liste: neu gefundene Modelle, deine Modell-Link-Sammlung und die Modelle, die
+        schon in deinen fertigen Listen stehen. Häkchen setzen und einmal prüfen lassen — nur was läuft, kommt in dein
+        Studio, sauber getrennt nach Bild, Text und Video. Was schon drin ist, lässt sich hier gesammelt an- und
+        ausschalten.
       </p>
 
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {FILTERS.map((f) => (
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        {SOURCES.map((s) => (
           <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
+            key={s.id}
+            onClick={() => { setSourceFilter(s.id); setShowAll(false); }}
             className={cn(
               "px-4 py-2 rounded-full text-xs font-bold transition-colors",
-              filter === f.id
+              sourceFilter === s.id
                 ? "bg-primary text-primary-foreground"
                 : "bg-elevated border border-border text-muted-foreground hover:text-foreground"
             )}
           >
-            {f.label} ({f.id === "ALLE" ? rows.length : rows.filter((r) => r.kind === f.id).length})
+            {s.label} ({s.id === "ALLE" ? rows.length : rows.filter((r) => r.origin === s.id).length})
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {KIND_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => { setKindFilter(f.id); setShowAll(false); }}
+            className={cn(
+              "px-4 py-2 rounded-full text-xs font-bold transition-colors",
+              kindFilter === f.id
+                ? "bg-primary text-primary-foreground"
+                : "bg-elevated border border-border text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {f.label} ({f.id === "ALLE" ? bySource.length : bySource.filter((r) => r.kind === f.id).length})
           </button>
         ))}
         <span className="flex-1" />
@@ -217,21 +357,29 @@ export default function BulkImport() {
         </button>
         <button
           onClick={load}
-          disabled={!!progress}
+          disabled={!!progress || busy}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-elevated border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Neu laden
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 mb-5">
+      <div className="flex flex-wrap items-center gap-3 mb-5">
         <button
           onClick={checkAndImport}
-          disabled={!!progress || chosen.length === 0}
+          disabled={!!progress || busy || chosen.length === 0}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
         >
           {progress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
           Prüfen &amp; übernehmen ({chosen.length})
+        </button>
+        <button
+          onClick={toggleEnabled}
+          disabled={!!progress || busy || chosenTaken.length === 0}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-elevated border border-border text-sm font-semibold text-foreground disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
+          An-/ausschalten ({chosenTaken.length})
         </button>
         <p className="text-[11px] text-muted-foreground">
           {fresh.length} neu · {rows.length - fresh.length} schon drin
@@ -257,38 +405,56 @@ export default function BulkImport() {
         <p className="text-sm text-muted-foreground py-8 text-center">Hier ist gerade nichts.</p>
       ) : (
         <div className="space-y-2">
-          {visible.map((r) => (
-            <label
-              key={r.key}
-              className={cn(
-                "flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border",
-                r.taken ? "opacity-60" : "cursor-pointer"
-              )}
+          {shown.map((r) => {
+            const record = r.record || r.ownRecord;
+            return (
+              <label
+                key={r.key}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border cursor-pointer",
+                  r.taken && "opacity-70"
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.has(r.key)}
+                  onChange={() => toggle(r.key)}
+                  className="w-4 h-4 accent-primary flex-shrink-0"
+                />
+                <ModelKindTag kind={r.kind} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-foreground truncate">{r.label}</p>
+                  {r.sub && <p className="text-[11px] text-muted-foreground truncate">{r.sub}</p>}
+                </div>
+                <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                  {r.origin === "HF" ? "Hugging Face" : r.origin === "LINK" ? "Modell-Link" : "Meine Liste"}
+                </span>
+                {r.taken && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600/20 text-emerald-400 text-[11px] font-semibold whitespace-nowrap">
+                    <Check className="w-3 h-3" /> Drin
+                  </span>
+                )}
+                {r.taken && record?.enabled === false && (
+                  <span className="px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-[11px] font-semibold whitespace-nowrap">
+                    Aus
+                  </span>
+                )}
+                {r.error && (
+                  <span className="text-[11px] text-destructive max-w-[190px] truncate" title={r.error}>
+                    Läuft nicht: {r.error}
+                  </span>
+                )}
+              </label>
+            );
+          })}
+          {!showAll && visible.length > shown.length && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="w-full py-3 rounded-xl bg-elevated border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
-              <input
-                type="checkbox"
-                checked={selected.has(r.key)}
-                disabled={r.taken}
-                onChange={() => toggle(r.key)}
-                className="w-4 h-4 accent-primary flex-shrink-0"
-              />
-              <ModelKindTag kind={r.kind} />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-foreground truncate">{r.id}</p>
-                {r.provider && <p className="text-[11px] text-muted-foreground truncate">über {r.provider}</p>}
-              </div>
-              {r.taken && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600/20 text-emerald-400 text-[11px] font-semibold whitespace-nowrap">
-                  <Check className="w-3 h-3" /> Drin
-                </span>
-              )}
-              {r.error && (
-                <span className="text-[11px] text-destructive max-w-[190px] truncate" title={r.error}>
-                  Läuft nicht: {r.error}
-                </span>
-              )}
-            </label>
-          ))}
+              Weitere {visible.length - shown.length} anzeigen
+            </button>
+          )}
         </div>
       )}
     </div>
