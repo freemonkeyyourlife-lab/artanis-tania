@@ -32,8 +32,12 @@ export function narratorBriefing(narrators = []) {
   return narrators
     .map((n, i) => {
       const kind = kindOf(n.kind);
-      const parts = [kind.prompt, n.personality?.trim()].filter(Boolean);
-      return `${i} — ${n.name} (${kind.label}): ${parts.join(" ")}`;
+      const parts = [
+        kind.prompt,
+        n.personality?.trim(),
+        n.appearance?.trim() ? `Aussehen: ${n.appearance.trim()}` : "",
+      ].filter(Boolean);
+      return `${i} — ${n.name} (${genderNoun(n.gender)}, ${kind.label}): ${parts.join(" ")}`;
     })
     .join("\n");
 }

@@ -5,7 +5,7 @@ import { Loader2, Plus, Pencil, Volume2, Square, Trash2, Users } from "lucide-re
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import NarratorEditor from "@/components/studio/assistant/NarratorEditor";
-import { kindOf, voiceLabel } from "@/lib/narratorStyle";
+import { genderNoun, kindOf, voiceLabel } from "@/lib/narratorStyle";
 
 const TEST_LINE = "Ich bin da. Sag mir, wohin es gehen soll — ich gehe mit.";
 
@@ -17,6 +17,7 @@ export default function ConciergePanel() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [playingId, setPlayingId] = useState("");
+  const [voiceNames, setVoiceNames] = useState({});
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -26,7 +27,12 @@ export default function ConciergePanel() {
 
   // Nie mehr als zwei aktive — der Rest wird still abgeschaltet.
   const load = async () => {
-    const items = await base44.entities.Narrator.list("order").catch(() => []);
+    const [items, voices] = await Promise.all([
+      base44.entities.Narrator.list("order").catch(() => []),
+      base44.entities.Voice.list("-created_date").catch(() => []),
+    ]);
+    const voiceItems = Array.isArray(voices) ? voices : voices?.items || [];
+    setVoiceNames(Object.fromEntries(voiceItems.map((v) => [v.id, v.name])));
     const on = items.filter((x) => x.active !== false);
     if (on.length > 2) {
       const drop = on.slice(2);
@@ -162,7 +168,7 @@ export default function ConciergePanel() {
                     <p className="font-display text-lg text-foreground truncate">{n.name}</p>
                     {slot > 0 && (
                       <span className="px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                        Erzählerin {slot}
+                        {genderNoun(n.gender)} {slot}
                       </span>
                     )}
                   </div>
@@ -172,8 +178,13 @@ export default function ConciergePanel() {
                   <p className="text-[13px] font-semibold text-muted-foreground line-clamp-3">
                     {n.personality || "Noch keine Persönlichkeit beschrieben."}
                   </p>
+                  {n.appearance && (
+                    <p className="text-[12px] font-semibold text-muted-foreground mt-1 line-clamp-2">
+                      Aussehen: {n.appearance}
+                    </p>
+                  )}
                   <p className="text-[12px] font-semibold text-muted-foreground mt-1.5 truncate">
-                    Stimme: {voiceLabel(n.voice)}
+                    Stimme: {voiceNames[n.voiceProfileId] || voiceLabel(n.voice)}
                   </p>
 
                   <div className="flex flex-wrap items-center gap-1.5 mt-3">

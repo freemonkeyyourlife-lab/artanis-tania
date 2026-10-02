@@ -4,6 +4,7 @@ import { Image } from "@/components/ui/image";
 import { Loader2, Upload, Check, Volume2, Square, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NARRATOR_VOICES, NARRATOR_GENDERS, kindOf, genderNoun } from "@/lib/narratorStyle";
+import VoiceProfilePicker from "@/components/story/VoiceProfilePicker";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -26,7 +27,9 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
             name: narrator.name || "",
             gender: narrator.gender || "WEIBLICH",
             personality: narrator.personality || "",
+            appearance: narrator.appearance || "",
             voice: narrator.voice || "honey",
+            voiceProfileId: narrator.voiceProfileId || "",
             artStyle: narrator.artStyle || "PHOTOREAL",
             avatar: narrator.avatar || "",
           }
@@ -212,6 +215,15 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
         className={cn(inputCls, "resize-none mb-3")}
       />
 
+      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Aussehen</p>
+      <textarea
+        value={form.appearance}
+        onChange={(e) => set({ appearance: e.target.value })}
+        rows={2}
+        placeholder="Haare, Augen, Figur, Kleidung — so wird sie auch gezeichnet."
+        className={cn(inputCls, "resize-none mb-3")}
+      />
+
       <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Stimm-Typ</p>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {NARRATOR_VOICES.map((v) => (
@@ -229,6 +241,15 @@ export default function StoryCastSlot({ slot, narrator, all, assignedIds, onAssi
             {v.label} <span className="font-semibold opacity-70">{v.hint}</span>
           </button>
         ))}
+      </div>
+
+      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Stimmprofil</p>
+      <div className="mb-3">
+        <VoiceProfilePicker
+          value={form.voiceProfileId}
+          baseVoice={form.voice}
+          onChange={(voiceProfileId) => set({ voiceProfileId })}
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

@@ -30,6 +30,7 @@ export default function ExperiencePlayer() {
     try { return localStorage.getItem("display_name") || "Guest"; } catch { return "Guest"; }
   });
   const [concierges, setConcierges] = useState([]);
+  const [voiceProfiles, setVoiceProfiles] = useState({});
   const [castOpen, setCastOpen] = useState(false);
   const [tips, setTips] = useState({});
   const [decisions, setDecisions] = useState({});
@@ -64,8 +65,16 @@ export default function ExperiencePlayer() {
       Object.keys(map).forEach(k => map[k].sort((a, b) => (a.order || 0) - (b.order || 0)));
       setChoices(map);
       // Bis zu zwei Erzählerinnen begleiten die Story — sie wechseln sich ab.
-      const found = await base44.entities.Narrator.filter({ active: { $ne: false } }, "order", 2).catch(() => ({ items: [] }));
-      setConcierges(found.items || []);
+      const found = await base44.entities.Narrator.filter({ active: { $ne: false } }, { sort: "order", limit: 2 }).catch(() => null);
+      const cast = found?.items || (Array.isArray(found) ? found : []);
+      setConcierges(cast);
+      // Ihr Stimmprofil aus der Stimmenbank — damit sie so klingt, wie eingestellt.
+      const profileIds = cast.map((n) => n.voiceProfileId).filter(Boolean);
+      if (profileIds.length) {
+        const res = await base44.entities.Voice.filter({ id: { $in: profileIds } }).catch(() => null);
+        const items = res?.items || (Array.isArray(res) ? res : []);
+        setVoiceProfiles(Object.fromEntries(items.map((v) => [v.id, v])));
+      }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -126,7 +135,11 @@ export default function ExperiencePlayer() {
       const person = concierges[line.who] || concierges[0];
       setSpeakingWho(line.who ?? 0);
       try {
-        const res = await base44.integrations.Core.GenerateSpeech({ text: line.text, voice: person?.voice || "honey" });
+        const profile = voiceProfiles[person?.voiceProfileId];
+        const res = await base44.integrations.Core.GenerateSpeech({
+          text: line.text,
+          voice: profile?.baseVoice || person?.voice || "honey",
+        });
         if (runRef.current !== run) return;
         await new Promise((resolve) => {
           const audio = new Audio(res.url);
@@ -275,7 +288,6 @@ export default function ExperiencePlayer() {
         <div className="h-1 rounded-full bg-elevated/60 overflow-hidden">
           <div className="h-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
-        <StoryProgress stages={stages} currentIndex={currentStageIdx} />
       </div>
 
       {/* Fortschritt und Concierge — sie schaut über die Schulter */}

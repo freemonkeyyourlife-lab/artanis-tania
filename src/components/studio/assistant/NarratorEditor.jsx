@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Loader2, Trash2, Upload, Check, X } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
-import { NARRATOR_KINDS, NARRATOR_VOICES } from "@/lib/narratorStyle";
+import { NARRATOR_GENDERS, NARRATOR_KINDS, NARRATOR_VOICES } from "@/lib/narratorStyle";
+import VoiceProfilePicker from "@/components/story/VoiceProfilePicker";
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -13,8 +14,11 @@ export default function NarratorEditor({ narrator, onSaved, onDeleted, onCancel,
   const [form, setForm] = useState({
     name: narrator?.name || "",
     kind: narrator?.kind || "ERZAEHLERIN",
+    gender: narrator?.gender || "WEIBLICH",
     personality: narrator?.personality || "",
+    appearance: narrator?.appearance || "",
     voice: narrator?.voice || "honey",
+    voiceProfileId: narrator?.voiceProfileId || "",
     artStyle: narrator?.artStyle || "PHOTOREAL",
     avatar: narrator?.avatar || "",
   });
@@ -106,6 +110,31 @@ export default function NarratorEditor({ narrator, onSaved, onDeleted, onCancel,
         </div>
       </div>
 
+      <label className="block text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 mt-3">Erzählerin oder Erzähler</label>
+      <div className="flex flex-wrap gap-1.5">
+        {NARRATOR_GENDERS.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => set({ gender: g.id })}
+            className={cn(
+              "px-3.5 py-2 rounded-full text-[12px] font-bold transition-colors",
+              form.gender === g.id ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-muted-foreground"
+            )}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
+
+      <label className="block text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 mt-3">Aussehen</label>
+      <textarea
+        value={form.appearance}
+        onChange={(e) => set({ appearance: e.target.value })}
+        rows={2}
+        placeholder="Haare, Augen, Figur, was sie trägt — damit sie auch so gezeichnet wird."
+        className={cn(inputCls, "resize-none")}
+      />
+
       <label className="block text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 mt-3">Persönlichkeit</label>
       <textarea
         value={form.personality}
@@ -130,6 +159,13 @@ export default function NarratorEditor({ narrator, onSaved, onDeleted, onCancel,
           </button>
         ))}
       </div>
+
+      <label className="block text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 mt-3">Stimmprofil</label>
+      <VoiceProfilePicker
+        value={form.voiceProfileId}
+        baseVoice={form.voice}
+        onChange={(voiceProfileId) => set({ voiceProfileId })}
+      />
 
       <div className="flex flex-wrap items-center gap-2 mt-4">
         <button

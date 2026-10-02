@@ -27,6 +27,9 @@
     "personality": {
       "type": "string"
     },
+    "appearance": {
+      "type": "string"
+    },
     "voice": {
       "type": "string",
       "enum": [
@@ -37,6 +40,9 @@
         "spark"
       ],
       "default": "honey"
+    },
+    "voiceProfileId": {
+      "type": "string"
     },
     "artStyle": {
       "type": "string",
