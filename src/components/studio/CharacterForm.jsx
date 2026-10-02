@@ -40,6 +40,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
     creatorCategory: initial?.creatorCategory || "AI_MODEL",
     age: initial?.age ?? "",
     tagline: initial?.tagline || "",
+    streamUrl: initial?.streamUrl || "",
     shortStory: initial?.shortStory || "",
     bio: initial?.bio || "",
     topics: (initial?.topics || []).join(", "),
@@ -114,6 +115,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         personaType: form.personaType,
         creatorCategory: form.creatorCategory,
         tagline: form.tagline,
+        streamUrl: form.streamUrl.trim(),
         shortStory: form.shortStory,
         bio: form.bio,
         topics: form.topics.split(",").map((s) => s.trim()).filter(Boolean),
@@ -194,6 +196,11 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         <div className="sm:col-span-2">
           <label className="text-xs text-muted-foreground mb-1.5 block">Tagline</label>
           <input value={form.tagline} onChange={(e) => set("tagline", e.target.value)} placeholder="Kurzer Spruch unter dem Namen" className={inputCls} />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="text-xs text-muted-foreground mb-1.5 block">Stripchat-Link (wird groß im Profil gezeigt)</label>
+          <input value={form.streamUrl} onChange={(e) => set("streamUrl", e.target.value)} placeholder="https://stripchat.com/dein-name" className={inputCls} />
         </div>
 
         <div className="sm:col-span-2">

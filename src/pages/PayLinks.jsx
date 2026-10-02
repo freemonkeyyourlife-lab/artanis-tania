@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Coins, Plus, X } from "lucide-react";
 import PaymentLinkForm from "@/components/pay/PaymentLinkForm";
 import PaymentLinkCard from "@/components/pay/PaymentLinkCard";
+import PayMessageTemplate from "@/components/pay/PayMessageTemplate";
 
 export default function PayLinks() {
   const [mine, setMine] = useState([]);
@@ -54,6 +55,8 @@ export default function PayLinks() {
           Preis an, die jeder aus der Kasse übernehmen kann.
         </p>
       </div>
+
+      <PayMessageTemplate onCreated={load} />
 
       <div className="flex flex-wrap gap-3 mb-8">
         {!showForm ? (

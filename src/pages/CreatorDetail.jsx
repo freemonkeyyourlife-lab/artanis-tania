@@ -5,6 +5,7 @@ import { Image } from "@/components/ui/image";
 import { MessageSquare, ArrowLeft, Pencil, Video } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import CharacterForm from "@/components/studio/CharacterForm";
+import StreamLinkCard from "@/components/creator/StreamLinkCard";
 
 export default function CreatorDetail() {
   const { id } = useParams();
@@ -66,6 +67,7 @@ export default function CreatorDetail() {
           </div>
           <h1 className="font-display text-3xl text-foreground mt-4">{creator.stageName}</h1>
           {creator.tagline && <p className="text-primary text-sm mt-1">{creator.tagline}</p>}
+          <StreamLinkCard url={creator.streamUrl} name={creator.stageName} />
           {creator.bio && <p className="text-sm text-muted-foreground mt-3 max-w-2xl whitespace-pre-line">{creator.bio}</p>}
 
           {creator.topics?.length > 0 && (
