@@ -1,8 +1,9 @@
 import { base44 } from "@/api/base44Client";
+import { narratorBriefing } from "@/lib/narratorStyle";
 
 // Aus einem Satz wird ein fertiger Vorschlag: Szenario, Besetzung, Ton — und
 // die Worte der Erzählerin, die neugierig macht und Geheimtipps verrät.
-export async function draftFromWish({ wish, creators = [], experiences = [], contents = [], avoid = "" }) {
+export async function draftFromWish({ wish, creators = [], experiences = [], contents = [], narrators = [], avoid = "" }) {
   const cast = creators
     .map((c) => `- ${c.id} — ${c.stageName} (${c.personaType}${c.artStyle === "CARTOON" ? ", gezeichnet" : ", fotoreal"})${c.tagline ? `: ${c.tagline}` : ""}`)
     .join("\n");
@@ -37,7 +38,7 @@ Aufgabe:
 2. Stelle die Besetzung zusammen. Nimm bevorzugt Figuren aus der Liste der vorhandenen Charaktere — dann setz ihre id in "existingId". Nur wenn wirklich keine passt, erfinde eine neue Figur (existingId leer) und beschreibe sie in "note" in zwei Sätzen.
 3. Wenn eines der vorhandenen Szenarien schon passt, gib seine id als "experienceId" zurück. Sonst lass es leer — dann wird ein neues angelegt.
 4. "startKind": wo sie starten soll — "CHAT" für ein privates Gespräch, "SZENE" für eine interaktive Szene.
-5. "narrator": deine Begrüßung, 2 bis 4 Sätze. Du sprichst die Nutzerin direkt an, machst neugierig und fragst sie etwas, das sie zum Reden bringt.
+5. "lines": was die Erzählerinnen sagen — 2 bis 5 kurze Zeilen, abwechselnd, jede bleibt in ihrer Rolle und ihrem Ton. "who" ist die Nummer der Erzählerin aus der Liste unten. Sie sprechen die Nutzerin direkt an, machen neugierig und fragen sie etwas, das sie zum Reden bringt.
 6. "tip": ein konkreter Geheimtipp, der genau zu diesem Wunsch passt.
 7. "pitch": ein bis zwei Sätze als Beraterin — du empfiehlst der Nutzerin etwas, das genau jetzt zu ihr passt, und sagst, warum.
 8. "advice": 1 bis 3 Empfehlungen dazu. Nimm NUR Ziele aus der Liste "Was du empfehlen kannst" und gib ihren Pfad wörtlich zurück. "why" ist ein kurzer Satz, warum es gerade jetzt passt. Wenn nichts passt, lass die Liste leer.
@@ -50,7 +51,10 @@ ${cast || "— noch keine —"}
 # Vorhandene Szenarien
 ${scenes || "— noch keine —"}
 
-${avoid ? `# Bitte etwas anderes als\n${avoid}\n\n` : ""}# Was du empfehlen kannst
+${avoid ? `# Bitte etwas anderes als\n${avoid}\n\n` : ""}# Deine Erzählerinnen
+${narratorBriefing(narrators)}
+
+# Was du empfehlen kannst
 ${catalog}
 
 # Der Wunsch
@@ -77,7 +81,16 @@ ${wish}`,
             },
           },
         },
-        narrator: { type: "string" },
+        lines: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              who: { type: "number" },
+              text: { type: "string" },
+            },
+          },
+        },
         tip: { type: "string" },
         pitch: { type: "string" },
         advice: {
@@ -92,7 +105,7 @@ ${wish}`,
           },
         },
       },
-      required: ["title", "scenario", "cast", "narrator", "startKind"],
+      required: ["title", "scenario", "cast", "lines", "startKind"],
     },
   });
 

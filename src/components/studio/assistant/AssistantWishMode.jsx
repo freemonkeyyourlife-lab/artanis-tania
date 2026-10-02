@@ -2,16 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import {
-  Sparkles, Loader2, RotateCcw, Volume2, VolumeX, Check, ArrowRight, Lightbulb, Users, MapPin, Plus, ShoppingBag,
+  Sparkles, Loader2, RotateCcw, Check, ArrowRight, Lightbulb, Users, MapPin, Plus, ShoppingBag,
 } from "lucide-react";
 
 import { useToast } from "@/components/ui/use-toast";
 import VoiceInput from "@/components/VoiceInput";
 import { cn } from "@/lib/utils";
 import { draftFromWish } from "@/lib/assistantWish";
-
-// Die Erzählerstimme. Warm und nah — sie redet dem Nutzer ins Ohr.
-const NARRATOR_VOICE = "honey";
+import NarratorPicker from "@/components/studio/assistant/NarratorPicker";
+import NarratorLines from "@/components/studio/assistant/NarratorLines";
 
 const EXAMPLES = [
   "Sie soll mich heute Abend überraschen und mich nicht mehr loslassen.",
@@ -28,30 +27,43 @@ export default function AssistantWishMode({ creators = [], experiences = [], con
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState("wish");
   const [made, setMade] = useState(null);
+  const [narrators, setNarrators] = useState([]);
   const [speaking, setSpeaking] = useState(false);
   const audioRef = useRef(null);
+  const runRef = useRef(0);
 
   useEffect(() => () => audioRef.current?.pause(), []);
 
-  // Sie spricht. Wird der Ton blockiert, bleibt der Text stehen und der Knopf hilft.
-  const say = async (text) => {
-    if (!text?.trim()) return;
-    setSpeaking(true);
-    try {
-      const res = await base44.integrations.Core.GenerateSpeech({ text, voice: NARRATOR_VOICE });
-      const audio = new Audio(res.url);
-      audioRef.current = audio;
-      audio.onended = () => setSpeaking(false);
-      audio.onerror = () => setSpeaking(false);
-      await audio.play();
-    } catch (e) {
-      setSpeaking(false);
-    }
-  };
-
   const stop = () => {
+    runRef.current += 1;
     audioRef.current?.pause();
     setSpeaking(false);
+  };
+
+  // Jede Zeile mit ihrer eigenen Stimme. Wird der Ton blockiert, bleibt der Text stehen.
+  const playLines = async (lines) => {
+    if (!lines?.length) return;
+    stop();
+    const run = runRef.current;
+    setSpeaking(true);
+    for (const line of lines) {
+      if (runRef.current !== run) return;
+      const person = narrators[line.who] || narrators[0];
+      try {
+        const res = await base44.integrations.Core.GenerateSpeech({ text: line.text, voice: person?.voice || "honey" });
+        if (runRef.current !== run) return;
+        await new Promise((resolve) => {
+          const audio = new Audio(res.url);
+          audioRef.current = audio;
+          audio.onended = resolve;
+          audio.onerror = resolve;
+          audio.play().catch(resolve);
+        });
+      } catch (e) {
+        /* weiter mit der nächsten Zeile */
+      }
+    }
+    if (runRef.current === run) setSpeaking(false);
   };
 
   const draftNow = async () => {
@@ -66,11 +78,12 @@ export default function AssistantWishMode({ creators = [], experiences = [], con
         creators,
         experiences,
         contents,
+        narrators,
         avoid: draft?.title || "",
       });
       setDraft(res);
       setStage("proposal");
-      say([res.narrator, res.pitch].filter(Boolean).join(" "));
+      playLines(res.lines || []);
     } catch (e) {
       toast({ title: "Sie hat gerade nichts gefunden", description: "Versuch es nochmal.", variant: "destructive" });
     } finally {
@@ -145,24 +158,6 @@ export default function AssistantWishMode({ creators = [], experiences = [], con
     setStage("wish");
   };
 
-  // Die Worte der Erzählerin — sie stehen immer da, auch ohne Ton.
-  const Narrator = ({ text, auto }) => (
-    <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Volume2 className="w-4 h-4 text-primary" />
-        <p className="text-[12px] font-bold uppercase tracking-wider text-primary">Die Erzählerin</p>
-        <button
-          onClick={() => (speaking ? stop() : say(text))}
-          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-btn text-[11px] font-bold text-foreground"
-        >
-          {speaking ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-          {speaking ? "Verstummen" : auto ? "Nochmal hören" : "Hören"}
-        </button>
-      </div>
-      <p className="text-[15px] font-semibold text-foreground leading-relaxed italic">„{text}“</p>
-    </div>
-  );
-
   if (stage === "wish") {
     return (
       <div className="space-y-4">
@@ -198,6 +193,8 @@ export default function AssistantWishMode({ creators = [], experiences = [], con
           </div>
         </div>
 
+        <NarratorPicker value={narrators} onChange={setNarrators} />
+
         <div className="flex flex-wrap gap-2">
           {EXAMPLES.map((e) => (
             <button
@@ -219,7 +216,13 @@ export default function AssistantWishMode({ creators = [], experiences = [], con
 
     return (
       <div className="space-y-4">
-        <Narrator text={draft.narrator} auto />
+        <NarratorLines
+          lines={draft.lines || []}
+          people={narrators}
+          speaking={speaking}
+          onSpeak={() => playLines(draft.lines || [])}
+          onStop={stop}
+        />
 
         <div className="rounded-2xl border-2 border-border bg-card p-5">
           <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
@@ -337,11 +340,21 @@ export default function AssistantWishMode({ creators = [], experiences = [], con
     );
   }
 
+  const closing = [
+    {
+      who: 0,
+      text: `Es steht. ${draft?.title ? `„${draft.title}" ` : ""}Ich bin dabei — und ich verrate dir unterwegs noch das eine oder andere. Geh rein, sie wartet schon.`,
+    },
+  ];
+
   return (
     <div className="space-y-4">
-      <Narrator
-        text={`Es steht. ${draft?.title ? `„${draft.title}" ` : ""}Ich bin dabei — und ich verrate dir unterwegs noch das eine oder andere. Geh rein, sie wartet schon.`}
-        auto
+      <NarratorLines
+        lines={closing}
+        people={narrators}
+        speaking={speaking}
+        onSpeak={() => playLines(closing)}
+        onStop={stop}
       />
       <div className="flex flex-wrap items-center gap-3">
         <Link
