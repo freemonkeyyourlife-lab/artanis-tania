@@ -56,34 +56,34 @@ export default function ContentBrowser({ defaultContentType, title, subtitle }) 
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search content..."
+          placeholder="Inhalte durchsuchen …"
           className="w-full pl-11 pr-4 py-3 rounded-2xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
         />
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
         <select value={creatorFilter} onChange={(e) => setCreatorFilter(e.target.value)} className="px-3 py-2 rounded-full bg-card border border-border text-xs text-foreground focus:outline-none focus:border-primary/50 cursor-pointer">
-          <option value="all">All Creators</option>
+          <option value="all">Alle Charaktere</option>
           {creators.map(c => <option key={c.id} value={c.id}>{c.stageName}</option>)}
         </select>
         <select value={topicFilter} onChange={(e) => setTopicFilter(e.target.value)} className="px-3 py-2 rounded-full bg-card border border-border text-xs text-foreground focus:outline-none focus:border-primary/50 cursor-pointer">
-          <option value="all">All Topics</option>
+          <option value="all">Alle Themen</option>
           {topics.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
         </select>
         <div className="flex gap-1">
-          {["all", "free", "vip", "ppv"].map(p => (
-            <button key={p} onClick={() => setPriceFilter(p)} className={cn("px-3 py-2 rounded-full text-xs font-medium capitalize transition-colors", priceFilter === p ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:text-foreground")}>
-              {p}
+          {[["all", "Alle"], ["free", "Gratis"], ["vip", "VIP"], ["ppv", "Einzeln"]].map(([p, label]) => (
+            <button key={p} onClick={() => setPriceFilter(p)} className={cn("px-3 py-2 rounded-full text-xs font-medium transition-colors", priceFilter === p ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:text-foreground")}>
+              {label}
             </button>
           ))}
         </div>
         <select value={sort} onChange={(e) => setSort(e.target.value)} className="px-3 py-2 rounded-full bg-card border border-border text-xs text-foreground focus:outline-none focus:border-primary/50 cursor-pointer">
-          <option value="newest">Newest</option>
-          <option value="popular">Popular</option>
+          <option value="newest">Neueste</option>
+          <option value="popular">Beliebt</option>
         </select>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-4">{filtered.length} items</p>
+      <p className="text-sm text-muted-foreground mb-4">{filtered.length} Einträge</p>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -92,7 +92,7 @@ export default function ContentBrowser({ defaultContentType, title, subtitle }) 
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map(item => <ContentCard key={item.id} content={item} />)}
-          {filtered.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">No content found</p>}
+          {filtered.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">Nichts gefunden</p>}
         </div>
       )}
     </div>

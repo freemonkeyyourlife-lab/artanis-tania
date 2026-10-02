@@ -5,7 +5,7 @@ const STEPS = [
   {
     icon: UserPlus,
     title: "1 · Charakter anlegen",
-    text: "Reiter „Charaktere“ → oben rechts „Neuer Charakter“. Name, Typ (Frau, Mann, Paar, Gruppe) und Kategorie (KI-Modell oder Real) eintragen, dann speichern. Sie erscheint sofort im Chat unter „Messages“.",
+    text: "Reiter „Charaktere“ → oben rechts „Neuer Charakter“. Name, Typ (Frau, Mann, Paar, Gruppe) und Kategorie (KI-Modell oder Real) eintragen, dann speichern. Sie erscheint sofort im Chat unter „Nachrichten“.",
   },
   {
     icon: ImageIcon,

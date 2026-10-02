@@ -48,20 +48,20 @@ export default function Admin() {
   };
 
   const stats = [
-    { label: "Total Content", value: content.length, icon: Radio },
-    { label: "Active Requests", value: requests.length, icon: Inbox },
-    { label: "Topics", value: topics.length, icon: TrendingUp },
-    { label: "Creators", value: creators.length, icon: Users },
+    { label: "Inhalte gesamt", value: content.length, icon: Radio },
+    { label: "Offene Wünsche", value: requests.length, icon: Inbox },
+    { label: "Themen", value: topics.length, icon: TrendingUp },
+    { label: "Charaktere", value: creators.length, icon: Users },
   ];
 
   const quickActions = [
-    { label: "Go Live", icon: Radio, color: "bg-red-500/20 text-red-400", to: "/live" },
-    { label: "Create Room", icon: Radio, color: "bg-primary/20 text-primary", to: "/call" },
-    { label: "Upload", icon: Upload, color: "bg-blue-500/20 text-blue-400", to: "/studio" },
-    { label: "New Story", icon: FileText, color: "bg-emerald-500/20 text-emerald-400", to: "/studio" },
-    { label: "New Experience", icon: Sparkles, color: "bg-violet-500/20 text-violet-400", to: "/interactive" },
-    { label: "View Requests", icon: Inbox, color: "bg-amber-500/20 text-amber-400", to: "/request" },
-    { label: "Messages", icon: MessageSquare, color: "bg-cyan-500/20 text-cyan-400", to: "/messages" },
+    { label: "Live gehen", icon: Radio, color: "bg-red-500/20 text-red-400", to: "/live" },
+    { label: "Raum anlegen", icon: Radio, color: "bg-primary/20 text-primary", to: "/call" },
+    { label: "Hochladen", icon: Upload, color: "bg-blue-500/20 text-blue-400", to: "/studio" },
+    { label: "Neue Story", icon: FileText, color: "bg-emerald-500/20 text-emerald-400", to: "/studio" },
+    { label: "Neues Erlebnis", icon: Sparkles, color: "bg-violet-500/20 text-violet-400", to: "/interactive" },
+    { label: "Wünsche ansehen", icon: Inbox, color: "bg-amber-500/20 text-amber-400", to: "/request" },
+    { label: "Nachrichten", icon: MessageSquare, color: "bg-cyan-500/20 text-cyan-400", to: "/messages" },
   ];
 
   if (loading) {
@@ -146,9 +146,9 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Trending Topics */}
+        {/* Beliebte Themen */}
         <div className="p-5 rounded-2xl border border-border bg-card">
-          <h2 className="font-display text-xl text-foreground mb-4">Trending Topics</h2>
+          <h2 className="font-display text-xl text-foreground mb-4">Beliebte Themen</h2>
           <div className="flex flex-wrap gap-2">
             {topics.map((t) => (
               <span key={t.id} className="px-3 py-1.5 rounded-full glass border border-border text-xs text-muted-foreground">

@@ -43,7 +43,7 @@ export default function Home() {
   const [experiences, setExperiences] = useState([]);
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState("Alle");
   const [isAdmin, setIsAdmin] = useState(false);
   const { userId, vote } = useRequestVotes();
 

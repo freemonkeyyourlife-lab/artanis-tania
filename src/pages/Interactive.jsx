@@ -20,8 +20,8 @@ export default function Interactive() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
-      <h1 className="font-display text-3xl text-foreground mb-2">Interactive Experiences</h1>
-      <p className="text-muted-foreground text-sm mb-8">Choose your path through branching interactive stories</p>
+      <h1 className="font-display text-3xl text-foreground mb-2">Interaktive Erlebnisse</h1>
+      <p className="text-muted-foreground text-sm mb-8">Wähle deinen Weg durch Geschichten mit Entscheidungen</p>
 
       {loading ? (
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>
@@ -46,7 +46,7 @@ export default function Interactive() {
               </div>
             </Link>
           ))}
-          {experiences.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">No interactive experiences yet</p>}
+          {experiences.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">Noch keine interaktiven Erlebnisse</p>}
         </div>
       )}
     </div>

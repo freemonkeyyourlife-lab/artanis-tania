@@ -51,7 +51,7 @@ export default function CreatorProfile({ personaType }) {
   if (!creator) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground">Creator not found</p>
+        <p className="text-muted-foreground">Charakter nicht gefunden</p>
       </div>
     );
   }
@@ -122,15 +122,15 @@ export default function CreatorProfile({ personaType }) {
             <div className="flex gap-6 mt-5">
               <div>
                 <p className="text-xl font-display text-foreground">{creator.stats_followers || 0}</p>
-                <p className="text-xs text-muted-foreground">Followers</p>
+                <p className="text-xs text-muted-foreground">Follower</p>
               </div>
               <div>
                 <p className="text-xl font-display text-foreground">{content.length}</p>
-                <p className="text-xs text-muted-foreground">Content</p>
+                <p className="text-xs text-muted-foreground">Inhalte</p>
               </div>
               <div>
                 <p className="text-xl font-display text-foreground">{stories.length}</p>
-                <p className="text-xs text-muted-foreground">Stories</p>
+                <p className="text-xs text-muted-foreground">Storys</p>
               </div>
             </div>
           </div>
@@ -150,10 +150,10 @@ export default function CreatorProfile({ personaType }) {
         {/* Tabs */}
         <div className="mt-8 flex gap-2 overflow-x-auto scrollbar-hide border-b border-border pb-px">
           {[
-            { id: "all", label: "All" },
+            { id: "all", label: "Alle" },
             { id: "video", label: "Videos" },
-            { id: "photo", label: "Photos" },
-            { id: "story", label: "Stories" },
+            { id: "photo", label: "Fotos" },
+            { id: "story", label: "Storys" },
           ].map((t) => (
             <button
               key={t.id}
@@ -179,14 +179,14 @@ export default function CreatorProfile({ personaType }) {
                   {story.series && <p className="text-xs text-primary mt-3">{story.series} · Ep. {story.episode || 1}</p>}
                 </div>
               ))}
-              {stories.length === 0 && <p className="text-muted-foreground col-span-2 text-center py-12">No stories yet</p>}
+              {stories.length === 0 && <p className="text-muted-foreground col-span-2 text-center py-12">Noch keine Storys</p>}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredContent.map((item) => (
                 <ContentCard key={item.id} content={item} />
               ))}
-              {filteredContent.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">No content yet</p>}
+              {filteredContent.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">Noch keine Inhalte</p>}
             </div>
           )}
         </div>

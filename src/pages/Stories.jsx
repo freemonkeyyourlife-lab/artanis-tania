@@ -24,12 +24,12 @@ export default function Stories() {
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
-      <h1 className="font-display text-3xl text-foreground mb-2">Stories</h1>
-      <p className="text-muted-foreground text-sm mb-6">Immersive written experiences from all personas</p>
+      <h1 className="font-display text-3xl text-foreground mb-2">Storys</h1>
+      <p className="text-muted-foreground text-sm mb-6">Geschichten zum Eintauchen — von allen Charakteren</p>
 
       <div className="relative mb-6">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search stories..." className="w-full pl-11 pr-4 py-3 rounded-2xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
+        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Storys durchsuchen …" className="w-full pl-11 pr-4 py-3 rounded-2xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
       </div>
 
       {loading ? (
@@ -62,7 +62,7 @@ export default function Stories() {
               )}
             </div>
           ))}
-          {filtered.length === 0 && <p className="text-muted-foreground text-center py-12">No stories found</p>}
+          {filtered.length === 0 && <p className="text-muted-foreground text-center py-12">Keine Storys gefunden</p>}
         </div>
       )}
     </div>

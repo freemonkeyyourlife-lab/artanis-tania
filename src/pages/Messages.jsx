@@ -1419,7 +1419,7 @@ export default function Messages() {
                     <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary flex-shrink-0">{(u.full_name || u.email || "?")[0]}</div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground truncate">{u.full_name || u.email}</p>
-                      <p className="text-xs text-muted-foreground">Direct message</p>
+                      <p className="text-xs text-muted-foreground">Direktnachricht</p>
                     </div>
                   </button>
                 ))
@@ -1962,7 +1962,7 @@ export default function Messages() {
               )}
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center"><p className="text-muted-foreground">Select a conversation to start chatting</p></div>
+            <div className="flex-1 flex items-center justify-center"><p className="text-muted-foreground">Wähle links einen Chat aus</p></div>
           )}
         </div>
       </div>

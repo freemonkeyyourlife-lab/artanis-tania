@@ -34,7 +34,7 @@ export default function Live() {
   return (
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
       <h1 className="font-display text-3xl text-foreground mb-2">Live</h1>
-      <p className="text-muted-foreground text-sm mb-8">Real-time sessions and online creators</p>
+      <p className="text-muted-foreground text-sm mb-8">Sitzungen in Echtzeit und Charaktere, die gerade da sind</p>
 
       {streams.length > 0 && (
         <section className="mb-10">
@@ -80,13 +80,13 @@ export default function Live() {
               </div>
             </Link>
           ))}
-          {onlineCreators.length === 0 && <p className="text-muted-foreground col-span-full text-center py-8">No creators online right now</p>}
+          {onlineCreators.length === 0 && <p className="text-muted-foreground col-span-full text-center py-8">Gerade ist niemand online</p>}
         </div>
       </section>
 
       {liveExperiences.length > 0 && (
         <section>
-          <h2 className="font-display text-xl text-foreground mb-4">Live Sessions</h2>
+          <h2 className="font-display text-xl text-foreground mb-4">Live-Sitzungen</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {liveExperiences.map(exp => (
               <Link key={exp.id} to="/interactive" className="group">

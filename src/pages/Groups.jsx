@@ -43,7 +43,7 @@ export default function Groups() {
       load();
       setActiveGroup(group);
     } catch (e) {
-      toast({ title: "Error", description: "Could not create group.", variant: "destructive" });
+      toast({ title: "Fehler", description: "Die Gruppe konnte nicht angelegt werden.", variant: "destructive" });
     } finally {
       setCreating(false);
     }
@@ -73,20 +73,20 @@ export default function Groups() {
     <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-3xl text-foreground">Groups</h1>
+          <h1 className="font-display text-3xl text-foreground">Gruppen</h1>
           <p className="text-sm text-muted-foreground mt-1">Offene Chats — jeder kann rein, jeder kann mitschreiben.</p>
         </div>
         <button onClick={() => setShowCreate(!showCreate)} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:accent-glow transition-all">
-          <Plus className="w-4 h-4" /> New Group
+          <Plus className="w-4 h-4" /> Neue Gruppe
         </button>
       </div>
 
       {showCreate && (
         <div className="rounded-2xl border border-border bg-card p-6 mb-6 space-y-4">
-          <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Group title" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
-          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What's this group about?" rows={2} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
-          <input type="text" value={form.topicTags} onChange={(e) => setForm({ ...form, topicTags: e.target.value })} placeholder="Tags (comma-separated)" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
-          <button onClick={create} disabled={!form.title.trim() || creating} className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">Create Group</button>
+          <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Titel der Gruppe" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
+          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Worum geht es in der Gruppe?" rows={2} className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" />
+          <input type="text" value={form.topicTags} onChange={(e) => setForm({ ...form, topicTags: e.target.value })} placeholder="Schlagworte (mit Komma getrennt)" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
+          <button onClick={create} disabled={!form.title.trim() || creating} className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">Gruppe anlegen</button>
         </div>
       )}
 
@@ -100,7 +100,7 @@ export default function Groups() {
                 <h3 className="font-display text-lg text-foreground">{g.title}</h3>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-600/20 text-emerald-400 text-[10px] font-semibold uppercase flex-shrink-0">Offen</span>
               </div>
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{g.description || "No description"}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{g.description || "Keine Beschreibung"}</p>
               {g.topicTags?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {g.topicTags.map((t, i) => <span key={i} className="px-2 py-0.5 rounded-full bg-elevated text-xs text-muted-foreground">{t}</span>)}

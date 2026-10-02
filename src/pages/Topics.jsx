@@ -26,8 +26,8 @@ export default function Topics() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
-      <h1 className="font-display text-3xl text-foreground mb-2">Topics</h1>
-      <p className="text-muted-foreground text-sm mb-6">Browse content by topic</p>
+      <h1 className="font-display text-3xl text-foreground mb-2">Themen</h1>
+      <p className="text-muted-foreground text-sm mb-6">Inhalte nach Thema durchstöbern</p>
 
       <div className="flex flex-wrap gap-2 mb-8">
         {topics.map(topic => (
@@ -46,7 +46,7 @@ export default function Topics() {
           <h2 className="font-display text-xl text-foreground mb-4">{activeTopic}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredContent.map(item => <ContentCard key={item.id} content={item} />)}
-            {filteredContent.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">No content in this topic yet</p>}
+            {filteredContent.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">Zu diesem Thema gibt es noch nichts</p>}
           </div>
         </div>
       ) : !loading && (

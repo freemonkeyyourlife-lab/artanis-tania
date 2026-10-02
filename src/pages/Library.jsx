@@ -36,8 +36,8 @@ export default function Library() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
-      <h1 className="font-display text-3xl text-foreground mb-2">My Library</h1>
-      <p className="text-muted-foreground text-sm mb-8">Your favorited content and creators</p>
+      <h1 className="font-display text-3xl text-foreground mb-2">Meine Bibliothek</h1>
+      <p className="text-muted-foreground text-sm mb-8">Deine gemerkten Inhalte und Charaktere</p>
 
       <section className="mb-10">
         <h2 className="font-display text-xl text-foreground mb-4 flex items-center gap-2">

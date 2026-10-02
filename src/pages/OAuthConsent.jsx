@@ -72,7 +72,7 @@ export default function OAuthConsent() {
         }
         setInfo(data);
       } catch (e) {
-        setError("Could not load this authorization request. Please try again.");
+        setError("Diese Freigabe-Anfrage konnte nicht geladen werden. Bitte nochmal versuchen.");
       } finally {
         if (!redirecting) setChecking(false);
       }
@@ -117,7 +117,7 @@ export default function OAuthConsent() {
           setSubmitting(false);
           return;
         }
-        throw new Error("Could not complete authorization. Please try again.");
+        throw new Error("Die Freigabe konnte nicht abgeschlossen werden. Bitte nochmal versuchen.");
       }
       const data = await res.json();
       window.location.href = data.redirect_url;
@@ -199,7 +199,7 @@ export default function OAuthConsent() {
       )}
 
       <p className="text-sm font-medium text-foreground mb-2">
-        {tools.length ? `It will be able to use these tools in ${appName}:` : "No tools requested"}
+        {tools.length ? `Diese Werkzeuge darf es in ${appName} nutzen:` : "Keine Werkzeuge angefragt"}
       </p>
       {tools.length > 0 && (
         <ul className="space-y-2 text-sm mb-6">

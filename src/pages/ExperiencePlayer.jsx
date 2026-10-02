@@ -127,11 +127,11 @@ export default function ExperiencePlayer() {
           <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-6 accent-glow">
             <Check className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="font-display text-3xl text-foreground mb-2">Experience Complete</h1>
-          <p className="text-muted-foreground mb-6">You earned {points} points</p>
+          <h1 className="font-display text-3xl text-foreground mb-2">Erlebnis abgeschlossen</h1>
+          <p className="text-muted-foreground mb-6">Du hast {points} Punkte gesammelt</p>
           <div className="flex gap-3 justify-center">
-            <Link to="/interactive" className="px-5 py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold">Back to Experiences</Link>
-            <button onClick={() => { setCurrentStageIdx(0); setCompleted(false); setPoints(0); setChatCount(0); setChatMessages([]); }} className="px-5 py-3 rounded-full glass border border-border text-foreground text-sm font-semibold">Play Again</button>
+            <Link to="/interactive" className="px-5 py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold">Zurück zu den Erlebnissen</Link>
+            <button onClick={() => { setCurrentStageIdx(0); setCompleted(false); setPoints(0); setChatCount(0); setChatMessages([]); }} className="px-5 py-3 rounded-full glass border border-border text-foreground text-sm font-semibold">Nochmal spielen</button>
           </div>
         </div>
       </div>
@@ -142,8 +142,8 @@ export default function ExperiencePlayer() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">This experience has no stages yet.</p>
-          <Link to="/interactive" className="text-primary hover:underline">Back to experiences</Link>
+          <p className="text-muted-foreground mb-4">Dieses Erlebnis hat noch keine Stationen.</p>
+          <Link to="/interactive" className="text-primary hover:underline">Zurück zu den Erlebnissen</Link>
         </div>
       </div>
     );
@@ -222,7 +222,7 @@ export default function ExperiencePlayer() {
                 </button>
               ))}
               {stageChoices.length === 0 && (
-                <button onClick={handleContinue} className="w-full py-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2">Continue <ChevronRight className="w-4 h-4" /></button>
+                <button onClick={handleContinue} className="w-full py-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2">Weiter <ChevronRight className="w-4 h-4" /></button>
               )}
             </div>
           ) : currentStage.triggerType === "CHAT_COUNT" ? (
