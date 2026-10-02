@@ -91,6 +91,12 @@
         "type": "string"
       }
     },
+    "hashtags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "duration": {
       "type": "number"
     },

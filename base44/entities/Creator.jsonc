@@ -113,6 +113,12 @@
         "type": "string"
       }
     },
+    "hashtags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "featured": {
       "type": "boolean",
       "default": false

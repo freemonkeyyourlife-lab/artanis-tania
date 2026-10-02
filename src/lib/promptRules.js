@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { hashtagPromptBlock } from "@/lib/hashtags";
 
 // Die feste Regel — so wird hier erzählt und gebaut, bei jedem Prompt:
 // Bild, Video, Text, Szene. Sie gilt für immer, bis du sie selbst änderst.
@@ -25,7 +26,11 @@ export async function ruleBlock(kind = "") {
   const all = await loadRules();
   const own = all.filter((r) => r.rule?.trim() && r.title !== LEARN_TITLE);
   const passed = own.filter((r) => r.kind === "ALLGEMEIN" || (kind && r.kind === kind));
-  const rules = [DEFAULT_RULE, ...passed.map((r) => `${r.title}: ${r.rule.trim()}`)].join("\n\n");
+  // Die Hashtags sagen in Worten, was hier gemeint ist — sie laufen immer mit.
+  const hashtags = await hashtagPromptBlock();
+  const rules = [DEFAULT_RULE, ...passed.map((r) => `${r.title}: ${r.rule.trim()}`), hashtags]
+    .filter(Boolean)
+    .join("\n\n");
 
   const learned = all.find((r) => r.title === LEARN_TITLE)?.examples || [];
   const examples = learned

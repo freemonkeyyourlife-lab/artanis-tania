@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import VoiceInput from "@/components/VoiceInput";
 import CharacterVoiceBox from "@/components/studio/CharacterVoiceBox";
 import CharacterImageStudio from "@/components/studio/CharacterImageStudio";
+import HashtagPicker from "@/components/studio/HashtagPicker";
 import { addGalleryItems } from "@/lib/gallery";
 
 const PERSONA_TYPES = [
@@ -48,6 +49,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
     bio: initial?.bio || "",
     topics: (initial?.topics || []).join(", "),
     tags: (initial?.tags || []).join(", "),
+    hashtags: initial?.hashtags || [],
     onlineStatus: initial?.onlineStatus || "AI_AVAILABLE",
     voice: initial?.voice || "river",
     voiceProfileId: initial?.voiceProfileId || "",
@@ -134,6 +136,7 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         bio: form.bio,
         topics: form.topics.split(",").map((s) => s.trim()).filter(Boolean),
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
+        hashtags: form.hashtags,
         onlineStatus: form.onlineStatus,
         voice: form.voice,
         voiceProfileId: form.voiceProfileId,
@@ -246,6 +249,10 @@ export default function CharacterForm({ initial, onSaved, onCancel }) {
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Tags (Komma-getrennt)</label>
           <input value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="frech, devot, lesbisch" className={inputCls} />
+        </div>
+
+        <div className="sm:col-span-2">
+          <HashtagPicker label="Hashtags für diese Figur" value={form.hashtags} onChange={(v) => set("hashtags", v)} />
         </div>
 
         {/* Images */}

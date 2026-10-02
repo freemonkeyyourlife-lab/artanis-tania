@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { Check } from "lucide-react";
 import ContentUploadForm from "@/components/studio/ContentUploadForm";
+import HashtagPicker from "@/components/studio/HashtagPicker";
+import { loadHashtags, tagLabel } from "@/lib/hashtags";
 
 const VISIBILITIES = ["PUBLIC", "REGISTERED", "FREE_MEMBER", "VIP", "PPV", "PRIVATE", "UNLISTED"];
 
@@ -11,13 +13,31 @@ export default function ContentManager({ creators = [] }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
+  const [hashtags, setHashtags] = useState([]);
+  const [tagFilter, setTagFilter] = useState("");
 
   useEffect(() => { load(); }, []);
+  useEffect(() => { loadHashtags().then(setHashtags).catch(() => {}); }, []);
 
-  const load = async () => {
-    try { setItems(await base44.entities.Content.list("-created_date", 100)); }
+  // Nach Hashtag wird auf dem Server gesucht — so findet man Material wieder,
+  // auch wenn inzwischen viel dazugekommen ist.
+  const load = async (tag = "") => {
+    try {
+      const page = await base44.entities.Content.filter(
+        tag ? { hashtags: tag } : {},
+        { sort: "-created_date", limit: 100 }
+      );
+      setItems(page.items || []);
+    }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
+  };
+
+  const pickFilter = (tag) => {
+    const next = tagFilter === tag ? "" : tag;
+    setTagFilter(next);
+    setLoading(true);
+    load(next);
   };
 
   const patch = (id, key, value) =>
@@ -31,6 +51,7 @@ export default function ContentManager({ creators = [] }) {
         isFree: (Number(item.price) || 0) === 0,
         published: !!item.published,
         visibility: item.visibility,
+        hashtags: item.hashtags || [],
       });
       toast({ title: "Gespeichert", description: `"${item.title}" aktualisiert.` });
     } catch (e) {
@@ -47,6 +68,30 @@ export default function ContentManager({ creators = [] }) {
   return (
     <div className="space-y-3">
       <ContentUploadForm creators={creators} onCreated={load} />
+      {hashtags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">Nach Hashtag suchen:</span>
+          {hashtags.map((h) => (
+            <button
+              key={h.id}
+              onClick={() => pickFilter(h.name)}
+              title={h.meaning}
+              className={`px-3 py-1.5 rounded-full border text-[11px] font-bold transition-colors ${
+                tagFilter === h.name
+                  ? "bg-primary text-primary-foreground border-transparent"
+                  : "bg-background border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tagLabel(h.name)}
+            </button>
+          ))}
+          {tagFilter && (
+            <button onClick={() => pickFilter(tagFilter)} className="text-[11px] font-bold text-primary underline">
+              Filter weg
+            </button>
+          )}
+        </div>
+      )}
       {items.length === 0 && (
         <p className="text-muted-foreground text-center py-10">Noch keine Inhalte — lade oben deinen ersten hoch.</p>
       )}
@@ -58,6 +103,14 @@ export default function ContentManager({ creators = [] }) {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
             <p className="text-xs text-muted-foreground">{(item.contentType || "").replace(/_/g, " ").toLowerCase()}</p>
+          </div>
+          <div className="lg:w-80 flex-shrink-0">
+            <HashtagPicker
+              label="Hashtags"
+              options={hashtags}
+              value={item.hashtags || []}
+              onChange={(v) => patch(item.id, "hashtags", v)}
+            />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5">
