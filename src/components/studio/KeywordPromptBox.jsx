@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Sparkles, Loader2, Copy, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import VoiceInput from "@/components/VoiceInput";
 import { writePrompt } from "@/lib/promptWriter";
 
 const FIELDS = ["stageName", "personaType", "artStyle", "age", "tagline"];
@@ -40,12 +41,20 @@ export default function KeywordPromptBox() {
     if (c) setStyle(c.artStyle === "CARTOON" ? "ANIMIERT" : "FOTO");
   };
 
-  const write = async () => {
-    if (!rough.trim()) return;
+  // Sprechen ist der kurze Weg: das Gesagte wird sofort zum fertigen Prompt.
+  const speak = (text) => {
+    const next = rough.trim() ? `${rough.trim()} ${text}` : text;
+    setRough(next);
+    write(next);
+  };
+
+  const write = async (override) => {
+    const text = (override ?? rough).trim();
+    if (!text) return;
     setBusy(true);
     setResult("");
     try {
-      setResult(await writePrompt({ rough, target: "BILD", style, character }));
+      setResult(await writePrompt({ rough: text, target: "BILD", style, character }));
     } catch (e) {
       console.error(e);
       toast({ title: "Hat nicht geklappt", description: "Versuch es noch einmal.", variant: "destructive" });
@@ -68,8 +77,8 @@ export default function KeywordPromptBox() {
     <div className="rounded-2xl border-2 border-border bg-card p-4 mb-5">
       <p className="font-display text-xl text-foreground mb-1">Stichworte zu einem fertigen Prompt</p>
       <p className="text-[14px] font-semibold text-muted-foreground mb-4 max-w-2xl">
-        Schreib in Stichworten, wie das Bild aussehen soll. Wählst du einen Charakter, steckt sein Aussehen mit drin —
-        so bleiben alle Bilder dieselbe Person.
+        Schreib in Stichworten, wie das Bild aussehen soll — oder sprich es einfach. Wählst du einen Charakter, steckt
+        sein Aussehen mit drin, so bleiben alle Bilder dieselbe Person.
       </p>
 
       <div className="grid sm:grid-cols-3 gap-3 mb-3">
@@ -94,7 +103,7 @@ export default function KeywordPromptBox() {
           ))}
         </div>
         <button
-          onClick={write}
+          onClick={() => write()}
           disabled={busy || !rough.trim()}
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss disabled:opacity-50"
         >
@@ -103,13 +112,25 @@ export default function KeywordPromptBox() {
         </button>
       </div>
 
-      <textarea
-        value={rough}
-        onChange={(e) => setRough(e.target.value)}
-        rows={3}
-        placeholder="Zum Beispiel: sitzt am Fenster, Regen, schaut über die Schulter, warmes Licht, rotes Kleid …"
-        className={cn(input, "resize-none")}
-      />
+      <div className="flex items-start gap-2">
+        <textarea
+          value={rough}
+          onChange={(e) => setRough(e.target.value)}
+          rows={3}
+          placeholder="Zum Beispiel: sitzt am Fenster, Regen, schaut über die Schulter, warmes Licht, rotes Kleid …"
+          className={cn(input, "resize-none flex-1")}
+        />
+        <VoiceInput
+          onResult={speak}
+          className="w-12 h-12"
+          title="Sprechen — der Prompt kommt von selbst"
+        />
+      </div>
+
+      <p className="mt-2 text-[13px] font-semibold text-muted-foreground">
+        Auf das Mikrofon tippen und erzählen, was du willst — der fertige Prompt erscheint von selbst. Tippen geht
+        genauso.
+      </p>
 
       {result && !busy && (
         <div className="mt-4">

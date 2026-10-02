@@ -26,12 +26,20 @@ export default function PromptGenerator() {
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const write = async () => {
-    if (!rough.trim()) return;
+  // Sprechen ist der kurze Weg: das Gesagte wird sofort zum fertigen Prompt.
+  const speak = (text) => {
+    const next = rough.trim() ? `${rough.trim()} ${text}` : text;
+    setRough(next);
+    write(next);
+  };
+
+  const write = async (override) => {
+    const text = (override ?? rough).trim();
+    if (!text) return;
     setBusy(true);
     setResult("");
     try {
-      setResult(await writePrompt({ rough, target, style }));
+      setResult(await writePrompt({ rough: text, target, style }));
     } catch (e) {
       console.error(e);
       toast({ title: "Hat nicht geklappt", description: "Versuch es noch einmal.", variant: "destructive" });
@@ -54,8 +62,8 @@ export default function PromptGenerator() {
     <div className="glass rounded-2xl border-2 border-border p-6">
       <p className="font-display text-2xl text-foreground mb-1">Prompt-Generator</p>
       <p className="text-[15px] font-semibold text-muted-foreground max-w-2xl mb-5">
-        Schreib oder sprich, was du willst — daraus wird ein fertiger Prompt für Bild, Video oder Text. Zum Kopieren
-        und im externen Studio einfügen.
+        Sprich, was du willst — daraus wird ein fertiger Prompt für Bild, Video oder Text. Zum Kopieren und im externen
+        Studio einfügen.
       </p>
 
       <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -98,18 +106,16 @@ export default function PromptGenerator() {
           placeholder="Zum Beispiel: Sie sitzt im Café am Fenster, Regen draußen, sie schaut über die Schulter zurück, warmes Licht …"
           className="flex-1 px-4 py-3 rounded-2xl bg-card border border-border text-[15px] font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none"
         />
-        <VoiceInput
-          onResult={(text) => setRough((prev) => (prev ? `${prev} ${text}` : text))}
-          className="mt-1"
-        />
+        <VoiceInput onResult={speak} className="mt-1 w-12 h-12" title="Sprechen — der Prompt kommt von selbst" />
       </div>
 
       <p className="text-[13px] font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
-        <Mic className="w-3.5 h-3.5" /> Sprechen geht auch — der Text landet direkt im Feld.
+        <Mic className="w-3.5 h-3.5" /> Auf das Mikrofon tippen und erzählen, was du willst — der fertige Prompt
+        erscheint von selbst. Tippen geht genauso.
       </p>
 
       <button
-        onClick={write}
+        onClick={() => write()}
         disabled={busy || !rough.trim()}
         className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-btn glass-btn-accent text-[15px] font-bold text-gloss disabled:opacity-50"
       >
@@ -137,7 +143,7 @@ export default function PromptGenerator() {
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copied ? "Kopiert" : "Prompt kopieren"}
             </button>
-            <button onClick={write} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-muted-foreground">
+            <button onClick={() => write()} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-muted-foreground">
               Nochmal
             </button>
           </div>
