@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import {
-  Sparkles, Loader2, RotateCcw, Volume2, VolumeX, Check, ArrowRight, Lightbulb, Users, MapPin, Plus,
+  Sparkles, Loader2, RotateCcw, Volume2, VolumeX, Check, ArrowRight, Lightbulb, Users, MapPin, Plus, ShoppingBag,
 } from "lucide-react";
 
 import { useToast } from "@/components/ui/use-toast";
@@ -21,7 +21,7 @@ const EXAMPLES = [
 
 // "Sag was du willst": tippen oder sprechen — daraus wird ein Vorschlag mit
 // Szenario und Besetzung. Die Erzählerin begleitet bis zum Start.
-export default function AssistantWishMode({ creators = [], experiences = [], onChanged }) {
+export default function AssistantWishMode({ creators = [], experiences = [], contents = [], onChanged }) {
   const { toast } = useToast();
   const [wish, setWish] = useState("");
   const [draft, setDraft] = useState(null);
@@ -65,11 +65,12 @@ export default function AssistantWishMode({ creators = [], experiences = [], onC
         wish: text,
         creators,
         experiences,
+        contents,
         avoid: draft?.title || "",
       });
       setDraft(res);
       setStage("proposal");
-      say(res.narrator);
+      say([res.narrator, res.pitch].filter(Boolean).join(" "));
     } catch (e) {
       toast({ title: "Sie hat gerade nichts gefunden", description: "Versuch es nochmal.", variant: "destructive" });
     } finally {
@@ -280,6 +281,32 @@ export default function AssistantWishMode({ creators = [], experiences = [], onC
                 <Lightbulb className="w-3.5 h-3.5" /> Geheimtipp
               </p>
               <p className="text-[14px] font-semibold text-muted-foreground leading-relaxed">{draft.tip}</p>
+            </div>
+          )}
+
+          {(draft.advice || []).length > 0 && (
+            <div className="mt-4 rounded-2xl border border-border bg-background/60 p-4">
+              <p className="text-[12px] font-bold uppercase tracking-wider text-primary mb-1 inline-flex items-center gap-1.5">
+                <ShoppingBag className="w-3.5 h-3.5" /> Sie legt dir dazu
+              </p>
+              {draft.pitch && <p className="text-[14px] font-semibold text-muted-foreground leading-relaxed mb-3">{draft.pitch}</p>}
+              <div className="space-y-2">
+                {draft.advice.map((a) => (
+                  <Link
+                    key={a.path}
+                    to={a.path}
+                    className="flex items-start gap-3 p-3 rounded-xl bg-elevated border border-border hover:border-primary/50 transition-colors"
+                  >
+                    <span className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0">
+                      <ArrowRight className="w-3 h-3" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[14px] font-bold text-foreground">{a.label}</span>
+                      {a.why && <span className="block text-[13px] font-semibold text-muted-foreground">{a.why}</span>}
+                    </span>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>

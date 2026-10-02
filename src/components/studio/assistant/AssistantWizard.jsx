@@ -42,6 +42,7 @@ export default function AssistantWizard() {
     textModels: [],
     blocks: [],
     experiences: [],
+    contents: [],
   });
   const [creator, setCreator] = useState(null);
   const [model, setModel] = useState(null);
@@ -50,7 +51,7 @@ export default function AssistantWizard() {
 
   const load = async () => {
     try {
-      const [creators, voices, imageModels, videoModels, textModels, blocks, experiences] = await Promise.all([
+      const [creators, voices, imageModels, videoModels, textModels, blocks, experiences, contents] = await Promise.all([
         base44.entities.Creator.list("-created_date"),
         base44.entities.Voice.list("-created_date"),
         base44.entities.ImageModel.list(),
@@ -58,8 +59,9 @@ export default function AssistantWizard() {
         base44.entities.TextModel.list(),
         base44.entities.BuildBlock.list("-created_date"),
         base44.entities.Experience.list("-created_date"),
+        base44.entities.Content.list("-created_date"),
       ]);
-      setData({ creators, voices, imageModels, videoModels, textModels, blocks, experiences });
+      setData({ creators, voices, imageModels, videoModels, textModels, blocks, experiences, contents });
     } catch (e) {
       console.error(e);
     } finally {
@@ -121,7 +123,7 @@ export default function AssistantWizard() {
       </div>
 
       {mode === "WISH" ? (
-        <AssistantWishMode creators={data.creators} experiences={data.experiences} onChanged={load} />
+        <AssistantWishMode creators={data.creators} experiences={data.experiences} contents={data.contents} onChanged={load} />
       ) : mode === "MOOD" ? (
         <AssistantMoodMode creators={data.creators} voices={data.voices} onChanged={load} />
       ) : (
