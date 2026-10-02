@@ -100,6 +100,7 @@ export const FIXED_AREAS = [
       { label: "Stimmen", path: "/stimmen" },
       { label: "Baukasten", path: "/baukasten" },
       { label: "Dockingstation", path: "/dock" },
+      { label: "Content-Planer", path: "/planung" },
       { label: "Kasse", path: "/paylinks" },
     ],
   },

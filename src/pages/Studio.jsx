@@ -51,7 +51,7 @@ const TAB_GROUPS = [
       { id: "stories", label: "Storys" },
       { id: "topics", label: "Themen" },
       { id: "gallery", label: "Galerie" },
-      { id: "plan", label: "Content-Plan" },
+      { id: "plan", label: "Content-Planer" },
       { id: "live", label: "Live-Stream" },
       { id: "contests", label: "Wettbewerbe" },
     ],
@@ -182,7 +182,15 @@ export default function Studio() {
       {tab === "generator" && <GeneratorManager creators={creators} />}
       {tab === "models" && <ModelManager />}
       {tab === "textmodels" && <TextModelManager />}
-      {tab === "plan" && <PlanManager creators={creators} />}
+      {tab === "plan" && (
+        <div>
+          <p className="font-display text-2xl text-foreground mb-1">Content-Planer</p>
+          <p className="text-[15px] font-semibold text-muted-foreground mb-5 max-w-3xl leading-relaxed">
+            Links die Wünsche aus der Community, rechts dein Plan. Übernimm, was du machen willst — und mach daraus mit einem Klick einen Entwurf.
+          </p>
+          <PlanManager creators={creators} />
+        </div>
+      )}
       {tab === "gallery" && <GalleryManager creators={creators} />}
       {tab === "stories" && <StoryManager creators={creators} />}
       {tab === "topics" && <TopicManager />}

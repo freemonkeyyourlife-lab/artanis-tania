@@ -36,7 +36,7 @@ const TABS = [
   { id: "channels", label: "Kanäle", icon: Link2 },
   { id: "baukasten", label: "Baukasten", icon: Blocks },
   { id: "voices", label: "Stimmen", icon: Mic },
-  { id: "plan", label: "Content-Plan", icon: CalendarRange },
+  { id: "plan", label: "Content-Planer", icon: CalendarRange },
   { id: "sales", label: "Verkauf", icon: Receipt },
   { id: "programmierer", label: "Programmierer", icon: BookOpen },
   { id: "data", label: "Sichern", icon: Database },
