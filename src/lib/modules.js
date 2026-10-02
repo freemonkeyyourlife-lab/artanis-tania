@@ -22,6 +22,7 @@ export const MODULE_TYPES = [
   { path: "/verkauf", label: "Verkaufs-Dashboard", description: "Umsatz, offene Beträge, Abos und die letzten Zahlungen." },
   { path: "/contests", label: "Wettbewerbe", description: "Wettbewerbe und ihre Beiträge." },
   { path: "/studio", label: "Studio", description: "Hier legst du Charaktere, Stimmen und Inhalte an." },
+  { path: "/creator-studio", label: "Creator-Studio", description: "Dasselbe Studio als eigene Seite, ohne Website drumherum — für Charaktere und Stimmen." },
   { path: "/externes-studio", label: "Externes Studio", description: "Der Arbeitsplatz für Bilder: Inhalte, Vorlagen und Modelle auf einen Blick." },
   { path: "/stimmen", label: "Stimmen", description: "Die Stimmbank mit allen Stimmen." },
   { path: "/baukasten", label: "Baukasten", description: "Bausteine und fertige Pakete." },
@@ -130,6 +131,7 @@ export const NAV_GROUPS = {
   "/admin": "Verwalten",
   "/leitstand": "Verwalten",
   "/owner": "Verwalten",
+  "/creator-studio": "Verwalten",
   "/sandbox": "Verwalten",
   "/vorschau": "Verwalten",
 };
@@ -195,6 +197,7 @@ export const FIXED_AREAS = [
   {
     label: "Verwaltung",
     items: [
+      { label: "Creator-Studio", path: "/creator-studio" },
       { label: "Verwaltung", path: "/admin" },
       { label: "Leitstand", path: "/leitstand" },
       { label: "Besitzer-Konsole", path: "/owner" },
