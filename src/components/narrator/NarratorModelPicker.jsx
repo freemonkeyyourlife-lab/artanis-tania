@@ -2,6 +2,15 @@ import React, { useMemo, useState } from "react";
 import { Check, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { inputCls, labelCls } from "@/lib/narratorUi";
+import { modelStrength } from "@/lib/modelStrengths";
+import ModelStrengthNote from "@/components/narrator/ModelStrengthNote";
+
+// Der Standard-Generator ist kein Modell, sondern der eingebaute Weg — er
+// nimmt jede Vorlage und hält ihr Gesicht am zuverlässigsten.
+const STANDARD = {
+  chips: ["Hält ihr Gesicht", "Fotoreal", "Gesichter"],
+  hint: "Baut aus jedem Vorlagebild um und hält ihr Gesicht am zuverlässigsten.",
+};
 
 // Alles, was im Studio an Bildmodellen freigeschaltet ist — Favoriten oben.
 // Mehrere dürfen gleichzeitig ran, dann laufen sie parallel.
@@ -39,7 +48,7 @@ export default function NarratorModelPicker({ models, loading, selected, onToggl
           )}
         >
           Standard-Generator
-          <span className="block text-[11px] font-semibold opacity-80">baut aus dem Vorlagebild um</span>
+          <ModelStrengthNote chips={STANDARD.chips} hint={STANDARD.hint} />
         </button>
 
         {loading && (
@@ -78,7 +87,7 @@ export default function NarratorModelPicker({ models, loading, selected, onToggl
                   {m.favorite ? "★ " : ""}
                   {m.name}
                 </span>
-                {m.modelId && <span className="block text-[11px] font-semibold opacity-70 truncate">{m.modelId}</span>}
+                <ModelStrengthNote chips={modelStrength(m).chips} hint={modelStrength(m).hint} />
               </span>
             </button>
           );
