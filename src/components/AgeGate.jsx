@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ShieldCheck, AlertTriangle } from "lucide-react";
+import BrandWordmark from "@/components/BrandWordmark";
 
 export default function AgeGate() {
   const [verified, setVerified] = useState(() => {
@@ -24,7 +25,7 @@ export default function AgeGate() {
         <div className="w-16 h-16 mx-auto rounded-full glass-strong flex items-center justify-center mb-6 accent-glow">
           <ShieldCheck className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="font-display text-3xl text-foreground mb-2">ARTANIS × TRIANIA</h1>
+        <h1 className="font-display text-3xl text-foreground mb-2"><BrandWordmark /></h1>
         <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-8">Privates interaktives Archiv</p>
 
         <div className="glass rounded-2xl border border-border p-6 mb-6 text-left">

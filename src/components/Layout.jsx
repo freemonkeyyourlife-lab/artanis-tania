@@ -11,6 +11,7 @@ import { getViewAs, setViewAs, subscribeViewAs } from "@/lib/viewAs";
 import { loadLayout, layoutFont } from "@/lib/siteLayout";
 import { structureOf, structureGroups } from "@/lib/siteStructure";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
+import BrandWordmark from "@/components/BrandWordmark";
 import TierFrame from "@/components/tier/TierFrame";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import WishButton from "@/components/wish/WishButton";
@@ -158,9 +159,7 @@ export default function Layout() {
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link to="/">
-              <span className="font-display text-lg lg:text-xl font-extrabold text-foreground tracking-wide text-gloss">
-                ARTANIS <span className="text-primary">×</span> TRIANIA
-              </span>
+              <BrandWordmark className="text-lg lg:text-xl text-foreground" />
             </Link>
             {memberStatus === "GOLD" && (
               <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wider">Gold</span>

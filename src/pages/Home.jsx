@@ -9,6 +9,7 @@ import CharacterStoryCard from "@/components/CharacterStoryCard";
 import ContentCard from "@/components/ContentCard";
 import HeroCloud from "@/components/HeroCloud";
 import HeroNews from "@/components/hero/HeroNews";
+import BrandWordmark from "@/components/BrandWordmark";
 import RequestCard from "@/components/RequestCard";
 import { useRequestVotes } from "@/hooks/useRequestVotes";
 import { cn } from "@/lib/utils";
@@ -150,7 +151,7 @@ export default function Home() {
             </div>
           )}
           <h1 className="font-display text-4xl sm:text-5xl lg:text-[56px] leading-[1.1] text-foreground max-w-3xl">
-            ARTANIS × TRIANIA
+            <BrandWordmark />
             <span className="block text-gradient-warm mt-2">Interaktives Archiv</span>
           </h1>
           <p className="text-muted-foreground text-sm lg:text-base mt-4 max-w-xl">

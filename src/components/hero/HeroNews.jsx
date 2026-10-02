@@ -21,26 +21,27 @@ export default function HeroNews({ items }) {
   const item = items[index % count];
 
   return (
-    <div className="relative max-w-2xl">
-      {/* Nur ein weicher Schatten hinter dem Text — keine Kante, kein Rahmen. */}
+    <div className="relative max-w-xl">
+      {/* Nur ein weicher Schatten hinter der Karte — keine harte Kante, kein Rahmen. */}
       <div className="absolute -inset-x-10 -inset-y-6 -z-10 pointer-events-none bg-[radial-gradient(65%_85%_at_32%_50%,hsl(var(--background)/0.85),transparent_72%)]" />
 
       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary mb-3">
         Was gibt's Neues
       </p>
 
+      {/* Die Karte selbst rutscht von rechts herein: Bild links, alles andere sauber daneben. */}
       <Link
         key={item.id}
         to={item.to}
-        className="animate-hero-slide group flex items-center gap-4"
+        className="animate-hero-slide group flex items-stretch gap-4 glass rounded-3xl border border-border p-3 pr-5 hover:border-primary/40 transition-colors"
       >
-        <div className="relative w-24 h-28 sm:w-28 sm:h-32 flex-shrink-0">
-          <Image src={item.image} fittingType="fill" className="w-full h-full rounded-xl" />
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+        <div className="relative w-28 h-32 sm:w-32 sm:h-36 flex-shrink-0 rounded-2xl overflow-hidden">
+          <Image src={item.image} fittingType="fill" className="w-full h-full" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
         </div>
 
-        <div className="min-w-0 flex-1">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wider">
+        <div className="min-w-0 flex-1 flex flex-col justify-center">
+          <span className="inline-flex items-center gap-1.5 self-start px-2.5 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wider">
             <Sparkles className="w-3 h-3" /> {item.kicker}
           </span>
           <h3 className="font-display text-base sm:text-lg text-foreground mt-2 truncate">{item.title}</h3>
