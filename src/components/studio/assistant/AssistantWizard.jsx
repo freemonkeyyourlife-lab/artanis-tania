@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Loader2, ArrowLeft, ArrowRight, Wand2, ListChecks, Flame } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, Wand2, ListChecks, Flame, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AssistantImportStep from "@/components/studio/assistant/AssistantImportStep";
 import AssistantCharacterStep from "@/components/studio/assistant/AssistantCharacterStep";
@@ -10,8 +10,10 @@ import AssistantBlockStep from "@/components/studio/assistant/AssistantBlockStep
 import AssistantVoiceStep from "@/components/studio/assistant/AssistantVoiceStep";
 import AssistantPromptStep from "@/components/studio/assistant/AssistantPromptStep";
 import AssistantMoodMode from "@/components/studio/assistant/AssistantMoodMode";
+import AssistantWishMode from "@/components/studio/assistant/AssistantWishMode";
 
 const MODES = [
+  { id: "WISH", label: "Sag was du willst", icon: Sparkles },
   { id: "GUIDED", label: "Schritt für Schritt", icon: ListChecks },
   { id: "MOOD", label: "Stimmung", icon: Flame },
 ];
@@ -29,7 +31,7 @@ const STEPS = [
 // Der Assistent führt einmal von vorne bis hinten: Charakter, Bilder, Modell,
 // Bausteine, Stimme, Prompt. Jeder Schritt fragt — du entscheidest.
 export default function AssistantWizard() {
-  const [mode, setMode] = useState("GUIDED");
+  const [mode, setMode] = useState("WISH");
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
@@ -39,6 +41,7 @@ export default function AssistantWizard() {
     videoModels: [],
     textModels: [],
     blocks: [],
+    experiences: [],
   });
   const [creator, setCreator] = useState(null);
   const [model, setModel] = useState(null);
@@ -47,15 +50,16 @@ export default function AssistantWizard() {
 
   const load = async () => {
     try {
-      const [creators, voices, imageModels, videoModels, textModels, blocks] = await Promise.all([
+      const [creators, voices, imageModels, videoModels, textModels, blocks, experiences] = await Promise.all([
         base44.entities.Creator.list("-created_date"),
         base44.entities.Voice.list("-created_date"),
         base44.entities.ImageModel.list(),
         base44.entities.VideoModel.list(),
         base44.entities.TextModel.list(),
         base44.entities.BuildBlock.list("-created_date"),
+        base44.entities.Experience.list("-created_date"),
       ]);
-      setData({ creators, voices, imageModels, videoModels, textModels, blocks });
+      setData({ creators, voices, imageModels, videoModels, textModels, blocks, experiences });
     } catch (e) {
       console.error(e);
     } finally {
@@ -116,7 +120,9 @@ export default function AssistantWizard() {
         )}
       </div>
 
-      {mode === "MOOD" ? (
+      {mode === "WISH" ? (
+        <AssistantWishMode creators={data.creators} experiences={data.experiences} onChanged={load} />
+      ) : mode === "MOOD" ? (
         <AssistantMoodMode creators={data.creators} voices={data.voices} onChanged={load} />
       ) : (
         <>
