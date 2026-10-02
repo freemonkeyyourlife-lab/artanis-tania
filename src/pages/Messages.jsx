@@ -17,6 +17,7 @@ import SceneReadButton from "@/components/chat/SceneReadButton";
 import RolePicker from "@/components/chat/RolePicker";
 import CharacterDirector from "@/components/chat/CharacterDirector";
 import StoryExportButton from "@/components/chat/StoryExportButton";
+import ChatPromptButton from "@/components/chat/ChatPromptButton";
 import ChatCastMenu from "@/components/chat/ChatCastMenu";
 import MoodQuickMenu from "@/components/chat/MoodQuickMenu";
 import { moodFor, setMoodFor, moodPrompt } from "@/lib/moodStyle";
@@ -1575,6 +1576,10 @@ export default function Messages() {
                   playLevel={viewMode === "ai" ? playLevel : ""}
                   scenario={scenario}
                   setupAnswers={setupAnswers}
+                />
+                <ChatPromptButton
+                  messages={messages[activeChat] || []}
+                  title={viewMode === "dm" ? dmParticipantName || "Chat" : activeCreator?.stageName || "Szene"}
                 />
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <RotateCcw className="w-4 h-4" />

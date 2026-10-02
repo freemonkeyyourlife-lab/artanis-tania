@@ -58,6 +58,9 @@ import ContentPlan from '@/pages/ContentPlan';
 import SalesDashboard from '@/pages/SalesDashboard';
 import VoiceStudio from '@/pages/VoiceStudio';
 import CreatorStudio from '@/pages/CreatorStudio';
+import PromptStudio from '@/pages/PromptStudio';
+import Sandbox from '@/pages/Sandbox';
+import UserPreview from '@/pages/UserPreview';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import ImportStatusPill from '@/components/import/ImportStatusPill';
@@ -141,6 +144,9 @@ const AuthenticatedApp = () => {
         <Route path="/archiv" element={<Archive />} />
         <Route path="/planung" element={<ContentPlan />} />
         <Route path="/verkauf" element={<SalesDashboard />} />
+        <Route path="/prompt" element={<PromptStudio />} />
+        <Route path="/sandbox" element={<Sandbox />} />
+        <Route path="/vorschau" element={<UserPreview />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>

@@ -49,12 +49,23 @@ export function defaultStructure(navItems) {
 export function structureOf(record) {
   const saved = record?.structure;
   if (saved && Array.isArray(saved.areas) && saved.areas.length) {
+    const base = defaultStructure(record?.navItems);
     return {
-      areas: saved.areas.map((a, i) => ({
-        id: a.id || `area-${i}`,
-        label: a.label || `Bereich ${i + 1}`,
-        items: withIds(a.items, `a${i}`),
-      })),
+      areas: saved.areas.map((a, i) => {
+        const area = {
+          id: a.id || `area-${i}`,
+          label: a.label || `Bereich ${i + 1}`,
+          items: withIds(a.items, `a${i}`),
+        };
+        // Feste Bereiche wachsen weiter: ein neuer Knopf taucht auch in einer
+        // schon gespeicherten Struktur auf — dort, wo sein Bereich steht.
+        // „Erleben" ist dein eigener Bereich — dort wird nichts nachgetragen.
+        const fixed = area.id === "explore" ? null : base.areas.find((f) => f.id === area.id);
+        if (!fixed) return area;
+        const have = new Set(area.items.map((it) => it.path));
+        const missing = fixed.items.filter((it) => !have.has(it.path));
+        return missing.length ? { ...area, items: [...area.items, ...missing] } : area;
+      }),
     };
   }
   return defaultStructure(record?.navItems);

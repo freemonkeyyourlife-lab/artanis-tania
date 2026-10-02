@@ -33,6 +33,9 @@ export const MODULE_TYPES = [
   { path: "/anleitung", label: "Anleitung", description: "Nachschlagewerk zum Weiterbauen." },
   { path: "/call", label: "Video-Call", description: "Der Video-Raum für Gespräche." },
   { path: "/account", label: "Konto", description: "Eigenes Profil und Einstellungen." },
+  { path: "/prompt", label: "Prompt-Generator", description: "Idee sprechen oder tippen — heraus kommt ein fertiger Prompt fürs externe Studio." },
+  { path: "/sandbox", label: "Testsandbox", description: "Die Menüführung durchklicken, bevor sie für alle gilt." },
+  { path: "/vorschau", label: "Vorschau als Nutzer", description: "Die Leiste so sehen, wie ein normaler Nutzer sie sieht." },
 ];
 
 export const MODULE_LIMITS = [
@@ -102,6 +105,7 @@ export const FIXED_AREAS = [
       { label: "Dockingstation", path: "/dock" },
       { label: "Content-Planer", path: "/planung" },
       { label: "Kasse", path: "/paylinks" },
+      { label: "Prompt-Generator", path: "/prompt" },
     ],
   },
   {
@@ -110,6 +114,8 @@ export const FIXED_AREAS = [
       { label: "Verwaltung", path: "/admin" },
       { label: "Leitstand", path: "/leitstand" },
       { label: "Besitzer-Konsole", path: "/owner" },
+      { label: "Testsandbox", path: "/sandbox" },
+      { label: "Vorschau als Nutzer", path: "/vorschau" },
     ],
   },
 ];
