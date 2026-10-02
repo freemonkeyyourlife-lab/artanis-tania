@@ -83,7 +83,7 @@ export default function VoiceByCharacter() {
                   <SlidersHorizontal className="w-3.5 h-3.5" /> Tonlage & Intensität einstellen
                 </button>
                 {tuning === c.id && (
-                  <VoiceTuner key={voice.updated_date} voice={voice} onSaved={() => { setTuning(null); load(); }} />
+                  <VoiceTuner key={voice.updated_date} voice={voice} creatorId={c.id} onSaved={() => { setTuning(null); load(); }} />
                 )}
               </>
             ) : (

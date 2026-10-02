@@ -1,5 +1,5 @@
 import { base44 } from "@/api/base44Client";
-import { resolveVoice, cloudTuning } from "@/lib/voiceDj";
+import { resolveVoice, cloudTuning, fineTuning } from "@/lib/voiceDj";
 
 // „Antworten als Sprachnachricht" — pro Charakter gemerkt. Liegt auch ohne
 // Browserspeicher fest, damit der Schalter innerhalb der Sitzung hält.
@@ -84,6 +84,7 @@ export async function speakAsVoice(profile, text) {
       mood: profile?.mood,
       intensity: tune.intensity,
       ending: profile?.ending,
+      tuning: fineTuning(profile),
     });
     if (res.data?.error) throw new Error(res.data.error);
     return res.data?.url || null;

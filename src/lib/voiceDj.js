@@ -37,6 +37,19 @@ export function cloudTuning(profile) {
   };
 }
 
+// Der Feinschliff einer Stimme, so wie er ans Sprechen weitergegeben wird.
+// −1 oder nichts Gesetztes heißt: der Klang folgt weiter der Stimmung.
+export function fineTuning(profile) {
+  const p = profile || {};
+  const value = (v) => (typeof v === "number" && v >= 0 ? v : undefined);
+  return {
+    stability: value(p.stability),
+    style: value(p.style),
+    similarity: value(p.similarity),
+    presence: p.presence !== false,
+  };
+}
+
 // Lautstärke aus der Stimmbank (0–100) in den Reglerwert fürs Abspielen (0–1).
 export function playVolume(profile) {
   const v = Number(profile?.volume);

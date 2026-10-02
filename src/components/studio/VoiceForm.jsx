@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { BASE_VOICES, MOODS } from "@/lib/voiceDj";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
 import VoiceDescribeBox from "@/components/voice/VoiceDescribeBox";
+import VoiceFineTune from "@/components/voice/VoiceFineTune";
+import SampleTrimBox from "@/components/voice/SampleTrimBox";
 import HelpButton from "@/components/HelpButton";
 
 const input = "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
@@ -22,6 +24,10 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
     depth: initial?.depth ?? 0,
     intensity: initial?.intensity ?? 50,
     ending: initial?.ending ?? 50,
+    stability: initial?.stability ?? -1,
+    style: initial?.style ?? -1,
+    similarity: initial?.similarity ?? -1,
+    presence: initial?.presence !== false,
     tags: initial?.tags || [],
     ownerName: initial?.ownerName || "",
     active: initial?.active !== false,
@@ -250,6 +256,8 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
         Tempo und Stimmung wirken auch bei ElevenLabs-Stimmen — im Chat, in der Sprechprobe und im Video-Call.
       </p>
 
+      <VoiceFineTune voice={form} onChange={(patch) => setForm((prev) => ({ ...prev, ...patch }))} />
+
       <VoiceDescribeBox voice={form} onApply={applyDescription} />
 
       <div className="flex flex-wrap items-center gap-3">
@@ -279,6 +287,11 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
             <button type="button" onClick={() => set("sampleFile", "")} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
               <Trash2 className="w-3.5 h-3.5" /> Aufnahme weg
             </button>
+            <SampleTrimBox
+              fileUri={form.sampleFile}
+              label="Aufnahme zuschneiden"
+              onTrimmed={(uri) => { set("sampleFile", uri); set("sampleCached", false); }}
+            />
           </>
         )}
       </div>

@@ -21,7 +21,7 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 
 // Intensität 0–100: höher = weniger Stabilität, mehr Ausdruck.
 // Ausklang 0–100: höher = am Satzende ruhiger und weicher statt abgehackt.
-export function voiceSettings(mood: string, intensity: any, ending: any) {
+export function voiceSettings(mood: string, intensity: any, ending: any, tuning?: any) {
   const preset = MOOD_SETTINGS[mood] || MOOD_SETTINGS.NEUTRAL;
   const level = Number(intensity);
   const base = Number.isFinite(level)
@@ -34,10 +34,21 @@ export function voiceSettings(mood: string, intensity: any, ending: any) {
 
   const end = Number(ending);
   const soft = clamp(Number.isFinite(end) ? end : 50, 0, 100) / 100;
+
+  // Von Hand eingestellter Feinschliff schlägt die Stimmung. −1 heißt: nicht gesetzt.
+  const pick = (value: any) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n >= 0 ? clamp(n, 0, 100) / 100 : null;
+  };
+  const stability = pick(tuning?.stability);
+  const style = pick(tuning?.style);
+  const similarity = pick(tuning?.similarity);
+
   return {
-    ...base,
-    stability: clamp(base.stability + soft * 0.2, 0, 1),
-    style: clamp(base.style - soft * 0.3, 0, 1),
+    stability: stability ?? clamp(base.stability + soft * 0.2, 0, 1),
+    style: style ?? clamp(base.style - soft * 0.3, 0, 1),
+    similarity_boost: similarity ?? base.similarity_boost,
+    use_speaker_boost: tuning?.presence !== false,
   };
 }
 
@@ -62,9 +73,10 @@ export async function synthesize(input: {
   speed?: any;
   format?: string;
   modelId?: string;
+  tuning?: any;
 }): Promise<Uint8Array> {
   const format = input.format || "mp3_44100_128";
-  const settings = voiceSettings(String(input.mood || ""), input.intensity, input.ending);
+  const settings = voiceSettings(String(input.mood || ""), input.intensity, input.ending, input.tuning);
   const wanted = Number(input.speed);
 
   const res = await fetch(`${ELEVEN}/text-to-speech/${input.voiceId}?output_format=${format}`, {
@@ -81,7 +93,7 @@ export async function synthesize(input: {
         stability: settings.stability,
         similarity_boost: settings.similarity_boost,
         style: settings.style,
-        use_speaker_boost: true,
+        use_speaker_boost: settings.use_speaker_boost !== false,
         speed: Number.isFinite(wanted) ? clamp(wanted, 0.7, 1.2) : 1,
       },
     }),

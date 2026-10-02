@@ -5,6 +5,9 @@ import { cn } from "@/lib/utils";
 import VoicePreviewButton from "@/components/voice/VoicePreviewButton";
 import VoiceDescribeBox from "@/components/voice/VoiceDescribeBox";
 import VoiceInput from "@/components/VoiceInput";
+import VoiceFineTune from "@/components/voice/VoiceFineTune";
+import SampleTrimBox from "@/components/voice/SampleTrimBox";
+import VoiceStyleTrainer from "@/components/voice/VoiceStyleTrainer";
 import { MOODS } from "@/lib/voiceDj";
 
 const TEST_TEXT = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
@@ -21,16 +24,21 @@ function Slider({ label, value, min, max, step, onChange, left, right }) {
 
 // Schnell-Editor direkt in der Stimmbank: Tonlage, Intensität, Ausklang und
 // Tempo — live anhören, speichern. Den Satz zum Anhören kannst du auch reinsprechen.
-export default function VoiceTuner({ voice, onSaved }) {
+export default function VoiceTuner({ voice, creatorId, onSaved }) {
   const [mood, setMood] = useState(voice.mood ?? "NEUTRAL");
   const [depth, setDepth] = useState(voice.depth ?? 0);
   const [intensity, setIntensity] = useState(voice.intensity ?? 50);
   const [ending, setEnding] = useState(voice.ending ?? 50);
   const [speed, setSpeed] = useState(voice.speed ?? 1);
   const [volume, setVolume] = useState(voice.volume ?? 100);
+  const [stability, setStability] = useState(voice.stability ?? -1);
+  const [style, setStyle] = useState(voice.style ?? -1);
+  const [similarity, setSimilarity] = useState(voice.similarity ?? -1);
+  const [presence, setPresence] = useState(voice.presence !== false);
+  const [styleLines, setStyleLines] = useState((voice.styleLines || []).join("\n"));
   const [testText, setTestText] = useState(TEST_TEXT);
   const [saving, setSaving] = useState(false);
-  const draft = { ...voice, mood, depth, intensity, ending, speed, volume, sampleFile: "" };
+  const draft = { ...voice, mood, depth, intensity, ending, speed, volume, stability, style, similarity, presence, sampleFile: "" };
   const isCloud = voice.provider === "ELEVENLABS" && voice.externalVoiceId;
 
   // Aus einer Beschreibung werden die Regler — hören kannst du es direkt danach.
@@ -40,13 +48,39 @@ export default function VoiceTuner({ voice, onSaved }) {
     setIntensity(next.intensity);
     setEnding(next.ending);
     setSpeed(next.speed);
+    if (typeof next.stability === "number") setStability(next.stability);
+    if (typeof next.style === "number") setStyle(next.style);
+    if (typeof next.similarity === "number") setSimilarity(next.similarity);
+  };
+
+  // Aus den echten Sätzen des Charakters wird die passende Einstellung.
+  const applyStyle = (next) => {
+    setMood(next.mood);
+    setSpeed(next.speed);
+    setDepth(next.depth);
+    setIntensity(next.intensity);
+    setEnding(next.ending);
+    setStability(next.stability);
+    setStyle(next.style);
+    setSimilarity(next.similarity);
+  };
+
+  // Der zugeschnittene Ausschnitt ersetzt die Aufnahme — die alte Hörprobe passt dazu nicht mehr.
+  const applyTrim = async (fileUri) => {
+    await base44.entities.Voice.update(voice.id, { sampleFile: fileUri, sampleCached: false });
+    onSaved();
   };
 
   const save = async () => {
     setSaving(true);
     // Eine automatisch abgelegte Hörprobe passt nach dem Drehen nicht mehr — die fliegt raus.
     const reset = voice.sampleCached ? { sampleFile: "", sampleCached: false } : {};
-    await base44.entities.Voice.update(voice.id, { mood, depth, intensity, ending, speed, volume, ...reset });
+    const lines = styleLines.split("\n").map((l) => l.trim()).filter(Boolean);
+    await base44.entities.Voice.update(voice.id, {
+      mood, depth, intensity, ending, speed, volume,
+      stability, style, similarity, presence, styleLines: lines,
+      ...reset,
+    });
     setSaving(false);
     onSaved();
   };
@@ -76,6 +110,7 @@ export default function VoiceTuner({ voice, onSaved }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <Slider label={`Lautstärke — ${volume} %`} value={volume} min={0} max={100} step={5} onChange={setVolume} left="leise" right="laut" />
+
         <Slider label={`Tonlage — ${depth > 0 ? "+" : ""}${depth}`} value={depth} min={-25} max={25} step={1} onChange={setDepth} left="tiefer" right="höher" />
         <Slider label={`Intensität — ${intensity}`} value={intensity} min={0} max={100} step={5} onChange={setIntensity} left="ruhig" right="leidenschaftlich" />
         <Slider label={`Ausklang am Satzende — ${ending}`} value={ending} min={0} max={100} step={5} onChange={setEnding} left="abgehackt" right="kommt runter" />
@@ -96,12 +131,33 @@ export default function VoiceTuner({ voice, onSaved }) {
         />
         <VoiceInput onResult={(t) => setTestText(t)} title="Satz reinsprechen statt tippen" />
       </div>
+      <VoiceFineTune
+        voice={draft}
+        onChange={(patch) => {
+          if ("stability" in patch) setStability(patch.stability);
+          if ("style" in patch) setStyle(patch.style);
+          if ("similarity" in patch) setSimilarity(patch.similarity);
+          if ("presence" in patch) setPresence(patch.presence);
+        }}
+      />
+
       <div className="flex flex-wrap items-center gap-2">
         <VoicePreviewButton profile={draft} text={testText || TEST_TEXT} useSample={false} live />
         <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Klang speichern
         </button>
+        {voice.sampleFile && (
+          <SampleTrimBox fileUri={voice.sampleFile} onTrimmed={applyTrim} label="Aufnahme zuschneiden" />
+        )}
       </div>
+
+      <VoiceStyleTrainer
+        creatorId={creatorId}
+        voice={draft}
+        lines={styleLines}
+        onLines={setStyleLines}
+        onApply={applyStyle}
+      />
     </div>
   );
 }

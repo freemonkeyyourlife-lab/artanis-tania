@@ -57,6 +57,7 @@ export default async function (req) {
         ending: body.ending,
         speed: body.speed,
         modelId: body.modelId,
+        tuning: body.tuning,
       });
     } catch (error) {
       console.log('elevenLabs speak error', voiceId, error.message);

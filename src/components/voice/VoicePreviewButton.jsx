@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Loader2, Play, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { resolveVoice, cloudTuning, playVolume } from "@/lib/voiceDj";
+import { resolveVoice, cloudTuning, playVolume, fineTuning } from "@/lib/voiceDj";
 
 const SAMPLE_TEXT = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
 
@@ -56,6 +56,7 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
           mood: p.mood,
           intensity: tune.intensity,
           ending: p.ending,
+          tuning: fineTuning(p),
         });
         if (res.data?.error) throw new Error(res.data.error);
         url = res.data.url;

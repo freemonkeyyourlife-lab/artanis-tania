@@ -58,6 +58,28 @@
       "type": "number",
       "default": 50
     },
+    "stability": {
+      "type": "number",
+      "default": -1
+    },
+    "style": {
+      "type": "number",
+      "default": -1
+    },
+    "similarity": {
+      "type": "number",
+      "default": -1
+    },
+    "presence": {
+      "type": "boolean",
+      "default": true
+    },
+    "styleLines": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "volume": {
       "type": "number",
       "default": 100
