@@ -4,8 +4,11 @@ import { Image } from "@/components/ui/image";
 import { Sparkles, Loader2, Star, ImagePlus, Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { uploadDataUrl } from "@/lib/mediaUpload";
+import ImageDirectionPanel from "@/components/studio/ImageDirectionPanel";
+import FinalPromptPreview from "@/components/studio/FinalPromptPreview";
+import { emptyDirection } from "@/lib/imageDirection";
+import { composeImagePrompt } from "@/lib/composeImagePrompt";
 import { addGalleryItems } from "@/lib/gallery";
 
 // Bilder direkt im Charakter erzeugen — seine eigenen Bilder sind dabei die Vorlage,
@@ -14,6 +17,7 @@ export default function CharacterImageStudio({ creatorId, name, avatar, referenc
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [animated, setAnimated] = useState(false);
+  const [direction, setDirection] = useState(emptyDirection());
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
 
@@ -22,14 +26,8 @@ export default function CharacterImageStudio({ creatorId, name, avatar, referenc
     .filter((v, i, a) => a.indexOf(v) === i)
     .slice(0, 6);
 
-  const buildPrompt = () => {
-    const style = animated ? CARTOON_STYLE : PHOTOREAL;
-    let p = style + IMAGE_SAFE_RULES + " ";
-    if (name?.trim() && refs.length) {
-      p += `The woman in the reference images is ${name.trim()}. Keep her face, hair colour, hair length, body and skin tone EXACTLY as in her reference images — she must be recognisable. `;
-    }
-    return p + prompt;
-  };
+  const buildPrompt = () =>
+    composeImagePrompt({ animated, name: name?.trim(), withRefs: refs.length > 0, prompt, direction });
 
   const generate = async () => {
     if (!prompt.trim()) return;
@@ -106,6 +104,11 @@ export default function CharacterImageStudio({ creatorId, name, avatar, referenc
         placeholder="Was soll zu sehen sein? Ort, Pose, Outfit, Licht …"
         className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none"
       />
+
+      <div className="mt-3 space-y-3">
+        <ImageDirectionPanel value={direction} onChange={setDirection} title="Regie: Stil, Stimmung, Freizügigkeit" />
+        <FinalPromptPreview text={buildPrompt()} />
+      </div>
 
       <button
         type="button"

@@ -4,10 +4,11 @@ import { Image } from "@/components/ui/image";
 import { Sparkles, Loader2, Video, Bookmark, Plus, Check, Trash2, Layers } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { CARTOON_STYLE, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
 import { uploadDataUrl } from "@/lib/mediaUpload";
 import ImageDirectionPanel from "@/components/studio/ImageDirectionPanel";
-import { directionPrompt, emptyDirection } from "@/lib/imageDirection";
+import FinalPromptPreview from "@/components/studio/FinalPromptPreview";
+import { emptyDirection, directionPrompt } from "@/lib/imageDirection";
+import { composeImagePrompt } from "@/lib/composeImagePrompt";
 import { generateWithModel } from "@/lib/imageGen";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
@@ -52,16 +53,8 @@ export default function GeneratorManager({ creators }) {
   // Ohne Auswahl läuft der Standard-Generator, sonst jedes gewählte Modell.
   const targets = () => (modelKeys.length ? models.filter((m) => modelKeys.includes(m.id)) : [null]);
 
-  const buildPrompt = () => {
-    const style = animated ? CARTOON_STYLE : PHOTOREAL;
-    let p = style + IMAGE_SAFE_RULES + " ";
-    if (creator) {
-      p += `The woman in the reference images is ${creator.stageName}. Keep her face, hair colour, hair length, body and skin tone EXACTLY as in her reference images — she must be recognisable. `;
-    }
-    p += prompt;
-    p += " " + directionPrompt(direction);
-    return p;
-  };
+  const buildPrompt = () =>
+    composeImagePrompt({ animated, name: creator?.stageName, withRefs: !!creator, prompt, direction });
 
   const generateImages = async () => {
     if (!prompt.trim()) return;
@@ -103,7 +96,9 @@ export default function GeneratorManager({ creators }) {
     setResults([]);
     try {
       const res = await base44.integrations.Core.GenerateVideo({
-        prompt: (creator ? `The woman looks exactly like ${creator.stageName}. ` : "") + prompt,
+        prompt: [creator ? `The woman looks exactly like ${creator.stageName}.` : "", directionPrompt(direction), prompt]
+          .filter(Boolean)
+          .join(" "),
         duration: 6,
         aspect_ratio: "9:16",
       });
@@ -282,9 +277,12 @@ export default function GeneratorManager({ creators }) {
           <ImageDirectionPanel
             value={direction}
             onChange={setDirection}
-            fields={["inhalt", "klamotte", "stimmung", "freizuegigkeit"]}
-            title="Regie: Inhalt, Stimmung, Freizügigkeit, Klamotte"
+            title="Regie: Stil, Inhalt, Stimmung, Freizügigkeit, Klamotte"
           />
+        </div>
+
+        <div className="mb-4">
+          <FinalPromptPreview text={buildPrompt()} />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-4">

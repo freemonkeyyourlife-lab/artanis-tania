@@ -19,6 +19,9 @@
         }
       }
     },
+    "studioLayout": {
+      "type": "object"
+    },
     "navFontSize": {
       "type": "number",
       "default": 15
