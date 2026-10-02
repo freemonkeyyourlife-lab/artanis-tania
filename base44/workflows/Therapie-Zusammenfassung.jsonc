@@ -1,0 +1,40 @@
+{
+  "name": "Therapie-Zusammenfassung",
+  "description": "Sobald eine Therapiesitzung abgeschlossen ist, schreibt die Erz\u00e4hlerin die Zusammenfassung und legt sie im Profil des Nutzers ab.",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "TherapySession",
+      "events": [
+        "update"
+      ]
+    },
+    "condition": "${ .trigger.data.status == \"DONE\" and .trigger.old_data.status != \"DONE\" }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "therapie_zusammenfassung",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "schreibe_zusammenfassung": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "therapySummary",
+            "args": {
+              "sessionId": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Zusammenfassung schreiben",
+            "description": "Erz\u00e4hlerin fasst die Sitzung zusammen, Ablage im Profil"
+          }
+        }
+      }
+    ]
+  }
+}

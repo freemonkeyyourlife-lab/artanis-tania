@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Loader2, NotebookPen, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { writeSummary } from "@/lib/therapySummary";
 import { speakAsVoice } from "@/lib/voiceChat";
 import { genderNoun, kindOf } from "@/lib/narratorStyle";
 
@@ -38,13 +37,9 @@ export default function TherapySummaryCard({ session, messages, isOwner, onSaved
     if (!narrators.length || busy) return;
     setBusy(true);
     try {
-      const text = await writeSummary({ narrators, session, messages });
-      const updated = await base44.entities.TherapySession.update(session.id, {
-        summary: text,
-        summaryBy: narrators.map((n) => n.name).join(" & "),
-        summaryAt: new Date().toISOString(),
-      });
-      onSaved?.(updated);
+      const res = await base44.functions.invoke("therapySummary", { sessionId: session.id });
+      if (res.data?.error) throw new Error(res.data.error);
+      if (res.data?.session) onSaved?.(res.data.session);
     } catch (e) {
       console.error(e);
     } finally {

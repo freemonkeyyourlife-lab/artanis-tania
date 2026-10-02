@@ -10,6 +10,7 @@ import StoryProgress from "@/components/story/StoryProgress";
 import ConciergeTip from "@/components/story/ConciergeTip";
 import StoryCastPanel from "@/components/story/StoryCastPanel";
 import { conciergeTip } from "@/lib/storyConcierge";
+import { speakAsVoice } from "@/lib/voiceChat";
 
 export default function ExperiencePlayer() {
   const { id } = useParams();
@@ -136,13 +137,11 @@ export default function ExperiencePlayer() {
       setSpeakingWho(line.who ?? 0);
       try {
         const profile = voiceProfiles[person?.voiceProfileId];
-        const res = await base44.integrations.Core.GenerateSpeech({
-          text: line.text,
-          voice: profile?.baseVoice || person?.voice || "honey",
-        });
+        // Ihre Stimme aus der Stimmbank — eine ElevenLabs-Stimme klingt genau so, wie sie eingerichtet ist.
+        const url = await speakAsVoice(profile || { baseVoice: person?.voice || "honey" }, line.text);
         if (runRef.current !== run) return;
         await new Promise((resolve) => {
-          const audio = new Audio(res.url);
+          const audio = new Audio(url);
           audioRef.current = audio;
           audio.onended = resolve;
           audio.onerror = resolve;

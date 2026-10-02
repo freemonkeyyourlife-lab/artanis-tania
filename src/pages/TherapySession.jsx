@@ -90,6 +90,16 @@ export default function TherapySession() {
     return unsubscribe;
   }, [id]);
 
+  // Am Ende schreibt die Erzählerin die Zusammenfassung im Hintergrund — sie
+  // soll hier auftauchen, ohne dass jemand die Seite neu lädt.
+  useEffect(() => {
+    const unsubscribe = base44.entities.TherapySession.subscribe((event) => {
+      if (event.type !== "update" || event.data?.id !== id) return;
+      setSession(event.data);
+    });
+    return unsubscribe;
+  }, [id]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);

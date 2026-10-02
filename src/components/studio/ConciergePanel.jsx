@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import NarratorEditor from "@/components/studio/assistant/NarratorEditor";
 import { genderNoun, kindOf, voiceLabel } from "@/lib/narratorStyle";
+import { speakAsVoice } from "@/lib/voiceChat";
 
 const TEST_LINE = "Ich bin da. Sag mir, wohin es gehen soll — ich gehe mit.";
 
@@ -18,6 +19,7 @@ export default function ConciergePanel() {
   const [editing, setEditing] = useState(null);
   const [playingId, setPlayingId] = useState("");
   const [voiceNames, setVoiceNames] = useState({});
+  const [voiceProfiles, setVoiceProfiles] = useState({});
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function ConciergePanel() {
     ]);
     const voiceItems = Array.isArray(voices) ? voices : voices?.items || [];
     setVoiceNames(Object.fromEntries(voiceItems.map((v) => [v.id, v.name])));
+    setVoiceProfiles(Object.fromEntries(voiceItems.map((v) => [v.id, v])));
     const on = items.filter((x) => x.active !== false);
     if (on.length > 2) {
       const drop = on.slice(2);
@@ -58,8 +61,9 @@ export default function ConciergePanel() {
     stop();
     setPlayingId(n.id);
     try {
-      const res = await base44.integrations.Core.GenerateSpeech({ text: TEST_LINE, voice: n.voice || "honey" });
-      const audio = new Audio(res.url);
+      // Genau ihre Stimme — auch eine aus ElevenLabs.
+      const url = await speakAsVoice(voiceProfiles[n.voiceProfileId] || { baseVoice: n.voice || "honey" }, TEST_LINE);
+      const audio = new Audio(url);
       audioRef.current = audio;
       audio.onended = () => setPlayingId("");
       audio.onerror = () => setPlayingId("");

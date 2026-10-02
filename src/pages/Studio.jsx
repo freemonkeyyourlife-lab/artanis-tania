@@ -44,6 +44,7 @@ import PromptGenerator from "@/components/studio/PromptGenerator";
 import PromptSandbox from "@/components/studio/PromptSandbox";
 import AssistantWizard from "@/components/studio/assistant/AssistantWizard";
 import ConciergePanel from "@/components/studio/ConciergePanel";
+import CameraSettings from "@/components/studio/CameraSettings";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -90,6 +91,7 @@ const TAB_GROUPS = [
       { id: "linkupload", label: "Link-Upload" },
       { id: "bulk", label: "Massen-Import" },
       { id: "services", label: "Dienste" },
+      { id: "camera", label: "Kamera & Aufnahme" },
       { id: "modellinks", label: "Modell-Links" },
       { id: "overview", label: "Modell-Übersicht" },
       { id: "textmodels", label: "Text-KI" },
@@ -225,6 +227,7 @@ export default function Studio() {
       {tab === "assistant" && <AssistantWizard />}
       {tab === "guide" && <GuideManager />}
       {tab === "services" && <ServiceListManager />}
+      {tab === "camera" && <CameraSettings />}
       {tab === "modellinks" && <ModelLinkList />}
       {tab === "overview" && <ModelOverview onOpenTab={setTab} />}
       {tab === "logbook" && <AiLogbook />}
