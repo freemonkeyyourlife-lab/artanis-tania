@@ -1,0 +1,77 @@
+{
+  "name": "AiUsage",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "enum": [
+        "OPENROUTER",
+        "HUGGING_FACE",
+        "BASE44"
+      ],
+      "default": "OPENROUTER"
+    },
+    "modelId": {
+      "type": "string"
+    },
+    "modelName": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "TEXT",
+        "BILD",
+        "STIMMUNG"
+      ],
+      "default": "TEXT"
+    },
+    "promptTokens": {
+      "type": "number",
+      "default": 0
+    },
+    "completionTokens": {
+      "type": "number",
+      "default": 0
+    },
+    "costUsd": {
+      "type": "number",
+      "default": 0
+    },
+    "userName": {
+      "type": "string"
+    },
+    "success": {
+      "type": "boolean",
+      "default": true
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "modelId"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { base44 } from "@/api/base44Client";
 import { MOODS } from "@/lib/moodStyle";
 import { PLAY_LEVELS } from "@/lib/playStyle";
 import { SPEECH_STYLES } from "@/lib/speechStyle";
+import { getMoodModel } from "@/lib/aiGateway";
 
 const VOICE_MOODS = ["NEUTRAL", "SANFT", "VERFUEHRERISCH", "HEISS", "SPIELERISCH", "ERNST", "HART"];
 
@@ -10,11 +11,7 @@ const clamp = (v, min, max, fallback) =>
 
 const text = (v) => String(v || "").trim();
 
-// Aus einem Satz in eigenen Worten werden die passenden Werte für Stimmung,
-// Tempo, Wortwahl, Stimme und die Szene.
-export async function readMood({ words, creator }) {
-  const res = await base44.integrations.Core.InvokeLLM({
-    prompt: `Du bist der Stimmungs-Regler einer Story-Plattform für Erwachsene.
+const buildPrompt = ({ words, creator }) => `Du bist der Stimmungs-Regler einer Story-Plattform für Erwachsene.
 
 Der Nutzer beschreibt in eigenen Worten, wie sich das nächste Erlebnis anfühlen soll. Übersetze das in feste Werte.
 
@@ -30,24 +27,49 @@ KURZ — ein deutscher Satz, der zusammenfasst, was eingestellt wurde.
 Figur: ${creator?.stageName || "unbekannt"}${creator?.age ? `, ${creator.age} Jahre` : ""}${creator?.tagline ? `, ${creator.tagline}` : ""}.
 
 WUNSCH DES NUTZERS:
-"""${text(words)}"""`,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        moodIds: { type: "array", items: { type: "string" } },
-        playLevel: { type: "string" },
-        styleId: { type: "string" },
-        styleNote: { type: "string" },
-        voiceMood: { type: "string" },
-        speed: { type: "number" },
-        depth: { type: "number" },
-        intensity: { type: "number" },
-        sceneNote: { type: "string" },
-        summary: { type: "string" },
-      },
-      required: ["moodIds", "playLevel", "styleId", "voiceMood", "sceneNote", "summary"],
-    },
-  });
+"""${text(words)}"""`;
+
+const MOOD_SCHEMA = {
+  type: "object",
+  properties: {
+    moodIds: { type: "array", items: { type: "string" } },
+    playLevel: { type: "string" },
+    styleId: { type: "string" },
+    styleNote: { type: "string" },
+    voiceMood: { type: "string" },
+    speed: { type: "number" },
+    depth: { type: "number" },
+    intensity: { type: "number" },
+    sceneNote: { type: "string" },
+    summary: { type: "string" },
+  },
+  required: ["moodIds", "playLevel", "styleId", "voiceMood", "sceneNote", "summary"],
+};
+
+// Aus einem Satz in eigenen Worten werden die passenden Werte für Stimmung,
+// Tempo, Wortwahl, Stimme und die Szene.
+export async function readMood({ words, creator }) {
+  const prompt = buildPrompt({ words, creator });
+
+  // Ist im Admin-Bereich ein OpenRouter-Modell gewählt, liest es die Stimmung —
+  // sonst bleibt es bei der Standard-KI.
+  const model = getMoodModel();
+  if (model) {
+    try {
+      const res = await base44.functions.invoke("openRouter", {
+        action: "chat",
+        model,
+        kind: "STIMMUNG",
+        jsonSchema: true,
+        prompt,
+      });
+      if (res.data?.json) return clean(res.data.json);
+    } catch (e) {
+      console.error("OpenRouter", e);
+    }
+  }
+
+  const res = await base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: MOOD_SCHEMA });
   return clean(res);
 }
 

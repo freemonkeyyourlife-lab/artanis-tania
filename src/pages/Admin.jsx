@@ -7,6 +7,7 @@ import UserInvite from "@/components/admin/UserInvite";
 import PurchaseRequests from "@/components/admin/PurchaseRequests";
 import CreatorToggleList from "@/components/admin/CreatorToggleList";
 import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
+import AiUsageDashboard from "@/components/admin/AiUsageDashboard";
 import { cn } from "@/lib/utils";
 
 export default function Admin() {
@@ -106,6 +107,11 @@ export default function Admin() {
             </div>
           );
         })}
+      </div>
+
+      {/* KI-Nutzung: welche Modelle laufen und was sie kosten */}
+      <div className="mb-8">
+        <AiUsageDashboard />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
