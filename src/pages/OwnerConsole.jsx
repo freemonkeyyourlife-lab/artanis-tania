@@ -11,6 +11,7 @@ import InviteList from "@/components/owner/InviteList";
 import GoldmutAccess from "@/components/owner/GoldmutAccess";
 import UserSwitcher from "@/components/owner/UserSwitcher";
 import { DEFAULT_MENU, DEFAULT_FONT, loadLayout, saveLayout } from "@/lib/siteLayout";
+import { defaultStructure, structureOf, structureMenu, applyMenu } from "@/lib/siteStructure";
 import { DEFAULT_STRUCTURE, DEFAULT_INTRO_STEPS, DEFAULT_INTERESTS, DEFAULT_INFO, clearStructureCache, loadStructure } from "@/lib/onboarding";
 import StructureEditor from "@/components/owner/StructureEditor";
 import ChannelHub from "@/components/owner/ChannelHub";
@@ -55,6 +56,7 @@ export default function OwnerConsole() {
   const [record, setRecord] = useState(null);
   const [items, setItems] = useState(DEFAULT_MENU);
   const [savedItems, setSavedItems] = useState(DEFAULT_MENU);
+  const [layoutStructure, setLayoutStructure] = useState(() => defaultStructure(DEFAULT_MENU));
   const [font, setFont] = useState(DEFAULT_FONT);
   const [structure, setStructure] = useState(DEFAULT_STRUCTURE);
   const [counts, setCounts] = useState(null);
@@ -74,9 +76,12 @@ export default function OwnerConsole() {
     if (!me || me.role !== "admin") return;
     loadLayout().then((row) => {
       setRecord(row);
-      if (Array.isArray(row?.navItems) && row.navItems.length) {
-        setItems(row.navItems);
-        setSavedItems(row.navItems);
+      const saved = structureOf(row);
+      setLayoutStructure(saved);
+      const menu = structureMenu(saved);
+      if (menu.length) {
+        setItems(menu);
+        setSavedItems(menu);
       }
       setFont({
         size: row?.navFontSize || DEFAULT_FONT.size,
@@ -122,13 +127,21 @@ export default function OwnerConsole() {
     })();
   }, [me]);
 
+  // Änderungen aus den Listen-Ansichten landen im Bereich „Erleben“ der Struktur.
+  const setMenu = (next) => {
+    setItems(next);
+    setLayoutStructure((prev) => applyMenu(prev, next));
+  };
+
   const save = async (override) => {
     setSaving(true);
     setNotice("");
-    const nextItems = override ?? items;
+    const nextItems = override ?? structureMenu(layoutStructure);
+    const nextStructure = override ? applyMenu(layoutStructure, nextItems) : layoutStructure;
     try {
       const saved = await saveLayout(record, {
         navItems: nextItems,
+        structure: nextStructure,
         navFontSize: font.size,
         navFontWeight: font.weight,
         navGap: font.gap,
@@ -136,6 +149,7 @@ export default function OwnerConsole() {
         ...structure,
       });
       setRecord(saved);
+      setLayoutStructure(nextStructure);
       setItems(nextItems);
       setSavedItems(nextItems);
       clearStructureCache();
@@ -219,7 +233,7 @@ export default function OwnerConsole() {
       count: items.length,
       hint: "Die Knöpfe in der Kopfzeile. Steht schon — du musst nur ran, wenn dich Reihenfolge oder ein Name stört.",
       to: "/",
-      reset: () => setItems(DEFAULT_MENU),
+      reset: () => setMenu(DEFAULT_MENU),
       resetTitle: "Menü auf Standard zurücksetzen",
     },
     {
@@ -345,23 +359,29 @@ export default function OwnerConsole() {
           <GuideBox
             title="Deine App als Karte"
             steps={[
-              "Oben das Bild der App: die Leiste, ihre vier Bereiche und jeder Knopf mit der Seite, auf die er führt.",
+              "Oben das Bild der App: die Leiste, ihre Bereiche und jeder Knopf mit der Seite, auf die er führt.",
               "Darunter steht jede Seite mit ihrer Aufgabe — das ist die Beschreibung, was wo ist.",
-              "„Erleben“ ist der Bereich, den du selbst bestückst. Ziehen am Griff oder die Zahl links ändern — so verschiebst du einen Knopf.",
-              "Der Name in der Mitte ist die Beschriftung oben in der Leiste, die Liste daneben bestimmt, wohin der Klick führt.",
-              "Das Auge blendet nur aus — nichts wird gelöscht. Der Papierkorb nimmt einen Knopf heraus, unten bindest du ihn wieder ein.",
-              "Unten stehen alle Seiten, die es sonst noch gibt: ein Klick, und sie stehen in deiner Leiste.",
-              "Danach unten auf Speichern — erst dann sieht es jeder.",
+              "Jeder Knopf hängt an einem Griff: zieh ihn nach oben oder unten — oder in einen ganz anderen Bereich.",
+              "Auch die Bereiche selbst ziehst du am Griff. Ihre Reihenfolge in der Karte ist die Reihenfolge oben in der Leiste.",
+              "Der Stift am Knopf ändert den Namen und wählt aus der Liste, wohin der Klick führt.",
+              "Der Stift am Bereich benennt ihn um, unten legst du Knöpfe dazu. Der Papierkorb nimmt einen Bereich mit allem heraus.",
+              "Das Auge blendet nur aus — nichts wird gelöscht. Danach unten auf Speichern, erst dann sieht es jeder.",
             ]}
           >
             Hier siehst du die ganze App auf einen Blick: welche Bereiche es gibt, was in deiner Leiste steht und was noch nicht.
           </GuideBox>
-          <StructureMap items={items} onChange={setItems} />
+          <StructureMap
+            structure={layoutStructure}
+            onChange={(next) => {
+              setLayoutStructure(next);
+              setItems(structureMenu(next));
+            }}
+          />
           <div className="mt-5">
             <PageDirectory items={items} />
           </div>
           <div className="mt-5">
-            <SiteOverview items={items} onChange={setItems} />
+            <SiteOverview items={items} onChange={setMenu} />
           </div>
         </>
       )}
@@ -384,7 +404,7 @@ export default function OwnerConsole() {
             <p className="text-[15px] font-semibold text-muted-foreground mb-4">
               Das sind die Einträge der Kopfzeile. Änderungen hier sehen alle Besucher.
             </p>
-            <ModuleEditor items={items} saved={savedItems} onChange={setItems} onApply={(next) => save(next)} />
+            <ModuleEditor items={items} saved={savedItems} onChange={setMenu} onApply={(next) => save(next)} />
           </div>
           <WindowLayoutEditor />
         </>
@@ -439,7 +459,7 @@ export default function OwnerConsole() {
             Das ist die Leiste oben, einmal komplett aufgelistet. Geh sie in Ruhe durch und ändere nur, was dich stört.
           </GuideBox>
           <div className="glass rounded-2xl border border-border p-5">
-            <MenuEditor items={items} onChange={setItems} />
+            <MenuEditor items={items} onChange={setMenu} />
           </div>
         </>
       )}

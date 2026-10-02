@@ -8,6 +8,17 @@
         "type": "object"
       }
     },
+    "structure": {
+      "type": "object",
+      "properties": {
+        "areas": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
     "navFontSize": {
       "type": "number",
       "default": 15

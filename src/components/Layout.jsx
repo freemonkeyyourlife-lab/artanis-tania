@@ -8,7 +8,8 @@ import InviteShareButton from "@/components/InviteShareButton";
 import { hasProAccess, localProActive } from "@/lib/proAccess";
 import { ownerHeartbeat, HEARTBEAT_MS } from "@/lib/presence";
 import { getViewAs, setViewAs, subscribeViewAs } from "@/lib/viewAs";
-import { loadLayout, layoutFont, layoutMenu } from "@/lib/siteLayout";
+import { loadLayout, layoutFont } from "@/lib/siteLayout";
+import { structureOf, structureGroups } from "@/lib/siteStructure";
 import BackgroundSlideshow from "@/components/BackgroundSlideshow";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import WishButton from "@/components/wish/WishButton";
@@ -138,8 +139,9 @@ export default function Layout() {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
-  const menuItems = layout ? layoutMenu(layout) : MORE_LINKS;
-  const groups = buildNavGroups(menuItems);
+  // Die Kopfzeile zeigt genau die Struktur, die der Besitzer in der Übersicht
+  // festgelegt hat — Bereiche und Knöpfe in seiner Reihenfolge.
+  const groups = layout ? structureGroups(structureOf(layout)) : buildNavGroups(MORE_LINKS);
   const mobileLinks = groups.flatMap((g) => g.items);
   const navFont = layoutFont(layout);
 
