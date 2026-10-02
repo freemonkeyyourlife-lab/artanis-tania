@@ -3,13 +3,23 @@ import { Image } from "@/components/ui/image";
 import { Loader2, Volume2, VolumeX, Lightbulb } from "lucide-react";
 import { kindOf } from "@/lib/narratorStyle";
 
-// Der Concierge schaut über die Schulter: was sie sieht, was jetzt dran ist.
-// Zu zweit stehen beide mit Bild und Namen über ihren Zeilen.
-export default function ConciergeTip({ narrators = [], lines = [], nudge, loading, speaking, onSpeak, onStop }) {
+// Das Feld, in dem der Concierge auf den Fortschritt reagiert:
+// was sie sieht, wo du gerade stehst, was jetzt dran ist.
+export default function ConciergeTip({
+  narrators = [],
+  lines = [],
+  nudge,
+  stageIndex = 0,
+  stageCount = 0,
+  loading,
+  speaking,
+  onSpeak,
+  onStop,
+}) {
   const two = narrators.length > 1;
 
   return (
-    <div className="w-full sm:w-[340px] rounded-3xl glass-strong border-2 border-primary/30 p-4">
+    <div className="w-full rounded-3xl glass-strong border-2 border-primary/30 p-4">
       <div className="flex items-center gap-2.5 mb-2.5">
         <div className="flex -space-x-2.5 flex-shrink-0">
           {(narrators.length ? narrators : [null]).map((n, i) =>
@@ -39,6 +49,12 @@ export default function ConciergeTip({ narrators = [], lines = [], nudge, loadin
           {speaking ? <VolumeX className="w-4 h-4 text-foreground" /> : <Volume2 className="w-4 h-4 text-foreground" />}
         </button>
       </div>
+
+      {stageCount > 0 && (
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          Zu Station {stageIndex + 1} von {stageCount}
+        </p>
+      )}
 
       {loading ? (
         <p className="flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">

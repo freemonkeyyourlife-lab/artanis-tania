@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { ChevronRight, Lock, Coins, ArrowLeft, Check, Send, Sparkles, Zap } from "lucide-react";
+import { ChevronRight, Lock, Coins, ArrowLeft, Check, Send, Sparkles, Zap, Users } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import { getTokens, spendTokens } from "@/lib/tokens";
 import StoryProgress from "@/components/story/StoryProgress";
 import ConciergeTip from "@/components/story/ConciergeTip";
+import StoryCastPanel from "@/components/story/StoryCastPanel";
 import { conciergeTip } from "@/lib/storyConcierge";
 
 export default function ExperiencePlayer() {
@@ -29,6 +30,7 @@ export default function ExperiencePlayer() {
     try { return localStorage.getItem("display_name") || "Guest"; } catch { return "Guest"; }
   });
   const [concierges, setConcierges] = useState([]);
+  const [castOpen, setCastOpen] = useState(false);
   const [tips, setTips] = useState({});
   const [speaking, setSpeaking] = useState(false);
   const audioRef = useRef(null);
@@ -94,6 +96,20 @@ export default function ExperiencePlayer() {
     runRef.current += 1;
     audioRef.current?.pause();
     setSpeaking(false);
+  };
+
+  // Andere Erzählerinnen gewählt: sie fangen an dieser Station nochmal neu an.
+  const refreshCast = async () => {
+    stopSpeak();
+    await load();
+    const key = currentStage?.id;
+    if (!key) return;
+    askedRef.current.delete(key);
+    setTips((t) => {
+      const next = { ...t };
+      delete next[key];
+      return next;
+    });
   };
 
   // Jede Zeile mit ihrer eigenen Stimme — erst sie, dann die andere.
@@ -233,6 +249,14 @@ export default function ExperiencePlayer() {
           </button>
           {experience && <StatusBadge experienceType={experience.experienceType} className="hidden sm:inline-flex" />}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setCastOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-strong"
+              title="Erzählerinnen für diese Geschichte"
+            >
+              <Users className="w-4 h-4 text-primary" />
+              <span className="hidden sm:inline text-sm font-semibold text-foreground">Erzählerinnen</span>
+            </button>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-strong">
               <Coins className="w-4 h-4 text-amber-400" />
               <span className="text-sm font-semibold text-foreground">{tokens}</span>
@@ -249,12 +273,15 @@ export default function ExperiencePlayer() {
         <StoryProgress stages={stages} currentIndex={currentStageIdx} />
       </div>
 
-      {/* Der Concierge schaut über die Schulter */}
-      <div className="absolute top-32 lg:top-36 left-4 lg:left-6 z-20 pointer-events-auto">
+      {/* Fortschritt und Concierge — sie schaut über die Schulter */}
+      <div className="absolute top-32 lg:top-36 left-4 right-4 lg:right-auto lg:w-[340px] z-20 space-y-3 max-h-[52vh] overflow-y-auto scrollbar-hide">
+        <StoryProgress stages={stages} currentIndex={currentStageIdx} />
         <ConciergeTip
           narrators={concierges}
           lines={tips[currentStage.id]?.lines || []}
           nudge={tips[currentStage.id]?.nudge}
+          stageIndex={currentStageIdx}
+          stageCount={stages.length}
           loading={!!tips[currentStage.id]?.loading}
           speaking={speaking}
           onSpeak={() => playLines(tips[currentStage.id]?.lines)}
@@ -325,6 +352,8 @@ export default function ExperiencePlayer() {
           )}
         </div>
       </div>
+
+      {castOpen && <StoryCastPanel onClose={() => setCastOpen(false)} onChanged={refreshCast} />}
     </div>
   );
 }
