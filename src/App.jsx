@@ -53,6 +53,7 @@ import Tutorial from '@/pages/Tutorial';
 import TutorialPlayer from '@/components/tutorial/TutorialPlayer';
 import Baukasten from '@/pages/Baukasten';
 import Anleitung from '@/pages/Anleitung';
+import Archive from '@/pages/Archive';
 import VoiceStudio from '@/pages/VoiceStudio';
 import HelpAssistant from '@/components/help/HelpAssistant';
 import { CallProvider } from '@/lib/CallContext';
@@ -133,6 +134,7 @@ const AuthenticatedApp = () => {
         <Route path="/baukasten" element={<Baukasten />} />
         <Route path="/stimmen" element={<VoiceStudio />} />
         <Route path="/anleitung" element={<Anleitung />} />
+        <Route path="/archiv" element={<Archive />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>

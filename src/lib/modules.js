@@ -24,6 +24,7 @@ export const MODULE_TYPES = [
   { path: "/baukasten", label: "Baukasten" },
   { path: "/dock", label: "Dockingstation" },
   { path: "/leitstand", label: "Leitstand" },
+  { path: "/archiv", label: "Archiv" },
   { path: "/owner", label: "Besitzer-Konsole" },
   { path: "/admin", label: "Verwaltung" },
   { path: "/tutorial", label: "Tutorial" },

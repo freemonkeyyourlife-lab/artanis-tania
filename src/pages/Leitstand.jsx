@@ -6,7 +6,8 @@ import LeitstandEmpty from "@/components/leitstand/LeitstandEmpty";
 import CallInviteButton from "@/components/call/CallInviteButton";
 import OrganizePanel from "@/components/leitstand/OrganizePanel";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { LayoutGrid } from "lucide-react";
+import { LayoutGrid, Archive as ArchiveIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 // Wartende Chats stehen oben — die anderen nach der letzten Nachricht.
@@ -101,6 +102,12 @@ export default function Leitstand() {
           <p className="text-sm text-muted-foreground">Alle Chats deiner Gäste. Du siehst sofort, wer wartet — und übernimmst jederzeit selbst.</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <Link
+            to="/archiv"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-elevated text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArchiveIcon className="w-4 h-4" /> Archiv
+          </Link>
           <Dialog>
             <DialogTrigger asChild>
               <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-sm font-bold text-foreground">
