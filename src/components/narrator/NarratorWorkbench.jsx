@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { NARRATOR_GENDERS, NARRATOR_KINDS } from "@/lib/narratorStyle";
 import { inputCls, labelCls, chipCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
 import NarratorImageBlock from "@/components/narrator/NarratorImageBlock";
+import NarratorVideoBlock from "@/components/narrator/NarratorVideoBlock";
 import NarratorVoiceBlock from "@/components/narrator/NarratorVoiceBlock";
 import NarratorTextBlock from "@/components/narrator/NarratorTextBlock";
 import NarratorRegieBlock from "@/components/narrator/NarratorRegieBlock";
@@ -15,6 +16,7 @@ import VoiceTextArea from "@/components/voice/VoiceTextArea";
 // zwei von ihnen abwechselnd durch die Geschichten führen.
 const TABS = [
   { id: "bild", label: "Bild" },
+  { id: "video", label: "Video" },
   { id: "stimme", label: "Stimme" },
   { id: "text", label: "Text" },
   { id: "regie", label: "Regie" },
@@ -203,6 +205,7 @@ export default function NarratorWorkbench() {
 
       <div key={current.id} className="glass rounded-2xl border-2 border-border p-5">
         {tab === "bild" && <NarratorImageBlock narrator={current} onSaved={onSaved} />}
+        {tab === "video" && <NarratorVideoBlock narrator={current} onSaved={onSaved} />}
         {tab === "stimme" && <NarratorVoiceBlock narrator={current} onSaved={onSaved} />}
         {tab === "text" && <NarratorTextBlock narrator={current} onSaved={onSaved} />}
         {tab === "regie" && <NarratorRegieBlock narrator={current} onSaved={onSaved} />}

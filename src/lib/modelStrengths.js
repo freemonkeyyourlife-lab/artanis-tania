@@ -13,6 +13,7 @@ export const STRENGTH_TONES = {
   "3D": "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
   Bewegung: "bg-violet-500/15 text-violet-300 border-violet-500/30",
   Schnell: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+  Ton: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   "Prompt-treu": "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
   Freizügig: "bg-orange-500/15 text-orange-300 border-orange-500/30",
   Allround: "bg-slate-500/15 text-slate-300 border-slate-500/30",
@@ -26,9 +27,76 @@ export const STANDARD_STRENGTH = {
   hint: "Baut aus jedem Vorlagebild um und hält ihr Gesicht am zuverlässigsten.",
 };
 
+// Der eingebaute Filmer: aus einem Satz werden Sekunden Bewegung.
+export const STANDARD_VIDEO_STRENGTH = {
+  chips: ["Bewegung", "Fotoreal", "Ton"],
+  hint: "Macht aus deinem Satz einen kurzen Film mit Ton — sie regt sich, das Licht wandert, die Kamera zieht mit.",
+};
+
 // Die Reihenfolge zählt: das Speziellere steht oben, das Allgemeine darunter.
 // Ein Eintrag passt, wenn ALLE seine Teile in Kennung oder Name vorkommen.
 const RULES = [
+  // Die Filmer zuerst — sonst greifen sie einander ins Wort.
+  {
+    match: ["veo"],
+    chips: ["Bewegung", "Fotoreal", "Ton"],
+    hint: "Bewegtbild mit Ton — die Kamera zieht mit und die Szene lebt.",
+  },
+  {
+    match: ["kling"],
+    chips: ["Bewegung", "Hält ihr Gesicht"],
+    hint: "Sehr flüssige Bewegung und hält die Person dabei fest — auch aus deinem Vorlagebild.",
+  },
+  {
+    match: ["sora"],
+    chips: ["Bewegung", "Fotoreal", "Prompt-treu"],
+    hint: "Versteht genaue Ansagen und baut daraus stimmige Szenen.",
+  },
+  {
+    match: ["minimax"],
+    chips: ["Bewegung", "Hält ihr Gesicht"],
+    hint: "Hält Gesicht und Figur sehr stabil — gut für längere Einstellungen.",
+  },
+  {
+    match: ["hailuo"],
+    chips: ["Bewegung", "Hält ihr Gesicht"],
+    hint: "Hält Gesicht und Figur sehr stabil — gut für längere Einstellungen.",
+  },
+  {
+    match: ["seedance"],
+    chips: ["Bewegung", "Fotoreal"],
+    hint: "Kräftige Bewegung und saubere Kamera — für tanzende und laufende Szenen.",
+  },
+  {
+    match: ["runway"],
+    chips: ["Bewegung", "Fotoreal"],
+    hint: "Filmscher Blick, weiche Kamera — für ruhige, edle Einstellungen.",
+  },
+  {
+    match: ["dream-machine"],
+    chips: ["Bewegung", "Fotoreal"],
+    hint: "Flüssige Bewegung mit weichem Licht — für sinnliche Kamerafahrten.",
+  },
+  {
+    match: ["pika"],
+    chips: ["Bewegung", "Schnell"],
+    hint: "Kurze Clips, schnell gemacht — für viele Versuche.",
+  },
+  {
+    match: ["hunyuan"],
+    chips: ["Bewegung", "Prompt-treu"],
+    hint: "Folgt dem Prompt gut und bewegt auch mehrere Figuren.",
+  },
+  {
+    match: ["cogvideo"],
+    chips: ["Bewegung", "Schnell"],
+    hint: "Solider Filmer für schnelle Versuche.",
+  },
+  {
+    match: ["mochi"],
+    chips: ["Bewegung", "Fotoreal"],
+    hint: "Weiche, natürliche Bewegung mit ruhiger Kamera.",
+  },
   {
     match: ["image-to-image"],
     chips: ["Hält ihr Gesicht"],

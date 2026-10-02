@@ -70,6 +70,12 @@
         "type": "string"
       }
     },
+    "videos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "lines": {
       "type": "object",
       "properties": {

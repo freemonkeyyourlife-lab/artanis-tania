@@ -10,7 +10,7 @@ import FinalPromptPreview from "@/components/studio/FinalPromptPreview";
 import { emptyDirection, directionPrompt } from "@/lib/imageDirection";
 import { composeImagePrompt } from "@/lib/composeImagePrompt";
 import { generateWithModel } from "@/lib/imageGen";
-import { modelStrength, STANDARD_STRENGTH } from "@/lib/modelStrengths";
+import { modelStrength, STANDARD_STRENGTH, STANDARD_VIDEO_STRENGTH } from "@/lib/modelStrengths";
 import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
@@ -335,6 +335,11 @@ export default function GeneratorManager({ creators }) {
             {busy === "video" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
             Video
           </button>
+        </div>
+
+        <div className="mt-3 rounded-xl border border-border bg-background px-3 py-2.5">
+          <p className="text-[12px] font-bold text-foreground mb-0.5">Der Filmer</p>
+          <ModelStrengthNote chips={STANDARD_VIDEO_STRENGTH.chips} hint={STANDARD_VIDEO_STRENGTH.hint} />
         </div>
       </div>
 
