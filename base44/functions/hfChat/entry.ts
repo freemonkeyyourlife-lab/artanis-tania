@@ -32,14 +32,33 @@ export default async function (req) {
     if (body.system) messages.push({ role: 'system', content: body.system });
     messages.push({ role: 'user', content: prompt });
 
-    // Denk-Modelle sollen direkt antworten, nicht laut nachdenken.
-    const res = await fetch(`${ROUTER}/chat/completions`, {
+    // Denk-Modelle sollen direkt antworten, nicht laut nachdenken. Manche Modelle
+    // kennen den Schalter nicht — dann ohne ihn noch einmal fragen.
+    const payload = (withFlag: boolean) =>
+      JSON.stringify({
+        model: modelId,
+        messages,
+        max_tokens: 1200,
+        temperature: 0.9,
+        ...(withFlag ? { chat_template_kwargs: { enable_thinking: false } } : {}),
+      });
+
+    let res = await fetch(`${ROUTER}/chat/completions`, {
       method: 'POST',
       headers: { ...auth, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: modelId, messages, max_tokens: 1200, temperature: 0.9, chat_template_kwargs: { enable_thinking: false } }),
+      body: payload(true),
     });
 
-    const text = await res.text();
+    let text = await res.text();
+    if (!res.ok && text.includes('chat_template_kwargs')) {
+      res = await fetch(`${ROUTER}/chat/completions`, {
+        method: 'POST',
+        headers: { ...auth, 'Content-Type': 'application/json' },
+        body: payload(false),
+      });
+      text = await res.text();
+    }
+
     if (!res.ok) {
       console.log('hfChat error', modelId, res.status, text.slice(0, 300));
       return Response.json({ error: `Hugging Face (${res.status}): ${text.slice(0, 200)}` }, { status: 502 });
