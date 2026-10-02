@@ -130,7 +130,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-background">
       <BackgroundSlideshow />
-      <header className="fixed top-0 left-0 right-0 z-50 glass-milky border-b border-border/60" style={{ height: "72px" }}>
+      <header className="fixed top-0 left-0 right-0 z-50 glass-milky" style={{ height: "72px" }}>
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link to="/">
@@ -225,7 +225,7 @@ export default function Layout() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 glass-strong border-b border-border p-4">
+          <div className="lg:hidden absolute top-full left-0 right-0 glass-strong border-b border-border/30 p-4">
             <nav className="flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
               {mobileLinks.map((link) => (
                 <Link
@@ -261,7 +261,7 @@ export default function Layout() {
       </main>
 
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-        <div className="glass-strong rounded-full border border-border flex items-center justify-around py-2 px-2 max-w-md mx-auto">
+        <div className="glass-strong rounded-full border border-border/40 flex items-center justify-around py-2 px-2 max-w-md mx-auto">
           {MOBILE_NAV.map((item) => {
             const Icon = item.icon;
             const active = location.pathname === item.path;

@@ -4,45 +4,45 @@
 
 @layer base {
   :root {
-    --background: 220 7% 14%;
+    --background: 220 10% 6%;
     --foreground: 240 10% 97%;
-    --card: 220 6% 18%;
+    --card: 220 9% 11%;
     --card-foreground: 240 10% 97%;
-    --popover: 220 6% 21%;
+    --popover: 220 9% 13%;
     --popover-foreground: 240 10% 96%;
     --primary: 16 65% 68%;
     --primary-foreground: 225 17% 5%;
     --secondary: 21 51% 56%;
     --secondary-foreground: 240 10% 96%;
-    --muted: 220 6% 19%;
-    --muted-foreground: 220 8% 72%;
+    --muted: 220 9% 12%;
+    --muted-foreground: 220 8% 62%;
     --accent: 16 65% 68%;
     --accent-foreground: 225 17% 5%;
     --destructive: 0 100% 65%;
     --destructive-foreground: 240 10% 96%;
-    --border: 220 6% 26%;
-    --input: 220 6% 28%;
+    --border: 220 8% 16%;
+    --input: 220 8% 17%;
     --ring: 16 65% 68%;
     --chart-1: 16 65% 68%;
     --chart-2: 21 51% 56%;
     --chart-3: 262 83% 58%;
     --chart-4: 0 100% 65%;
     --chart-5: 226 11% 60%;
-    --radius: 1rem;
+    --radius: 1.5rem;
     --font-heading: "Montserrat", sans-serif;
     --font-body: "Montserrat", sans-serif;
     --font-display: "Montserrat", sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --sidebar-background: 220 6% 18%;
+    --sidebar-background: 220 9% 9%;
     --sidebar-foreground: 240 10% 96%;
     --sidebar-primary: 16 65% 68%;
     --sidebar-primary-foreground: 225 17% 5%;
-    --sidebar-accent: 220 6% 22%;
+    --sidebar-accent: 220 9% 14%;
     --sidebar-accent-foreground: 240 10% 96%;
-    --sidebar-border: 220 6% 26%;
+    --sidebar-border: 220 8% 16%;
     --sidebar-ring: 16 65% 68%;
-    --surface: 220 6% 18%;
-    --elevated: 220 6% 23%;
+    --surface: 220 9% 11%;
+    --elevated: 220 9% 15%;
     --badge-live: 0 100% 65%;
     --badge-ai: 262 83% 58%;
   }
@@ -57,9 +57,9 @@
     @apply bg-background text-foreground font-body font-bold;
     /* Ein weiches Licht über der Fläche — damit nichts mehr wie ein schwarzes Loch wirkt. */
     background-image:
-      radial-gradient(1100px 620px at 15% -10%, rgba(226, 149, 120, 0.10), transparent 62%),
-      radial-gradient(900px 520px at 100% 0%, rgba(255, 255, 255, 0.05), transparent 58%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 40%);
+      radial-gradient(1100px 620px at 15% -10%, rgba(226, 149, 120, 0.06), transparent 62%),
+      radial-gradient(900px 520px at 100% 0%, rgba(255, 255, 255, 0.025), transparent 58%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.012), transparent 40%);
     background-attachment: fixed;
   }
 
@@ -76,20 +76,20 @@
     letter-spacing: -0.01em;
   }
   .glass {
-    background: rgba(43, 45, 49, 0.74);
+    background: rgba(18, 19, 22, 0.74);
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
   }
   .glass-strong {
-    background: rgba(52, 54, 59, 0.86);
+    background: rgba(24, 25, 29, 0.88);
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
   }
   /* Milchige Glasfläche für die feste Kopfzeile — 70 % deckend. */
   .glass-milky {
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-      rgba(42, 44, 48, 0.74);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.01)),
+      rgba(20, 21, 24, 0.82);
     backdrop-filter: blur(28px) saturate(150%);
     -webkit-backdrop-filter: blur(28px) saturate(150%);
   }
@@ -98,13 +98,13 @@
     position: relative;
     overflow: hidden;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.07) 42%, rgba(255, 255, 255, 0.02) 58%, rgba(0, 0, 0, 0.14) 100%),
-      rgba(52, 54, 59, 0.6);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.04) 42%, rgba(255, 255, 255, 0.01) 58%, rgba(0, 0, 0, 0.16) 100%),
+      rgba(26, 27, 31, 0.66);
     backdrop-filter: blur(18px) saturate(150%);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
       inset 0 -1px 1px rgba(0, 0, 0, 0.35),
       0 6px 16px rgba(0, 0, 0, 0.35),
       0 1px 2px rgba(0, 0, 0, 0.4);
