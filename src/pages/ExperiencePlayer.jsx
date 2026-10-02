@@ -32,6 +32,7 @@ export default function ExperiencePlayer() {
   const [concierges, setConcierges] = useState([]);
   const [castOpen, setCastOpen] = useState(false);
   const [tips, setTips] = useState({});
+  const [decisions, setDecisions] = useState({});
   const [speaking, setSpeaking] = useState(false);
   const [speakingWho, setSpeakingWho] = useState(null);
   const audioRef = useRef(null);
@@ -159,6 +160,7 @@ export default function ExperiencePlayer() {
 
   const handleChoice = (choice) => {
     setPoints(p => p + 20);
+    setDecisions((d) => ({ ...d, [currentStage.id]: choice.label }));
     goToStage(choice.nextStageId);
   };
 
@@ -214,7 +216,7 @@ export default function ExperiencePlayer() {
           <p className="text-muted-foreground mb-6">Du hast {points} Punkte gesammelt</p>
           <div className="flex gap-3 justify-center">
             <Link to="/interactive" className="px-5 py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold">Zurück zu den Erlebnissen</Link>
-            <button onClick={() => { setCurrentStageIdx(0); setCompleted(false); setPoints(0); setChatCount(0); setChatMessages([]); }} className="px-5 py-3 rounded-full glass border border-border text-foreground text-sm font-semibold">Nochmal spielen</button>
+            <button onClick={() => { setCurrentStageIdx(0); setCompleted(false); setPoints(0); setChatCount(0); setChatMessages([]); setDecisions({}); }} className="px-5 py-3 rounded-full glass border border-border text-foreground text-sm font-semibold">Nochmal spielen</button>
           </div>
         </div>
       </div>
@@ -280,7 +282,7 @@ export default function ExperiencePlayer() {
       <div className="absolute top-32 lg:top-36 left-4 right-4 lg:right-auto z-20 max-h-[52vh] overflow-y-auto scrollbar-hide">
         <div className="flex flex-col lg:flex-row lg:items-start gap-3">
           <div className="lg:w-[300px] lg:flex-shrink-0">
-            <StoryProgress stages={stages} currentIndex={currentStageIdx} />
+            <StoryProgress stages={stages} currentIndex={currentStageIdx} decisions={decisions} />
           </div>
           <div className="lg:w-[380px] lg:flex-shrink-0">
             <ConciergeTip

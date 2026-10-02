@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Plus, Pencil, Trash2, BookOpen, Mic, ImagePlus, Maximize } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Mic, ImagePlus, Maximize, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import CharacterForm from "@/components/studio/CharacterForm";
@@ -182,6 +182,12 @@ export default function Studio() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn glass-btn-accent text-[14px] font-bold text-gloss"
           >
             <Maximize className="w-4 h-4" /> Eigene Studio-Seite
+          </Link>
+          <Link
+            to="/erzaehler"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-foreground"
+          >
+            <Users className="w-4 h-4" /> Erzähler-Studio
           </Link>
           <Link
             to="/anleitung"
