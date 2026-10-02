@@ -11,6 +11,7 @@ import EmotionVoiceBuilder from "@/components/studio/EmotionVoiceBuilder";
 import VoiceSayBox from "@/components/studio/VoiceSayBox";
 import HelpButton from "@/components/HelpButton";
 import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
+import { mergeVoiceModels, voiceModelLabel, languageLabel } from "@/lib/voiceModels";
 import { assignVoiceToCreator } from "@/lib/voiceAssign";
 
 const SORTS = [
@@ -38,17 +39,20 @@ export default function VoiceManager() {
   const [showBuilder, setShowBuilder] = useState(false);
   const [tuning, setTuning] = useState(null);
   const [byCharacter, setByCharacter] = useState(false);
+  const [models, setModels] = useState([]);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     try {
-      const [v, c] = await Promise.all([
+      const [v, c, m] = await Promise.all([
         base44.entities.Voice.list("-created_date"),
         base44.entities.Creator.list("-created_date"),
+        base44.entities.VoiceModel.list("order", 200).catch(() => ({ items: [] })),
       ]);
       setVoices(v);
       setCreators(c);
+      setModels(mergeVoiceModels(m?.items || []));
     } catch (e) {
       console.error(e);
     } finally {
@@ -259,6 +263,8 @@ export default function VoiceManager() {
                       {v.label} · Tempo {voice.speed?.toFixed(2) ?? "1.00"}× · Tonlage {voice.depth > 0 ? "+" : ""}{voice.depth ?? 0}{typeof voice.intensity === "number" && ` · Intensität ${voice.intensity}`}
                       {voice.priceCoins > 0 && ` · ${voice.priceCoins} Coins`}
                       {voice.ownerName && ` · ${voice.ownerName}`}
+                      {` · ${voiceModelLabel(models, voice.modelId)}`}
+                      {voice.language ? ` · ${languageLabel(voice.language)}` : ""}
                     </p>
                     {voice.description && <p className="text-xs text-muted-foreground mt-1">{voice.description}</p>}
                     {voice.originNote && <p className="text-xs text-muted-foreground mt-1">Herkunft: {voice.originNote}</p>}

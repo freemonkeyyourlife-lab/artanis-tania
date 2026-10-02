@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Check, Loader2, Mic, Sparkles, Square, Trash2, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,6 +9,7 @@ import VoiceDescribeBox from "@/components/voice/VoiceDescribeBox";
 import VoiceFineTune from "@/components/voice/VoiceFineTune";
 import SampleTrimBox from "@/components/voice/SampleTrimBox";
 import HelpButton from "@/components/HelpButton";
+import { VOICE_LANGUAGES, MULTILINGUAL_DEFAULT, mergeVoiceModels, findVoiceModel, modelIsMultilingual } from "@/lib/voiceModels";
 
 const input = "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
 
@@ -46,7 +47,12 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
     externalVoiceId: initial?.externalVoiceId || "",
     originNote: initial?.originNote || "",
     favorite: initial?.favorite === true,
+    modelId: initial?.modelId || "",
+    language: initial?.language || "",
+    sourceModel: initial?.sourceModel || "",
+    sourceUrl: initial?.sourceUrl || "",
   });
+  const [models, setModels] = useState([]);
   const [tagInput, setTagInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [cloning, setCloning] = useState(false);
@@ -59,6 +65,15 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
   const chunksRef = useRef([]);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  // Die Modell-Bibliothek: eingebaute Modelle plus alles, was aus Links dazukam.
+  useEffect(() => {
+    let alive = true;
+    base44.entities.VoiceModel.list("order", 200)
+      .then((res) => { if (alive) setModels(mergeVoiceModels(res?.items || [])); })
+      .catch(() => { if (alive) setModels(mergeVoiceModels([])); });
+    return () => { alive = false; };
+  }, []);
   const applyMood = (mood) => setForm((prev) => ({ ...prev, mood: mood.id, speed: mood.speed, depth: mood.depth }));
 
   // Aus einer Beschreibung in Worten werden die Regler — hören kannst du es direkt danach.
@@ -257,6 +272,60 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Welches Modell spricht — und in welcher Sprache. */}
+      <div className="rounded-2xl border border-border bg-elevated p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Modell, das spricht</label>
+            <select
+              value={form.modelId}
+              onChange={(e) => {
+                const m = findVoiceModel(models, e.target.value);
+                setForm((prev) => ({
+                  ...prev,
+                  modelId: e.target.value,
+                  sourceModel: m?.name || "",
+                  sourceUrl: m?.url || "",
+                }));
+              }}
+              className={input}
+            >
+              <option value="">Standard — Multilingual v2</option>
+              {models.map((m) => (
+                <option key={m.id} value={m.id}>{m.name}{m.hint ? ` · ${m.hint}` : ""}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Sprache</label>
+            <select
+              value={form.language}
+              onChange={(e) => {
+                const lang = e.target.value;
+                setForm((prev) => ({
+                  ...prev,
+                  language: lang,
+                  modelId: lang && !modelIsMultilingual(models, prev.modelId) ? MULTILINGUAL_DEFAULT : prev.modelId,
+                }));
+              }}
+              className={input}
+            >
+              <option value="">Automatisch — Sprache des Textes</option>
+              {VOICE_LANGUAGES.map((l) => (
+                <option key={l.id} value={l.id}>{l.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">
+          Mehrsprachig: mit einem multilingualen Modell spricht die Stimme die Sprache des Textes — eine englische
+          Stimme redet damit auch Deutsch. Nur „Monolingual v1" bleibt beim Englischen.
+        </p>
+        {form.sourceModel && (
+          <p className="text-[11px] text-primary mt-1">Modell aus deinem Link: {form.sourceModel}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

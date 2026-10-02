@@ -84,6 +84,7 @@ export async function speakAsVoice(profile, text) {
       mood: profile?.mood,
       intensity: tune.intensity,
       ending: profile?.ending,
+      modelId: profile?.modelId,
       tuning: fineTuning(profile),
     });
     if (res.data?.error) throw new Error(res.data.error);

@@ -56,6 +56,7 @@ export default function VoicePreviewButton({ profile, text = SAMPLE_TEXT, classN
           mood: p.mood,
           intensity: tune.intensity,
           ending: p.ending,
+          modelId: p.modelId,
           tuning: fineTuning(p),
         });
         if (res.data?.error) throw new Error(res.data.error);

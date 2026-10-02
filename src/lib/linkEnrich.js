@@ -39,6 +39,68 @@ const modelKindOf = (row) => {
   return "BILD";
 };
 
+// Woher das Modell kommt — davon hängt ab, über welchen Weg es gerechnet wird.
+const imageSourceOf = (host) => {
+  const h = String(host || "").toLowerCase();
+  if (h.includes("pollinations")) return "POLLINATIONS";
+  if (h.includes("fal.") || h.includes("falai")) return "FAL_AI";
+  if (h.includes("huggingface") || h.includes("hf.co")) return "HUGGING_FACE";
+  return "EXTERN";
+};
+
+const LIBRARY = { BILD: "ImageModel", TEXT: "TextModel", VIDEO: "VideoModel", AUDIO: "VoiceModel" };
+
+// Ein erkannter Model-Link wird auch für die Generierung nutzbar: er landet in
+// der Modell-Bibliothek des passenden Bereichs. Ohne Kennung geht das nicht —
+// dann bleibt er als Link in der Sammlung stehen.
+async function registerModels(rows) {
+  const groups = { BILD: [], TEXT: [], VIDEO: [], AUDIO: [] };
+  rows.filter((r) => r.modelId).forEach((r) => groups[modelKindOf(r)].push(r));
+  const added = { BILD: 0, TEXT: 0, VIDEO: 0, AUDIO: 0 };
+
+  for (const [kind, list] of Object.entries(groups)) {
+    if (!list.length) continue;
+    const entity = base44.entities[LIBRARY[kind]];
+    const existing = new Set(asArray(await entity.list("created_date", 1000)).map((m) => m.modelId));
+    const fresh = list.filter((r) => !existing.has(r.modelId));
+    if (!fresh.length) continue;
+
+    const records = fresh.map((r) => {
+      const name = r.title || r.modelId;
+      const note = (r.description || "").slice(0, 300);
+      if (kind === "BILD") {
+        return {
+          name,
+          modelId: r.modelId,
+          source: imageSourceOf(r.host),
+          style: "GEMISCHT",
+          note,
+          description: note,
+          url: r.url,
+          enabled: true,
+        };
+      }
+      if (kind === "AUDIO") {
+        return {
+          name,
+          modelId: r.modelId,
+          provider: "EXTERN",
+          multilingual: true,
+          note,
+          description: note,
+          url: r.url,
+          enabled: true,
+        };
+      }
+      return { name, modelId: r.modelId, note, description: note, enabled: true };
+    });
+
+    await entity.bulkCreate(records);
+    added[kind] = records.length;
+  }
+  return added;
+}
+
 // Modelle wandern in die Modell-Links, alles andere in die Dienste-Liste.
 // Was schon dasteht, bleibt unangetastet.
 export async function saveEnriched(rows) {
@@ -46,6 +108,7 @@ export async function saveEnriched(rows) {
   const others = rows.filter((r) => r.kind !== "MODELL");
   const saved = { MODELL: 0, DIENST: 0 };
   const skipped = { MODELL: 0, DIENST: 0 };
+  let library = { BILD: 0, TEXT: 0, VIDEO: 0, AUDIO: 0 };
 
   if (models.length) {
     const existing = new Set(asArray(await base44.entities.ModelLink.list("name", 1000)).map((l) => l.url));
@@ -64,6 +127,7 @@ export async function saveEnriched(rows) {
       );
       saved.MODELL = fresh.length;
     }
+    library = await registerModels(models);
   }
 
   if (others.length) {
@@ -83,5 +147,5 @@ export async function saveEnriched(rows) {
     }
   }
 
-  return { saved, skipped };
+  return { saved, skipped, library };
 }

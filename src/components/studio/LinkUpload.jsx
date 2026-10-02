@@ -67,10 +67,12 @@ export default function LinkUpload() {
     if (!chosen.length || saving) return;
     setSaving(true);
     try {
-      const { saved, skipped } = await saveEnriched(chosen);
+      const { saved, skipped, library } = await saveEnriched(chosen);
       const parts = [];
       if (saved.MODELL) parts.push(`${saved.MODELL} Modell-Links`);
       if (saved.DIENST) parts.push(`${saved.DIENST} Dienste`);
+      const usable = library ? library.BILD + library.TEXT + library.VIDEO + library.AUDIO : 0;
+      if (usable) parts.push(`${usable} davon sofort nutzbar in der Generierung`);
       const dupes = skipped.MODELL + skipped.DIENST;
       toast({
         title: parts.length ? `Übernommen: ${parts.join(", ")}` : "Nichts übernommen",
@@ -92,7 +94,8 @@ export default function LinkUpload() {
       <p className="text-[15px] font-semibold text-muted-foreground mb-5 max-w-3xl">
         Adressen einfügen — eine pro Zeile — oder eine Liste als Datei hochladen. Jede Adresse wird gelesen und mit
         Titel, Vorschaubild und Modell-Angaben übernommen: Modelle in die Modell-Links, alles andere in die
-        Dienste-Liste.
+        Dienste-Liste. Wird dabei ein Modell erkannt, steht es danach auch in der Modell-Bibliothek zur Auswahl —
+        bei Bildern, Videos, Texten und Stimmen.
       </p>
 
       <div className="rounded-2xl border border-border bg-card p-4 mb-5">

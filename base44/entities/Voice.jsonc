@@ -20,6 +20,18 @@
     "externalVoiceId": {
       "type": "string"
     },
+    "modelId": {
+      "type": "string"
+    },
+    "sourceModel": {
+      "type": "string"
+    },
+    "sourceUrl": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string"
+    },
     "baseVoice": {
       "type": "string",
       "enum": [

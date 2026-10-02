@@ -1,0 +1,49 @@
+{
+  "name": "VoiceModel",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "modelId": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "ELEVENLABS",
+        "EXTERN"
+      ],
+      "default": "ELEVENLABS"
+    },
+    "multilingual": {
+      "type": "boolean",
+      "default": true
+    },
+    "description": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "favorite": {
+      "type": "boolean",
+      "default": false
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "name",
+    "modelId"
+  ]
+}
