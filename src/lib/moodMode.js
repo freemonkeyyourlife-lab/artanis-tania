@@ -39,6 +39,22 @@ export function takePendingMood() {
   return data;
 }
 
+// Der erkannte Klang — Tempo, Tonlage, Intensität und Stimmung der Stimme.
+// Er überlagert die hinterlegte Stimme, sobald das Erlebnis aufgeht.
+const VOICE_KEY = "artanis_mood_voice";
+
+export function setVoiceOverride(chatId, voice) {
+  if (!chatId) return;
+  const all = read(VOICE_KEY);
+  if (voice && Object.keys(voice).length) all[chatId] = voice;
+  else delete all[chatId];
+  write(VOICE_KEY, all);
+}
+
+export function voiceOverrideFor(chatId) {
+  return chatId ? read(VOICE_KEY)[chatId] || null : null;
+}
+
 export function setSceneNote(chatId, note) {
   if (!chatId) return;
   const all = read(NOTE_KEY);

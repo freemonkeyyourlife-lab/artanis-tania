@@ -21,7 +21,7 @@ import ChatPromptButton from "@/components/chat/ChatPromptButton";
 import ChatCastMenu from "@/components/chat/ChatCastMenu";
 import MoodQuickMenu from "@/components/chat/MoodQuickMenu";
 import { moodFor, setMoodFor, moodPrompt } from "@/lib/moodStyle";
-import { takePendingMood, setSceneNote, sceneNotePrompt } from "@/lib/moodMode";
+import { takePendingMood, setSceneNote, sceneNotePrompt, setVoiceOverride, voiceOverrideFor } from "@/lib/moodMode";
 import { speechPrompt, styleFor, setStyleFor, SPEECH_STYLES } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
 import { splitScene, playScene } from "@/lib/sceneVoice";
@@ -317,6 +317,8 @@ export default function Messages() {
       setPlayLevelFor(activeChat, pending.playLevel || "NORMAL");
       setSceneNote(activeChat, pending.sceneNote || "");
       setStyleFor(activeChat, pending.creatorId, { preset: pending.styleId || null, note: pending.styleNote || "" });
+      // Der Klang zieht sofort mit: Tempo, Tonlage, Intensität und Stimmung der Stimme.
+      setVoiceOverride(activeChat, pending.voice || null);
     }
     setPlayLevel(pending?.creatorId ? pending.playLevel || "NORMAL" : playLevelFor(activeChat));
     setMoods(pending?.creatorId ? pending.moodIds || [] : moodFor(activeChat));
@@ -374,7 +376,10 @@ export default function Messages() {
   // Die Stimmbank: der Charakter spricht mit der Stimme, die ihm zugeordnet ist.
   const voiceProfileFor = (creatorId) => {
     const creator = creators.find((c) => c.id === creatorId);
-    return voices.find((v) => v.id === creator?.voiceProfileId) || null;
+    const base = voices.find((v) => v.id === creator?.voiceProfileId) || null;
+    const override = voiceOverrideFor(creatorId);
+    if (!override) return base;
+    return { ...(base || { baseVoice: creator?.voice || "honey" }), ...override };
   };
 
   // Wer hier schreibt, und mit welcher Stimme er gerade klingt.
@@ -446,7 +451,9 @@ export default function Messages() {
         || creators.find((c) => low.startsWith(c.stageName.toLowerCase().split(" ")[0]));
     };
     const c = find(name) || find(fallbackName) || activeCreator;
-    return voices.find((v) => v.id === c?.voiceProfileId) || { baseVoice: c?.voice || "honey" };
+    const base = voices.find((v) => v.id === c?.voiceProfileId) || { baseVoice: c?.voice || "honey" };
+    const override = c?.id ? voiceOverrideFor(c.id) : null;
+    return override ? { ...base, ...override } : base;
   };
   const readScene = (text, speakerName, key) => playScene(splitScene(text, speakerName), voiceForName(speakerName), key);
   // Jede neue Zeile wird von selbst vorgelesen — solange Vorlesen an ist.

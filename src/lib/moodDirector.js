@@ -22,7 +22,7 @@ STIMMUNG — wähle 1 bis 3, die am besten passen: ${MOODS.map((m) => `${m.id} (
 TEMPO — genau eine: ${PLAY_LEVELS.map((p) => `${p.id} (${p.label}: ${p.hint})`).join(" | ")}
 WORTWAHL — genau eine: ${SPEECH_STYLES.map((s) => `${s.id} (${s.label}: ${s.prompt})`).join(" | ")}
 STIMMKLANG — genau eine: ${VOICE_MOODS.join(" | ")}
-REGLER — speed zwischen 0.7 und 1.3, depth zwischen -3 und 3, intensity zwischen 0 und 100. Übertreibe nicht.
+REGLER — speed zwischen 0.7 und 1.3, depth zwischen -40 und 20 (0 ist neutral, negativ klingt tiefer), intensity zwischen 0 und 100. Übertreibe nicht.
 WORTWAHL-ZUSATZ — ein kurzer deutscher Halbsatz, der die Wortwahl der Figur noch genauer festlegt.
 SZENEN-VORGABE — zwei bis vier deutsche Sätze als Regieanweisung für das nächste Erlebnis: Ort, Licht, Nähe, Tempo, Ton. Kein Vorwort, keine Anrede, keine Überschrift.
 KURZ — ein deutscher Satz, der zusammenfasst, was eingestellt wurde.
@@ -61,7 +61,7 @@ function clean(res) {
     voice: {
       mood: VOICE_MOODS.includes(res?.voiceMood) ? res.voiceMood : "NEUTRAL",
       speed: clamp(res?.speed, 0.7, 1.3, 1),
-      depth: clamp(res?.depth, -3, 3, 0),
+      depth: clamp(res?.depth, -40, 20, 0),
       intensity: clamp(res?.intensity, 0, 100, 50),
     },
     sceneNote: text(res?.sceneNote),
