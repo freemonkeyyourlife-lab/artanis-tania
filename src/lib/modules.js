@@ -34,6 +34,8 @@ export const MODULE_TYPES = [
   { path: "/tutorial", label: "Tutorial", description: "Die Einführung Schritt für Schritt." },
   { path: "/anleitung", label: "Anleitung", description: "Nachschlagewerk zum Weiterbauen." },
   { path: "/modellplan", label: "Modell-Plan", description: "Welche Bild-Modelle es gibt, was fehlt und was es kostet." },
+  { path: "/lernordner", label: "Lern-Ordner", description: "Alle Fragen aus dem Chat mit ihren Antworten, nach Themen sortiert." },
+  { path: "/spickzettel", label: "Spickzettel", description: "Prompt-Länge, Modellwahl, Begriffe — zum Nachschlagen." },
   { path: "/call", label: "Video-Call", description: "Der Video-Raum für Gespräche." },
   { path: "/account", label: "Konto", description: "Eigenes Profil und Einstellungen." },
   { path: "/prompt", label: "Prompt-Generator", description: "Idee sprechen oder tippen — heraus kommt ein fertiger Prompt fürs externe Studio." },
@@ -131,6 +133,8 @@ export const NAV_GROUPS = {
 
   "/admin": "Verwalten",
   "/leitstand": "Verwalten",
+  "/lernordner": "Verwalten",
+  "/spickzettel": "Verwalten",
   "/owner": "Verwalten",
   "/creator-studio": "Verwalten",
   "/sandbox": "Verwalten",
@@ -205,6 +209,8 @@ export const FIXED_AREAS = [
       { label: "Testsandbox", path: "/sandbox" },
       { label: "Vorschau als Nutzer", path: "/vorschau" },
       { label: "Modell-Plan", path: "/modellplan" },
+      { label: "Lern-Ordner", path: "/lernordner" },
+      { label: "Spickzettel", path: "/spickzettel" },
     ],
   },
 ];

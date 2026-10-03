@@ -43,6 +43,8 @@ const ADMIN_PATHS = new Set([
   "/archiv",
   "/anleitung",
   "/modellplan",
+  "/lernordner",
+  "/spickzettel",
 ]);
 
 // Nur für dich: hier wird nichts veröffentlicht, hier wird geprüft und gesteuert.
