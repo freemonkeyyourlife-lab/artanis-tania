@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
-import { secrets } from 'base44:runtime';
 
 // Erzeugt ein Bild über ein Modell aus dem Studio.
 // Zwei Plattformen: Hugging Face (Konto des Betreibers) und Pollinations (frei, ohne Anmeldung).
@@ -7,7 +6,7 @@ import { secrets } from 'base44:runtime';
 const HF_API = 'https://huggingface.co/api/models';
 const HF_CLASSIC = 'https://router.huggingface.co/hf-inference/models';
 const POLLINATIONS = 'https://gen.pollinations.ai/image';
-const POLL_SIZES = { portrait: [832, 1216], square: [1024, 1024], landscape: [1216, 832] };
+const POLL_FREE_MODEL = 'flux';
 
 function toBase64(bytes) {
   let binary = '';
@@ -53,26 +52,19 @@ async function readImage(res) {
 // Pollinations: kostenlos, kein Konto, keine Anmeldung. Ohne eigenen Schlüssel
 // gibt der Dienst nur seine Standardgröße heraus — dann wird auch kein Format
 // verlangt, sonst kommt eine Absage zurück statt eines Bildes.
-async function generatePollinations(modelId, prompt, aspect, key) {
-  const params = new URLSearchParams({
-    nologo: 'true',
-    seed: String(Math.floor(Math.random() * 1000000)),
-  });
-  if (modelId && modelId !== 'default') params.set('model', modelId);
-  // Ein Format verlangt der Dienst nur mit Schlüssel — ohne gibt es allein
-  // seine Standardgröße, und ein Wunsch nach Hochformat wird abgelehnt.
-  if (key) {
-    const [w, h] = POLL_SIZES[aspect] || POLL_SIZES.portrait;
-    params.set('width', String(w));
-    params.set('height', String(h));
-  }
+async function generatePollinations(prompt) {
+  // Frei und ohne Anmeldung nimmt der Dienst genau zwei Angaben an: sein
+  // freies Modell und den Wunsch ohne Wasserzeichen. Jede weitere Angabe
+  // (anderes Modell, Format, Seed) wird ohne Schlüssel abgelehnt — deshalb
+  // wird hier auch nichts weiter verlangt.
+  const params = new URLSearchParams({ model: POLL_FREE_MODEL, nologo: 'true' });
   const url = `${POLLINATIONS}/${encodeURIComponent(prompt.slice(0, 900))}?${params}`;
 
-  const res = await fetch(url, key ? { headers: { Authorization: `Bearer ${key}` } } : undefined);
+  const res = await fetch(url);
   if (!res.ok) {
     const text = await res.text();
-    console.log('Pollinations fehlgeschlagen', modelId, res.status, text.slice(0, 300));
-    return { error: `Pollinations (${res.status}): ${text.slice(0, 200)}` };
+    console.log('Pollinations fehlgeschlagen', res.status, text.slice(0, 300));
+    return { error: `Bilderdienst (${res.status}): ${text.slice(0, 200)}` };
   }
   return readImage(res);
 }
@@ -124,7 +116,7 @@ export default async function (req) {
 
     const out =
       source === 'POLLINATIONS'
-        ? await generatePollinations(modelId, prompt, body.aspect, (secrets.get('POLLINATIONS_API_KEY') || '').trim())
+        ? await generatePollinations(prompt)
         : !modelId
           ? { error: 'Modell-ID fehlt.' }
           : await generateHuggingFace(
