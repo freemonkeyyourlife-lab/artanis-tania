@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { CheckSquare, Square } from "lucide-react";
 import { DIRECTION_LEVELS } from "@/lib/imageDirection";
 import { modelStrength } from "@/lib/modelStrengths";
-import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelStrengthNote from "@/components/studio/StrengthChips";
 
 // Womit erzeugt wird — und wie freizügig jedes Modell arbeiten soll.
 // Die Stufe hängt direkt am Modell und gilt ab jetzt überall.

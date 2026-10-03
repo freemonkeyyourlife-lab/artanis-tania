@@ -5,7 +5,7 @@ import VoiceInput from "@/components/VoiceInput";
 
 // Tippen oder sprechen: das Mikro sitzt im Feld und hängt das Gesagte an den
 // Text an. So beschreibst du laut, wie sie ist — und es kommt auch so an.
-export default function VoiceTextArea({ value, onChange, className, rows = 4, ...rest }) {
+export default function SpeakField({ value, onChange, className, rows = 4, ...rest }) {
   const append = (text) => {
     const current = value || "";
     onChange([current, text].filter(Boolean).join(current.trim() ? " " : ""));

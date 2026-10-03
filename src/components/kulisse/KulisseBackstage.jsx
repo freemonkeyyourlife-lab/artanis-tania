@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Lock, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import VoiceTextArea from "@/components/voice/SpeakField";
 import { BACKSTAGE_FIELDS, EMPTY_BACKSTAGE, loadBackstage, saveBackstage } from "@/lib/kulisse";
 
 // Hinter den Kulissen: was nur wir sehen. Hier steht, was die Figur wirklich ist.

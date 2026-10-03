@@ -3,7 +3,7 @@ import { Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { suggestModel, usableModels } from "@/lib/assistant";
 import { modelStrength } from "@/lib/modelStrengths";
-import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelStrengthNote from "@/components/studio/StrengthChips";
 
 const TARGETS = [
   { id: "BILD", label: "Bild" },

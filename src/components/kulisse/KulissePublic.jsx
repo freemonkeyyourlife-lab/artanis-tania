@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Eye, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import VoiceTextArea from "@/components/voice/SpeakField";
 
 // Die Kulisse: das, was die User von der Figur sehen. Steht direkt an der Figur.
 export default function KulissePublic({ character, onSaved }) {

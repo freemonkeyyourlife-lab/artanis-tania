@@ -11,7 +11,7 @@ import { emptyDirection, directionPrompt } from "@/lib/imageDirection";
 import { composeImagePrompt } from "@/lib/composeImagePrompt";
 import { generateWithModel } from "@/lib/imageGen";
 import { modelStrength, STANDARD_STRENGTH, STANDARD_VIDEO_STRENGTH } from "@/lib/modelStrengths";
-import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelStrengthNote from "@/components/studio/StrengthChips";
 import PromptRefiner from "@/components/studio/PromptRefiner";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.

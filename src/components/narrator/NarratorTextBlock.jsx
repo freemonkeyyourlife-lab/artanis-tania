@@ -4,7 +4,7 @@ import { Check, Loader2, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BETWEEN_LINES, RECALL_LINES, RECALL_TIPS } from "@/lib/introStory";
 import LineListEditor from "@/components/narrator/LineListEditor";
-import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import VoiceTextArea from "@/components/voice/SpeakField";
 import { labelCls, btnCls, btnAccentCls } from "@/lib/narratorUi";
 
 // Text: was sie sagt. {narrator} wird beim Sprechen durch ihren Namen ersetzt.

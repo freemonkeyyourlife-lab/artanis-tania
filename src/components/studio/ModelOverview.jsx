@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Image as ImageIcon, Type, Power, Loader2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { modelStrength, modelCapabilities, capabilityLabel, capabilityCount } from "@/lib/modelStrengths";
-import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelStrengthNote from "@/components/studio/StrengthChips";
 import ModelCapabilityBar from "@/components/studio/ModelCapabilityBar";
 
 const SOURCE_LABELS = {

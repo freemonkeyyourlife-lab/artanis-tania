@@ -13,7 +13,7 @@ import FinalPromptPreview from "@/components/studio/FinalPromptPreview";
 import NarratorModelPicker from "@/components/narrator/NarratorModelPicker";
 import NarratorRefStrip from "@/components/narrator/NarratorRefStrip";
 import NarratorImageResult from "@/components/narrator/NarratorImageResult";
-import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import VoiceTextArea from "@/components/voice/SpeakField";
 import PromptRefiner from "@/components/studio/PromptRefiner";
 import { characterFromNarrator } from "@/lib/promptSharpen";
 import { presetFor } from "@/lib/modelPrompts";

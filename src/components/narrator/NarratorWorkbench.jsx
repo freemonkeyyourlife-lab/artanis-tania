@@ -10,7 +10,7 @@ import NarratorVoiceBlock from "@/components/narrator/NarratorVoiceBlock";
 import NarratorTextBlock from "@/components/narrator/NarratorTextBlock";
 import NarratorRegieBlock from "@/components/narrator/NarratorRegieBlock";
 import ConciergePanel from "@/components/studio/ConciergePanel";
-import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import VoiceTextArea from "@/components/voice/SpeakField";
 
 // Die vier Blöcke, in denen sie fertig wird — plus der Story-Modus, in dem
 // zwei von ihnen abwechselnd durch die Geschichten führen.

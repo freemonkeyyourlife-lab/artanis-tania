@@ -6,7 +6,7 @@ const chip = "inline-flex items-center px-2 py-0.5 rounded-full border text-[10p
 
 // Die Vermerkung zu einem Modell: wofür es bekannt ist, in Etiketten — und
 // darunter in einem Satz, damit klar ist, was man für was nimmt.
-export default function ModelStrengthNote({ chips, hint, className }) {
+export default function StrengthChips({ chips = [], hint, className }) {
   return (
     <div className={cn("mt-1", className)}>
       {chips.length > 0 && (

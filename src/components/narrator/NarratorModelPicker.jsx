@@ -3,7 +3,7 @@ import { Check, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { inputCls, labelCls } from "@/lib/narratorUi";
 import { modelStrength, STANDARD_STRENGTH } from "@/lib/modelStrengths";
-import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelStrengthNote from "@/components/studio/StrengthChips";
 
 // Alles, was im Studio an Bildmodellen freigeschaltet ist — Favoriten oben.
 // Mehrere dürfen gleichzeitig ran, dann laufen sie parallel.

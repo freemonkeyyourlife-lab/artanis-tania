@@ -4,7 +4,7 @@ import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOODS, bestModelFor, explicitLabel, styleLabel } from "@/lib/modelTags";
 import { modelStrength } from "@/lib/modelStrengths";
-import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelStrengthNote from "@/components/studio/StrengthChips";
 
 const ENTITY = { BILD: "ImageModel", VIDEO: "VideoModel", TEXT: "TextModel" };
 

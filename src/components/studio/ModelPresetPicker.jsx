@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { PRESETS, presetById, presetFor } from "@/lib/modelPrompts";
 import { modelStrength } from "@/lib/modelStrengths";
-import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelStrengthNote from "@/components/studio/StrengthChips";
 
 // Modell wählen — der Generator benutzt dann dessen eigene Syntax. Was hier
 // erkannt wird, merkt sich das Modell als Grundsetting.

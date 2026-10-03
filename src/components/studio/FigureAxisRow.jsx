@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Mic, Check, Loader2 } from "lucide-react";
-import VoiceTextArea from "@/components/voice/VoiceTextArea";
+import VoiceTextArea from "@/components/voice/SpeakField";
 import { saveNote } from "@/lib/figureRaster";
 
 // Eine Achse des Rasters: die Möglichkeiten als Reihe, darunter deine Worte zu

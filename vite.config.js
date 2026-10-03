@@ -6,12 +6,6 @@ import { defineConfig } from 'vite'
 // Bei einer Änderung an dieser Datei startet der Entwicklungsserver neu und
 // baut seinen Modul-Zwischenspeicher frisch auf.
 export default defineConfig({
-  resolve: {
-    // Manche Module werden unter ihrem vollen Pfad angesprochen (/app/src/...).
-    // Vite sucht sie dann relativ zur Wurzel und findet sie nicht. Diese Zeile
-    // biegt den vollen Pfad wieder auf den richtigen um.
-    alias: [{ find: /^\/app\//, replacement: "/" }],
-  },
   plugins: [
     base44({
       // Support for legacy code that imports the base44 SDK with @/integrations, @/entities, etc.

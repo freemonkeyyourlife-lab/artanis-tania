@@ -9,7 +9,7 @@ import ModelTags from "@/components/studio/ModelTags";
 import ModelTagsPicker from "@/components/studio/ModelTagsPicker";
 import ModelFilterBar from "@/components/studio/ModelFilterBar";
 import ModelExplainBox from "@/components/studio/ModelExplainBox";
-import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelStrengthNote from "@/components/studio/StrengthChips";
 import { modelStrength } from "@/lib/modelStrengths";
 import { emptyTags, matchesFilter } from "@/lib/modelTags";
 import { explainModel } from "@/lib/modelExplain";
