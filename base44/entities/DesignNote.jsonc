@@ -1,0 +1,60 @@
+{
+  "name": "DesignNote",
+  "type": "object",
+  "properties": {
+    "page": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "ELEMENT",
+        "PAGE"
+      ],
+      "default": "ELEMENT"
+    },
+    "label": {
+      "type": "string"
+    },
+    "tag": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OFFEN",
+        "ERLEDIGT"
+      ],
+      "default": "OFFEN"
+    }
+  },
+  "required": [
+    "page",
+    "note"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

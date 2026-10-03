@@ -76,6 +76,8 @@ import FloatingCall from '@/components/call/FloatingCall';
 import NarratorCompanion from '@/components/narrator/NarratorCompanion';
 import CreateConsole from '@/components/creator/CreateConsole';
 import ImportStatusPill from '@/components/import/ImportStatusPill';
+import GodPencilLayer from '@/components/god/GodPencilLayer';
+import GodNotesBar from '@/components/god/GodNotesBar';
 import FloatingZones from '@/components/floating/FloatingZones';
 
 const AuthenticatedApp = () => {
@@ -114,6 +116,8 @@ const AuthenticatedApp = () => {
       <NarratorCompanion />
       <CreateConsole />
       <ImportStatusPill />
+      <GodPencilLayer />
+      <GodNotesBar />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
