@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { secrets } from 'base44:runtime';
 
 // Erzeugt ein Bild über ein Modell aus dem Studio.
 // Zwei Plattformen: Hugging Face (Konto des Betreibers) und Pollinations (frei, ohne Anmeldung).
@@ -6,7 +7,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 const HF_API = 'https://huggingface.co/api/models';
 const HF_CLASSIC = 'https://router.huggingface.co/hf-inference/models';
 const POLLINATIONS = 'https://gen.pollinations.ai/image';
-const POLL_FREE_MODEL = 'flux';
+const POLL_SIZES = { portrait: [832, 1216], square: [1024, 1024], landscape: [1216, 832] };
 
 function toBase64(bytes) {
   let binary = '';
@@ -52,18 +53,28 @@ async function readImage(res) {
 // Pollinations: kostenlos, kein Konto, keine Anmeldung. Ohne eigenen Schlüssel
 // gibt der Dienst nur seine Standardgröße heraus — dann wird auch kein Format
 // verlangt, sonst kommt eine Absage zurück statt eines Bildes.
-async function generatePollinations(prompt) {
-  // Frei und ohne Anmeldung nimmt der Dienst genau zwei Angaben an: sein
-  // freies Modell und den Wunsch ohne Wasserzeichen. Jede weitere Angabe
-  // (anderes Modell, Format, Seed) wird ohne Schlüssel abgelehnt — deshalb
-  // wird hier auch nichts weiter verlangt.
-  const params = new URLSearchParams({ model: POLL_FREE_MODEL, nologo: 'true' });
+async function generatePollinations(modelId, prompt, aspect) {
+  const params = new URLSearchParams({
+    nologo: 'true',
+    seed: String(Math.floor(Math.random() * 1000000)),
+  });
+  // „default“ ist kein Modellname — dann entscheidet der Dienst selbst.
+  if (modelId && modelId !== 'default') params.set('model', modelId);
+  const [w, h] = POLL_SIZES[aspect] || POLL_SIZES.portrait;
+  params.set('width', String(w));
+  params.set('height', String(h));
   const url = `${POLLINATIONS}/${encodeURIComponent(prompt.slice(0, 900))}?${params}`;
 
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${secrets.get('POLLINATIONS_API_KEY')}` },
+  });
   if (!res.ok) {
     const text = await res.text();
-    console.log('Pollinations fehlgeschlagen', res.status, text.slice(0, 300));
+    console.log('Pollinations fehlgeschlagen', modelId, res.status, text.slice(0, 300));
+    // 402 heißt: dieses Modell kostet Geld, das freie Guthaben reicht nicht.
+    if (res.status === 402) {
+      return { error: 'Dieses Modell ist kostenpflichtig. Nimm „Flux (frei)" oder ein Hugging-Face-Modell.' };
+    }
     return { error: `Bilderdienst (${res.status}): ${text.slice(0, 200)}` };
   }
   return readImage(res);
@@ -116,7 +127,7 @@ export default async function (req) {
 
     const out =
       source === 'POLLINATIONS'
-        ? await generatePollinations(prompt)
+        ? await generatePollinations(modelId, prompt, body.aspect)
         : !modelId
           ? { error: 'Modell-ID fehlt.' }
           : await generateHuggingFace(
