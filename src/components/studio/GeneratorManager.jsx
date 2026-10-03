@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Sparkles, Loader2, Video, Bookmark, Plus, Check, Trash2, Layers } from "lucide-react";
+import { Sparkles, Loader2, Video, Bookmark, Plus, Check, Trash2, Layers, Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { uploadDataUrl } from "@/lib/mediaUpload";
@@ -13,6 +13,7 @@ import { generateWithModel } from "@/lib/imageGen";
 import { modelStrength, STANDARD_STRENGTH, STANDARD_VIDEO_STRENGTH } from "@/lib/modelStrengths";
 import ModelStrengthNote from "@/components/studio/StrengthChips";
 import PromptRefiner from "@/components/studio/PromptRefiner";
+import { suggestModels } from "@/lib/modelSuggest";
 
 // Eigene Bilder und Videos bauen: Person wählen, Prompt drunter, fertig.
 // Mehrere Modelle dürfen gleichzeitig ran — und als Kombi abgespeichert werden.
@@ -26,6 +27,7 @@ export default function GeneratorManager({ creators }) {
   const [modelKeys, setModelKeys] = useState([]);
   const [kits, setKits] = useState([]);
   const [kitName, setKitName] = useState("");
+  const [suche, setSuche] = useState("");
   const [busy, setBusy] = useState(null);
   const [results, setResults] = useState([]);
   const { toast } = useToast();
@@ -48,6 +50,15 @@ export default function GeneratorManager({ creators }) {
   }, []);
 
   const creator = creators.find((c) => c.id === creatorId);
+
+  // Die Liste wird durchsucht, und was im Prompt steht, zieht die passenden
+  // Modelle nach oben — damit man nicht an ihnen vorbeiscrollt.
+  const sichtbar = models.filter((m) => {
+    const t = `${m.name || ""} ${m.modelId || ""}`.toLowerCase();
+    return !suche.trim() || t.includes(suche.trim().toLowerCase());
+  });
+  const vorschlag = suggestModels(models, prompt, 3);
+
   const refs = [creator?.avatar, ...(creator?.referenceImages || []), ...extraRefs]
     .filter(Boolean)
     .filter((v, i, a) => a.indexOf(v) === i)
@@ -197,41 +208,78 @@ export default function GeneratorManager({ creators }) {
         <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
           Quellen · {modelKeys.length ? `${modelKeys.length} gewählt` : "Standard-Generator"}
         </label>
-        <div className="max-h-44 overflow-y-auto rounded-xl border border-border bg-background p-1.5 mb-2 space-y-1">
+
+        {vorschlag.length > 0 && (
+          <div className="rounded-xl border border-primary/40 bg-primary/5 p-2.5 mb-2">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-1.5">
+              Vorschlag zu deinem Prompt
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {vorschlag.map(({ model, hits }) => (
+                <button
+                  key={model.id}
+                  onClick={() => setModelKeys((prev) => (prev.includes(model.id) ? prev : [...prev, model.id]))}
+                  title={hits.join(" · ")}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-btn text-[12px] font-bold text-foreground"
+                >
+                  {modelKeys.includes(model.id) && <Check className="w-3 h-3 text-primary" />}
+                  {model.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="relative mb-2">
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            value={suche}
+            onChange={(e) => setSuche(e.target.value)}
+            placeholder="Modell suchen — z. B. flux, seedream, grok"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground"
+          />
+        </div>
+
+        <div className="max-h-96 overflow-y-auto rounded-xl border border-border bg-background p-1.5 mb-2 space-y-1">
           <button
             onClick={() => setModelKeys([])}
             className={cn(
-              "w-full text-left px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+              "w-full text-left px-3 py-3 rounded-lg text-sm font-semibold transition-colors",
               !modelKeys.length ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
             )}
           >
             Standard-Generator
             <ModelStrengthNote chips={STANDARD_STRENGTH.chips} hint={STANDARD_STRENGTH.hint} />
           </button>
-          {models.map((m) => {
+          {sichtbar.map((m) => {
             const on = modelKeys.includes(m.id);
             return (
               <button
                 key={m.id}
                 onClick={() => toggleModel(m.id)}
                 className={cn(
-                  "w-full flex items-start gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-left transition-colors",
+                  "w-full flex items-start gap-2.5 px-3 py-3 rounded-lg text-sm font-semibold text-left transition-colors",
                   on ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <span className={cn("w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0", on ? "bg-primary border-primary text-primary-foreground" : "border-border")}>
-                  {on && <Check className="w-3 h-3" />}
+                <span className={cn("w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0", on ? "bg-primary border-primary text-primary-foreground" : "border-border")}>
+                  {on && <Check className="w-3.5 h-3.5" />}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate">{m.name}</span>
+                  <span className="block truncate text-[15px]">{m.name}</span>
                   <ModelStrengthNote chips={modelStrength(m).chips} hint={modelStrength(m).hint} />
                 </span>
               </button>
             );
           })}
+          {sichtbar.length === 0 && (
+            <p className="px-3 py-6 text-center text-[13px] font-semibold text-muted-foreground">
+              Kein Modell mit diesem Namen.
+            </p>
+          )}
         </div>
         <p className="text-[11px] text-muted-foreground mb-4">
-          Mehrere wählen — alle laufen gleichzeitig, du siehst die Ergebnisse nebeneinander.
+          {sichtbar.length} Modelle{sichtbar.length !== models.length ? ` von ${models.length}` : ""} — mehrere wählen, alle laufen gleichzeitig, du siehst die Ergebnisse nebeneinander.
         </p>
 
         {kits.length > 0 && (
