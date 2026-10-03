@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { LayoutGrid, Loader2, Copy, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import FigureAxisRow from "@/components/studio/FigureAxisRow";
-import { loadAxes, composeFigure } from "@/lib/figureRaster";
+import { loadAxes, composeFigure, GENDERS } from "@/lib/figureRaster";
 
 // Das Raster: die Figur aus Achsen zusammensetzen statt sie in einem Satz zu
 // beschreiben. Was hier herauskommt, ist reiner Text — der läuft bei jeder Maschine.
 export default function FigureRaster() {
   const { toast } = useToast();
+  const [gender, setGender] = useState("FRAU");
   const [axes, setAxes] = useState(null);
   const [picked, setPicked] = useState({});
 
   useEffect(() => {
-    loadAxes().then(setAxes);
-  }, []);
+    setAxes(null);
+    setPicked({});
+    loadAxes(gender).then(setAxes);
+  }, [gender]);
 
-  const { prompt, parts } = composeFigure(axes || [], picked);
+  const { prompt, parts } = composeFigure(axes || [], picked, gender);
 
   const copy = () => {
     navigator.clipboard.writeText(prompt);
@@ -32,9 +34,26 @@ export default function FigureRaster() {
         <h2 className="text-[17px] font-bold text-foreground">Das Raster</h2>
       </div>
       <p className="text-[13px] font-semibold text-muted-foreground mb-4 max-w-3xl leading-relaxed">
-        Dieselbe Frau, andere Achsen: dunkel statt hell, zierlich statt üppig, anschmiegsam statt kalt. Du wählst je
-        Achse ein Wort — oder sagst mit eigenen Worten, was du damit meinst. Beides geht in den Prompt ein.
+        Die Figur in Achsen zerlegt statt in einem Satz: dunkel statt hell, zierlich statt üppig, anschmiegsam statt
+        kalt. Du wählst je Achse ein Wort — oder sagst mit eigenen Worten, was du damit meinst. Beides geht in den
+        Prompt ein.
       </p>
+
+      <div className="flex items-center gap-2 mb-4">
+        {GENDERS.map((g) => (
+          <button
+            key={g.key}
+            onClick={() => setGender(g.key)}
+            className={
+              gender === g.key
+                ? "px-4 py-1.5 rounded-full glass-btn glass-btn-accent text-[13px] font-bold"
+                : "px-4 py-1.5 rounded-full glass-btn text-[13px] font-bold text-foreground"
+            }
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
 
       {!axes ? (
         <div className="flex items-center gap-2 text-muted-foreground py-6">

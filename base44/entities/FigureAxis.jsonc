@@ -17,6 +17,15 @@
       ],
       "default": "KOERPER"
     },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "ALLGEMEIN",
+        "FRAU",
+        "MANN"
+      ],
+      "default": "ALLGEMEIN"
+    },
     "hint": {
       "type": "string"
     },

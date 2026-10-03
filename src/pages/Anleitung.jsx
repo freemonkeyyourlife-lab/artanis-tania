@@ -39,6 +39,12 @@ export default function Anleitung() {
           Zum Nachschlagen: Schritt für Schritt, mit den genauen Stellen in der App. Damit du nicht
           jedes Mal fragen musst — und damit du weißt, was schon läuft und was nicht.
         </p>
+        <Link
+          to="/spickzettel"
+          className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-full glass-btn glass-btn-accent text-[14px] font-bold text-gloss"
+        >
+          Zum Spickzettel
+        </Link>
       </div>
 
       <div className="space-y-5">

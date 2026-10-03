@@ -168,6 +168,7 @@ export const PAGES = [
   { path: "/messages", label: "Nachrichten / Chat" },
   { path: "/baukasten", label: "Baukasten (Bausteine, Pakete, Sprechzeilen)" },
   { path: "/anleitung", label: "Anleitung" },
+  { path: "/spickzettel", label: "Spickzettel (Prompt-Länge, Modellwahl, Begriffe)" },
   { path: "/tutorial", label: "Tutorial" },
   { path: "/therapy", label: "Therapie-Sitzungen" },
   { path: "/paylinks", label: "Zahlungslinks" },
