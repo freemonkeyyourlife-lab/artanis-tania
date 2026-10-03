@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Sparkles, Blocks } from "lucide-react";
 import PromptGenerator from "@/components/studio/PromptGenerator";
 import ImageToPrompt from "@/components/studio/ImageToPrompt";
+import FigureRaster from "@/components/studio/FigureRaster";
 import PromptRulePanel from "@/components/studio/PromptRulePanel";
 import HashtagManager from "@/components/studio/HashtagManager";
 
@@ -23,6 +24,10 @@ export default function PromptStudio() {
 
       <div className="mb-5">
         <ImageToPrompt />
+      </div>
+
+      <div className="mb-5">
+        <FigureRaster />
       </div>
 
       <PromptGenerator />
