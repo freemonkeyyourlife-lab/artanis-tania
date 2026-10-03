@@ -30,6 +30,7 @@ export const TIER_BADGE = {
 // Werkzeuge zum Anlegen, Verwalten und Verkaufen.
 const ADMIN_PATHS = new Set([
   "/studio",
+  "/ideen",
   "/creator-studio",
   "/stimmen",
   "/baukasten",

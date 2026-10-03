@@ -1,0 +1,63 @@
+{
+  "name": "Idea",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "IDEE",
+        "GESCHICHTE",
+        "SZENE"
+      ],
+      "default": "IDEE"
+    },
+    "idea": {
+      "type": "string"
+    },
+    "story": {
+      "type": "string"
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "IDEE",
+        "IN ARBEIT",
+        "FERTIG"
+      ],
+      "default": "IDEE"
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "title"
+  ]
+}
