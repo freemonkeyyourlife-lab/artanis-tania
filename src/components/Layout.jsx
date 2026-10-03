@@ -18,6 +18,7 @@ import Footer from "@/components/Footer";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import WishButton from "@/components/wish/WishButton";
 import HelpAssistant from "@/components/help/HelpAssistant";
+import QuickSwitch from "@/components/owner/QuickSwitch";
 import { useCallSession } from "@/lib/CallContext";
 import { getRooms } from "@/lib/callRooms";
 import { publicName } from "@/lib/displayName";
@@ -331,6 +332,8 @@ export default function Layout() {
           })}
         </div>
       </nav>
+
+      <QuickSwitch isOwner={memberStatus === "OWNER"} />
     </div>
   );
 }
