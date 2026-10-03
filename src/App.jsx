@@ -69,6 +69,7 @@ import NarratorStudio from '@/pages/NarratorStudio';
 import Spickzettel from '@/pages/Spickzettel';
 import Kulisse from '@/pages/Kulisse';
 import Lernordner from '@/pages/Lernordner';
+import Leitfaden from '@/pages/Leitfaden';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import NarratorCompanion from '@/components/narrator/NarratorCompanion';
@@ -160,6 +161,7 @@ const AuthenticatedApp = () => {
         <Route path="/spickzettel" element={<Spickzettel />} />
         <Route path="/kulisse" element={<Kulisse />} />
         <Route path="/lernordner" element={<Lernordner />} />
+        <Route path="/leitfaden" element={<Leitfaden />} />
         <Route path="/modellplan" element={<ModelPlan />} />
         <Route path="/archiv" element={<Archive />} />
         <Route path="/planung" element={<ContentPlan />} />

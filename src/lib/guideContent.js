@@ -168,6 +168,7 @@ export const PAGES = [
   { path: "/messages", label: "Nachrichten / Chat" },
   { path: "/baukasten", label: "Baukasten (Bausteine, Pakete, Sprechzeilen)" },
   { path: "/anleitung", label: "Anleitung" },
+  { path: "/leitfaden", label: "Leitfaden (wenn ich das will, klicke ich da und da)" },
   { path: "/spickzettel", label: "Spickzettel (Prompt-Länge, Modellwahl, Begriffe)" },
   { path: "/kulisse", label: "Kulisse (hinter jeder Figur: was die User sehen und was nur du)" },
   { path: "/tutorial", label: "Tutorial" },

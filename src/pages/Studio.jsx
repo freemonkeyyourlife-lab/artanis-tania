@@ -45,6 +45,7 @@ import PromptSandbox from "@/components/studio/PromptSandbox";
 import AssistantWizard from "@/components/studio/assistant/AssistantWizard";
 import ConciergePanel from "@/components/studio/ConciergePanel";
 import CameraSettings from "@/components/studio/CameraSettings";
+import ReferenceModelManager from "@/components/studio/ReferenceModelManager";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -56,6 +57,7 @@ const TAB_GROUPS = [
     tabs: [
       { id: "assistant", label: "Assistent" },
       { id: "characters", label: "Charaktere" },
+      { id: "vorbilder", label: "Vorbilder" },
       { id: "external", label: "Externes Studio" },
       { id: "dock", label: "Dockingstation" },
       { id: "baukasten", label: "Baukasten" },
@@ -226,6 +228,7 @@ export default function Studio() {
 
       {tab === "assistant" && <AssistantWizard />}
       {tab === "guide" && <GuideManager />}
+      {tab === "vorbilder" && <ReferenceModelManager />}
       {tab === "services" && <ServiceListManager />}
       {tab === "camera" && <CameraSettings />}
       {tab === "modellinks" && <ModelLinkList />}
