@@ -11,12 +11,14 @@ import {
   emptyDirection,
 } from "@/lib/imageDirection";
 
+// Die Freizügigkeit bleibt eine Stufe — alles andere darf mehrfach an sein,
+// und zu jeder Reihe kannst du eigene Einträge dazutippen.
 const ROWS = [
-  { key: "stil", label: "Stil", options: DIRECTION_STYLES },
-  { key: "inhalt", label: "Inhalt", options: DIRECTION_CONTENTS },
-  { key: "klamotte", label: "Klamotte", options: DIRECTION_OUTFITS },
-  { key: "stimmung", label: "Stimmung", options: DIRECTION_MOODS },
-  { key: "freizuegigkeit", label: "Freizügigkeit", options: DIRECTION_LEVELS },
+  { key: "stil", label: "Stil", options: DIRECTION_STYLES, addLabel: "Eigener Stil" },
+  { key: "inhalt", label: "Inhalt", options: DIRECTION_CONTENTS, addLabel: "Eigener Ort" },
+  { key: "klamotte", label: "Klamotte", options: DIRECTION_OUTFITS, addLabel: "Eigene Klamotte" },
+  { key: "stimmung", label: "Stimmung", options: DIRECTION_MOODS, addLabel: "Eigene Stimmung" },
+  { key: "freizuegigkeit", label: "Freizügigkeit", options: DIRECTION_LEVELS, multi: false },
 ];
 
 // Derselbe Regler-Block überall: im Generator, in der Massen-Erzeugung und im
@@ -53,6 +55,8 @@ export default function ImageDirectionPanel({ value, onChange, fields, title = "
             label={r.label}
             options={r.options}
             value={dir[r.key]}
+            multi={r.multi !== false}
+            addLabel={r.addLabel}
             onChange={(v) => onChange({ ...dir, [r.key]: v })}
           />
         ))}

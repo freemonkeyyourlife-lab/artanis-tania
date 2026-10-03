@@ -83,26 +83,51 @@ export const DIRECTION_OUTFITS = [
   { id: "NACKT", label: "Nackt", prompt: "Outfit: no clothing at all — she is completely nude, tasteful composition, nothing covering her." },
 ];
 
-export const emptyDirection = () => ({ stil: "", inhalt: "", stimmung: "", freizuegigkeit: "", klamotte: "" });
+// Mehrere Angaben dürfen gleichzeitig gewählt sein — auch Kombinationen wie
+// „Pool" und „Dusche". Ältere Einzelwerte werden dabei mitgelesen.
+export const toList = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+
+// Eigene Einträge, die nicht in der Liste stehen: sie werden getippt und
+// bekommen eine Kennung, damit sie sich wie die anderen an- und abschalten.
+const CUSTOM = "EIGEN:";
+const CUSTOM_PREFIX = { stil: "Style: ", inhalt: "Content: ", klamotte: "Outfit: ", stimmung: "Mood: " };
+
+export const customId = (text) => CUSTOM + text.trim();
+export const isCustom = (id) => typeof id === "string" && id.startsWith(CUSTOM);
+export const customText = (id) => (isCustom(id) ? id.slice(CUSTOM.length) : "");
+
+// Ein gewählter Eintrag ist entweder aus der Liste oder selbst getippt.
+export const resolveOption = (key, list, id) =>
+  pick(list, id) ||
+  (isCustom(id) ? { id, label: customText(id), prompt: `${CUSTOM_PREFIX[key] || ""}${customText(id)}.` } : null);
+
+export const emptyDirection = () => ({ stil: [], inhalt: [], stimmung: [], freizuegigkeit: "", klamotte: [] });
 
 const pick = (list, id) => list.find((o) => o.id === id) || null;
 export const directionLabel = (list, id) => pick(list, id)?.label || "";
 export const directionLevel = (id) => pick(DIRECTION_LEVELS, id);
 
+// Die Reihenfolge zählt: erst der Stil, dann der Ort, die Klamotte, die
+// Stimmung — die Stufe zum Schluss.
+const MULTI_ROWS = [
+  { key: "stil", list: DIRECTION_STYLES },
+  { key: "inhalt", list: DIRECTION_CONTENTS },
+  { key: "klamotte", list: DIRECTION_OUTFITS },
+  { key: "stimmung", list: DIRECTION_MOODS },
+];
+
 export const directionFilled = (d) =>
-  !!d && ["stil", "inhalt", "stimmung", "freizuegigkeit", "klamotte"].some((k) => d[k]);
+  !!d && (MULTI_ROWS.some((r) => toList(d[r.key]).length > 0) || !!d.freizuegigkeit);
 
 // Alles Gewählte in einer Reihenfolge, die Bild-Modelle gut verstehen.
 export function directionPrompt(d = {}) {
   const parts = [];
-  const style = pick(DIRECTION_STYLES, d.stil);
-  if (style) parts.push(style.prompt);
-  const content = pick(DIRECTION_CONTENTS, d.inhalt);
-  if (content) parts.push(content.prompt);
-  const outfit = pick(DIRECTION_OUTFITS, d.klamotte);
-  if (outfit) parts.push(outfit.prompt);
-  const mood = pick(DIRECTION_MOODS, d.stimmung);
-  if (mood) parts.push(mood.prompt);
+  MULTI_ROWS.forEach(({ key, list }) => {
+    toList(d[key]).forEach((id) => {
+      const o = resolveOption(key, list, id);
+      if (o) parts.push(o.prompt);
+    });
+  });
   const level = pick(DIRECTION_LEVELS, d.freizuegigkeit);
   if (level) parts.push(level.prompt);
   return parts.join(" ");
@@ -110,10 +135,16 @@ export function directionPrompt(d = {}) {
 
 // Die Regler in einem Satz — für die Vorschau im Regler-Block.
 export function directionSummary(d = {}) {
-  return [d.stil, d.inhalt, d.klamotte, d.stimmung, d.freizuegigkeit]
-    .map((id, i) => directionLabel([DIRECTION_STYLES, DIRECTION_CONTENTS, DIRECTION_OUTFITS, DIRECTION_MOODS, DIRECTION_LEVELS][i], id))
-    .filter(Boolean)
-    .join(" · ");
+  const names = [];
+  MULTI_ROWS.forEach(({ key, list }) => {
+    toList(d[key]).forEach((id) => {
+      const o = resolveOption(key, list, id);
+      if (o) names.push(o.label);
+    });
+  });
+  const level = directionLabel(DIRECTION_LEVELS, d.freizuegigkeit);
+  if (level) names.push(level);
+  return names.join(" · ");
 }
 
 // Welche Modelle passen zur eingestellten Freizügigkeit? Ein Modell ohne
