@@ -67,6 +67,7 @@ import UserPreview from '@/pages/UserPreview';
 import Legal from '@/pages/Legal';
 import NarratorStudio from '@/pages/NarratorStudio';
 import Spickzettel from '@/pages/Spickzettel';
+import Kulisse from '@/pages/Kulisse';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import NarratorCompanion from '@/components/narrator/NarratorCompanion';
@@ -156,6 +157,7 @@ const AuthenticatedApp = () => {
         <Route path="/stimmen" element={<VoiceStudio />} />
         <Route path="/anleitung" element={<Anleitung />} />
         <Route path="/spickzettel" element={<Spickzettel />} />
+        <Route path="/kulisse" element={<Kulisse />} />
         <Route path="/modellplan" element={<ModelPlan />} />
         <Route path="/archiv" element={<Archive />} />
         <Route path="/planung" element={<ContentPlan />} />

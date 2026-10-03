@@ -1,0 +1,71 @@
+{
+  "name": "CharacterBackstage",
+  "type": "object",
+  "properties": {
+    "characterId": {
+      "type": "string"
+    },
+    "characterName": {
+      "type": "string"
+    },
+    "meaning": {
+      "type": "string"
+    },
+    "story": {
+      "type": "string"
+    },
+    "experiences": {
+      "type": "string"
+    },
+    "voiceIdeas": {
+      "type": "string"
+    },
+    "scenes": {
+      "type": "string"
+    },
+    "humanPrompt": {
+      "type": "string"
+    },
+    "refImage": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "LEER",
+        "SKIZZE",
+        "FERTIG"
+      ],
+      "default": "SKIZZE"
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "characterId"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

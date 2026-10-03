@@ -169,6 +169,7 @@ export const PAGES = [
   { path: "/baukasten", label: "Baukasten (Bausteine, Pakete, Sprechzeilen)" },
   { path: "/anleitung", label: "Anleitung" },
   { path: "/spickzettel", label: "Spickzettel (Prompt-Länge, Modellwahl, Begriffe)" },
+  { path: "/kulisse", label: "Kulisse (hinter jeder Figur: was die User sehen und was nur du)" },
   { path: "/tutorial", label: "Tutorial" },
   { path: "/therapy", label: "Therapie-Sitzungen" },
   { path: "/paylinks", label: "Zahlungslinks" },

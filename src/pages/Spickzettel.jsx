@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { NotebookPen, Ruler, Layers, Film, BookOpen, UserSquare, Flame, Mic, Ban } from "lucide-react";
+import { NotebookPen, Ruler, Layers, Film, BookOpen, SquareUser, Flame, Mic, Ban } from "lucide-react";
 import {
   LENGTH_RULES,
   MODEL_PICKS,
@@ -132,7 +132,7 @@ export default function Spickzettel() {
         </Card>
 
         <Card
-          icon={UserSquare}
+          icon={SquareUser}
           title="Dieselbe Person nochmal"
           intro="Der Weg zum Wiedererkennungswert — damit sie nicht bei jedem Bild anders aussieht."
         >
