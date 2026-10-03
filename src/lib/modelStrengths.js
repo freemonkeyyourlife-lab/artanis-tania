@@ -369,6 +369,88 @@ const RULES = [
   },
 ];
 
+// Wofür ein Modell gut ist, wenn es nicht um Gesichter geht: Gegenstände,
+// Landschaft, Räume, Tiere. Wer nur Köpfe kann, kann dir keinen Abzug bauen.
+export const CAPABILITIES = [
+  { id: "GESICHT", label: "Gesichter", tone: "bg-sky-500/15 text-sky-300 border-sky-500/30" },
+  { id: "KOERPER", label: "Körper & Haut", tone: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
+  { id: "GEGENSTAENDE", label: "Gegenstände", tone: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+  { id: "LANDSCHAFT", label: "Landschaft", tone: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
+  { id: "ARCHITEKTUR", label: "Räume & Bau", tone: "bg-teal-500/15 text-teal-300 border-teal-500/30" },
+  { id: "TIERE", label: "Tiere", tone: "bg-lime-500/15 text-lime-300 border-lime-500/30" },
+  { id: "FAHRZEUGE", label: "Fahrzeuge", tone: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30" },
+  { id: "GRUPPEN", label: "Mehrere Personen", tone: "bg-violet-500/15 text-violet-300 border-violet-500/30" },
+  { id: "HAENDE", label: "Hände & Details", tone: "bg-orange-500/15 text-orange-300 border-orange-500/30" },
+  { id: "SCHRIFT", label: "Schrift im Bild", tone: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30" },
+];
+
+const WIDE = ["GESICHT", "KOERPER", "GEGENSTAENDE", "LANDSCHAFT", "ARCHITEKTUR", "TIERE", "FAHRZEUGE", "GRUPPEN", "HAENDE"];
+const WIDE_TEXT = [...WIDE, "SCHRIFT"];
+const PORTRAIT = ["GESICHT", "KOERPER"];
+const PORTRAIT_PLUS = ["GESICHT", "KOERPER", "GEGENSTAENDE", "GRUPPEN"];
+const ANIME = ["GESICHT", "KOERPER", "GEGENSTAENDE", "GRUPPEN", "HAENDE"];
+
+// Das Speziellere steht oben: die Weiten zuerst, die reinen Porträt-Maler zuletzt.
+const CAPABILITY_RULES = [
+  { match: ["nano-banana"], can: WIDE_TEXT },
+  { match: ["nanobanana"], can: WIDE_TEXT },
+  { match: ["gemini"], can: WIDE_TEXT },
+  { match: ["gpt-image"], can: WIDE_TEXT },
+  { match: ["gptimage"], can: WIDE_TEXT },
+  { match: ["seedream"], can: WIDE_TEXT },
+  { match: ["imagen"], can: WIDE_TEXT },
+  { match: ["qwen"], can: WIDE_TEXT },
+  { match: ["flux"], can: WIDE },
+  { match: ["stable-diffusion-3"], can: WIDE },
+  { match: ["sdxl"], can: WIDE },
+  { match: ["hidream"], can: WIDE },
+  { match: ["kolors"], can: WIDE },
+  { match: ["z-image"], can: WIDE },
+  { match: ["zimage"], can: WIDE },
+  { match: ["lumina"], can: WIDE },
+  { match: ["playground"], can: WIDE },
+  { match: ["dreamshaper"], can: WIDE },
+  { match: ["chroma"], can: WIDE },
+  { match: ["sana"], can: WIDE },
+  { match: ["wan"], can: WIDE },
+  { match: ["pony"], can: ANIME },
+  { match: ["wai"], can: ANIME },
+  { match: ["hassaku"], can: ANIME },
+  { match: ["noob"], can: ANIME },
+  { match: ["illustrious"], can: ANIME },
+  { match: ["animagine"], can: ANIME },
+  { match: ["anything"], can: ANIME },
+  { match: ["counterfeit"], can: ANIME },
+  { match: ["pixart"], can: ANIME },
+  { match: ["chilloutmix"], can: PORTRAIT },
+  { match: ["majicmix"], can: PORTRAIT },
+  { match: ["realvis"], can: PORTRAIT },
+  { match: ["realistic", "vision"], can: PORTRAIT },
+  { match: ["cyberrealistic"], can: PORTRAIT },
+  { match: ["uberrealistic"], can: PORTRAIT },
+  { match: ["epicrealism"], can: PORTRAIT },
+  { match: ["lustify"], can: PORTRAIT },
+  { match: ["juggernaut"], can: PORTRAIT },
+  { match: ["dreamlike"], can: PORTRAIT },
+  { match: ["revanimated"], can: PORTRAIT },
+  { match: ["openjourney"], can: PORTRAIT },
+];
+
+export const capabilityOption = (id) => CAPABILITIES.find((c) => c.id === id) || null;
+export const capabilityLabel = (id) => capabilityOption(id)?.label || id;
+
+// Was es kann: erst das selbst Eingetragene, sonst die Familie. Kein Modell bleibt leer.
+export function modelCapabilities(model) {
+  const own = Array.isArray(model?.capabilities) ? model.capabilities.filter(Boolean) : [];
+  if (own.length) return own;
+  const hay = `${model?.modelId || ""} ${model?.name || ""}`.toLowerCase();
+  const rule = CAPABILITY_RULES.find((r) => r.match.every((part) => hay.includes(part)));
+  return rule ? rule.can : PORTRAIT_PLUS;
+}
+
+// Je mehr es kann, desto weiter oben steht es.
+export const capabilityCount = (model) => modelCapabilities(model).length;
+
 // Was in den Kategorien steht, wird zu Etiketten — damit kein Modell leer bleibt.
 const STYLE_CHIPS = {
   FOTOREAL: "Fotoreal",

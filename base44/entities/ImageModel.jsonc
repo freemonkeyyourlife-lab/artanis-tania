@@ -50,6 +50,12 @@
         "HART"
       ]
     },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "moods": {
       "type": "array",
       "items": {

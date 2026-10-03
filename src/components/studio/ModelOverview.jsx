@@ -2,15 +2,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image as ImageIcon, Type, Power, Loader2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { modelStrength } from "@/lib/modelStrengths";
+import { modelStrength, modelCapabilities, capabilityLabel, capabilityCount } from "@/lib/modelStrengths";
 import ModelStrengthNote from "@/components/studio/ModelStrengthNote";
+import ModelCapabilityBar from "@/components/studio/ModelCapabilityBar";
 
 const SOURCE_LABELS = {
   HUGGING_FACE: "Hugging Face",
   POLLINATIONS: "Pollinations (frei)",
 };
 
-function ModelRow({ model, onToggle }) {
+function ModelRow({ model, onToggle, showCapabilities }) {
   return (
     <div className={cn("flex items-center gap-3 p-3 rounded-xl bg-elevated border border-border", !model.enabled && "opacity-60")}>
       <div className="min-w-0 flex-1">
@@ -18,6 +19,18 @@ function ModelRow({ model, onToggle }) {
         <p className="text-[11px] text-muted-foreground truncate">{model.modelId}</p>
         {model.note && <p className="text-[11px] text-muted-foreground truncate">{model.note}</p>}
         <ModelStrengthNote chips={modelStrength(model).chips} hint={modelStrength(model).hint} />
+        {showCapabilities && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {modelCapabilities(model).map((id) => (
+              <span
+                key={id}
+                className="px-2 py-0.5 rounded-full border border-border bg-background text-[10px] font-bold text-muted-foreground"
+              >
+                {capabilityLabel(id)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <button
         onClick={() => onToggle(model)}
@@ -39,6 +52,8 @@ export default function ModelOverview({ onOpenTab }) {
   const [images, setImages] = useState([]);
   const [texts, setTexts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [caps, setCaps] = useState([]);
+  const [sort, setSort] = useState("default");
 
   useEffect(() => { load(); }, []);
 
@@ -68,15 +83,20 @@ export default function ModelOverview({ onOpenTab }) {
   };
 
   const imageGroups = useMemo(() => {
+    const shown = images
+      .filter((m) => !caps.length || caps.every((c) => modelCapabilities(m).includes(c)))
+      .sort((a, b) =>
+        sort === "vielfalt" ? capabilityCount(b) - capabilityCount(a) || Number(b.enabled) - Number(a.enabled) : 0
+      );
     const out = [];
     for (const key of ["HUGGING_FACE", "POLLINATIONS"]) {
-      const rows = images.filter((m) => (m.source || "HUGGING_FACE") === key);
+      const rows = shown.filter((m) => (m.source || "HUGGING_FACE") === key);
       if (rows.length) out.push({ key, label: SOURCE_LABELS[key], rows });
     }
-    const other = images.filter((m) => !["HUGGING_FACE", "POLLINATIONS"].includes(m.source || "HUGGING_FACE"));
+    const other = shown.filter((m) => !["HUGGING_FACE", "POLLINATIONS"].includes(m.source || "HUGGING_FACE"));
     if (other.length) out.push({ key: "ANDERE", label: "Weitere", rows: other });
     return out;
-  }, [images]);
+  }, [images, caps, sort]);
 
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -96,6 +116,8 @@ export default function ModelOverview({ onOpenTab }) {
           {activeImages} von {images.length} an — nach Plattform sortiert.
         </p>
 
+        <ModelCapabilityBar models={images} value={caps} onChange={setCaps} sort={sort} onSort={setSort} />
+
         <div className="space-y-5">
           {imageGroups.map((g) => (
             <div key={g.key}>
@@ -103,7 +125,7 @@ export default function ModelOverview({ onOpenTab }) {
                 {g.label} · {g.rows.length}
               </p>
               <div className="space-y-2">
-                {g.rows.map((m) => <ModelRow key={m.id} model={m} onToggle={toggleImage} />)}
+                {g.rows.map((m) => <ModelRow key={m.id} model={m} onToggle={toggleImage} showCapabilities />)}
               </div>
             </div>
           ))}

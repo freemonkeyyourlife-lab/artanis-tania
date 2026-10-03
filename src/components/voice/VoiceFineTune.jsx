@@ -49,19 +49,19 @@ export default function VoiceFineTune({ voice, onChange }) {
         <Row
           label="Halt" value={v.stability ?? AUTO}
           left="schwankend" right="ganz fest"
-          hint="Fest hält die Stimme ruhig, schwankend lässt sie atmen."
+          hint="Fest hält die Stimme gleichmäßig und ruhig. Weiter links lässt sie atmen und schwanken — lebendiger, aber auch wackeliger. Hier sitzt der Atem."
           onChange={(n) => onChange({ stability: n })}
         />
         <Row
           label="Spiel" value={v.style ?? AUTO}
           left="nüchtern" right="ausdrucksvoll"
-          hint="Mehr Spiel heißt mehr Betonung und Farbe."
+          hint="Wie viel Farbe und Betonung in den einzelnen Wörtern liegt. Rechts klingt sie lebhaft, links sachlich."
           onChange={(n) => onChange({ style: n })}
         />
         <Row
           label="Nähe" value={v.similarity ?? AUTO}
           left="frei" right="nah am Original"
-          hint="Wie dicht die Ausgabe an der Ursprungsstimme bleibt."
+          hint="Wie dicht die Ausgabe an deiner Aufnahme bleibt. Weiter rechts klingt sie mehr nach dem Original, weiter links freier."
           onChange={(n) => onChange({ similarity: n })}
         />
       </div>

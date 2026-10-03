@@ -12,12 +12,13 @@ import { MOODS } from "@/lib/voiceDj";
 
 const TEST_TEXT = "Hey … ich bin's. Bleib kurz da, ich will dir was sagen.";
 
-function Slider({ label, value, min, max, step, onChange, left, right }) {
+function Slider({ label, value, min, max, step, onChange, left, right, hint }) {
   return (
     <div>
       <p className="text-xs font-semibold text-muted-foreground mb-1.5">{label}</p>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full accent-[hsl(var(--primary))]" />
       <div className="flex justify-between text-[10px] text-muted-foreground"><span>{left}</span><span>{right}</span></div>
+      {hint && <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{hint}</p>}
     </div>
   );
 }
@@ -90,7 +91,10 @@ export default function VoiceTuner({ voice, creatorId, onSaved }) {
       <VoiceDescribeBox voice={draft} onApply={applyDescription} />
 
       <div>
-        <p className="text-xs font-semibold text-muted-foreground mb-2">Stimmung</p>
+        <p className="text-xs font-semibold text-muted-foreground">Stimmung</p>
+        <p className="text-[11px] text-muted-foreground mb-2">
+          Der Grundklang. Ein Klick setzt Tempo und Tonlage gleich mit — die Regler darunter kannst du danach einzeln nachziehen.
+        </p>
         <div className="flex flex-wrap gap-2">
           {MOODS.map((m) => (
             <button
@@ -109,12 +113,27 @@ export default function VoiceTuner({ voice, creatorId, onSaved }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <Slider label={`Lautstärke — ${volume} %`} value={volume} min={0} max={100} step={5} onChange={setVolume} left="leise" right="laut" />
+        <Slider
+          label={`Lautstärke — ${volume} %`} value={volume} min={0} max={100} step={5} onChange={setVolume} left="leise" right="laut"
+          hint="Wie laut sie im Raum steht. Greift sofort beim Anhören."
+        />
 
-        <Slider label={`Tonlage — ${depth > 0 ? "+" : ""}${depth}`} value={depth} min={-25} max={25} step={1} onChange={setDepth} left="tiefer" right="höher" />
-        <Slider label={`Intensität — ${intensity}`} value={intensity} min={0} max={100} step={5} onChange={setIntensity} left="ruhig" right="leidenschaftlich" />
-        <Slider label={`Ausklang am Satzende — ${ending}`} value={ending} min={0} max={100} step={5} onChange={setEnding} left="abgehackt" right="kommt runter" />
-        <Slider label={`Tempo — ${speed.toFixed(2)}×`} value={speed} min={0.7} max={1.3} step={0.02} onChange={setSpeed} left="langsam" right="schnell" />
+        <Slider
+          label={`Tonlage — ${depth > 0 ? "+" : ""}${depth}`} value={depth} min={-25} max={25} step={1} onChange={setDepth} left="tiefer" right="höher"
+          hint="Tiefer klingt dunkler und voller, höher heller und jünger. Für eine Frauenstimme meist ein Stück nach oben."
+        />
+        <Slider
+          label={`Intensität — ${intensity}`} value={intensity} min={0} max={100} step={5} onChange={setIntensity} left="ruhig" right="leidenschaftlich"
+          hint="Wie viel Druck in der Stimme liegt: ruhig erzählt bis drängend und erregt."
+        />
+        <Slider
+          label={`Ausklang am Satzende — ${ending}`} value={ending} min={0} max={100} step={5} onChange={setEnding} left="abgehackt" right="kommt runter"
+          hint="Wie sie das letzte Wort loslässt — hier liegen ihre Endungen. Abgehackt klingt hart, runtergezogen weich und müde."
+        />
+        <Slider
+          label={`Tempo — ${speed.toFixed(2)}×`} value={speed} min={0.7} max={1.3} step={0.02} onChange={setSpeed} left="langsam" right="schnell"
+          hint="Wie schnell sie spricht. Langsam wirkt überlegt, schnell aufgeregt."
+        />
       </div>
       <p className="text-[11px] text-muted-foreground">
         Drück auf Anhören und dreh dabei an den Reglern — Lautstärke greift sofort, Tonlage, Intensität,
