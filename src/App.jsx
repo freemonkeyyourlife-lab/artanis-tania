@@ -78,6 +78,7 @@ import CreateConsole from '@/components/creator/CreateConsole';
 import ImportStatusPill from '@/components/import/ImportStatusPill';
 import GodPencilLayer from '@/components/god/GodPencilLayer';
 import GodNotesBar from '@/components/god/GodNotesBar';
+import GuideConsole from '@/components/god/GuideConsole';
 import FloatingZones from '@/components/floating/FloatingZones';
 
 const AuthenticatedApp = () => {
@@ -118,6 +119,7 @@ const AuthenticatedApp = () => {
       <ImportStatusPill />
       <GodPencilLayer />
       <GodNotesBar />
+      <GuideConsole />
       <Routes>
       {/* Add your page Route elements here */}
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
