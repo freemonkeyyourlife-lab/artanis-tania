@@ -235,18 +235,26 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
           <ImageDirectionPanel value={direction} onChange={setDirection} title="Regie: Stil, Inhalt, Stimmung, Freizügigkeit, Klamotte" />
           <FinalPromptPreview text={buildPrompt()} />
 
-          <button
-            onClick={generate}
-            disabled={busy || (!prompt.trim() && !appearance.trim())}
-            className={cn(btnAccentCls, "w-full justify-center py-3")}
-          >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {busy
-              ? "Wird erzeugt …"
-              : modelKeys.length > 1
-                ? `Bild × ${modelKeys.length}`
-                : "Bild erzeugen"}
-          </button>
+          {/* Der Knopf bleibt beim Scrollen unten stehen — man kann ihn nicht übersehen. */}
+          <div className="sticky bottom-4 z-20 pt-1">
+            <button
+              onClick={generate}
+              disabled={busy || (!prompt.trim() && !appearance.trim())}
+              className={cn(btnAccentCls, "w-full justify-center py-3.5 text-[15px] shadow-2xl")}
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {busy
+                ? "Wird erzeugt …"
+                : modelKeys.length > 1
+                  ? `Bild erzeugen × ${modelKeys.length} Modelle`
+                  : "Bild erzeugen"}
+            </button>
+            {!busy && !prompt.trim() && !appearance.trim() && (
+              <p className="mt-2 text-center text-[12px] font-semibold text-muted-foreground">
+                Erst „Wie sie aussieht" oder den Prompt ausfüllen — dann wird der Knopf aktiv.
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
