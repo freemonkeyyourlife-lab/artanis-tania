@@ -8,6 +8,8 @@ const SCHEMA = {
   properties: {
     prompt: { type: "string" },
     negative: { type: "string" },
+    subject: { type: "string" },
+    setting: { type: "string" },
     style: { type: "string" },
     light: { type: "string" },
     colors: { type: "string" },
@@ -15,13 +17,15 @@ const SCHEMA = {
   },
 };
 
-const INSTRUCTION = `Du siehst ein Bild. Schreibe daraus einen fertigen Prompt, mit dem ein Bildgenerator dieselbe Szene neu bauen kann.
+const INSTRUCTION = `Du siehst ein Bild. Schreibe daraus einen fertigen Prompt, mit dem ein Bildgenerator dieselbe Aufnahme neu bauen kann — egal, was zu sehen ist: eine Person, ein Raum, ein Fahrzeug, eine Landschaft, ein Gegenstand.
 
-Achte auf: Stil und Medium, Licht und Tageszeit, Farbstimmung, Kamera und Ausschnitt, Umgebung, Kleidung, Pose, Stimmung.
-Beschreibe klar und konkret, in der Reihenfolge: Motiv, Umgebung, Kleidung, Pose, Licht, Stil, Kamera.
+Beschreibe zuerst, WAS zu sehen ist, und dann, WO es steht. Nenne die Dinge beim Namen: das Flugzeug, die Sitzreihe, die Fenster, der Tisch, das Glas, die Wand, das Geländer. Erfinde nichts dazu, was nicht im Bild ist — aber lass nichts weg, was die Aufnahme ausmacht.
 
-Antworte auf Deutsch. "prompt" ist der fertige Satz zum Einfügen (zwei bis vier Sätze, keine Aufzählung, keine Anführungszeichen).
-"negative" sind die Dinge, die nicht ins Bild sollen (leer lassen, wenn nichts nötig).
+Achte auf: Motiv und Haltung, Umgebung und alle Gegenstände darin, Licht und Tageszeit, Farbstimmung, Material und Oberfläche, Kamera, Ausschnitt und Blickwinkel, Stil und Medium.
+
+Antworte auf Deutsch. "prompt" ist der fertige Satz zum Einfügen (drei bis fünf Sätze, keine Aufzählung, keine Anführungszeichen).
+"negative" sind die Dinge, die nicht ins Bild sollen — Gegenstände, die dort nicht hingehören, falsche Stimmung, typische Fehler (leer lassen, wenn nichts nötig).
+"subject" ist das Motiv in einem Halbsatz. "setting" ist die Umgebung mit ihren Gegenständen in einem Halbsatz.
 "style", "light", "colors" und "camera" sind je ein kurzer Halbsatz.`;
 
 // Ein Bild hinein — ein fertiger Prompt heraus. Die App liest das Bild selbst,
@@ -76,8 +80,9 @@ export default function ImageToPrompt() {
         <h2 className="text-[17px] font-bold text-foreground">Bild auslesen</h2>
       </div>
       <p className="text-[13px] font-semibold text-muted-foreground mb-4 max-w-3xl leading-relaxed">
-        Lade ein Bild hoch — die App liest Stil, Licht, Farben und Ausschnitt und schreibt daraus den fertigen Prompt.
-        Für deine eigenen Figuren und für Szenen, die du nachbauen willst.
+        Lade ein Bild hoch — die App liest Motiv, Umgebung und alle Gegenstände darin, dazu Licht, Farben und
+        Ausschnitt, und schreibt daraus den fertigen Prompt. Für alles: Figuren, Räume, Fahrzeuge, Landschaften,
+        Gegenstände. Aus einem Video ziehst du vorher ein Einzelbild heraus.
       </p>
 
       {!preview ? (

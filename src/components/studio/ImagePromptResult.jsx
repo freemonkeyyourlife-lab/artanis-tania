@@ -3,6 +3,8 @@ import { Copy } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const ROWS = [
+  { key: "subject", label: "Motiv" },
+  { key: "setting", label: "Umgebung & Gegenstände" },
   { key: "style", label: "Stil" },
   { key: "light", label: "Licht" },
   { key: "colors", label: "Farben" },
@@ -46,6 +48,10 @@ export default function ImagePromptResult({ result }) {
             </button>
           </div>
           <p className="text-[14px] font-semibold text-foreground leading-relaxed whitespace-pre-wrap">{result.negative}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground mt-2 leading-snug">
+            Hier stehen die Dinge, die nicht ins Bild sollen. Genauso wichtig wie der Prompt: was fehlt, füllt die
+            Maschine mit Zufall.
+          </p>
         </div>
       )}
 
