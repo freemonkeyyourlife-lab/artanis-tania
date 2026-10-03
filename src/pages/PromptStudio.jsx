@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Blocks } from "lucide-react";
 import PromptGenerator from "@/components/studio/PromptGenerator";
+import ImageToPrompt from "@/components/studio/ImageToPrompt";
 import PromptRulePanel from "@/components/studio/PromptRulePanel";
 import HashtagManager from "@/components/studio/HashtagManager";
 
@@ -18,6 +19,10 @@ export default function PromptStudio() {
           Sprich deine Idee oder tippe sie — daraus wird ein fertiger Prompt fürs externe Studio, mit Negativ-Prompt
           und LoRA-Zusatz. Alles kannst du vor dem Kopieren noch bearbeiten.
         </p>
+      </div>
+
+      <div className="mb-5">
+        <ImageToPrompt />
       </div>
 
       <PromptGenerator />
