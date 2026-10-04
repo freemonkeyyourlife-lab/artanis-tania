@@ -236,6 +236,21 @@ export const LERN_TOPICS = [
         ],
       },
       {
+        frage: "Wer geht wie weit — und wo endet jedes Modell?",
+        antwort:
+          "Jedes Modell geht genau so weit, wie seine Aufgabe reicht. Danach übernimmt das nächste. Keins macht alles — deshalb ist es eine Kette und keine Wahl.",
+        punkte: [
+          "Entwerfen (Z-Image-Turbo, Qwen-Lightning): weit in der Menge, nicht in der Nähe. Zwanzig Varianten in Minuten — aber das Gesicht wandert.",
+          "Nano Banana Basis: so weit wie Pro, was das Gesicht angeht. Endet bei Schrift im Bild, 2K und mehreren Figuren.",
+          "Nano Banana Pro: Schrift, 2K und 4K, mehrere Figuren auf einem Blatt. Endet bei extremer Treue über hunderte Bilder.",
+          "FLUX.1 Kontext: bearbeitet ein vorhandenes Bild — dieselbe Person, neue Pose. Endet dort, wo du frei neu erfinden willst.",
+          "Trainierter LoRA: geht am weitesten. Dieselbe Figur in jeder Pose, für 3 bis 5 Cent das Bild. Endet nur bei einem: gilt nur für dieses eine Gesicht.",
+          "Schärfen (SUPIR, SeedVR): holt 4K und Hautporen heraus. Endet, wo das Bild selbst unscharf ist — aus Matsch wird kein Detail.",
+        ],
+        beispiel:
+          "Auf fal.ai, Feld „5 Modelle“: die Zahl ist kein Rabatt.\nEst. 0,37 $ heißt 0,37 $ für einen Durchlauf über alle fünf — also rund 7 Cent je Modell.\nLieber eins nach dem anderen laufen lassen, dann weißt du, welches es war.",
+      },
+      {
         frage: "Was ist ein LoRA?",
         antwort:
           "Ein Zusatz, der einem Modell etwas beibringt — einen Stil oder ein Gesicht. Aus 10 bis 20 guten Bildern wird eine Figur, die in jeder Pose dieselbe bleibt. Einmal antrainiert, danach für immer verfügbar.",
