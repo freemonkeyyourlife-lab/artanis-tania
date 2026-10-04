@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { BANANA_MODELS, BANANA_PARAMS, BANANA_WATCH, BANANA_RECIPE, BANANA_MODULES } from "@/lib/bananaModules";
 import BananaPromptCard from "@/components/banana/BananaPromptCard";
+import BananaWishBox from "@/components/banana/BananaWishBox";
+import BananaGlossary from "@/components/banana/BananaGlossary";
 
 // Nano Banana: welches Modell, wie ein Prompt aufgebaut ist, was schiefgeht —
 // und die Module zum Kopieren.
@@ -23,6 +25,8 @@ export default function BananaStudio() {
           Unten stehen fertige Module — Text kopieren, die GROSSBUCHSTABEN in Klammern ersetzen, fertig.
         </p>
       </header>
+
+      <BananaWishBox />
 
       <section className="mb-10">
         <h2 className="text-xl font-display text-foreground mb-3">Welches Modell?</h2>
@@ -73,6 +77,8 @@ export default function BananaStudio() {
           </div>
         </div>
       </section>
+
+      <BananaGlossary />
 
       <section>
         <h2 className="text-xl font-display text-foreground mb-3">Module zum Kopieren</h2>
