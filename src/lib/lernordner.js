@@ -327,6 +327,25 @@ export const LERN_TOPICS = [
         beispiel:
           "Erstelle ein Charakter-Blatt mit vier Ansichten derselben Frau aus dem Referenzbild: Frontal, Dreiviertel, Profil, Ganzkörper. Gleiches Gesicht, gleiche Frisur, gleiche Augenfarbe, neutrale Kleidung, gleichmäßiges Licht, einfarbiger grauer Hintergrund.",
       },
+      {
+        frage: "Klick für Klick: fünf Frauen anlegen",
+        antwort:
+          "Einmal durchklicken, dann wiederholst du es einfach. Zwanzig Sekunden pro Bild.",
+        punkte: [
+          "1. fal.ai öffnen. Oben auf Generate.",
+          "2. Prompt ins Textfeld einfügen (steht unten zum Kopieren).",
+          "3. Links unten: Text To Image. Rechts daneben: 3:4.",
+          "4. Beim Modell-Feld: FLUX.1 dev auswählen.",
+          "5. Run drücken. Etwa zwanzig Sekunden warten.",
+          "6. Gefällt sie dir? Rechtsklick aufs Bild, Bild speichern. Gefällt sie dir nicht? Nochmal Run.",
+          "7. In die App: Ideen-Ordner, Bild hochladen, Name geben — Frau 1.",
+          "8. Schritt 2 bis 7 noch vier Mal. Jede Frau bekommt einen eigenen Namen.",
+          "9. Später trainieren: von jeder Frau 15 Bilder sammeln, alle 15 in einen Ordner, als ZIP packen.",
+          "10. fal.ai, flux-lora-fast-training, ZIP hochladen, Run. Rund 2 $. Fertig — ab jetzt ist sie in jedem Bild dieselbe.",
+        ],
+        beispiel:
+          "Fotorealistische Frau, 28 Jahre, langes dunkles Haar, grüne Augen, schlank, natürliche Haut mit Poren.\nStehend, Ganzkörper, grauer Hintergrund, weiches Tageslicht.\n50 mm, Kamera auf Augenhöhe, kein Weichzeichner.\nKeine verzerrten Hände, kein Text im Bild.",
+      },
     ],
   },
 ];
