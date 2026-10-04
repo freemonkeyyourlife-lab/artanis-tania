@@ -240,6 +240,63 @@ export const LERN_TOPICS = [
         antwort:
           "Ein Zusatz, der einem Modell etwas beibringt — einen Stil oder ein Gesicht. Aus 10 bis 20 guten Bildern wird eine Figur, die in jeder Pose dieselbe bleibt. Einmal antrainiert, danach für immer verfügbar.",
       },
+      {
+        frage: "Wo finde ich das LoRA-Training — und was kostet es?",
+        antwort:
+          "Bei fal.ai, dort wo auch Nano Banana läuft. Zwei Angebote: „flux-lora-fast-training“ für rund 2 Dollar pro Durchlauf, und der neuere „flux-2-trainer“ für rund 6,40 Dollar bei 1000 Schritten. Du lädst 10 bis 20 Bilder derselben Figur als ZIP hoch und gibst ein Trigger-Wort an — ein Kunstwort wie „trnwoman“, das ab dann für diese Figur steht. Nach ein paar Minuten ist das Modell fertig und liegt dauerhaft bereit.",
+        punkte: [
+          "Der Preis hängt an der Zahl der Schritte, nicht an der Zahl der Bilder.",
+          "Nimm als Trainingsbilder am besten welche, die du selbst mit Nano Banana erzeugt hast — dann gibt es kein Rechte-Problem mit echten Personen.",
+          "Zehn bis zwanzig Bilder reichen. Mehr Bilder machen es nicht besser, nur langsamer.",
+        ],
+        beispiel:
+          "fal.ai → fal-ai/flux-lora-fast-training\nimages_data_url: die ZIP-Datei mit 15 Bildern\ntrigger_word: trnwoman\nis_style: false\n→ fertig in wenigen Minuten, ca. 2 $",
+      },
+      {
+        frage: "Ist das Basis-Modell gut genug — auch für einzelne Bilder?",
+        antwort:
+          "Ja. Nano Banana Basis ist dasselbe Modell wie Pro, nur ohne die Extras. Für ein einzelnes Bild einer Figur ist die Qualität gleich — der Unterschied liegt nicht im Gesicht, sondern im Beiwerk.",
+        punkte: [
+          "Basis, rund 0,039 $ pro Bild: normale Größe (1K), keine Schrift im Bild, eine Figur sicher.",
+          "Pro, rund 0,15 $ pro Bild: Schrift und Logos im Bild, 2K und 4K, mehrere Figuren in einem Bild.",
+          "Für alles, wo dieselbe Person bleiben soll, reicht die Basis völlig.",
+        ],
+      },
+      {
+        frage: "Was kostet es nach dem Training?",
+        antwort:
+          "Das Training zahlst du einmal. Danach kostet nur noch das Bild — und zwar weniger als bei Nano Banana.",
+        punkte: [
+          "FLUX.1 mit deinem LoRA: rund 0,03 bis 0,05 $ pro Bild.",
+          "FLUX.1 schnell: rund 0,003 $ pro Megapixel — die billigste Masse überhaupt.",
+          "Das trainierte Modell bleibt liegen, solange du es nicht löschst. Du kannst es also jederzeit wieder benutzen.",
+        ],
+      },
+      {
+        frage: "Was mache ich am besten mit 20 Dollar — und was bekomme ich dann?",
+        antwort:
+          "Erst den Charakter festnageln, dann Bilder machen. So bekommst du für 20 Dollar eine Figur, die für immer dieselbe bleibt, und dazu mehrere hundert Bilder.",
+        punkte: [
+          "2 $ — ein Charakter antrainieren (einmalig, für immer).",
+          "0,15 $ — ein Charakter-Blatt mit vier Ansichten, um die Figur endgültig festzulegen.",
+          "0,60 $ — vier Einzelbilder in voller Größe zum Zeigen.",
+          "Rest, rund 17 $ — bei Nano Banana Basis etwa 440 Bilder, mit deinem trainierten LoRA etwa 570.",
+        ],
+        beispiel:
+          "20 $ = 1 Charakter für immer + rund 440 Bilder.\n\nReihenfolge:\n1. Charakter-Blatt entwerfen (0,15 $)\n2. Die beste Ansicht als Ankerbild ins Archiv\n3. LoRA trainieren (2 $)\n4. Ab jetzt jedes Bild für 0,03–0,04 $",
+      },
+      {
+        frage: "Ist es schlauer, mehrere Figuren in ein Bild zu packen?",
+        antwort:
+          "Zum Planen ja, zum Zeigen nein. Ein Blatt mit vier Ansichten kostet 0,15 $ statt 0,60 $ für vier einzelne — aber jede Figur bekommt nur ein Viertel der Bildpunkte. Für ein großes Bild wird das weich.",
+        punkte: [
+          "Blatt: entwerfen, ausprobieren, ins Archiv legen. Dafür ist Pro gebaut — es hält dasselbe Gesicht über mehrere Figuren.",
+          "Einzelbild: das, was du wirklich zeigst. Immer in voller Größe.",
+          "Zerteilen lohnt sich für Auswahlbilder, nicht für die Endfassung.",
+        ],
+        beispiel:
+          "Erstelle ein Charakter-Blatt mit vier Ansichten derselben Frau aus dem Referenzbild: Frontal, Dreiviertel, Profil, Ganzkörper. Gleiches Gesicht, gleiche Frisur, gleiche Augenfarbe, neutrale Kleidung, gleichmäßiges Licht, einfarbiger grauer Hintergrund.",
+      },
     ],
   },
 ];

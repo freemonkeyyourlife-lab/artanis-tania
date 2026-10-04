@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 // Eine Frage mit ihrer Antwort. Zugeklappt sieht man nur die Fragen — so findet
 // man die richtige schnell und öffnet erst dann.
-export default function LernEntry({ frage, antwort, punkte }) {
+export default function LernEntry({ frage, antwort, punkte, beispiel }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -31,6 +31,12 @@ export default function LernEntry({ frage, antwort, punkte }) {
                 </li>
               ))}
             </ul>
+          )}
+          {beispiel && (
+            <div className="mt-3 rounded-xl bg-elevated border border-primary/30 p-3">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-1">Beispiel</p>
+              <p className="text-[13px] font-semibold text-foreground/90 leading-relaxed whitespace-pre-wrap">{beispiel}</p>
+            </div>
           )}
         </div>
       )}
