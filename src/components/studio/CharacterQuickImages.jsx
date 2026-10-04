@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Upload, X, Star, Loader2 } from "lucide-react";
+import { Upload, X, Star, Loader2, Archive } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { addGalleryItems } from "@/lib/gallery";
+import { uploadToArchive } from "@/lib/imageArchive";
+import ArchivePicker from "@/components/images/ArchivePicker";
 
 // Bilder direkt am Charakter: hochladen, zuweisen, fertig — ohne Umweg übers Formular.
 export default function CharacterQuickImages({ creator, onClose, onChanged }) {
@@ -12,6 +14,7 @@ export default function CharacterQuickImages({ creator, onClose, onChanged }) {
   const [avatar, setAvatar] = useState(creator.avatar || "");
   const [refs, setRefs] = useState(creator.referenceImages || []);
   const [busy, setBusy] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   const persist = async (nextAvatar, nextRefs) => {
     const data = { avatar: nextAvatar, referenceImages: nextRefs };
@@ -25,11 +28,7 @@ export default function CharacterQuickImages({ creator, onClose, onChanged }) {
     if (!files.length) return;
     setBusy(true);
     try {
-      const urls = [];
-      for (const f of files) {
-        const res = await base44.integrations.Core.UploadPublicFile({ file: f });
-        urls.push(res.file_url);
-      }
+      const urls = await uploadToArchive(files, { kind: "CHARAKTER" });
       await addGalleryItems({ urls, creatorId: creator.id, creatorName: creator.stageName });
       const rest = [...urls];
       let nextAvatar = avatar;
@@ -61,6 +60,14 @@ export default function CharacterQuickImages({ creator, onClose, onChanged }) {
     await persist(avatar, nextRefs);
   };
 
+  // Ein Bild, das schon im Archiv liegt, direkt an den Charakter hängen.
+  const addFromArchive = async (url) => {
+    if (avatar === url || refs.includes(url)) return;
+    const nextRefs = [...refs, url];
+    setRefs(nextRefs);
+    await persist(avatar, nextRefs);
+  };
+
   return (
     <div className="mb-6 rounded-2xl border border-primary/30 bg-card p-5">
       <div className="flex items-center justify-between gap-3 mb-1">
@@ -73,11 +80,30 @@ export default function CharacterQuickImages({ creator, onClose, onChanged }) {
         Mehrere Bilder auf einmal wählen: Das erste wird das Hauptbild, alle weiteren sind Referenzen, damit sie in jedem Chat-Bild gleich aussieht. Alles ist sofort gespeichert.
       </p>
 
-      <label className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-        {busy ? "Lädt …" : "Bilder hochladen (mehrere)"}
-        <input type="file" accept="image/*" multiple onChange={pick} className="hidden" />
-      </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+          {busy ? "Lädt …" : "Bilder hochladen (mehrere)"}
+          <input type="file" accept="image/*" multiple onChange={pick} className="hidden" />
+        </label>
+        <button
+          type="button"
+          onClick={() => setArchiveOpen((o) => !o)}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold"
+        >
+          <Archive className="w-4 h-4" /> {archiveOpen ? "Archiv schließen" : "Aus dem Archiv"}
+        </button>
+      </div>
+
+      {archiveOpen && (
+        <div className="mt-3">
+          <ArchivePicker
+            kind="CHARAKTER"
+            onPick={addFromArchive}
+            selected={[...(avatar ? [avatar] : []), ...refs]}
+          />
+        </div>
+      )}
 
       {(avatar || refs.length > 0) && (
         <div className="mt-4">

@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Loader2, Sparkles } from "lucide-react";
 import SpeakField from "@/components/voice/SpeakField";
 import CopyBlock from "@/components/banana/CopyBlock";
+import ArchiveUpload from "@/components/images/ArchiveUpload";
 import { BANANA_MODULES } from "@/lib/bananaModules";
 
 // Sag in eigenen Worten, was du willst — sprechen oder tippen. Daraus wird ein
@@ -27,6 +28,7 @@ const SCHEMA = {
 
 export default function BananaWishBox() {
   const [wish, setWish] = useState("");
+  const [images, setImages] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
@@ -53,6 +55,9 @@ Regeln:
 - "watch" sind zwei bis vier kurze Hinweise, was bei genau diesem Motiv schiefgehen kann.
 - "missing" listet, was der Nutzer noch liefern muss, z. B. "ein Vorlagenbild mit scharfem Gesicht". Wenn nichts fehlt, lass die Liste leer.
 - Keine sexuellen oder nackten Inhalte: Google blockiert das. Sag das in dem Fall offen in "why".
+${images.length
+  ? `- Der Nutzer hat ${images.length} Vorlagenbild(er) beigelegt (${images.map((_, i) => `Bild ${i + 1}`).join(", ")}). Wenn er ein vorhandenes Bild ändern will, nimm ein Edit-Modul und setze in "params" image_urls: [${images.map((_, i) => `Bild ${i + 1}`).join(", ")}].`
+  : "- Der Nutzer hat kein Vorlagenbild beigelegt."}
 
 Wunsch des Nutzers:
 """${wish}"""`,
@@ -84,6 +89,13 @@ Wunsch des Nutzers:
         placeholder="Zum Beispiel: Dieselbe Frau wie auf dem Foto, aber im roten Kleid auf einer Dachterrasse bei Sonnenuntergang."
       />
 
+      <div className="mt-3">
+        <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+          Vorlagenbilder — sie werden zu Bild 1, Bild 2 …
+        </p>
+        <ArchiveUpload value={images} onChange={setImages} kind="BAUSATZ" />
+      </div>
+
       <div className="flex items-center gap-2 mt-3">
         <button
           onClick={build}
@@ -95,7 +107,7 @@ Wunsch des Nutzers:
         </button>
         {wish && (
           <button
-            onClick={() => { setWish(""); setResult(null); setError(""); }}
+            onClick={() => { setWish(""); setImages([]); setResult(null); setError(""); }}
             className="px-4 py-2.5 rounded-full glass-btn text-[13px] font-bold text-muted-foreground hover:text-foreground transition-colors"
           >
             Leeren
@@ -118,6 +130,15 @@ Wunsch des Nutzers:
           )}
 
           <CopyBlock text={result.prompt} className="mt-3" />
+
+          {images.length > 0 && (
+            <div className="mt-3">
+              <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                Diese Adressen sind {images.map((_, i) => `Bild ${i + 1}`).join(", ")}
+              </p>
+              <CopyBlock text={images.join("\n")} />
+            </div>
+          )}
 
           {(result.watch || []).length > 0 && (
             <div className="mt-3 space-y-1.5">
