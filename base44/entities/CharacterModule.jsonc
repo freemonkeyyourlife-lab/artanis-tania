@@ -1,0 +1,91 @@
+{
+  "name": "CharacterModule",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "ROLLE",
+        "SITUATION",
+        "SZENARIO",
+        "ERSTELLUNG",
+        "IMPORT"
+      ],
+      "default": "SITUATION"
+    },
+    "text": {
+      "type": "string"
+    },
+    "short": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "voiceProfileId": {
+      "type": "string"
+    },
+    "characterId": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "EIGEN",
+        "IMPORT"
+      ],
+      "default": "EIGEN"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "title",
+    "kind"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

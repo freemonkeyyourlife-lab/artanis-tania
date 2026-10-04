@@ -37,6 +37,7 @@ export const MODULE_TYPES = [
   { path: "/leitfaden", label: "Leitfaden", description: "Wenn ich das will, klicke ich da und da — der Weg durch die ganze Seite." },
   { path: "/modellplan", label: "Modell-Plan", description: "Welche Bild-Modelle es gibt, was fehlt und was es kostet." },
   { path: "/banana", label: "Nano Banana", description: "Welches Modell bei fal.ai, wie ein Prompt aufgebaut ist und die Module zum Kopieren." },
+  { path: "/palette", label: "Neigungen und Bausteine", description: "Die Neigungs-Palette und der Baukasten: jeder Baustein mit jedem kombinierbar." },
   { path: "/lernordner", label: "Lern-Ordner", description: "Alle Fragen aus dem Chat mit ihren Antworten, nach Themen sortiert." },
   { path: "/spickzettel", label: "Spickzettel", description: "Prompt-Länge, Modellwahl, Begriffe — zum Nachschlagen." },
   { path: "/call", label: "Video-Call", description: "Der Video-Raum für Gespräche." },
@@ -108,6 +109,7 @@ export const NAV_GROUPS = {
   "/dock": "Bauen",
   "/prompt": "Bauen",
   "/banana": "Bauen",
+  "/palette": "Bauen",
 
   "/paylinks": "Verkaufen",
   "/verkauf": "Verkaufen",
@@ -205,6 +207,7 @@ export const FIXED_AREAS = [
       { label: "Kasse", path: "/paylinks" },
       { label: "Prompt-Generator", path: "/prompt" },
       { label: "Nano Banana", path: "/banana" },
+      { label: "Neigungen und Bausteine", path: "/palette" },
     ],
   },
   {
