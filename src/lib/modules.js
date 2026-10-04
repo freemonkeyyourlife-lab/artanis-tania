@@ -36,6 +36,7 @@ export const MODULE_TYPES = [
   { path: "/anleitung", label: "Anleitung", description: "Nachschlagewerk zum Weiterbauen." },
   { path: "/leitfaden", label: "Leitfaden", description: "Wenn ich das will, klicke ich da und da — der Weg durch die ganze Seite." },
   { path: "/modellplan", label: "Modell-Plan", description: "Welche Bild-Modelle es gibt, was fehlt und was es kostet." },
+  { path: "/banana", label: "Nano Banana", description: "Welches Modell bei fal.ai, wie ein Prompt aufgebaut ist und die Module zum Kopieren." },
   { path: "/lernordner", label: "Lern-Ordner", description: "Alle Fragen aus dem Chat mit ihren Antworten, nach Themen sortiert." },
   { path: "/spickzettel", label: "Spickzettel", description: "Prompt-Länge, Modellwahl, Begriffe — zum Nachschlagen." },
   { path: "/call", label: "Video-Call", description: "Der Video-Raum für Gespräche." },
@@ -106,6 +107,7 @@ export const NAV_GROUPS = {
   "/baukasten": "Bauen",
   "/dock": "Bauen",
   "/prompt": "Bauen",
+  "/banana": "Bauen",
 
   "/paylinks": "Verkaufen",
   "/verkauf": "Verkaufen",
@@ -202,6 +204,7 @@ export const FIXED_AREAS = [
       { label: "Content-Planer", path: "/planung" },
       { label: "Kasse", path: "/paylinks" },
       { label: "Prompt-Generator", path: "/prompt" },
+      { label: "Nano Banana", path: "/banana" },
     ],
   },
   {

@@ -44,6 +44,7 @@ const ADMIN_PATHS = new Set([
   "/archiv",
   "/anleitung",
   "/modellplan",
+  "/banana",
   "/lernordner",
   "/spickzettel",
 ]);
