@@ -251,6 +251,21 @@ export const LERN_TOPICS = [
           "Auf fal.ai, Feld „5 Modelle“: die Zahl ist kein Rabatt.\nEst. 0,37 $ heißt 0,37 $ für einen Durchlauf über alle fünf — also rund 7 Cent je Modell.\nLieber eins nach dem anderen laufen lassen, dann weißt du, welches es war.",
       },
       {
+        frage: "Welche fünf nehme ich — und wie hole ich das Meiste heraus?",
+        antwort:
+          "Fünf aus einer Familie, alle offen, alle billig. Nicht fünf aus fünf Familien — sonst hast du fünf Handschriften und keine Figur. Und wenn du nur eins nehmen dürftest: FLUX.1 dev. Das ist das Zuhause des Charakters, dort wird später der LoRA drangehängt.",
+        punkte: [
+          "1. FLUX.1 dev — das Zuhause. Hier hängt später dein trainierter Charakter dran. Rund 2,5 Cent pro Megapixel.",
+          "2. FLUX.1 schnell — dieselbe Familie, die billigste Masse überhaupt: rund 0,3 Cent pro Megapixel.",
+          "3. FLUX.1 Krea dev — dieselbe Familie, etwas schönere Haut und Hauttöne.",
+          "4. Z-Image-Turbo — zum Entwerfen. Zwanzig Varianten, du suchst die beste aus.",
+          "5. Qwen-Image-Lightning — dasselbe zum Entwerfen, andere Handschrift. Nur zum Vergleichen, nicht für die Figur.",
+          "Alle fünf sind offen: kein Filter, keine Blockade. Genau deshalb sind sie die richtigen, wenn du frei sein willst.",
+        ],
+        beispiel:
+          "fal.ai → Generate → Modell-Feld, diese fünf heraussuchen:\n\nFLUX.1 dev\nFLUX.1 schnell\nFLUX.1 Krea dev\nZ-Image-Turbo\nQwen-Image-Lightning\n\nEinen Prompt, 1x laufen lassen = rund 0,37 $.\nDas machst du genau einmal, um deinen Look zu finden.\nDanach nie wieder fünf auf einmal — ab da läuft eins.",
+      },
+      {
         frage: "Was ist ein LoRA?",
         antwort:
           "Ein Zusatz, der einem Modell etwas beibringt — einen Stil oder ein Gesicht. Aus 10 bis 20 guten Bildern wird eine Figur, die in jeder Pose dieselbe bleibt. Einmal antrainiert, danach für immer verfügbar.",
