@@ -74,6 +74,7 @@ import Lernordner from '@/pages/Lernordner';
 import Leitfaden from '@/pages/Leitfaden';
 import Palette from '@/pages/Palette';
 import Logbuch from '@/pages/Logbuch';
+import ChatModul from '@/pages/ChatModul';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import NarratorCompanion from '@/components/narrator/NarratorCompanion';
@@ -132,6 +133,8 @@ const AuthenticatedApp = () => {
       <Route path="/pay/:token" element={<Pay />} />
       <Route path="/creator-studio" element={<CreatorStudio />} />
       <Route path="/betreiber" element={<BetreiberStudio />} />
+      {/* Das Chat-Modul läuft ohne Rahmen der Plattform — eigenständig und einbettbar. */}
+      <Route path="/chatmodul" element={<ChatModul />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/artanis" element={<Artanis />} />

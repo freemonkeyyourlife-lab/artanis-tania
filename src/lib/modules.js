@@ -39,6 +39,7 @@ export const MODULE_TYPES = [
   { path: "/banana", label: "Nano Banana", description: "Welches Modell bei fal.ai, wie ein Prompt aufgebaut ist und die Module zum Kopieren." },
   { path: "/palette", label: "Neigungen und Bausteine", description: "Die Neigungs-Palette und der Baukasten: jeder Baustein mit jedem kombinierbar." },
   { path: "/logbuch", label: "Logbuch", description: "Bauaufträge sprechen, Prompt freigeben, Weg bis fertig mitverfolgen." },
+  { path: "/chatmodul", label: "Chat-Modul", description: "Das eigenständige Chatfenster — als App installierbar, mit Telegram gespiegelt und in fremde Seiten einbettbar." },
   { path: "/lernordner", label: "Lern-Ordner", description: "Alle Fragen aus dem Chat mit ihren Antworten, nach Themen sortiert." },
   { path: "/spickzettel", label: "Spickzettel", description: "Prompt-Länge, Modellwahl, Begriffe — zum Nachschlagen." },
   { path: "/call", label: "Video-Call", description: "Der Video-Raum für Gespräche." },
@@ -111,6 +112,7 @@ export const NAV_GROUPS = {
   "/prompt": "Bauen",
   "/banana": "Bauen",
   "/palette": "Bauen",
+  "/chatmodul": "Bauen",
 
   "/paylinks": "Verkaufen",
   "/verkauf": "Verkaufen",
@@ -210,6 +212,7 @@ export const FIXED_AREAS = [
       { label: "Prompt-Generator", path: "/prompt" },
       { label: "Nano Banana", path: "/banana" },
       { label: "Neigungen und Bausteine", path: "/palette" },
+      { label: "Chat-Modul", path: "/chatmodul" },
     ],
   },
   {
