@@ -73,6 +73,7 @@ import Kulisse from '@/pages/Kulisse';
 import Lernordner from '@/pages/Lernordner';
 import Leitfaden from '@/pages/Leitfaden';
 import Palette from '@/pages/Palette';
+import Logbuch from '@/pages/Logbuch';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import NarratorCompanion from '@/components/narrator/NarratorCompanion';
@@ -174,6 +175,7 @@ const AuthenticatedApp = () => {
         <Route path="/lernordner" element={<Lernordner />} />
         <Route path="/leitfaden" element={<Leitfaden />} />
         <Route path="/palette" element={<Palette />} />
+        <Route path="/logbuch" element={<Logbuch />} />
         <Route path="/modellplan" element={<ModelPlan />} />
         <Route path="/archiv" element={<Archive />} />
         <Route path="/planung" element={<ContentPlan />} />

@@ -50,7 +50,7 @@ const ADMIN_PATHS = new Set([
 ]);
 
 // Nur für dich: hier wird nichts veröffentlicht, hier wird geprüft und gesteuert.
-const DEV_PATHS = new Set(["/owner", "/sandbox", "/vorschau"]);
+const DEV_PATHS = new Set(["/owner", "/sandbox", "/vorschau", "/logbuch"]);
 
 export const tierForPath = (path) => {
   if (DEV_PATHS.has(path)) return TIER.DEV;

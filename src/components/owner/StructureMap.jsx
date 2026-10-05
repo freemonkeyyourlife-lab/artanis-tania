@@ -1,6 +1,8 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Plus, RotateCcw } from "lucide-react";
+import { Plus, RotateCcw, KeyRound } from "lucide-react";
+import { isGodMode } from "@/lib/godMode";
 import StructureArea from "@/components/owner/StructureArea";
 import StructureItem from "@/components/owner/StructureItem";
 import { defaultStructure } from "@/lib/siteStructure";
@@ -94,6 +96,17 @@ export default function StructureMap({ structure, onChange }) {
           <RotateCcw className="w-4 h-4" /> Zurücksetzen
         </button>
       </div>
+
+      {/* Der Godmode-Weg: nur sichtbar, wenn der Meister-Schalter an ist. */}
+      {isGodMode() && (
+        <Link
+          to="/logbuch"
+          title="Godmode"
+          className="mb-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-yellow-300/60 transition-colors hover:text-yellow-300"
+        >
+          <KeyRound className="w-3.5 h-3.5" /> Logbuch öffnen
+        </Link>
+      )}
 
       <div className="rounded-2xl border-2 border-border bg-elevated px-4 py-3 text-center max-w-md mx-auto">
         <p className="font-display text-lg text-foreground">Kopfzeile</p>

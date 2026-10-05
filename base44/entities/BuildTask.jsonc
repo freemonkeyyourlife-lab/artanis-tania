@@ -1,0 +1,96 @@
+{
+  "name": "BuildTask",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "WARTESCHLANGE",
+        "IN_ARBEIT",
+        "FERTIG",
+        "VERWORFEN"
+      ],
+      "default": "WARTESCHLANGE"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "LOGBUCH",
+        "MODUL",
+        "LAYOUT",
+        "DATEN",
+        "DESIGN",
+        "SONSTIGES"
+      ],
+      "default": "MODUL"
+    },
+    "urgency": {
+      "type": "number",
+      "default": 3
+    },
+    "effort": {
+      "type": "number",
+      "default": 3
+    },
+    "cluster": {
+      "type": "string"
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    },
+    "progress": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "note": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "GODMODE",
+        "ROADMAP",
+        "IMPORT"
+      ],
+      "default": "GODMODE"
+    }
+  },
+  "required": [
+    "title",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
