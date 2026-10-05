@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut, Video, Crown } from "lucide-react";
+import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut, Video, Crown, BookOpen } from "lucide-react";
+import PageSearch from "@/components/nav/PageSearch";
 import { cn } from "@/lib/utils";
 import HeaderNav, { buildNavGroups } from "@/components/nav/HeaderNav";
 import { base44 } from "@/api/base44Client";
@@ -185,6 +186,15 @@ export default function Layout() {
                 <Crown className="w-3.5 h-3.5 text-primary" /> Studio
               </Link>
             )}
+            {memberStatus === "OWNER" && (
+              <Link
+                to="/logbuch"
+                title="Logbuch — Bauaufträge und Roadmap"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-btn text-[11px] font-bold text-yellow-300 hover:text-yellow-200 transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5" /> Logbuch
+              </Link>
+            )}
             {viewAs && (
               <button
                 onClick={() => setViewAs(null)}
@@ -220,9 +230,7 @@ export default function Layout() {
               {callRunning && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500" />}
             </button>
             <InviteShareButton className="hidden sm:flex" />
-            <span title="Suche folgt in Kürze" className="w-9 h-9 rounded-full glass-btn flex items-center justify-center text-muted-foreground/40 cursor-not-allowed">
-              <Search className="w-4 h-4" />
-            </span>
+            <PageSearch isOwner={memberStatus === "OWNER"} />
             <Link to="/messages" title={incomingCount > 0 ? `${incomingCount} wollen mit dir chatten` : "Messages"} className="hidden sm:flex w-9 h-9 rounded-full glass-btn items-center justify-center hover:text-primary transition-colors relative">
               <MessageSquare className="w-4 h-4" />
               {incomingCount > 0 && (
