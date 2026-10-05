@@ -5,7 +5,7 @@ import { STATUS, STATUS_LABEL, kindLabel } from "@/lib/logbuch";
 
 // Eine Karte im Logbuch: was zu tun ist, wie dringend, und der Prompt zum
 // Nachlesen. Der Status lässt sich hier direkt weiterschieben.
-export default function LogbuchTaskCard({ task, onStatus }) {
+export default function LogbuchTaskCard({ task, onStatus, onRun, running }) {
   const [open, setOpen] = useState(false);
 
   const next = task.status === STATUS.WARTESCHLANGE ? STATUS.IN_ARBEIT : STATUS.FERTIG;
@@ -37,6 +37,11 @@ export default function LogbuchTaskCard({ task, onStatus }) {
         {task.status !== STATUS.FERTIG && (
           <Button size="sm" variant="outline" onClick={() => onStatus(task, next)}>
             → {STATUS_LABEL[next]}
+          </Button>
+        )}
+        {onRun && (
+          <Button size="sm" onClick={() => onRun(task)} disabled={running}>
+            {running ? "Läuft …" : "Bau starten"}
           </Button>
         )}
         {task.status !== STATUS.VERWORFEN && (

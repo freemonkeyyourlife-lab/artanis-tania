@@ -37,6 +37,15 @@ export default function ChatModuleWindow() {
     (async () => {
       const user = await base44.auth.me().catch(() => null);
       if (cancelled) return;
+      // Ein gewähltes Gespräch aus der Plattform hat Vorrang — es läuft hier weiter.
+      if (settings.conversationId) {
+        const picked = await base44.entities.Conversation.get(settings.conversationId).catch(() => null);
+        if (picked) {
+          if (!cancelled) setConv(picked);
+          return;
+        }
+      }
+
       const handle = handleFor(settings, user?.id);
       const found = await base44.entities.Conversation.filter({ participantId: handle }, "-created_date", 1);
       let c = found[0];
@@ -56,7 +65,7 @@ export default function ChatModuleWindow() {
     return () => {
       cancelled = true;
     };
-  }, [settings.mirrorToTelegram, settings.telegramChatId]);
+  }, [settings.conversationId, settings.mirrorToTelegram, settings.telegramChatId]);
 
   // Nachrichten laden und live mitlaufen lassen — auch das, was von Telegram kommt.
   useEffect(() => {

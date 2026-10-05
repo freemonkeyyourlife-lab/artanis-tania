@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { listVoices } from "@/lib/chatSpeak";
 import { base44 } from "@/api/base44Client";
+import ChatConversationPicker from "@/components/chatmodul/ChatConversationPicker";
 import {
   CHAT_MODES,
   CHAT_MODE_LABEL,
@@ -19,7 +20,34 @@ export default function ChatModuleSettings() {
   const [s, setS] = useState(getChatModule());
   const [voices, setVoices] = useState(listVoices());
   const [pool, setPool] = useState([]);
+  const [models, setModels] = useState([]);
+  const [newModel, setNewModel] = useState("");
+  const [adding, setAdding] = useState(false);
   const set = (patch) => setS(setChatModule(patch));
+
+  // Die Modelle, die in der App schon liegen — plus alles, was hier dazukommt.
+  useEffect(() => {
+    base44.entities.TextModel.filter({}, "-created_date", 200)
+      .then((list) => setModels(list || []))
+      .catch(() => setModels([]));
+  }, []);
+
+  const addModel = async () => {
+    const modelId = newModel.trim();
+    if (!modelId) return;
+    setAdding(true);
+    try {
+      const created = await base44.entities.TextModel.create({
+        name: modelId.split("/").pop(),
+        modelId,
+        note: "Im Chat-Modul aufgenommen",
+      });
+      setModels((cur) => [...cur, created]);
+      setNewModel("");
+    } finally {
+      setAdding(false);
+    }
+  };
 
   // Die Stimmen aus dem Pool der App — jede davon lässt sich hier anhängen.
   useEffect(() => {
@@ -57,15 +85,44 @@ export default function ChatModuleSettings() {
           ))}
         </div>
         {s.mode === CHAT_MODES.AI && (
-          <div className="mt-3">
-            <Input
+          <div className="mt-3 space-y-2">
+            <select
               value={s.modelId}
               onChange={(e) => set({ modelId: e.target.value })}
-              placeholder="Modell-Kennung (leer = Standard-KI)"
-            />
+              className="h-9 w-full max-w-[360px] rounded-xl border border-border bg-card px-3 text-xs text-foreground"
+            >
+              <option value="">Standard-KI (ohne eigenes Modell)</option>
+              {models.map((m) => (
+                <option key={m.id} value={m.modelId}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                value={newModel}
+                onChange={(e) => setNewModel(e.target.value)}
+                placeholder="Modell-Kennung einfügen, z. B. meta-llama/Llama-3.3-70B-Instruct"
+                className="max-w-[360px]"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={addModel}
+                disabled={adding || !newModel.trim()}
+              >
+                {adding ? "…" : "Modell aufnehmen"}
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Einfach die Kennung einfügen und aufnehmen — das Modell steht danach überall in der
+              App zur Verfügung, nicht nur hier.
+            </p>
           </div>
         )}
       </div>
+
+      <ChatConversationPicker currentId={s.conversationId} onPicked={() => setS(getChatModule())} />
 
       <div>
         <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">

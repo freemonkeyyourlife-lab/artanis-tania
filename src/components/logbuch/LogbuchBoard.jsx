@@ -3,7 +3,7 @@ import LogbuchTaskCard from "@/components/logbuch/LogbuchTaskCard";
 import { STATUS, STATUS_LABEL, STATUS_ORDER } from "@/lib/logbuch";
 
 // Die Listen des Logbuchs: was wartet, was läuft, was fertig ist.
-export default function LogbuchBoard({ tasks, onStatus }) {
+export default function LogbuchBoard({ tasks, onStatus, onRun, runningId }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {STATUS_ORDER.map((status) => {
@@ -18,7 +18,13 @@ export default function LogbuchBoard({ tasks, onStatus }) {
             </div>
             <div className="space-y-2">
               {items.map((t) => (
-                <LogbuchTaskCard key={t.id} task={t} onStatus={onStatus} />
+                <LogbuchTaskCard
+                  key={t.id}
+                  task={t}
+                  onStatus={onStatus}
+                  onRun={onRun}
+                  running={runningId === t.id}
+                />
               ))}
               {!items.length && (
                 <p className="py-6 text-center text-xs text-muted-foreground">Nichts hier.</p>

@@ -28,6 +28,8 @@ export const DEFAULT_CHAT_MODULE = {
   voiceName: "",
   voiceModelId: "",
   autoMood: true,
+  // Ist ein Gespräch aus der Plattform gewählt, läuft dieses hier weiter.
+  conversationId: "",
   mirrorToTelegram: false,
   telegramChatId: "",
 };
