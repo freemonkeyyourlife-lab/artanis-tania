@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import VoiceInput from "@/components/VoiceInput";
 import { Sparkles, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,8 @@ export default function LogbuchComposer({ onCreated }) {
   const [text, setText] = useState("");
   const [kind, setKind] = useState("MODUL");
   const [urgency, setUrgency] = useState(3);
+  const [effort, setEffort] = useState(3);
+  const [cluster, setCluster] = useState("");
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -21,7 +24,7 @@ export default function LogbuchComposer({ onCreated }) {
     setPrompt(buildCodePrompt({ text, kind }));
   };
 
-  const approve = async () => {
+  const submit = async (status) => {
     const body = prompt || buildCodePrompt({ text, kind });
     if (!body.trim()) return;
     setBusy(true);
@@ -32,9 +35,17 @@ export default function LogbuchComposer({ onCreated }) {
         prompt: body,
         kind,
         urgency,
-        status: STATUS.IN_ARBEIT,
+        effort,
+        cluster,
+        status,
         source: "GODMODE",
-        progress: [logLine("Freigegeben und in Arbeit gesetzt.")],
+        progress: [
+          logLine(
+            status === STATUS.WARTESCHLANGE
+              ? "In die Warteschlange gelegt."
+              : "Freigegeben und in Arbeit gesetzt."
+          ),
+        ],
       });
       setText("");
       setPrompt("");
@@ -98,12 +109,45 @@ export default function LogbuchComposer({ onCreated }) {
         ))}
       </div>
 
+      <div className="mt-3 flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">Aufwand</span>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => setEffort(n)}
+            className={cn(
+              "h-7 w-7 rounded-full border text-xs font-bold",
+              effort === n ? "border-primary text-primary" : "border-border text-muted-foreground"
+            )}
+          >
+            {n}
+          </button>
+        ))}
+        <span className="ml-2 text-xs text-muted-foreground">klein → groß</span>
+      </div>
+
+      <div className="mt-3">
+        <Input
+          value={cluster}
+          onChange={(e) => setCluster(e.target.value)}
+          placeholder="Thema (z. B. Layout) — Gleichartiges wird gebündelt"
+        />
+      </div>
+
       <div className="mt-4 flex flex-wrap gap-2">
         <Button variant="outline" onClick={generate} disabled={!text.trim()}>
           <Sparkles className="mr-2 h-4 w-4" /> Prompt erzeugen
         </Button>
-        <Button onClick={approve} disabled={busy || !text.trim()}>
+        <Button onClick={() => submit(STATUS.IN_ARBEIT)} disabled={busy || !text.trim()}>
           <Send className="mr-2 h-4 w-4" /> Freigeben &amp; Senden
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => submit(STATUS.WARTESCHLANGE)}
+          disabled={busy || !text.trim()}
+        >
+          In die Warteschlange
         </Button>
       </div>
 
