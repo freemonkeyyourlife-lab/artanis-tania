@@ -17,21 +17,19 @@ export default function ChatCastPicker({ cast = [], onChange, accent }) {
     Promise.all([
       base44.entities.Character.filter({}, "name", 200).catch(() => []),
       base44.entities.Narrator.filter({}, "order", 200).catch(() => []),
-    ]).then(([chars, narrs]) => {
+      base44.entities.Voice.list("-created_date", 200).catch(() => []),
+    ]).then(([chars, narrs, bank]) => {
       setFigures([
         ...(chars || []).map((c) => ({ id: `char:${c.id}`, name: c.name, avatar: c.avatar })),
         ...(narrs || []).map((n) => ({
           id: `narr:${n.id}`,
           name: n.name,
           avatar: n.avatar,
-          voiceModelId: n.voiceProfileId || "",
+          voiceId: n.voiceProfileId || "",
         })),
       ]);
+      setPool((bank || []).filter((v) => v.active !== false));
     });
-
-    base44.entities.VoiceModel.filter({}, "order", 100)
-      .then((list) => setPool((list || []).filter((v) => v.enabled !== false)))
-      .catch(() => setPool([]));
 
     const read = () => setVoices(listVoices());
     read();
@@ -46,7 +44,7 @@ export default function ChatCastPicker({ cast = [], onChange, accent }) {
     }
     onChange([
       ...cast,
-      { id: f.id, name: f.name, avatar: f.avatar, voiceModelId: f.voiceModelId || "", voiceName: "" },
+      { id: f.id, name: f.name, avatar: f.avatar, voiceId: f.voiceId || "", voiceName: "" },
     ]);
   };
 
@@ -54,15 +52,14 @@ export default function ChatCastPicker({ cast = [], onChange, accent }) {
     onChange(
       cast.map((c) => {
         if (c.id !== id) return c;
-        if (value.startsWith("pool:")) return { ...c, voiceModelId: value.slice(5), voiceName: "" };
-        if (value.startsWith("device:")) return { ...c, voiceName: value.slice(7), voiceModelId: "" };
-        return { ...c, voiceModelId: "", voiceName: "" };
+        if (value.startsWith("bank:")) return { ...c, voiceId: value.slice(5), voiceName: "" };
+        if (value.startsWith("device:")) return { ...c, voiceName: value.slice(7), voiceId: "" };
+        return { ...c, voiceId: "", voiceName: "" };
       })
     );
   };
 
-  const valueOf = (c) =>
-    c.voiceModelId ? `pool:${c.voiceModelId}` : c.voiceName ? `device:${c.voiceName}` : "";
+  const valueOf = (c) => (c.voiceId ? `bank:${c.voiceId}` : c.voiceName ? `device:${c.voiceName}` : "");
 
   return (
     <Popover>
@@ -83,7 +80,7 @@ export default function ChatCastPicker({ cast = [], onChange, accent }) {
           <p className="text-sm font-bold text-foreground">Wer spielt mit</p>
           <p className="text-[11px] leading-snug text-muted-foreground">
             Figuren antippen, um sie in die Szene zu holen. Sie reden miteinander, jede mit eigener
-            Stimme. Ohne Besetzung antwortet eine einzelne Stimme.
+            Stimme aus deiner Stimmbank. Ohne Besetzung antwortet eine einzelne Stimme.
           </p>
         </div>
 
@@ -98,10 +95,7 @@ export default function ChatCastPicker({ cast = [], onChange, accent }) {
             return (
               <div
                 key={f.id}
-                className={cn(
-                  "rounded-xl p-2",
-                  member ? "bg-elevated/70" : "bg-transparent"
-                )}
+                className={cn("rounded-xl p-2", member ? "bg-elevated/70" : "bg-transparent")}
               >
                 <div className="flex items-center gap-2.5">
                   {f.avatar ? (
@@ -133,9 +127,7 @@ export default function ChatCastPicker({ cast = [], onChange, accent }) {
                     onClick={() => toggle(f)}
                     className={cn(
                       "rounded-full border px-2.5 py-0.5 text-[10px] font-semibold",
-                      member
-                        ? "border-border text-muted-foreground"
-                        : "border-primary/40 text-primary"
+                      member ? "border-border text-muted-foreground" : "border-primary/40 text-primary"
                     )}
                   >
                     {member ? "absetzen" : "besetzen"}
@@ -150,9 +142,9 @@ export default function ChatCastPicker({ cast = [], onChange, accent }) {
                   >
                     <option value="">Standard-Stimme</option>
                     {pool.length > 0 && (
-                      <optgroup label="Stimmen aus dem Pool">
+                      <optgroup label="Stimmen aus deiner Stimmbank">
                         {pool.map((v) => (
-                          <option key={v.id} value={`pool:${v.modelId}`}>
+                          <option key={v.id} value={`bank:${v.id}`}>
                             {v.name}
                           </option>
                         ))}

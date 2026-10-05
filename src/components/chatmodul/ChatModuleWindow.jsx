@@ -49,12 +49,12 @@ export default function ChatModuleWindow() {
         splitCast(reply, cast).map((b) => ({
           text: b.text,
           voiceName: voiceForName(cast, b.name).voiceName || settings.voiceName,
-          voiceModelId: voiceForName(cast, b.name).voiceModelId || settings.voiceModelId,
+          voiceId: voiceForName(cast, b.name).voiceId || settings.voiceId,
         }))
       );
       return;
     }
-    speakText(reply, { voiceName: settings.voiceName, voiceModelId: settings.voiceModelId });
+    speakText(reply, { voiceName: settings.voiceName, voiceId: settings.voiceId });
   };
 
   // Das Gespräch holen oder anlegen. Ändert sich die Spiegelung, wandert es mit.
@@ -297,7 +297,7 @@ export default function ChatModuleWindow() {
                         <ChatSpeakButton
                           text={b.text}
                           voiceName={voiceForName(cast, b.name).voiceName || settings.voiceName}
-                          voiceModelId={voiceForName(cast, b.name).voiceModelId || settings.voiceModelId}
+                          voiceId={voiceForName(cast, b.name).voiceId || settings.voiceId}
                           accent={settings.accent}
                         />
                       </div>
@@ -321,7 +321,7 @@ export default function ChatModuleWindow() {
                 <ChatSpeakButton
                   text={m.text}
                   voiceName={settings.voiceName}
-                  voiceModelId={settings.voiceModelId}
+                  voiceId={settings.voiceId}
                   accent={settings.accent}
                 />
               )}

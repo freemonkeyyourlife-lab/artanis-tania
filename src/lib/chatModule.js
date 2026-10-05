@@ -28,7 +28,8 @@ export const DEFAULT_CHAT_MODULE = {
   imageModelId: "",
   autoSpeak: false,
   voiceName: "",
-  voiceModelId: "",
+  // Die Stimme aus der Stimmbank — ihre Kennung, nicht ihr Name.
+  voiceId: "",
   autoMood: true,
   // Ist ein Gespräch aus der Plattform gewählt, läuft dieses hier weiter.
   conversationId: "",

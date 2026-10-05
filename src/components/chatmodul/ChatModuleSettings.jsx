@@ -57,10 +57,10 @@ export default function ChatModuleSettings() {
       .catch(() => setImageModels([]));
   }, []);
 
-  // Die Stimmen aus dem Pool der App — jede davon lässt sich hier anhängen.
+  // Die Stimmen aus der Stimmbank der App — jede davon lässt sich hier anhängen.
   useEffect(() => {
-    base44.entities.VoiceModel.filter({}, "order", 100)
-      .then((list) => setPool((list || []).filter((v) => v.enabled !== false)))
+    base44.entities.Voice.list("-created_date", 200)
+      .then((list) => setPool((list || []).filter((v) => v.active !== false)))
       .catch(() => setPool([]));
   }, []);
 
@@ -219,22 +219,23 @@ export default function ChatModuleSettings() {
           </select>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Stimme aus dem Pool</span>
+          <span className="text-xs text-muted-foreground">Stimme aus deiner Stimmbank</span>
           <select
-            value={s.voiceModelId}
-            onChange={(e) => set({ voiceModelId: e.target.value })}
+            value={s.voiceId}
+            onChange={(e) => set({ voiceId: e.target.value })}
             className="h-9 max-w-[280px] rounded-xl border border-border bg-card px-3 text-xs text-foreground"
           >
             <option value="">Keine — Gerätestimme nutzen</option>
             {pool.map((v) => (
-              <option key={v.id} value={v.modelId}>
+              <option key={v.id} value={v.id}>
                 {v.name}
               </option>
             ))}
           </select>
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Ist eine Pool-Stimme gewählt, klingt das Vorlesen wie im Studio. Ohne sie spricht das
+          Das sind genau die Stimmen, die in deiner Stimmbank liegen — hier wählst du, welche
+          vorliest. Sie klingt wie im Studio, mit Stimmung, Tempo und Tonlage. Ohne Wahl spricht das
           Gerät — ohne Kosten. Jede Antwort hat außerdem einen Lautsprecher zum Antippen.
         </p>
       </div>
