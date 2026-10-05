@@ -5,6 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CHAT_MODES, CHAT_LAYOUTS, getChatModule, subscribeChatModule, handleFor } from "@/lib/chatModule";
+import { Image as ImageIcon } from "@/components/ui/image";
+import ChatSpeakButton from "@/components/chatmodul/ChatSpeakButton";
+import ChatImageTools from "@/components/chatmodul/ChatImageTools";
+import { speak } from "@/lib/chatSpeak";
 
 const SYSTEM =
   "Du bist der Assistent dieses Chat-Moduls. Antworte knapp, hilfreich und in der Sprache des Nutzers.";
@@ -106,6 +110,7 @@ export default function ChatModuleWindow() {
       channel: "PLATFORM",
     });
     await base44.entities.Conversation.update(conversationId, { lastMessageAt: new Date().toISOString() });
+    if (settings.autoSpeak) speak(reply, settings.voiceName);
   };
 
   const send = async () => {
@@ -196,7 +201,20 @@ export default function ChatModuleWindow() {
                 }}
               >
                 {m.text}
+                {(m.attachments || [])
+                  .filter((a) => a?.type === "image" && a.url)
+                  .map((a, i) => (
+                    <ImageIcon
+                      key={i}
+                      src={a.url}
+                      alt=""
+                      className="mt-2 max-h-64 w-full rounded-xl object-cover"
+                    />
+                  ))}
               </div>
+              {!mine && (
+                <ChatSpeakButton text={m.text} voiceName={settings.voiceName} accent={settings.accent} />
+              )}
               {mine && <User className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />}
             </div>
           );
@@ -210,6 +228,23 @@ export default function ChatModuleWindow() {
       </div>
 
       {error && <p className="px-4 pb-1 text-xs text-destructive">{error}</p>}
+
+      <ChatImageTools
+        accent={settings.accent}
+        onImage={async (url, prompt) => {
+          await base44.entities.Message.create({
+            conversationId: conv.id,
+            sender: "Assistent",
+            senderType: "AI",
+            text: prompt,
+            attachments: [{ type: "image", url }],
+            channel: "PLATFORM",
+          });
+          await base44.entities.Conversation.update(conv.id, {
+            lastMessageAt: new Date().toISOString(),
+          });
+        }}
+      />
 
       <div className="flex items-end gap-2 border-t border-border p-3">
         <Textarea

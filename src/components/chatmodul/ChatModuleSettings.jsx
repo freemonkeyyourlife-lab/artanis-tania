@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { listVoices } from "@/lib/chatSpeak";
 import {
   CHAT_MODES,
   CHAT_MODE_LABEL,
@@ -15,7 +16,16 @@ const ACCENTS = ["#e29578", "#c87d55", "#8b5cf6", "#0ea5e9", "#22c55e", "#f43f5e
 // Die Einstellungen: Modus, Optik und der Telegram-Weg. Alles wirkt sofort.
 export default function ChatModuleSettings() {
   const [s, setS] = useState(getChatModule());
+  const [voices, setVoices] = useState(listVoices());
   const set = (patch) => setS(setChatModule(patch));
+
+  // Die Stimmen des Geräts treffen erst nach und nach ein.
+  useEffect(() => {
+    const read = () => setVoices(listVoices());
+    read();
+    window.speechSynthesis?.addEventListener("voiceschanged", read);
+    return () => window.speechSynthesis?.removeEventListener("voiceschanged", read);
+  }, []);
 
   return (
     <div className="space-y-5 rounded-2xl border border-border bg-card p-4">
@@ -85,6 +95,37 @@ export default function ChatModuleSettings() {
             {s.layout === CHAT_LAYOUTS.BUBBLE ? "Fenster" : "Vollbild"}
           </button>
         </div>
+      </div>
+
+      <div>
+        <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Stimme
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant={s.autoSpeak ? "default" : "outline"}
+            onClick={() => set({ autoSpeak: !s.autoSpeak })}
+          >
+            {s.autoSpeak ? "Antworten vorlesen" : "Nicht vorlesen"}
+          </Button>
+          <select
+            value={s.voiceName}
+            onChange={(e) => set({ voiceName: e.target.value })}
+            className="h-9 rounded-xl border border-border bg-card px-3 text-xs text-foreground"
+          >
+            <option value="">Standard-Stimme</option>
+            {voices.map((v) => (
+              <option key={v.name} value={v.name}>
+                {v.name} ({v.lang})
+              </option>
+            ))}
+          </select>
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Vorgelesen wird mit der Stimme dieses Geräts — ohne Umweg über einen Dienst, also ohne
+          Kosten. Jede Antwort hat außerdem einen Lautsprecher zum Antippen.
+        </p>
       </div>
 
       <div>

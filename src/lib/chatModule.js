@@ -24,6 +24,8 @@ export const DEFAULT_CHAT_MODULE = {
   accent: "#e29578",
   radius: 20,
   modelId: "",
+  autoSpeak: false,
+  voiceName: "",
   mirrorToTelegram: false,
   telegramChatId: "",
 };
