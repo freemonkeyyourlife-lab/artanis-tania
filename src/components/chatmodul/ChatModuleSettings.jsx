@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { listVoices } from "@/lib/chatSpeak";
+import { base44 } from "@/api/base44Client";
 import {
   CHAT_MODES,
   CHAT_MODE_LABEL,
@@ -17,7 +18,15 @@ const ACCENTS = ["#e29578", "#c87d55", "#8b5cf6", "#0ea5e9", "#22c55e", "#f43f5e
 export default function ChatModuleSettings() {
   const [s, setS] = useState(getChatModule());
   const [voices, setVoices] = useState(listVoices());
+  const [pool, setPool] = useState([]);
   const set = (patch) => setS(setChatModule(patch));
+
+  // Die Stimmen aus dem Pool der App — jede davon lässt sich hier anhängen.
+  useEffect(() => {
+    base44.entities.VoiceModel.filter({}, "order", 100)
+      .then((list) => setPool((list || []).filter((v) => v.enabled !== false)))
+      .catch(() => setPool([]));
+  }, []);
 
   // Die Stimmen des Geräts treffen erst nach und nach ein.
   useEffect(() => {
@@ -114,7 +123,7 @@ export default function ChatModuleSettings() {
             onChange={(e) => set({ voiceName: e.target.value })}
             className="h-9 rounded-xl border border-border bg-card px-3 text-xs text-foreground"
           >
-            <option value="">Standard-Stimme</option>
+            <option value="">Gerätestimme (kostenlos)</option>
             {voices.map((v) => (
               <option key={v.name} value={v.name}>
                 {v.name} ({v.lang})
@@ -122,9 +131,42 @@ export default function ChatModuleSettings() {
             ))}
           </select>
         </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Stimme aus dem Pool</span>
+          <select
+            value={s.voiceModelId}
+            onChange={(e) => set({ voiceModelId: e.target.value })}
+            className="h-9 max-w-[280px] rounded-xl border border-border bg-card px-3 text-xs text-foreground"
+          >
+            <option value="">Keine — Gerätestimme nutzen</option>
+            {pool.map((v) => (
+              <option key={v.id} value={v.modelId}>
+                {v.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Vorgelesen wird mit der Stimme dieses Geräts — ohne Umweg über einen Dienst, also ohne
-          Kosten. Jede Antwort hat außerdem einen Lautsprecher zum Antippen.
+          Ist eine Pool-Stimme gewählt, klingt das Vorlesen wie im Studio. Ohne sie spricht das
+          Gerät — ohne Kosten. Jede Antwort hat außerdem einen Lautsprecher zum Antippen.
+        </p>
+      </div>
+
+      <div>
+        <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Stimmung
+        </div>
+        <Button
+          size="sm"
+          variant={s.autoMood ? "default" : "outline"}
+          onClick={() => set({ autoMood: !s.autoMood })}
+        >
+          {s.autoMood ? "Stimmung wird mitgelesen" : "Stimmung aus"}
+        </Button>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Ist es an, liest das Modul nach jeder Nachricht, wo das Gespräch steht. Der Ton der
+          Antworten und der Stil des nächsten Bildes richten sich danach. Die Stimmung steht als
+          kleine Reihe über dem Gespräch.
         </p>
       </div>
 

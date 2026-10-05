@@ -9,6 +9,7 @@ import { Image as ImageIcon } from "@/components/ui/image";
 import ChatSpeakButton from "@/components/chatmodul/ChatSpeakButton";
 import ChatImageTools from "@/components/chatmodul/ChatImageTools";
 import { speak } from "@/lib/chatSpeak";
+import { readMood, moodFor, setMoodFor, moodLabels } from "@/lib/chatMood";
 
 const SYSTEM =
   "Du bist der Assistent dieses Chat-Moduls. Antworte knapp, hilfreich und in der Sprache des Nutzers.";
@@ -22,9 +23,13 @@ export default function ChatModuleWindow() {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [mood, setMood] = useState(null);
   const endRef = useRef(null);
 
   useEffect(() => subscribeChatModule(setSettings), []);
+
+  // Die Stimmung kommt mit dem Gespräch zurück — sie liegt am Gerät.
+  useEffect(() => setMood(moodFor(conv?.id)), [conv?.id]);
 
   // Das Gespräch holen oder anlegen. Ändert sich die Spiegelung, wandert es mit.
   useEffect(() => {
@@ -76,19 +81,21 @@ export default function ChatModuleWindow() {
   }, [messages.length, busy]);
 
   // Im KI-Modus antwortet das Modell — über das gewählte Modell, sonst mit der Standard-KI.
-  const answer = async (userText, conversationId) => {
+  const answer = async (userText, conversationId, current) => {
     const history = messages
       .slice(-12)
       .map((m) => `${m.senderType === "HUMAN" ? "Nutzer" : "Assistent"}: ${m.text || ""}`)
       .join("\n");
     const prompt = (history ? "BISHERIGES GESPRÄCH:\n" + history + "\n\n" : "") + "Nutzer sagt: " + userText;
 
+    const system =
+      SYSTEM + (current?.tone ? `\n\nSTIMMUNG — so sprichst du jetzt:\n${current.tone}` : "");
     let reply = "";
     if (settings.modelId) {
       try {
         const res = await base44.functions.invoke("hfChat", {
           modelId: settings.modelId,
-          system: SYSTEM,
+          system,
           prompt,
         });
         reply = res.data?.text || "";
@@ -97,7 +104,7 @@ export default function ChatModuleWindow() {
       }
     }
     if (!reply) {
-      const res = await base44.integrations.Core.InvokeLLM({ prompt: `${SYSTEM}\n\n${prompt}` });
+      const res = await base44.integrations.Core.InvokeLLM({ prompt: `${system}\n\n${prompt}` });
       reply = typeof res === "string" ? res : res?.response || res?.text || "";
     }
     if (!reply) return;
@@ -143,7 +150,20 @@ export default function ChatModuleWindow() {
           .catch(() => setError("Nach Telegram ging es gerade nicht raus."));
       }
 
-      if (settings.mode === CHAT_MODES.AI) await answer(body, conv.id);
+      if (settings.mode === CHAT_MODES.AI) {
+        // Erst hören, wo das Gespräch steht — daraus antwortet das Modell.
+        let current = mood;
+        if (settings.autoMood) {
+          try {
+            current = await readMood([...messages, { senderType: "HUMAN", text: body }]);
+            setMood(current);
+            setMoodFor(conv.id, current);
+          } catch (e) {
+            current = mood;
+          }
+        }
+        await answer(body, conv.id, current);
+      }
     } catch (e) {
       setError(e?.message || "Senden hat nicht geklappt.");
     } finally {
@@ -179,6 +199,23 @@ export default function ChatModuleWindow() {
         </span>
       </div>
 
+      {mood?.moodIds?.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-border px-4 py-1.5">
+          {moodLabels(mood).map((label) => (
+            <span
+              key={label}
+              className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+              style={{ backgroundColor: `${settings.accent}22`, color: settings.accent }}
+            >
+              {label}
+            </span>
+          ))}
+          {mood.summary && (
+            <span className="ml-1 truncate text-[11px] text-muted-foreground">{mood.summary}</span>
+          )}
+        </div>
+      )}
+
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {!messages.length && (
           <p className="py-10 text-center text-sm text-muted-foreground">
@@ -213,7 +250,12 @@ export default function ChatModuleWindow() {
                   ))}
               </div>
               {!mine && (
-                <ChatSpeakButton text={m.text} voiceName={settings.voiceName} accent={settings.accent} />
+                <ChatSpeakButton
+                  text={m.text}
+                  voiceName={settings.voiceName}
+                  voiceModelId={settings.voiceModelId}
+                  accent={settings.accent}
+                />
               )}
               {mine && <User className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />}
             </div>
@@ -231,6 +273,7 @@ export default function ChatModuleWindow() {
 
       <ChatImageTools
         accent={settings.accent}
+        moodStyle={mood?.imageStyle}
         onImage={async (url, prompt) => {
           await base44.entities.Message.create({
             conversationId: conv.id,

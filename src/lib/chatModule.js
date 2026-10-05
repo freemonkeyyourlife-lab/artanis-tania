@@ -26,6 +26,8 @@ export const DEFAULT_CHAT_MODULE = {
   modelId: "",
   autoSpeak: false,
   voiceName: "",
+  voiceModelId: "",
+  autoMood: true,
   mirrorToTelegram: false,
   telegramChatId: "",
 };

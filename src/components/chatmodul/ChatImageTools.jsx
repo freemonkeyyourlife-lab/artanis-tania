@@ -4,23 +4,38 @@ import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// Bild aus dem Chat heraus: Wunsch beschreiben, Bild landet im Gespräch.
-export default function ChatImageTools({ accent, onImage }) {
+// Bild aus dem Chat heraus: Wunsch beschreiben, die Stimmung färbt es ein, und
+// das Ergebnis landet im Gespräch — und dauerhaft im Archiv.
+export default function ChatImageTools({ accent, moodStyle, onImage }) {
   const [wish, setWish] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   const make = async () => {
-    const prompt = wish.trim();
-    if (!prompt || busy) return;
+    const wishText = wish.trim();
+    if (!wishText || busy) return;
     setBusy(true);
     setError("");
     try {
+      const prompt = moodStyle ? `${wishText}. ${moodStyle}` : wishText;
       const res = await base44.integrations.Core.GenerateImage({ prompt });
       const url = res?.url;
       if (!url) throw new Error("Es kam kein Bild zurück.");
+
+      // Jedes Bild bleibt im Archiv — dort ist es jederzeit wiederzufinden.
+      try {
+        await base44.entities.ImageArchive.create({
+          name: wishText.slice(0, 60),
+          url,
+          kind: "ALLGEMEIN",
+          note: "Aus dem Chat-Modul",
+        });
+      } catch (e) {
+        /* Ins Archiv darf nur der Besitzer schreiben — das Bild kommt trotzdem an */
+      }
+
       setWish("");
-      await onImage(url, prompt);
+      await onImage(url, wishText);
     } catch (e) {
       setError(e?.message || "Das Bild kam nicht durch.");
     } finally {
@@ -53,6 +68,9 @@ export default function ChatImageTools({ accent, onImage }) {
           <span className="ml-1.5 text-xs">Bild</span>
         </Button>
       </div>
+      {moodStyle && !error && (
+        <p className="pt-1.5 text-[11px] text-muted-foreground">Stimmung fließt ins Bild: {moodStyle}</p>
+      )}
       {error && <p className="pt-1.5 text-xs text-destructive">{error}</p>}
     </div>
   );
