@@ -21,6 +21,7 @@ export default function ChatModuleSettings() {
   const [voices, setVoices] = useState(listVoices());
   const [pool, setPool] = useState([]);
   const [models, setModels] = useState([]);
+  const [imageModels, setImageModels] = useState([]);
   const [newModel, setNewModel] = useState("");
   const [adding, setAdding] = useState(false);
   const set = (patch) => setS(setChatModule(patch));
@@ -48,6 +49,13 @@ export default function ChatModuleSettings() {
       setAdding(false);
     }
   };
+
+  // Die Bildmodelle der App — das gewählte zeichnet die Bilder im Chat.
+  useEffect(() => {
+    base44.entities.ImageModel.filter({}, "name", 200)
+      .then((list) => setImageModels((list || []).filter((m) => m.enabled !== false)))
+      .catch(() => setImageModels([]));
+  }, []);
 
   // Die Stimmen aus dem Pool der App — jede davon lässt sich hier anhängen.
   useEffect(() => {
@@ -120,6 +128,28 @@ export default function ChatModuleSettings() {
             </p>
           </div>
         )}
+      </div>
+
+      <div>
+        <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Bildgenerierung
+        </div>
+        <select
+          value={s.imageModelId}
+          onChange={(e) => set({ imageModelId: e.target.value })}
+          className="h-9 w-full max-w-[360px] rounded-xl border border-border bg-card px-3 text-xs text-foreground"
+        >
+          <option value="">Standard-Bildmodell der Plattform</option>
+          {imageModels.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name} {m.style ? `· ${m.style}` : ""}
+            </option>
+          ))}
+        </select>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Welches Modell unten im Chat die Bilder zeichnet. Die Modelle selbst pflegst du im Studio
+          unter „Bildmodelle" — hier wählst du nur, welches im Chat läuft.
+        </p>
       </div>
 
       <ChatConversationPicker currentId={s.conversationId} onPicked={() => setS(getChatModule())} />

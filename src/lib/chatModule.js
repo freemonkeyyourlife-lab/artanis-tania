@@ -24,6 +24,8 @@ export const DEFAULT_CHAT_MODULE = {
   accent: "#e29578",
   radius: 20,
   modelId: "",
+  // Leer heißt: das Standard-Bildmodell der Plattform zeichnet.
+  imageModelId: "",
   autoSpeak: false,
   voiceName: "",
   voiceModelId: "",

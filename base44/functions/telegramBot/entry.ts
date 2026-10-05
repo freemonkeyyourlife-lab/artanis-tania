@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { secrets } from 'base44:runtime';
 
 const API = "https://api.telegram.org";
-const WEBHOOK_URL = "https://artanis-triania-live.base44.app/functions/telegramBot";
+const WEBHOOK_URL = "https://artanis-tania.base44.app/functions/telegramBot";
 const CHANNEL = "TELEGRAM";
 const PREFIX = "telegram:";
 

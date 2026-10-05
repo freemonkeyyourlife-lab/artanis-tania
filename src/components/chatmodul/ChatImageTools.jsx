@@ -3,6 +3,8 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { getChatModule } from "@/lib/chatModule";
+import { generateWithModel } from "@/lib/imageGen";
 
 // Bild aus dem Chat heraus: Wunsch beschreiben, die Stimmung färbt es ein, und
 // das Ergebnis landet im Gespräch — und dauerhaft im Archiv.
@@ -18,8 +20,18 @@ export default function ChatImageTools({ accent, moodStyle, onImage }) {
     setError("");
     try {
       const prompt = moodStyle ? `${wishText}. ${moodStyle}` : wishText;
-      const res = await base44.integrations.Core.GenerateImage({ prompt });
-      const url = res?.url;
+      // Ist in den Einstellungen ein Modell gewählt, zeichnet es — sonst der
+      // Standard der Plattform.
+      const chosen = getChatModule().imageModelId;
+      let url = "";
+      if (chosen) {
+        const model = await base44.entities.ImageModel.get(chosen).catch(() => null);
+        if (model) url = await generateWithModel(model, prompt);
+      }
+      if (!url) {
+        const res = await base44.integrations.Core.GenerateImage({ prompt });
+        url = res?.url;
+      }
       if (!url) throw new Error("Es kam kein Bild zurück.");
 
       // Jedes Bild bleibt im Archiv — dort ist es jederzeit wiederzufinden.
