@@ -8,8 +8,10 @@ import { CHAT_MODES, CHAT_LAYOUTS, getChatModule, subscribeChatModule, handleFor
 import { Image as ImageIcon } from "@/components/ui/image";
 import ChatSpeakButton from "@/components/chatmodul/ChatSpeakButton";
 import ChatImageTools from "@/components/chatmodul/ChatImageTools";
-import { speak } from "@/lib/chatSpeak";
+import ChatCastPicker from "@/components/chatmodul/ChatCastPicker";
+import { speakText, speakSequence } from "@/lib/chatVoice";
 import { readMood, moodFor, setMoodFor, moodLabels } from "@/lib/chatMood";
+import { castFor, setCastFor, castPrompt, splitCast, voiceForName } from "@/lib/chatCast";
 
 const SYSTEM =
   "Du bist der Assistent dieses Chat-Moduls. Antworte knapp, hilfreich und in der Sprache des Nutzers.";
@@ -24,12 +26,36 @@ export default function ChatModuleWindow() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [mood, setMood] = useState(null);
+  const [cast, setCast] = useState([]);
   const endRef = useRef(null);
 
   useEffect(() => subscribeChatModule(setSettings), []);
 
   // Die Stimmung kommt mit dem Gespräch zurück — sie liegt am Gerät.
   useEffect(() => setMood(moodFor(conv?.id)), [conv?.id]);
+
+  // Die Besetzung gehört zum Gespräch — sie kommt mit ihm zurück.
+  useEffect(() => setCast(castFor(conv?.id)), [conv?.id]);
+
+  const changeCast = (next) => {
+    setCast(next);
+    setCastFor(conv?.id, next);
+  };
+
+  // Vorlesen: mit Besetzung spricht jede Figur mit ihrer eigenen Stimme.
+  const speakReply = (reply) => {
+    if (cast.length) {
+      speakSequence(
+        splitCast(reply, cast).map((b) => ({
+          text: b.text,
+          voiceName: voiceForName(cast, b.name).voiceName || settings.voiceName,
+          voiceModelId: voiceForName(cast, b.name).voiceModelId || settings.voiceModelId,
+        }))
+      );
+      return;
+    }
+    speakText(reply, { voiceName: settings.voiceName, voiceModelId: settings.voiceModelId });
+  };
 
   // Das Gespräch holen oder anlegen. Ändert sich die Spiegelung, wandert es mit.
   useEffect(() => {
@@ -98,7 +124,9 @@ export default function ChatModuleWindow() {
     const prompt = (history ? "BISHERIGES GESPRÄCH:\n" + history + "\n\n" : "") + "Nutzer sagt: " + userText;
 
     const system =
-      SYSTEM + (current?.tone ? `\n\nSTIMMUNG — so sprichst du jetzt:\n${current.tone}` : "");
+      SYSTEM +
+      castPrompt(cast) +
+      (current?.tone ? `\n\nSTIMMUNG — so sprichst du jetzt:\n${current.tone}` : "");
     let reply = "";
     if (settings.modelId) {
       try {
@@ -126,7 +154,7 @@ export default function ChatModuleWindow() {
       channel: "PLATFORM",
     });
     await base44.entities.Conversation.update(conversationId, { lastMessageAt: new Date().toISOString() });
-    if (settings.autoSpeak) speak(reply, settings.voiceName);
+    if (settings.autoSpeak) speakReply(reply);
   };
 
   const send = async () => {
@@ -201,11 +229,14 @@ export default function ChatModuleWindow() {
         <span className="text-xs font-bold uppercase tracking-wider" style={{ color: settings.accent }}>
           {settings.mode === CHAT_MODES.AI ? "Chatbot" : "Manuell"}
         </span>
-        <span className="text-[11px] text-muted-foreground">
-          {settings.mirrorToTelegram && settings.telegramChatId
-            ? `gespiegelt nach Telegram · ${settings.telegramChatId}`
-            : "nur hier"}
-        </span>
+        <div className="flex items-center gap-2">
+          <ChatCastPicker cast={cast} onChange={changeCast} accent={settings.accent} />
+          <span className="hidden text-[11px] text-muted-foreground sm:inline">
+            {settings.mirrorToTelegram && settings.telegramChatId
+              ? `gespiegelt nach Telegram · ${settings.telegramChatId}`
+              : "nur hier"}
+          </span>
+        </div>
       </div>
 
       {mood?.moodIds?.length > 0 && (
@@ -233,12 +264,14 @@ export default function ChatModuleWindow() {
         )}
         {messages.map((m) => {
           const mine = m.senderType === "HUMAN";
+          // Mit Besetzung wird die Antwort in Zeilen zerlegt — wer sagt was.
+          const blocks = !mine && cast.length ? splitCast(m.text, cast) : null;
           return (
             <div key={m.id} className={cn("flex gap-2", mine ? "justify-end" : "justify-start")}>
               {!mine && <Bot className="mt-1 h-4 w-4 shrink-0" style={{ color: settings.accent }} />}
               <div
                 className={cn(
-                  "max-w-[80%] whitespace-pre-wrap px-3.5 py-2 text-sm",
+                  "max-w-[80%] px-3.5 py-2 text-sm",
                   mine ? "text-primary-foreground" : "bg-elevated text-foreground"
                 )}
                 style={{
@@ -246,7 +279,33 @@ export default function ChatModuleWindow() {
                   ...(mine ? { backgroundColor: settings.accent } : {}),
                 }}
               >
-                {m.text}
+                {blocks ? (
+                  <div className="space-y-2">
+                    {blocks.map((b, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <div className="min-w-0">
+                          {b.name && (
+                            <p
+                              className="text-[10px] font-bold uppercase tracking-wider"
+                              style={{ color: settings.accent }}
+                            >
+                              {b.name}
+                            </p>
+                          )}
+                          <p className="whitespace-pre-wrap">{b.text}</p>
+                        </div>
+                        <ChatSpeakButton
+                          text={b.text}
+                          voiceName={voiceForName(cast, b.name).voiceName || settings.voiceName}
+                          voiceModelId={voiceForName(cast, b.name).voiceModelId || settings.voiceModelId}
+                          accent={settings.accent}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap">{m.text}</p>
+                )}
                 {(m.attachments || [])
                   .filter((a) => a?.type === "image" && a.url)
                   .map((a, i) => (
@@ -258,7 +317,7 @@ export default function ChatModuleWindow() {
                     />
                   ))}
               </div>
-              {!mine && (
+              {!mine && !blocks && (
                 <ChatSpeakButton
                   text={m.text}
                   voiceName={settings.voiceName}

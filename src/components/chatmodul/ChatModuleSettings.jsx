@@ -211,6 +211,17 @@ export default function ChatModuleSettings() {
 
       <div>
         <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Rollen
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Oben im Chatfenster liegt der Knopf „Rollen". Dort holst du mehrere Figuren gleichzeitig in
+          die Szene — sie reden miteinander, und jeder gibst du dort ihre eigene Stimme. Ohne
+          Besetzung antwortet eine einzelne Stimme.
+        </p>
+      </div>
+
+      <div>
+        <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Stimmung
         </div>
         <Button

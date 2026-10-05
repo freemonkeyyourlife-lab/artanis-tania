@@ -5,12 +5,16 @@ export function listVoices() {
   return window.speechSynthesis.getVoices();
 }
 
-export function speak(text, voiceName) {
+export function speak(text, voiceName, onEnd) {
   const clean = String(text || "").trim();
   if (!clean || typeof window === "undefined" || !window.speechSynthesis) return false;
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(clean);
   utter.lang = "de-DE";
+  // Damit eine Reihe von Stimmen nacheinander sprechen kann, meldet jede, wenn
+  // sie fertig ist.
+  utter.onend = () => onEnd?.();
+  utter.onerror = () => onEnd?.();
   if (voiceName) {
     const voice = listVoices().find((v) => v.name === voiceName);
     if (voice) {
