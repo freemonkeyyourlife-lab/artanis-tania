@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Pencil, Trash2, ShieldCheck, ShieldAlert } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
@@ -16,16 +17,20 @@ export default function CharacterTile({ character, paletteList = [], voices = []
   return (
     <div className="glass rounded-2xl border border-border p-4">
       <div className="flex items-start gap-3">
-        {character.avatar ? (
-          <Image src={character.avatar} fittingType="fill" className="h-16 w-16 flex-shrink-0 rounded-2xl" />
-        ) : (
-          <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-elevated font-display text-xl text-primary">
-            {(character.name || "?").charAt(0)}
-          </div>
-        )}
+        <Link to={`/charakter/${character.id}`} title="Figur aufschlagen" className="flex-shrink-0">
+          {character.avatar ? (
+            <Image src={character.avatar} fittingType="fill" className="h-24 w-24 rounded-2xl" />
+          ) : (
+            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-elevated font-display text-2xl text-primary">
+              {(character.name || "?").charAt(0)}
+            </div>
+          )}
+        </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate font-heading text-[15px] text-foreground">{character.name}</span>
+            <Link to={`/charakter/${character.id}`} className="truncate font-heading text-[15px] text-foreground hover:text-primary">
+              {character.name}
+            </Link>
             <span className="flex-shrink-0 text-[11px] text-muted-foreground">{character.adultAge}+</span>
           </div>
           <p className="truncate text-[12px] text-muted-foreground">

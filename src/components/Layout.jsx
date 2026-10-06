@@ -4,6 +4,7 @@ import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCh
 import PageSearch from "@/components/nav/PageSearch";
 import { cn } from "@/lib/utils";
 import HeaderNav, { buildNavGroups } from "@/components/nav/HeaderNav";
+import SideNav from "@/components/nav/SideNav";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
 import { hasProAccess, localProActive } from "@/lib/proAccess";
@@ -163,7 +164,8 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-background">
       <BackgroundSlideshow />
-      <header className="fixed top-0 left-0 right-0 z-50 glass-milky" style={{ height: "72px" }}>
+      <SideNav groups={groups} />
+      <header className="fixed top-0 left-0 right-0 lg:left-64 z-50 glass-milky" style={{ height: "72px" }}>
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link to="/">
@@ -308,7 +310,7 @@ export default function Layout() {
         )}
       </header>
 
-      <main className="relative z-10 pt-[72px]">
+      <main className="relative z-10 pt-[72px] lg:pl-64">
         <TierFrame>
           <Outlet />
         </TierFrame>

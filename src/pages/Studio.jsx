@@ -46,6 +46,7 @@ import AssistantWizard from "@/components/studio/assistant/AssistantWizard";
 import ConciergePanel from "@/components/studio/ConciergePanel";
 import CameraSettings from "@/components/studio/CameraSettings";
 import ReferenceModelManager from "@/components/studio/ReferenceModelManager";
+import Mischpult from "@/components/charakter/Mischpult";
 
 const personaLabel = (t) =>
   t === "SOLO_MALE" ? "Mann" : t === "COUPLE" ? "Paar" : t === "SHEMALE" ? "Shemale" : t === "GROUP" ? "Gruppe" : "Frau";
@@ -200,6 +201,10 @@ export default function Studio() {
             <BookOpen className="w-4 h-4" /> Anleitung: Modelle eintragen
           </Link>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <Mischpult />
       </div>
 
       <div className="space-y-3 mb-8">

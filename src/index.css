@@ -197,6 +197,13 @@
       0 18px 44px rgba(0, 0, 0, 0.5);
   }
 
+  /* Bilder stehen groß und weich — keine harten Kanten, nirgends. */
+  img,
+  video,
+  canvas {
+    border-radius: 20px;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
