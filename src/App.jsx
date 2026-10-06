@@ -73,6 +73,9 @@ import Kulisse from '@/pages/Kulisse';
 import Lernordner from '@/pages/Lernordner';
 import Leitfaden from '@/pages/Leitfaden';
 import Palette from '@/pages/Palette';
+import CharakterStudio from '@/pages/CharakterStudio';
+import Mitmachen from '@/pages/Mitmachen';
+import BotImport from '@/pages/BotImport';
 import Logbuch from '@/pages/Logbuch';
 import ChatModul from '@/pages/ChatModul';
 import { CallProvider } from '@/lib/CallContext';
@@ -178,6 +181,9 @@ const AuthenticatedApp = () => {
         <Route path="/lernordner" element={<Lernordner />} />
         <Route path="/leitfaden" element={<Leitfaden />} />
         <Route path="/palette" element={<Palette />} />
+        <Route path="/charakter" element={<CharakterStudio />} />
+        <Route path="/mitmachen" element={<Mitmachen />} />
+        <Route path="/botimport" element={<BotImport />} />
         <Route path="/logbuch" element={<Logbuch />} />
         <Route path="/modellplan" element={<ModelPlan />} />
         <Route path="/archiv" element={<Archive />} />

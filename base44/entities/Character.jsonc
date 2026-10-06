@@ -9,28 +9,66 @@
       "type": "number",
       "minimum": 18
     },
-    "description": {
-      "type": "string"
-    },
-    "appearance": {
-      "type": "string"
-    },
-    "personality": {
-      "type": "string"
-    },
-    "relationship": {
-      "type": "string"
+    "createdByRole": {
+      "type": "string",
+      "enum": [
+        "DAVID",
+        "GAST"
+      ],
+      "default": "GAST"
     },
     "fictional": {
       "type": "boolean",
       "default": true
     },
-    "avatar": {
-      "type": "string"
-    },
     "sourceConsentVerified": {
       "type": "boolean",
       "default": false
+    },
+    "appearance": {
+      "type": "string"
+    },
+    "art": {
+      "type": "string"
+    },
+    "behavior": {
+      "type": "string"
+    },
+    "understanding": {
+      "type": "string"
+    },
+    "personality": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "relationship": {
+      "type": "string"
+    },
+    "neigungen": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "voiceId": {
+      "type": "string"
+    },
+    "moduleIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "avatar": {
+      "type": "string"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [

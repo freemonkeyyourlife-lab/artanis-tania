@@ -63,6 +63,18 @@ export default function Palette() {
         Alles lässt sich mit allem verbinden — rechts wächst daraus eine fertige Anweisung.
       </p>
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link to="/charakter" className="glass-btn rounded-full px-4 py-2 text-[13px]">
+          Charakter-Werkstatt
+        </Link>
+        <Link to="/mitmachen" className="glass-btn rounded-full px-4 py-2 text-[13px]">
+          Mitmachen — Co-Creation
+        </Link>
+        <Link to="/botimport" className="glass-btn rounded-full px-4 py-2 text-[13px]">
+          Bot / Agent importieren
+        </Link>
+      </div>
+
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
         <div className="space-y-6">
           <section className="rounded-2xl border border-border bg-card p-4">
