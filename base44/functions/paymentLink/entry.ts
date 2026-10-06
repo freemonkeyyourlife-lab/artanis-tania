@@ -94,7 +94,7 @@ export default async function (req) {
       const appId = secrets.get('BASE44_APP_ID') || '';
       const recurring = link.billingType === 'RECURRING';
 
-      const origin = req.headers.get('origin') || 'https://artanis-triania-live.base44.app';
+      const origin = req.headers.get('origin') || 'https://artanis-tania-live.base44.app';
       const params = new URLSearchParams();
       params.set('mode', recurring ? 'subscription' : 'payment');
       params.set('line_items[0][price_data][currency]', 'eur');

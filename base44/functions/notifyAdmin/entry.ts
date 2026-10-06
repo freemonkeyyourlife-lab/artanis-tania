@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 
-const APP_URL = "https://artanis-triania-live.base44.app";
+const APP_URL = "https://artanis-tania-live.base44.app";
 
 // Schickt eine Meldung an alle Admins — aufgerufen von den Automatik-Regeln.
 export default async function (req) {
@@ -25,7 +25,7 @@ export default async function (req) {
     if (recipients.length === 0) return Response.json({ ok: true, sent: 0 });
 
     const url = link ? APP_URL + link : APP_URL;
-    const subject = "ARTANIS × TRIANIA — " + title;
+    const subject = "ARTANIS × TANIA — " + title;
     const body =
       title + "\n\n" +
       (message ? message + "\n\n" : "") +

@@ -14,7 +14,7 @@ export function downloadChat(conversation, messages = []) {
   const who = conversation.userName || "Gast";
   const other = conversation.creatorName || conversation.participantName || "Chat";
   const lines = [
-    "ARTANIS × TRIANIA — CHAT-ARCHIV",
+    "ARTANIS × TANIA — CHAT-ARCHIV",
     "",
     `Gast: ${who}`,
     `Mit: ${other}`,

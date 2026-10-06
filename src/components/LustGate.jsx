@@ -6,7 +6,7 @@ import { isGodMode } from "@/lib/godMode";
 const KEY = "artanis_lust_gate_seen";
 
 const OPTIONS = [
-  { label: "Verführen lassen", hint: "Direkt in den Chat mit Triania", icon: MessageSquare, path: "/messages" },
+  { label: "Verführen lassen", hint: "Direkt in den Chat mit Tania", icon: MessageSquare, path: "/messages" },
   { label: "Eine Story spielen", hint: "Interaktiv, du entscheidest", icon: Sparkles, path: "/interactive" },
   { label: "Bilder ansehen", hint: "Frischer Content", icon: ImageIcon, path: "/photos" },
   { label: "Mit anderen reden", hint: "Offener Gruppenchat", icon: Users, path: "/groups" },
@@ -53,7 +53,7 @@ export default function LustGate() {
         </div>
 
         <h2 className="font-display text-3xl text-foreground mb-2">Hast du Lust?</h2>
-        <p className="text-sm text-muted-foreground mb-6">Sag einfach, worauf du gerade Lust hast — Triania ist da.</p>
+        <p className="text-sm text-muted-foreground mb-6">Sag einfach, worauf du gerade Lust hast — Tania ist da.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {OPTIONS.map((o) => {

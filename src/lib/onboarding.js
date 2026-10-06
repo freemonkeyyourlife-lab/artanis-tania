@@ -51,7 +51,7 @@ export const DEFAULT_GUIDE_BEHAVIOR =
 
 export const DEFAULT_INFO = {
   group_characters:
-    "Die drei Hauptfiguren: Artanis, Triania und das Paar. Hier fängst du an, wenn du reden oder mitspielen willst.",
+    "Die drei Hauptfiguren: Artanis, Tania und das Paar. Hier fängst du an, wenn du reden oder mitspielen willst.",
   group_create:
     "Alles, wo du selbst etwas baust: eigene Figuren, eigene Inhalte, eigene Preise.",
   group_explore:

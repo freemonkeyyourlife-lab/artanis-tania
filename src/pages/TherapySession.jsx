@@ -140,7 +140,7 @@ export default function TherapySession() {
     setMessages((prev) => (prev.some((m) => m.id === created.id) ? prev : [...prev, created]));
   };
 
-  // Triania eröffnet die Sitzung von selbst.
+  // Tania eröffnet die Sitzung von selbst.
   useEffect(() => {
     if (loading || openedRef.current || !session || !isOwner) return;
     if (messages.length > 0 || session.status === "DONE") return;
@@ -221,7 +221,7 @@ export default function TherapySession() {
     }
   };
 
-  // Freilauf: Triania macht von selbst weiter, bis Stopp gedrückt wird.
+  // Freilauf: Tania macht von selbst weiter, bis Stopp gedrückt wird.
   const continueRun = async () => {
     if (sending || !session || !canWrite) return;
     setSending(true);
@@ -281,7 +281,7 @@ export default function TherapySession() {
     }
   };
 
-  // Solange der Freilauf läuft, antwortet Triania von selbst weiter.
+  // Solange der Freilauf läuft, antwortet Tania von selbst weiter.
   useEffect(() => {
     if (!running || sending || loading || !canWrite) return;
     const last = messages[messages.length - 1];
@@ -403,7 +403,7 @@ export default function TherapySession() {
         {isOwner && session.status !== "DONE" && (
           <div className="mt-3 pt-3 border-t border-border">
             <SessionControls
-              roleSetup={session.roleSetup || "TRIANIA_THERAPIST"}
+              roleSetup={session.roleSetup || "TANIA_THERAPIST"}
               onRole={switchRole}
               running={running}
               onRunning={(v) => { setRunCount(0); setRunning(v); }}
@@ -525,7 +525,7 @@ export default function TherapySession() {
       ) : session.visibility === "PUBLIC" ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-3">
           <p className="text-xs text-muted-foreground mb-2">
-            Du liest mit. Wenn dir etwas durch den Kopf geht — wirf es ein. Triania darf es aufgreifen.
+            Du liest mit. Wenn dir etwas durch den Kopf geht — wirf es ein. Tania darf es aufgreifen.
           </p>
           <div className="flex gap-2">
             <input

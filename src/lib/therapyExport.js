@@ -17,7 +17,7 @@ export function buildSessionText(session, messages = []) {
   const name = therapistName(session);
   const cast = session.cast || [];
   const head = [
-    "ARTANIS × TRIANIA — SPRECHSTUNDE",
+    "ARTANIS × TANIA — SPRECHSTUNDE",
     "",
     session.seriesTitle ? `Serie: ${session.seriesTitle}` : null,
     `Format: ${formatLabel(session)}`,

@@ -79,7 +79,7 @@ export default function TherapyConfigMask({ session, creators = [], onSave, onCa
   const [role, setRole] = useState(session.therapistRole || "");
   const [mode, setMode] = useState(session.mode || "GUIDED");
   const [intensity, setIntensity] = useState(session.intensity || "TIEF");
-  const [roleSetup, setRoleSetup] = useState(session.roleSetup || "TRIANIA_THERAPIST");
+  const [roleSetup, setRoleSetup] = useState(session.roleSetup || "TANIA_THERAPIST");
   const [therapistVoice, setTherapistVoice] = useState(session.therapistVoice || "honey");
 
   const present = cast.filter((c) => c.mode === "PRESENT");

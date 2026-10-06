@@ -3,7 +3,7 @@ import { BLEND_OPTIONS, createCreatorFromDock } from "@/lib/dock";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
 import { runInBackground } from "@/lib/importRunner";
 
-const BLEND_KEY = { ARTANIS: "artanis", TRIANIA: "triania", COUPLE: "couple" };
+const BLEND_KEY = { ARTANIS: "artanis", TANIA: "tania", COUPLE: "couple" };
 
 // Ein Link rein, ein Charakter raus: Seite lesen, Persönlichkeit mischen,
 // andocken und freigeben — derselbe Weg wie im Formular, nur in einem Zug.

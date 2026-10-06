@@ -29,7 +29,7 @@ export default function CallSharePanel({ token, roomNumber, rooms = [], isHost, 
 
   const share = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: "ARTANIS × TRIANIA", text: invitation, url }); return; } catch (e) { /* abgebrochen */ }
+      try { await navigator.share({ title: "ARTANIS × TANIA", text: invitation, url }); return; } catch (e) { /* abgebrochen */ }
     }
     copy(invitation, "text");
   };

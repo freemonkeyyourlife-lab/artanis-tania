@@ -57,8 +57,8 @@ export default async function (req) {
         headers: {
           Authorization: `Bearer ${secrets.get('OPENROUTER_API_KEY')}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://artanis-triania-live.base44.app',
-          'X-Title': 'Artanis x Triania',
+          'HTTP-Referer': 'https://artanis-tania-live.base44.app',
+          'X-Title': 'Artanis x Tania',
         },
         body: JSON.stringify(payload),
       });

@@ -150,7 +150,7 @@ export const RECIPES = [
 
 // Die Landkarte: welche Bereiche es gibt und was in welchem steckt.
 export const MAP = [
-  { area: "Die drei", what: "Artanis, Triania und das Paar — die Hauptfiguren der Seite." },
+  { area: "Die drei", what: "Artanis, Tania und das Paar — die Hauptfiguren der Seite." },
   { area: "Bauen", what: "Studio, Erzähler, Stimmen, Baukasten, Vorbilder, Prompt-Generator. Hier entsteht alles." },
   { area: "Verkaufen", what: "Kasse, Verkaufs-Dashboard und der Content-Planer." },
   { area: "Ansehen", what: "Entdecken, Videos, Fotos, Storys, Themen, Live — was die Gäste sehen." },

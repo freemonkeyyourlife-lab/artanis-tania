@@ -54,8 +54,8 @@ export default function SessionForm({ onCreated }) {
   const [seriesTitle, setSeriesTitle] = useState("");
   const [episodeNumber, setEpisodeNumber] = useState("1");
   const [episodeCount, setEpisodeCount] = useState("3");
-  const [roleSetup, setRoleSetup] = useState("TRIANIA_THERAPIST");
-  const [therapist, setTherapist] = useState({ id: "", name: "Triania", age: "", type: "", avatar: "" });
+  const [roleSetup, setRoleSetup] = useState("TANIA_THERAPIST");
+  const [therapist, setTherapist] = useState({ id: "", name: "Tania", age: "", type: "", avatar: "" });
   const [plan, setPlan] = useState({ topic: "", goal: "", agenda: "", style: "", role: "", location: "", clientAge: "", agreement: "" });
   const [mode, setMode] = useState("GUIDED");
   const [intensity, setIntensity] = useState("TIEF");
@@ -111,7 +111,7 @@ export default function SessionForm({ onCreated }) {
         clientAge: plan.clientAge.trim(),
         agreement: plan.agreement.trim(),
         therapistId: therapist.id,
-        therapistName: therapist.name || "Triania",
+        therapistName: therapist.name || "Tania",
         therapistAvatar: therapist.avatar,
         therapistAge: Number(therapist.age) || undefined,
         therapistType: therapist.type,
@@ -146,7 +146,7 @@ export default function SessionForm({ onCreated }) {
         <OptionRow options={ROLE_SETUPS} value={roleSetup} onChange={setRoleSetup} />
       </Section>
 
-      <Section label="Die Therapeutin" hint="Nimm Triania, eine bestehende oder leg deine eigene an — mit Foto, Alter, Fachrichtung und Ton.">
+      <Section label="Die Therapeutin" hint="Nimm Tania, eine bestehende oder leg deine eigene an — mit Foto, Alter, Fachrichtung und Ton.">
         <TherapistPicker
           therapist={therapist}
           onChange={setTherapist}

@@ -109,7 +109,7 @@ export default function Pay() {
             <p className="text-[15px] text-foreground mb-1">{link.title}</p>
             {link.description && <p className="text-sm text-muted-foreground mb-1">{link.description}</p>}
             <p className="text-xs text-muted-foreground mb-6">
-              von {link.creatorName || "ARTANIS × TRIANIA"}
+              von {link.creatorName || "ARTANIS × TANIA"}
               {link.targetName ? ` · für ${link.targetName}` : ""}
             </p>
 

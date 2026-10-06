@@ -37,7 +37,7 @@ export function getCallToken() {
 
 // Die Adresse für den Einladungslink. In der Vorschau zeigt die Adresszeile auf
 // die Vorschau — ein Link daraus führt Gäste woanders hin als in deinen Raum.
-const PUBLISHED = "https://artanis-triania-live.base44.app";
+const PUBLISHED = "https://artanis-tania.base44.app";
 
 export function callInviteUrl(token, roomNumber) {
   const base = window.self !== window.top ? PUBLISHED : window.location.origin;
@@ -64,14 +64,14 @@ export function inviteCode() {
 
 // Die Einladung als fertiger Text — gleich, ob sie per Link, Bot oder Teilen rausgeht.
 export function callInviteText(token, roomNumber) {
-  return `ARTANIS × TRIANIA — Chatraum ${roomNumber}.\nKomm rein: ${callInviteUrl(token, roomNumber)}`;
+  return `ARTANIS × TANIA — Chatraum ${roomNumber}.\nKomm rein: ${callInviteUrl(token, roomNumber)}`;
 }
 
 // Derselbe Text für einen persönlichen Zugang — mit Namen, wenn du ihn kennst.
 export function guestInviteText(roomNumber, url, name) {
   const who = String(name || "").trim();
   const line = who ? `${who}, hier ist dein persönlicher Zugang:` : "Hier ist dein persönlicher Zugang:";
-  return `ARTANIS × TRIANIA — Chatraum ${roomNumber}.\n${line} ${url}`;
+  return `ARTANIS × TANIA — Chatraum ${roomNumber}.\n${line} ${url}`;
 }
 
 export function resetCallToken() {

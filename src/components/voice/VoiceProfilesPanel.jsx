@@ -34,7 +34,7 @@ const WORDS = [
 
 const START = { mood: "NEUTRAL", speed: 1, depth: 0, intensity: 50, ending: 50 };
 
-// Stimmen-Profile für die Figuren — Artanis und Triania zuerst.
+// Stimmen-Profile für die Figuren — Artanis und Tania zuerst.
 // Du beschreibst den Klang in Worten, daraus wird ein Profil, das du anhörst und speicherst.
 export default function VoiceProfilesPanel() {
   const [creators, setCreators] = useState([]);
@@ -53,7 +53,7 @@ export default function VoiceProfilesPanel() {
       base44.entities.Creator.list("-created_date"),
       base44.entities.Voice.list("-created_date"),
     ]);
-    const first = ["Artanis", "Triania"];
+    const first = ["Artanis", "Tania"];
     const rank = (x) => {
       const i = first.indexOf(x.stageName);
       return i === -1 ? first.length : i;

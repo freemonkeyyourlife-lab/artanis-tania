@@ -15,7 +15,7 @@ export const MODULE_TYPES = [
   { path: "/coins", label: "Börse", description: "Münzen, Guthaben und Einsätze." },
   { path: "/library", label: "Bibliothek", description: "Alles, was man sich gemerkt hat." },
   { path: "/messages", label: "Nachrichten", description: "Die Chats mit Charakteren und echten Leuten." },
-  { path: "/therapy", label: "Sprechstunde", description: "Sitzungen mit Triania." },
+  { path: "/therapy", label: "Sprechstunde", description: "Sitzungen mit Tania." },
   { path: "/request", label: "Wünsche", description: "Wünsche eintragen und abstimmen." },
   { path: "/planung", label: "Content-Planer", description: "Wünsche übernehmen und den Plan für die nächsten Inhalte ziehen." },
   { path: "/paylinks", label: "Kasse", description: "Zahlungen anfordern und bezahlen." },
@@ -100,7 +100,7 @@ export function diffModules(saved = [], draft = []) {
 // Ein Punkt ohne Eintrag landet unter „Mehr" — nichts fällt weg.
 export const NAV_GROUPS = {
   "/artanis": "Die drei",
-  "/triania": "Die drei",
+  "/tania": "Die drei",
   "/couple": "Die drei",
 
   "/studio": "Bauen",
@@ -194,7 +194,7 @@ export const FIXED_AREAS = [
     label: "Charaktere",
     items: [
       { label: "Artanis", path: "/artanis" },
-      { label: "Triania", path: "/triania" },
+      { label: "Tania", path: "/tania" },
       { label: "Couple", path: "/couple" },
     ],
   },

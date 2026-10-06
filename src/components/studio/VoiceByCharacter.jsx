@@ -22,8 +22,8 @@ export default function VoiceByCharacter() {
       base44.entities.Creator.list("-created_date"),
       base44.entities.Voice.list("-created_date"),
     ]);
-    // Artanis und Triania stehen oben — ihre Stimmen werden zuerst fertig gemacht.
-    const first = ["Artanis", "Triania"];
+    // Artanis und Tania stehen oben — ihre Stimmen werden zuerst fertig gemacht.
+    const first = ["Artanis", "Tania"];
     const rank = (creator) => {
       const i = first.indexOf(creator.stageName);
       return i === -1 ? first.length + (creator.active === false ? 1 : 0) : i;

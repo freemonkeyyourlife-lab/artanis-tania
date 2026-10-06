@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 
-const APP_URL = "https://artanis-triania-live.base44.app";
+const APP_URL = "https://artanis-tania-live.base44.app";
 const COOLDOWN_MS = 5 * 60 * 1000;
 
 // Ein Gast wartet im Chat — die Admins bekommen eine Mail (und Push, wenn die App installiert ist).
@@ -27,7 +27,7 @@ export default async function (req) {
     const link = APP_URL + "/leitstand";
     const who = conv.userName || "Ein Gast";
     const with_whom = conv.creatorName || "einem Charakter";
-    const subject = "ARTANIS × TRIANIA — jemand wartet im Chat";
+    const subject = "ARTANIS × TANIA — jemand wartet im Chat";
     const body =
       who + " will mit " + with_whom + " chatten und wartet auf dich.\n\n" +
       "Übernehmen: " + link + "\n\n" +

@@ -32,7 +32,7 @@ export function phoneCameraUrl(token, roomNumber) {
 
 function callBase() {
   try {
-    return window.self !== window.top ? "https://artanis-triania-live.base44.app" : window.location.origin;
+    return window.self !== window.top ? "https://artanis-tania-live.base44.app" : window.location.origin;
   } catch (e) {
     return window.location.origin;
   }

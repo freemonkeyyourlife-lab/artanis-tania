@@ -9,7 +9,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
 import Home from '@/pages/Home';
 import Artanis from '@/pages/Artanis';
-import Triania from '@/pages/Triania';
+import Tania from '@/pages/Tania';
 import Couple from '@/pages/Couple';
 import Admin from '@/pages/Admin';
 import Layout from '@/components/Layout';
@@ -142,7 +142,7 @@ const AuthenticatedApp = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/artanis" element={<Artanis />} />
-        <Route path="/triania" element={<Triania />} />
+        <Route path="/tania" element={<Tania />} />
         <Route path="/couple" element={<Couple />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/explore" element={<Explore />} />

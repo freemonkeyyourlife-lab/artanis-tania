@@ -10,7 +10,7 @@ import { BLEND_OPTIONS, PERSONA_TYPES, createCreatorFromDock } from "@/lib/dock"
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50";
 
-const BLEND_KEY = { ARTANIS: "artanis", TRIANIA: "triania", COUPLE: "couple" };
+const BLEND_KEY = { ARTANIS: "artanis", TANIA: "tania", COUPLE: "couple" };
 
 // Reinlegen, mischen, andocken — alles, was jemand mitbringt.
 export default function DockForm({ onDone }) {

@@ -63,7 +63,7 @@ export function guessTopics(name) {
   return out;
 }
 
-// Der Charakter steht im Dateinamen — „triania_dusche_03.mp4" findet Triania.
+// Der Charakter steht im Dateinamen — „tania_dusche_03.mp4" findet Tania.
 export function guessCreator(name, creators = []) {
   const set = new Set(nameWords(name));
   if (!set.size) return null;

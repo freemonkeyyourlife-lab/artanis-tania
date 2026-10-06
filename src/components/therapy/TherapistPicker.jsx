@@ -7,7 +7,7 @@ import { Loader2, Plus, Upload, X } from "lucide-react";
 const EMPTY = { name: "", age: "", type: "", style: "", role: "", bio: "", avatar: "" };
 
 // Die Therapeutin dieser Sitzung: eine bestehende nehmen, selbst eine anlegen
-// und ihr Gesicht hochladen — oder bei Triania bleiben.
+// und ihr Gesicht hochladen — oder bei Tania bleiben.
 export default function TherapistPicker({ therapist, onChange, therapists = [], onSaved }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(EMPTY);
@@ -17,7 +17,7 @@ export default function TherapistPicker({ therapist, onChange, therapists = [], 
 
   const pick = (t) => onChange({
     id: t.id || "",
-    name: t.name || "Triania",
+    name: t.name || "Tania",
     age: t.age || "",
     type: t.type || "",
     avatar: t.avatar || "",
@@ -72,10 +72,10 @@ export default function TherapistPicker({ therapist, onChange, therapists = [], 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={() => pick({ name: "Triania" })} className={chip(!therapist.id && therapist.name === "Triania")}>
+        <button type="button" onClick={() => pick({ name: "Tania" })} className={chip(!therapist.id && therapist.name === "Tania")}>
           {therapist.avatar || !therapist.id ? null : null}
           <span className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-[11px] font-bold">T</span>
-          Triania (Standard)
+          Tania (Standard)
         </button>
         {therapists.map((t) => (
           <button key={t.id} type="button" onClick={() => pick(t)} className={chip(therapist.id === t.id)}>

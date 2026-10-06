@@ -156,7 +156,7 @@ export default function BulkMediaImport({ creators = [] }) {
       <h2 className="font-display text-xl text-foreground mb-1">Dateien im Paket</h2>
       <p className="text-xs text-muted-foreground mb-4 max-w-3xl">
         Bilder und Clips auf einmal hineinlegen. Jede Datei wird an ihrem Typ erkannt und bekommt aus ihrem Namen den
-        passenden Charakter und das Thema — ein Clip heißt zum Beispiel „triania_dusche_03" und landet bei Triania unter
+        passenden Charakter und das Thema — ein Clip heißt zum Beispiel „tania_dusche_03" und landet bei Tania unter
         „Dusche". Stimmt etwas nicht, änderst du es direkt an der Zeile.
       </p>
 

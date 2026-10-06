@@ -16,7 +16,7 @@ export default function SideNav({ groups = [], isOwner = false }) {
       <div className="px-3 py-4 space-y-5">
         {groups.map((group) => (
           <div key={group.label}>
-            <p className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1.5 px-2 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -27,7 +27,7 @@ export default function SideNav({ groups = [], isOwner = false }) {
                     key={item.path}
                     to={item.path}
                     className={cn(
-                      "block truncate rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors",
+                      "block truncate rounded-xl px-3 py-2.5 text-[15px] font-bold transition-colors",
                       active
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
@@ -43,7 +43,7 @@ export default function SideNav({ groups = [], isOwner = false }) {
       </div>
 
       <div className="mt-auto border-t border-border/40 px-3 py-4">
-        <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        <p className="mb-2 px-2 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
           Werkzeuge
         </p>
         <div className="flex items-center gap-2 px-1">

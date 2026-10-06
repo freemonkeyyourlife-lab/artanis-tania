@@ -99,7 +99,7 @@ export default function StoryForm({ initial, creators, onSaved, onCancel }) {
 
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Figuren (Komma-getrennt)</label>
-          <input value={form.characters} onChange={(e) => set("characters", e.target.value)} placeholder="Triania, Jessie" className={inputCls} />
+          <input value={form.characters} onChange={(e) => set("characters", e.target.value)} placeholder="Tania, Jessie" className={inputCls} />
         </div>
 
         <div>

@@ -27,7 +27,7 @@ export default async function (req) {
       contentId: creatorId,
     });
 
-    const origin = req.headers.get('origin') || 'https://artanis-triania-live.base44.app';
+    const origin = req.headers.get('origin') || 'https://artanis-tania-live.base44.app';
     const params = new URLSearchParams();
     params.set('mode', 'payment');
     params.set('line_items[0][price_data][currency]', 'eur');

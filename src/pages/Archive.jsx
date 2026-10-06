@@ -203,7 +203,7 @@ export default function Archive() {
                     key={r.id}
                     active={r.id === activeId}
                     title={r.topic || "Ohne Thema"}
-                    subtitle={`${r.anonymous ? "Anonym" : r.userName || "Unbekannt"} · ${r.therapistName || "Triania"}`}
+                    subtitle={`${r.anonymous ? "Anonym" : r.userName || "Unbekannt"} · ${r.therapistName || "Tania"}`}
                     meta={when(r.created_date)}
                     badge={r.status === "DONE" ? "beendet" : "offen"}
                     onClick={() => setActiveId(r.id)}

@@ -25,7 +25,7 @@ export default function InviteShareButton({ className, label = "Einladen" }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "ARTANIS × TRIANIA",
+          title: "ARTANIS × TANIA",
           text: "Komm rein — mit dem Link ist bei der Anmeldung alles für dich frei:",
           url,
         });

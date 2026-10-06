@@ -31,7 +31,7 @@ export default function CallGuestInvites({ token, roomNumber, invites = [], onCr
   const share = async (invite, url) => {
     const text = guestInviteText(roomNumber, url, invite.name);
     if (navigator.share) {
-      try { await navigator.share({ title: "ARTANIS × TRIANIA", text, url }); return; } catch (e) { /* abgebrochen */ }
+      try { await navigator.share({ title: "ARTANIS × TANIA", text, url }); return; } catch (e) { /* abgebrochen */ }
     }
     copy(url, invite.token);
   };

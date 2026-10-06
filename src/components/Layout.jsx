@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { MessageSquare, User, Home, Sparkles, Library, Menu, X, LogOut, Video, Crown } from "lucide-react";
+import { MessageSquare, User, Home, Sparkles, Library, Menu, X, LogOut, Video } from "lucide-react";
 import PageSearch from "@/components/nav/PageSearch";
 import { cn } from "@/lib/utils";
 import { buildNavGroups } from "@/components/nav/HeaderNav";
-import NavGroup from "@/components/nav/NavGroup";
+import OwnerCorner from "@/components/owner/OwnerCorner";
 import SideNav from "@/components/nav/SideNav";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
@@ -59,6 +59,7 @@ export default function Layout() {
   const [me, setMe] = useState(null);
   const [memberStatus, setMemberStatus] = useState(null);
   const [viewAs, setViewAsState] = useState(null);
+  // God-Mode: steuert, ob die Verwaltung in der Leiste steht.
   const [godMode, setGodModeState] = useState(isGodMode);
   const [incomingCount, setIncomingCount] = useState(0);
   const [waitingChats, setWaitingChats] = useState(0);
@@ -92,9 +93,6 @@ export default function Layout() {
     setViewAsState(getViewAs());
     return subscribeViewAs(() => setViewAsState(getViewAs()));
   }, []);
-
-  // God-Mode: der Meister-Schalter für die eigene Ansicht.
-  useEffect(() => subscribeGodMode(() => setGodModeState(isGodMode())), []);
 
   useEffect(() => {
     base44.auth.me()
@@ -151,6 +149,8 @@ export default function Layout() {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
+  useEffect(() => subscribeGodMode(() => setGodModeState(isGodMode())), []);
+
   // Die Kopfzeile zeigt genau die Struktur, die der Besitzer in der Übersicht
   // festgelegt hat — Bereiche und Knöpfe in seiner Reihenfolge.
   // Beim Blick als normaler Nutzer fällt die Verwaltung weg — genau so sieht
@@ -177,11 +177,6 @@ export default function Layout() {
             </Link>
             {memberStatus === "GOLD" && (
               <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wider">Gold</span>
-            )}
-            {godMode && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-yellow-400 text-black text-[10px] font-bold uppercase tracking-wider">
-                <Crown className="w-3 h-3" /> God Mode
-              </span>
             )}
             {viewAs && (
               <button
@@ -246,7 +241,6 @@ export default function Layout() {
             >
               <LogOut className="w-4 h-4" />
             </button>
-            {adminGroup && <NavGroup group={adminGroup} gold waitingChats={waitingChats} />}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden w-9 h-9 rounded-full glass-btn flex items-center justify-center"
@@ -327,6 +321,9 @@ export default function Layout() {
       </nav>
 
       <QuickSwitch isOwner={memberStatus === "OWNER"} />
+      {memberStatus === "OWNER" && (
+        <OwnerCorner adminGroup={adminGroup} waitingChats={waitingChats} />
+      )}
     </div>
   );
 }

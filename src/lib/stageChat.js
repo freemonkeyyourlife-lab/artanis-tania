@@ -24,7 +24,7 @@ export const stageTitle = (conversation) =>
 const personaKey = (creator) =>
   creator?.personaType === "SOLO_MALE" ? "artanis"
     : creator?.personaType === "COUPLE" || creator?.personaType === "GROUP" ? "couple"
-      : "triania";
+      : "tania";
 
 const STAGE_RULES =
   "\n\n═══ IM VIDEO-CALL ═══\n" +
@@ -36,12 +36,12 @@ const STAGE_RULES =
 // Die Antwort der Figur — dieselbe Persönlichkeit wie im normalen Chat, nur ohne
 // Bilder und Knöpfe, weil hier alle gemeinsam mitlesen.
 export async function generateStageReply({ conversation, creator, history }) {
-  const persona = PERSONA_MODES[personaKey(creator)] || PERSONA_MODES.triania;
+  const persona = PERSONA_MODES[personaKey(creator)] || PERSONA_MODES.tania;
   let system = persona.prompt + STAGE_RULES;
   if (creator?.personaPrompt) system += "\n\n" + creator.personaPrompt;
   const name = creator?.stageName;
-  if (name && !["Artanis", "Triania", "Artanis × Triania"].includes(name)) {
-    system += `\n\nWICHTIG: Dein Name ist ${name} — nicht Triania, nicht Artanis. ${creator?.bio || ""}`;
+  if (name && !["Artanis", "Tania", "Artanis × Tania"].includes(name)) {
+    system += `\n\nWICHTIG: Dein Name ist ${name} — nicht Tania, nicht Artanis. ${creator?.bio || ""}`;
   }
   const turns = (history || [])
     .slice(-12)

@@ -3,7 +3,7 @@
 
 export const ROLE_SETUPS = [
   {
-    value: "TRIANIA_THERAPIST",
+    value: "TANIA_THERAPIST",
     label: "Sie führt",
     hint: "Du legst dich hin und redest. Sie führt und hakt nach.",
   },
@@ -74,7 +74,7 @@ const LANGUAGE_RULE = `
 SPRACHE: Ausschließlich Deutsch, Du-Form. Kein Übersetzungs-Deutsch, keine englischen Wörter dazwischen.`;
 
 export function therapistName(session) {
-  return (session?.therapistName || "").trim() || "Triania";
+  return (session?.therapistName || "").trim() || "Tania";
 }
 
 // „Dr. Held, 46, Sexualtherapeutin“ — nur was eingetragen ist.
@@ -86,7 +86,7 @@ export function therapistLine(session) {
 }
 
 export function roleLabel(session) {
-  const role = session?.roleSetup || "TRIANIA_THERAPIST";
+  const role = session?.roleSetup || "TANIA_THERAPIST";
   const name = therapistName(session);
   if (role === "USER_THERAPIST") return "Du bist der Therapeut";
   if (role === "BOTH_PROBANDS") return "Ihr seid beide Probanden";
@@ -100,8 +100,8 @@ export function formatLabel(session) {
 }
 
 export function buildTherapyPrompt(session, history, guestThoughts, direction) {
-  const role = session.roleSetup || "TRIANIA_THERAPIST";
-  const leads = role === "TRIANIA_THERAPIST";
+  const role = session.roleSetup || "TANIA_THERAPIST";
+  const leads = role === "TANIA_THERAPIST";
   const bothProbands = role === "BOTH_PROBANDS";
   const clientName = session.anonymous ? "der Klient" : (session.userName || "der Klient");
   const mode = session.mode || "GUIDED";
@@ -111,7 +111,7 @@ export function buildTherapyPrompt(session, history, guestThoughts, direction) {
   const informed = (session.cast || []).filter((c) => c.mode === "INFORMED");
 
   let ctx = "";
-  ctx += `Du spielst eine Sexualtherapie-Sitzung auf der Plattform ARTANIS × TRIANIA. Das ist eine Sprechstunde, kein Smalltalk: eine Couch, eine Sitzung, Erwachsene, die Tacheles reden. Deine Rolle ist die Therapeutin ${therapistLine(session)}.\n`;
+  ctx += `Du spielst eine Sexualtherapie-Sitzung auf der Plattform ARTANIS × TANIA. Das ist eine Sprechstunde, kein Smalltalk: eine Couch, eine Sitzung, Erwachsene, die Tacheles reden. Deine Rolle ist die Therapeutin ${therapistLine(session)}.\n`;
   ctx += LANGUAGE_RULE + "\n";
 
   // ── Rollen ──

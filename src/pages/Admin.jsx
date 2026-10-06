@@ -39,7 +39,7 @@ export default function Admin() {
   };
 
   const artanis = creators.find(c => c.personaType === "SOLO_MALE");
-  const triania = creators.find(c => c.personaType === "SOLO_FEMALE");
+  const tania = creators.find(c => c.personaType === "SOLO_FEMALE");
 
   const toggleStatus = async (creator, newStatus) => {
     try {
@@ -134,18 +134,18 @@ export default function Admin() {
                 </div>
               </div>
             )}
-            {triania && (
+            {tania && (
               <div className="flex items-center justify-between p-4 rounded-xl bg-elevated">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-display text-primary">T</div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{triania.stageName}</p>
-                    <div className="mt-1"><StatusBadge status={triania.onlineStatus} /></div>
+                    <p className="text-sm font-medium text-foreground">{tania.stageName}</p>
+                    <div className="mt-1"><StatusBadge status={tania.onlineStatus} /></div>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => toggleStatus(triania, "ONLINE")} className="px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors">Online</button>
-                  <button onClick={() => toggleStatus(triania, "OFFLINE")} className="px-3 py-1.5 rounded-full text-xs font-medium bg-slate-500/20 text-slate-400 hover:bg-slate-500/30 transition-colors">Offline</button>
+                  <button onClick={() => toggleStatus(tania, "ONLINE")} className="px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors">Online</button>
+                  <button onClick={() => toggleStatus(tania, "OFFLINE")} className="px-3 py-1.5 rounded-full text-xs font-medium bg-slate-500/20 text-slate-400 hover:bg-slate-500/30 transition-colors">Offline</button>
                 </div>
               </div>
             )}

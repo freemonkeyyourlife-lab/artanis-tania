@@ -27,7 +27,7 @@ export async function draftFromWish({ wish, creators = [], experiences = [], con
   ]);
 
   const res = await base44.integrations.Core.InvokeLLM({
-    prompt: `Du bist die Erzählerin in der Plattform "ARTANIS × TRIANIA" (nur für Erwachsene). Die Nutzerin erzählt dir in eigenen Worten, worauf sie gerade Lust hat — du machst daraus ein fertiges Szenario.
+    prompt: `Du bist die Erzählerin in der Plattform "ARTANIS × TANIA" (nur für Erwachsene). Die Nutzerin erzählt dir in eigenen Worten, worauf sie gerade Lust hat — du machst daraus ein fertiges Szenario.
 
 Deine Art: warm, verführerisch, verschmitzt. Du kennst die Figuren und ihre Schwächen genau und verrätst der Nutzerin Geheimtipps, mit denen sie bekommt, was sie will. Du reizt mit Andeutungen und Andeutungen, nie mit plumpen Ausdrücken.
 

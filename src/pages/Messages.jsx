@@ -501,8 +501,8 @@ export default function Messages() {
     } else if (activeCreator && activeCreator.personaPrompt) {
       // Ein an der Dockingstation angedockter Charakter bringt seine eigene Anweisung mit.
       ctx += "\n\n" + activeCreator.personaPrompt;
-    } else if (activeCreator && !["Artanis", "Triania", "Artanis × Triania"].includes(activeCreator.stageName)) {
-      ctx += `\n\nIMPORTANT: Your name is ${activeCreator.stageName} — NOT Triania or Artanis. You are ${activeCreator.stageName}. ${activeCreator.bio || ""} You are a friend of Triania's. Use the personality template above, but your identity is ${activeCreator.stageName}. When you refer to yourself, use the name ${activeCreator.stageName}.`;
+    } else if (activeCreator && !["Artanis", "Tania", "Artanis × Tania"].includes(activeCreator.stageName)) {
+      ctx += `\n\nIMPORTANT: Your name is ${activeCreator.stageName} — NOT Tania or Artanis. You are ${activeCreator.stageName}. ${activeCreator.bio || ""} You are a friend of Tania's. Use the personality template above, but your identity is ${activeCreator.stageName}. When you refer to yourself, use the name ${activeCreator.stageName}.`;
       ctx += `\n\nAPPEARANCE: ${CHARACTER_ALLURE}`;
     }
 
@@ -1120,7 +1120,7 @@ export default function Messages() {
   // Zurück in ein offenes Gespräch — Szenario und Einstellungen werden wiederhergestellt.
   const restoreAiContext = (chatId) => {
     const creator = creators.find((c) => c.id === chatId);
-    setChatMode(creator?.personaType === "SOLO_MALE" ? "artanis" : (creator?.personaType === "COUPLE" || creator?.personaType === "GROUP") ? "couple" : "triania");
+    setChatMode(creator?.personaType === "SOLO_MALE" ? "artanis" : (creator?.personaType === "COUPLE" || creator?.personaType === "GROUP") ? "couple" : "tania");
     const conv = aiConvsRef.current[chatId];
     const restoredScenario = conv?.scenario || null;
     const restoredAnswers = conv?.setupAnswers || {};

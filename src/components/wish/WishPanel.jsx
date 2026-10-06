@@ -46,7 +46,7 @@ const SCHEMA = {
   required: ["verstanden", "angebote"],
 };
 
-const buildPrompt = (wish) => `Du bist der Angebots-Assistent von "Artanis × Triania", einer Plattform für Story-Games und Rollenspiel für Erwachsene.
+const buildPrompt = (wish) => `Du bist der Angebots-Assistent von "Artanis × Tania", einer Plattform für Story-Games und Rollenspiel für Erwachsene.
 
 Jemand sagt frei heraus, was er will. Übersetze diesen Wunsch in 3 bis 4 konkrete Angebote, die genau dazu passen.
 

@@ -12,7 +12,7 @@ export default function CallInvite({ url, code, className, label = "Einladen", o
   const { toast } = useToast();
   const [copied, setCopied] = useState("");
   const pretty = code ? `${code.slice(0, 4)}-${code.slice(4)}` : "";
-  const invitation = `ARTANIS × TRIANIA — Video-Call.\nKomm rein: ${url}\nOder gib im Call den Code ${pretty} ein.`;
+  const invitation = `ARTANIS × TANIA — Video-Call.\nKomm rein: ${url}\nOder gib im Call den Code ${pretty} ein.`;
 
   const copy = async (text, what) => {
     try {
@@ -27,7 +27,7 @@ export default function CallInvite({ url, code, className, label = "Einladen", o
   const share = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: "ARTANIS × TRIANIA", text: invitation, url });
+        await navigator.share({ title: "ARTANIS × TANIA", text: invitation, url });
         return;
       } catch (e) { /* abgebrochen */ }
     }

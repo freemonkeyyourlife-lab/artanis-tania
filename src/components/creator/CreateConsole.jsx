@@ -14,7 +14,7 @@ const PLACES = [
   ["/erzaehler", "Erzähler-Studio"],
   ["/stimmen", "Stimmen-Studio"],
   ["/artanis", "Artanis"],
-  ["/triania", "Triania"],
+  ["/tania", "Tania"],
   ["/couple", "Das Paar"],
   ["/creator", "Figuren"],
   ["/stories", "Storys"],

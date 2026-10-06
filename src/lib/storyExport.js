@@ -46,7 +46,7 @@ const playLabel = (id) => PLAY_LEVELS.find((p) => p.id === id)?.label || "";
 export function buildStoryText({ title, meName, messages = [], cast = [], moods = [], playLevel, scenarioTitle, setupAnswers = {} }) {
   const spoken = moodLabels(moods);
   const head = [
-    `ARTANIS × TRIANIA — STORY`,
+    `ARTANIS × TANIA — STORY`,
     ``,
     `Titel: ${title}`,
     `Exportiert: ${when()}`,

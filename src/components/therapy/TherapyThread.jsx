@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import ChatText from "@/components/chat/ChatText";
 
 const label = (msg) => {
-  if (msg.senderType === "AI") return msg.senderName || "Triania";
+  if (msg.senderType === "AI") return msg.senderName || "Tania";
   if (msg.senderType === "GUEST") return `Gast${msg.senderName ? ` · ${msg.senderName}` : ""}`;
   if (msg.senderType === "SYSTEM") return "Sitzung";
   return msg.senderName || "Du";

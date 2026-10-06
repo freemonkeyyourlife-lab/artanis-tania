@@ -62,7 +62,7 @@ export default function TelegramPanel({ setup, onSave, saving }) {
       const data = await call({
         action: "send",
         chatId: setup.telegramChatId,
-        text: "Test aus ARTANIS × TRIANIA — die Verbindung steht. 🖤",
+        text: "Test aus ARTANIS × TANIA — die Verbindung steht. 🖤",
       });
       setNotice(data.ok ? "Testnachricht ist raus — schau in Telegram." : (data.error || "Senden hat nicht geklappt."));
     } catch (e) {

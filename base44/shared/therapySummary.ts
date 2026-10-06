@@ -10,7 +10,7 @@ const KIND_PROMPTS = {
 };
 
 function therapistName(session) {
-  return String(session?.therapistName || "").trim() || "Triania";
+  return String(session?.therapistName || "").trim() || "Tania";
 }
 
 function formatLabel(session) {
@@ -20,7 +20,7 @@ function formatLabel(session) {
 }
 
 function roleLabel(session) {
-  const role = session?.roleSetup || "TRIANIA_THERAPIST";
+  const role = session?.roleSetup || "TANIA_THERAPIST";
   const name = therapistName(session);
   if (role === "USER_THERAPIST") return "Der Nutzer ist der Therapeut";
   if (role === "BOTH_PROBANDS") return "Beide sind Probanden";

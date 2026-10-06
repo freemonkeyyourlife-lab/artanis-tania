@@ -6,7 +6,7 @@
       "type": "string",
       "enum": [
         "ARTANIS_AI",
-        "TRIANIA_AI",
+        "TANIA_AI",
         "COUPLE_AI"
       ]
     },

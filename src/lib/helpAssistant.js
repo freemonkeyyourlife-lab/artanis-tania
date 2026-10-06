@@ -15,7 +15,7 @@ function knowledge() {
 export async function askHelp(question, history = []) {
   const past = history.slice(-4).map((h) => `Frage: ${h.q}\nAntwort: ${h.answer}`).join("\n\n");
   const res = await base44.integrations.Core.InvokeLLM({
-    prompt: `Du bist der Hilfe-Assistent in der App "ARTANIS × TRIANIA". Die Besitzerin ist keine Technikerin.
+    prompt: `Du bist der Hilfe-Assistent in der App "ARTANIS × TANIA". Die Besitzerin ist keine Technikerin.
 Erkläre ganz einfach, freundlich und auf Deutsch, in kurzen nummerierten Schritten (Markdown), mit den genauen Knopf-Namen aus dem Wissen.
 Nutze NUR das Wissen unten. Wenn etwas dort nicht steht, sag ehrlich, dass es das noch nicht gibt, und dass sie es im Chat mit dem Bau-Assistenten anfragen kann.
 Gib bei "links" 1–3 passende Seiten aus der Seitenliste zurück (nur Pfade aus der Liste), damit sie direkt hinspringen kann.

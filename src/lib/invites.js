@@ -27,7 +27,7 @@ export const inviteUrl = (token) => `${window.location.origin}/?invite=${token}`
 
 export function shareLinks(token, label) {
   const url = inviteUrl(token);
-  const text = `${label ? label + ", " : ""}hier ist deine Einladung zu ARTANIS × TRIANIA: ${url}`;
+  const text = `${label ? label + ", " : ""}hier ist deine Einladung zu ARTANIS × TANIA: ${url}`;
   const encoded = encodeURIComponent(text);
   return {
     whatsapp: `https://wa.me/?text=${encoded}`,

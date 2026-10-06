@@ -2,9 +2,9 @@ import { base44 } from "@/api/base44Client";
 
 // Wessen Persönlichkeit mit reingemischt wird.
 export const BLEND_OPTIONS = [
-  { id: "COUPLE", label: "Artanis × Triania", hint: "Die volle Haus-Persönlichkeit — beide." },
+  { id: "COUPLE", label: "Artanis × Tania", hint: "Die volle Haus-Persönlichkeit — beide." },
   { id: "ARTANIS", label: "Artanis", hint: "Direkt, dominant, männlich." },
-  { id: "TRIANIA", label: "Triania", hint: "Verspielt, warm, verführerisch." },
+  { id: "TANIA", label: "Tania", hint: "Verspielt, warm, verführerisch." },
   { id: "NONE", label: "Nichts mischen", hint: "Sein Charakter bleibt ganz für sich." },
 ];
 

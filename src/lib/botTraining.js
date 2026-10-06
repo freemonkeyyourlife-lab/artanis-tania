@@ -3,8 +3,8 @@ import { explicitLabel, moodLabel, styleLabel } from "@/lib/modelTags";
 // Die Bots, die sich trainieren lassen — jeder mit seinem eigenen Ton.
 export const PERSONAS = [
   { id: "ARTANIS_AI", mode: "artanis", label: "Artanis" },
-  { id: "TRIANIA_AI", mode: "triania", label: "Triania" },
-  { id: "COUPLE_AI", mode: "couple", label: "Artanis & Triania" },
+  { id: "TANIA_AI", mode: "tania", label: "Tania" },
+  { id: "COUPLE_AI", mode: "couple", label: "Artanis & Tania" },
 ];
 
 export const personaById = (id) => PERSONAS.find((p) => p.id === id) || PERSONAS[0];

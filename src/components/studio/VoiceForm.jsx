@@ -203,7 +203,7 @@ export default function VoiceForm({ initial, onSaved, onCancel }) {
         </div>
         <div>
           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Wem gehört sie?</label>
-          <input value={form.ownerName} onChange={(e) => set("ownerName", e.target.value)} placeholder="z. B. Triania oder ein Nutzer" className={input} />
+          <input value={form.ownerName} onChange={(e) => set("ownerName", e.target.value)} placeholder="z. B. Tania oder ein Nutzer" className={input} />
         </div>
       </div>
 

@@ -85,7 +85,7 @@ export default function RequestPage() {
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">Für Charakter (optional)</label>
-              <input type="text" value={form.creatorName} onChange={(e) => setForm({ ...form, creatorName: e.target.value })} placeholder="Artanis, Triania oder Couple" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
+              <input type="text" value={form.creatorName} onChange={(e) => setForm({ ...form, creatorName: e.target.value })} placeholder="Artanis, Tania oder Couple" className="w-full px-4 py-2.5 rounded-xl bg-elevated border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" />
             </div>
           </div>
           <div>

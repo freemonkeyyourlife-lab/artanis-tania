@@ -22,7 +22,7 @@ const HERO_ITEMS = [
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/6549e1153_Screenshot2026-09-28053726.png", title: "Privater Chat", text: "Schreib ihr direkt — sie antwortet dir", to: "/messages" },
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/09e9be2ef_generated_image.png", title: "Interaktive Szene", text: "Du entscheidest, was passiert", to: "/interactive" },
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png", title: "Storys", text: "Geschichten aus ihrer Welt", to: "/stories" },
-  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/9795fbefc_generated_image.png", title: "Artanis × Triania", text: "Unser gemeinsames Profil", to: "/couple" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/9795fbefc_generated_image.png", title: "Artanis × Tania", text: "Unser gemeinsames Profil", to: "/couple" },
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/78af4f762_Screenshot2026-09-28034357.png", title: "Live / Online", text: "Wer gerade da ist", to: "/live" },
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dcbb95a47_Screenshot2026-09-28051650.png", title: "Wettbewerbe", text: "Mitmachen, abstimmen, gewinnen", to: "/contests" },
 ];
@@ -34,7 +34,7 @@ const TEASER_IMAGES = [
   "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/0097a75a2_generated_image.png",
 ];
 
-const FEED_FILTERS = ["Alle", "Solo Artanis", "Solo Triania", "Paar", "Interaktive Storys", "Themen"];
+const FEED_FILTERS = ["Alle", "Solo Artanis", "Solo Tania", "Paar", "Interaktive Storys", "Themen"];
 
 export default function Home() {
   const [creators, setCreators] = useState([]);
@@ -87,9 +87,9 @@ export default function Home() {
   const realCreators = creators.filter(c => c.creatorCategory === "REAL" && c.active !== false);
   const aiCharacters = creators.filter(c => c.creatorCategory === "AI_MODEL" && c.active !== false);
   const artanis = creators.find(c => c.stageName === "Artanis");
-  const triania = creators.find(c => c.stageName === "Triania");
-  const couple = creators.find(c => c.stageName === "Artanis × Triania");
-  const spotlight = artanis || triania || creators[0];
+  const tania = creators.find(c => c.stageName === "Tania");
+  const couple = creators.find(c => c.stageName === "Artanis × Tania");
+  const spotlight = artanis || tania || creators[0];
   const latestContent = content.slice(0, 6);
 
   // Was oben durchläuft: abwechselnd eine interaktive Szene und eine Story.
@@ -155,7 +155,7 @@ export default function Home() {
             <span className="block text-gradient-warm mt-2">Interaktives Archiv</span>
           </h1>
           <p className="text-muted-foreground text-sm lg:text-base mt-4 max-w-xl">
-            Exklusive Inhalte, interaktive Szenen und private Stunden — von Artanis, Triania und ihrer gemeinsamen Welt.
+            Exklusive Inhalte, interaktive Szenen und private Stunden — von Artanis, Tania und ihrer gemeinsamen Welt.
           </p>
 
           <div className="flex flex-wrap gap-3 mt-8">
@@ -204,7 +204,7 @@ export default function Home() {
               <h2 className="font-display text-2xl text-foreground mb-4">Im Rampenlicht</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {artanis && <PersonaCard creator={artanis} />}
-                {triania && <PersonaCard creator={triania} />}
+                {tania && <PersonaCard creator={tania} />}
                 {couple && <PersonaCard creator={couple} />}
               </div>
             </div>
@@ -320,7 +320,7 @@ export default function Home() {
               <div className="space-y-3">
                 {[
                   { creator: "Artanis", title: "Abendliche Szene", time: "Heute 21:00", type: "PRERECORDED_INTERACTIVE" },
-                  { creator: "Triania", title: "Solo-Storyzeit", time: "Morgen 20:00", type: "AI_INTERACTIVE" },
+                  { creator: "Tania", title: "Solo-Storyzeit", time: "Morgen 20:00", type: "AI_INTERACTIVE" },
                   { creator: "Paar", title: "Freitagnacht live", time: "Fr 22:00", type: "LIVE" },
                 ].map((s, i) => (
                   <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-elevated">

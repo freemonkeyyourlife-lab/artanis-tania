@@ -15,11 +15,11 @@
     "roleSetup": {
       "type": "string",
       "enum": [
-        "TRIANIA_THERAPIST",
+        "TANIA_THERAPIST",
         "USER_THERAPIST",
         "BOTH_PROBANDS"
       ],
-      "default": "TRIANIA_THERAPIST"
+      "default": "TANIA_THERAPIST"
     },
     "mode": {
       "type": "string",

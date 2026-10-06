@@ -28,7 +28,7 @@ export default function SessionControls({ roleSetup, onRole, running, onRunning,
       <button
         onClick={() => onRunning(!running)}
         disabled={disabled}
-        title="Triania macht von selbst weiter — bis du Stopp sagst."
+        title="Tania macht von selbst weiter — bis du Stopp sagst."
         className={cn(
           "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors disabled:opacity-50",
           running ? "bg-destructive text-destructive-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"

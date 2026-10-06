@@ -44,9 +44,9 @@ export const CHAPTERS = [
     steps: [
       {
         title: "Die drei Hauptfiguren",
-        text: "Artanis ist die männliche Figur, Triania die weibliche, dazu gibt es das Paar, das zusammen auftritt. Jede hat eine eigene Art zu reden, eigene Themen und eigene Grenzen.",
+        text: "Artanis ist die männliche Figur, Tania die weibliche, dazu gibt es das Paar, das zusammen auftritt. Jede hat eine eigene Art zu reden, eigene Themen und eigene Grenzen.",
         to: "/artanis",
-        tips: ["Artanis — ruhig, direkt, fordert dich heraus", "Triania — warm, neugierig, fragt viel nach", "Das Paar — beide gleichzeitig im Gespräch"],
+        tips: ["Artanis — ruhig, direkt, fordert dich heraus", "Tania — warm, neugierig, fragt viel nach", "Das Paar — beide gleichzeitig im Gespräch"],
       },
       {
         title: "Das Profil einer Figur",
