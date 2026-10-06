@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import LogbuchComposer from "@/components/logbuch/LogbuchComposer";
 import LogbuchBoard from "@/components/logbuch/LogbuchBoard";
@@ -7,6 +7,10 @@ import RoadmapBoard from "@/components/logbuch/RoadmapBoard";
 import { logLine, STATUS } from "@/lib/logbuch";
 import { sortByOrder, withOrder } from "@/lib/roadmap";
 import { runTask } from "@/lib/logbuchRunner";
+
+// Der direkte Draht: von hier aus landet der Auftrag direkt beim Baumeister.
+const BAUMEISTER_URL =
+  "https://app.base44.com/superagent/6aa588d7043bbf3a02ca48dc/library?path=conversations%2F6aa5895e5d5b4135aec1940a%2Ffree-monkeys";
 
 // Das Logbuch: der Schaltraum für Bauaufträge. Auftrag sprechen, Prompt
 // freigeben — und der Bau-Lauf setzt sofort um, was sich umsetzen lässt.
@@ -83,12 +87,25 @@ export default function Logbuch() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="font-display text-4xl">Logbuch</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Aufträge sprechen oder tippen, Prompt erzeugen, freigeben. Danach läuft der Auftrag sofort:
-        was sich ausführen lässt, wird ausgeführt — der Rest wird als klarer Auftrag für den
-        Baumeister mitgeschrieben.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-4xl">Logbuch</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Aufträge sprechen oder tippen, Prompt erzeugen, freigeben. Danach läuft der Auftrag sofort:
+            was sich ausführen lässt, wird ausgeführt — der Rest wird als klarer Auftrag für den
+            Baumeister mitgeschrieben.
+          </p>
+        </div>
+        <a
+          href={BAUMEISTER_URL}
+          target="_blank"
+          rel="noreferrer"
+          title="Direkt zum Baumeister — dort läuft die Unterhaltung weiter"
+          className="inline-flex items-center gap-2 rounded-full glass-btn px-5 py-2.5 text-[13px] font-bold text-yellow-300 hover:text-yellow-200"
+        >
+          <Sparkles className="h-4 w-4" /> Direkt zum Baumeister
+        </a>
+      </div>
 
       {(runningId || note) && (
         <div className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm">

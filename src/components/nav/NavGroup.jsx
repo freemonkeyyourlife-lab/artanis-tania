@@ -26,7 +26,7 @@ const NavLink = ({ item, waitingChats }) => (
 // Ein Block der Kopfzeile. Klappt er auf, stehen die Punkte nach Untergruppen
 // sortiert unter einer kurzen Überschrift — statt einer langen Liste.
 // Alles, was nur mit Rechten erreichbar ist, trägt einen gelben Rand.
-export default function NavGroup({ group, waitingChats = 0, showInfo = false, info = "" }) {
+export default function NavGroup({ group, waitingChats = 0, showInfo = false, info = "", gold = false }) {
   const location = useLocation();
   const [showText, setShowText] = useState(false);
   const active = group.items.some((l) => l.path === location.pathname);
@@ -39,8 +39,12 @@ export default function NavGroup({ group, waitingChats = 0, showInfo = false, in
         <button
           className={cn(
             "px-4 py-2 rounded-full whitespace-nowrap text-gloss transition-colors flex items-center gap-1",
-            restricted && TIER_RING[group.tier],
-            active ? "text-primary bg-primary/10" : "text-foreground hover:text-primary"
+            !gold && restricted && TIER_RING[group.tier],
+            gold
+              ? "glass-btn text-yellow-300 hover:text-yellow-200"
+              : active
+                ? "text-primary bg-primary/10"
+                : "text-foreground hover:text-primary"
           )}
         >
           {group.label} <ChevronDown className="w-3.5 h-3.5" />

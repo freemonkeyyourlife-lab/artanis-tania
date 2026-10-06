@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Search, MessageSquare, User, Home, Sparkles, Library, Menu, X, ShieldCheck, ArrowLeft, LogOut, Video, Crown, BookOpen } from "lucide-react";
+import { MessageSquare, User, Home, Sparkles, Library, Menu, X, LogOut, Video, Crown } from "lucide-react";
 import PageSearch from "@/components/nav/PageSearch";
 import { cn } from "@/lib/utils";
-import HeaderNav, { buildNavGroups } from "@/components/nav/HeaderNav";
+import { buildNavGroups } from "@/components/nav/HeaderNav";
+import NavGroup from "@/components/nav/NavGroup";
 import SideNav from "@/components/nav/SideNav";
 import { base44 } from "@/api/base44Client";
 import InviteShareButton from "@/components/InviteShareButton";
@@ -160,11 +161,14 @@ export default function Layout() {
     : buildNavGroups(MORE_LINKS);
   const mobileLinks = groups.flatMap((g) => g.items);
   const navFont = layoutFont(layout);
+  // Die Verwaltung steht genau einmal in der Kopfzeile — rechts, in Gold, und
+  // nur der Besitzer bekommt sie überhaupt zu sehen.
+  const adminGroup = groups.find((g) => g.label === "Verwaltung");
 
   return (
     <div className="min-h-screen bg-background">
       <BackgroundSlideshow />
-      <SideNav groups={groups} />
+      <SideNav groups={groups} isOwner={memberStatus === "OWNER"} />
       <header className="fixed top-0 left-0 right-0 lg:left-64 z-50 glass-milky" style={{ height: "72px" }}>
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -179,24 +183,6 @@ export default function Layout() {
                 <Crown className="w-3 h-3" /> God Mode
               </span>
             )}
-            {memberStatus === "OWNER" && (
-              <Link
-                to="/betreiber"
-                title="Betreiber-Studio — Seiten, Leiste, God-Mode"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-btn text-[11px] font-bold text-foreground hover:text-primary transition-colors"
-              >
-                <Crown className="w-3.5 h-3.5 text-primary" /> Studio
-              </Link>
-            )}
-            {memberStatus === "OWNER" && (
-              <Link
-                to="/logbuch"
-                title="Logbuch — Bauaufträge und Roadmap"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-btn text-[11px] font-bold text-yellow-300 hover:text-yellow-200 transition-colors"
-              >
-                <BookOpen className="w-3.5 h-3.5" /> Logbuch
-              </Link>
-            )}
             {viewAs && (
               <button
                 onClick={() => setViewAs(null)}
@@ -209,20 +195,14 @@ export default function Layout() {
             )}
           </div>
 
-          <HeaderNav groups={groups} font={navFont} waitingChats={waitingChats} />
-
-          <div className="flex items-center gap-2 lg:gap-3">
-            {location.pathname !== "/" && (
-              <button
-                onClick={() => navigate(-1)}
-                title="Zurück"
-                className="w-9 h-9 rounded-full glass-btn flex items-center justify-center hover:text-primary transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            )}
+          {/* MITTE: „Sag was du willst" — hier kommt die Erzählerin. */}
+          <div className="flex-1 min-w-0 flex justify-center">
             <WishButton />
-            <InfoModeToggle />
+          </div>
+
+          {/* RECHTS: übersichtlich. Die Verwaltung steht genau einmal hier — in
+              Gold, und nur der Besitzer sieht sie. */}
+          <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
             <button
               onClick={openCall}
               title={callRunning ? "Zurück in den laufenden Video-Call" : "Video-Call starten"}
@@ -231,9 +211,7 @@ export default function Layout() {
               <Video className="w-4 h-4" />
               {callRunning && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500" />}
             </button>
-            <InviteShareButton className="hidden sm:flex" />
-            <PageSearch isOwner={memberStatus === "OWNER"} />
-            <Link to="/messages" title={incomingCount > 0 ? `${incomingCount} wollen mit dir chatten` : "Messages"} className="hidden sm:flex w-9 h-9 rounded-full glass-btn items-center justify-center hover:text-primary transition-colors relative">
+            <Link to="/messages" title={incomingCount > 0 ? `${incomingCount} wollen mit dir chatten` : "Messages"} className="flex w-9 h-9 rounded-full glass-btn items-center justify-center hover:text-primary transition-colors relative">
               <MessageSquare className="w-4 h-4" />
               {incomingCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{incomingCount}</span>
@@ -268,13 +246,13 @@ export default function Layout() {
             >
               <LogOut className="w-4 h-4" />
             </button>
+            {adminGroup && <NavGroup group={adminGroup} gold waitingChats={waitingChats} />}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden w-9 h-9 rounded-full glass-btn flex items-center justify-center"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            <HelpAssistant />
           </div>
         </div>
 
@@ -299,6 +277,11 @@ export default function Layout() {
               ))}
               <WishButton className="w-full justify-center py-3 text-[15px] my-1" />
               <InviteShareButton className="w-full justify-center py-3 text-sm my-1" />
+              <div className="flex items-center justify-center gap-3 py-2">
+                <PageSearch isOwner={memberStatus === "OWNER"} />
+                <InfoModeToggle />
+                <HelpAssistant />
+              </div>
               <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground">
                 Account
               </Link>
