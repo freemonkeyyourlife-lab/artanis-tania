@@ -112,9 +112,11 @@ export default function ModelManager() {
     load();
   };
 
+  // Nichts wird gelöscht — es wandert ins Archiv: bleibt in der Datenbank,
+  // ist aber in keiner Auswahl mehr zu sehen.
   const remove = async (m) => {
-    if (!window.confirm(`"${m.name}" entfernen?`)) return;
-    await base44.entities.ImageModel.delete(m.id);
+    if (!window.confirm(`"${m.name}" ins Archiv legen? Es bleibt erhalten und ist nur ausgeblendet.`)) return;
+    await base44.entities.ImageModel.update(m.id, { enabled: false, note: "Archiviert — bleibt erhalten, ist aber ausgeblendet." });
     load();
   };
 

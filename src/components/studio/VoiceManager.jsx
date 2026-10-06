@@ -60,9 +60,10 @@ export default function VoiceManager() {
     }
   };
 
+  // Nichts wird gelöscht — die Stimme wandert ins Archiv und bleibt erhalten.
   const remove = async (voice) => {
-    if (!window.confirm(`Stimme "${voice.name}" wirklich löschen?`)) return;
-    await base44.entities.Voice.delete(voice.id);
+    if (!window.confirm(`Stimme "${voice.name}" ins Archiv legen? Sie bleibt erhalten und ist nur ausgeblendet.`)) return;
+    await base44.entities.Voice.update(voice.id, { active: false, note: "Archiviert — bleibt erhalten, ist aber ausgeblendet." });
     load();
   };
 
