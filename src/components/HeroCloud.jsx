@@ -4,13 +4,13 @@ import { Image } from "@/components/ui/image";
 
 // Fächer: die Mitte groß, nach außen etwas kleiner — aber alle klar sichtbar.
 const SLOTS = [
-  { w: 220, h: 300, drop: 40, z: 12, dim: 0.85 },
-  { w: 250, h: 330, drop: 22, z: 16, dim: 0.92 },
-  { w: 280, h: 360, drop: 8, z: 20, dim: 1 },
-  { w: 460, h: 410, drop: 0, z: 30, dim: 1 },
-  { w: 280, h: 360, drop: 8, z: 20, dim: 1 },
-  { w: 250, h: 330, drop: 22, z: 16, dim: 0.92 },
-  { w: 220, h: 300, drop: 40, z: 12, dim: 0.85 },
+  { w: 265, h: 360, drop: 46, z: 12, dim: 0.85 },
+  { w: 305, h: 400, drop: 24, z: 16, dim: 0.92 },
+  { w: 345, h: 440, drop: 8, z: 20, dim: 1 },
+  { w: 560, h: 500, drop: 0, z: 30, dim: 1 },
+  { w: 345, h: 440, drop: 8, z: 20, dim: 1 },
+  { w: 305, h: 400, drop: 24, z: 16, dim: 0.92 },
+  { w: 265, h: 360, drop: 46, z: 12, dim: 0.85 },
 ];
 
 // Weiche Ränder: Gesicht und Haare bleiben frei, nur die Außenkante verläuft.

@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 // Alle zehn Sekunden schießt die nächste Karte herein.
 const ROTATE_MS = 10000;
 
+// Weiche Ränder: das Bild läuft aus, statt an einer Kante zu enden.
+const MASK = "radial-gradient(95% 92% at 50% 46%, #000 46%, transparent 82%)";
+
 export default function HeroNews({ items }) {
   const [index, setIndex] = useState(0);
   const count = items?.length || 0;
@@ -29,15 +32,18 @@ export default function HeroNews({ items }) {
         Was gibt's Neues
       </p>
 
-      {/* Die Karte selbst rutscht von rechts herein: Bild links, alles andere sauber daneben. */}
+      {/* Sie rutscht von rechts herein — ohne Rahmen, ohne Kante: das Bild
+          läuft weich in die Fläche aus, alles andere steht sauber daneben. */}
       <Link
         key={item.id}
         to={item.to}
-        className="animate-hero-slide group flex items-stretch gap-4 glass rounded-3xl border border-border p-3 pr-5 hover:border-primary/40 transition-colors"
+        className="animate-hero-slide group flex items-stretch gap-5 pr-4 transition-opacity hover:opacity-90"
       >
-        <div className="relative w-28 h-32 sm:w-32 sm:h-36 flex-shrink-0 rounded-2xl overflow-hidden">
+        <div
+          className="relative w-32 h-44 sm:w-40 sm:h-52 flex-shrink-0"
+          style={{ WebkitMaskImage: MASK, maskImage: MASK }}
+        >
           <Image src={item.image} fittingType="fill" className="w-full h-full" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
         </div>
 
         <div className="min-w-0 flex-1 flex flex-col justify-center">

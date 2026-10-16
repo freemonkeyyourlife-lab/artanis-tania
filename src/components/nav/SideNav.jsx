@@ -5,15 +5,27 @@ import PageSearch from "@/components/nav/PageSearch";
 import InviteShareButton from "@/components/InviteShareButton";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import HelpAssistant from "@/components/help/HelpAssistant";
+import NarratorPanel from "@/components/nav/NarratorPanel";
+import BrandWordmark from "@/components/BrandWordmark";
 
-// Die ganze Leiste links: jeder Bereich und jede Funktion an einer Stelle.
-// Unten stehen die kleinen Werkzeuge, damit die Kopfzeile frei bleibt.
+// Die ganze Leiste links, in dieser Reihenfolge:
+// ganz oben „Artanis × Tania", darunter Einladen, dann alle Punkte in ihren
+// Themen-Blöcken. Den Rest der Höhe nimmt die Erzählerin ein — in groß.
 export default function SideNav({ groups = [], isOwner = false }) {
   const { pathname } = useLocation();
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 z-40 flex-col glass-strong border-r border-border/40 overflow-y-auto scrollbar-hide pt-[72px]">
-      <div className="px-3 py-4 space-y-5">
+    <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 z-40 flex-col glass-strong border-r border-border/40 pt-[72px]">
+      {/* Ganz oben links: die Marke. Direkt darunter: Einladen. */}
+      <div className="px-3 pt-4 pb-3 border-b border-border/40">
+        <Link to="/" className="block px-2 py-1.5">
+          <BrandWordmark className="text-[17px] text-foreground" />
+        </Link>
+        <InviteShareButton className="mt-3 w-full justify-center" />
+      </div>
+
+      {/* Alle Punkte — in Themen-Blöcken, in der Reihenfolge des Besitzers. */}
+      <div className="shrink-0 max-h-[46vh] overflow-y-auto scrollbar-hide px-3 py-4 space-y-5">
         {groups.map((group) => (
           <div key={group.label}>
             <p className="mb-1.5 px-2 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -42,16 +54,15 @@ export default function SideNav({ groups = [], isOwner = false }) {
         ))}
       </div>
 
-      <div className="mt-auto border-t border-border/40 px-3 py-4">
-        <p className="mb-2 px-2 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
-          Werkzeuge
-        </p>
+      {/* Die Erzählerin in groß — volle Breite, die restliche Höhe. */}
+      <NarratorPanel />
+
+      <div className="border-t border-border/40 px-3 py-3">
         <div className="flex items-center gap-2 px-1">
           <PageSearch isOwner={isOwner} />
           <InfoModeToggle />
           <HelpAssistant />
         </div>
-        <InviteShareButton className="mt-3 w-full justify-center" />
       </div>
     </aside>
   );

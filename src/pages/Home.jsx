@@ -14,15 +14,17 @@ import RequestCard from "@/components/RequestCard";
 import { useRequestVotes } from "@/hooks/useRequestVotes";
 import { cn } from "@/lib/utils";
 
-const HERO_BG = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/36d23e21f_generated_image.png";
+const HERO_BG = "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/9795fbefc_generated_image.png";
 
-// Die Flanken oben — sie laufen im V nach außen in die Flucht.
-// Mit Info-Fenster beim Drüberfahren — man sieht sofort, was dahintersteckt.
+// Die Flanken oben — immer die echten Gesichter: Artanis, Tania und ihre
+// gemeinsame Welt. Kein fremdes Modell, kein Testdummy.
+// Die Mitte trägt das Paar, links und rechts stehen die beiden Einzelnen.
 const HERO_ITEMS = [
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/6549e1153_Screenshot2026-09-28053726.png", title: "Privater Chat", text: "Schreib ihr direkt — sie antwortet dir", to: "/messages" },
-  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/09e9be2ef_generated_image.png", title: "Interaktive Szene", text: "Du entscheidest, was passiert", to: "/interactive" },
-  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png", title: "Storys", text: "Geschichten aus ihrer Welt", to: "/stories" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dd71409ec_generated_image.png", title: "Tania", text: "Solo · Storytelling", to: "/" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/83f1549c6_Screenshot2026-09-091854361.png", title: "Artanis", text: "Solo · Interactive", to: "/" },
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/9795fbefc_generated_image.png", title: "Artanis × Tania", text: "Unser gemeinsames Profil", to: "/couple" },
+  { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/99c4b7146_Screenshot2026-09-28084637.png", title: "Storys", text: "Geschichten aus ihrer Welt", to: "/stories" },
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/78af4f762_Screenshot2026-09-28034357.png", title: "Live / Online", text: "Wer gerade da ist", to: "/live" },
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/dcbb95a47_Screenshot2026-09-28051650.png", title: "Wettbewerbe", text: "Mitmachen, abstimmen, gewinnen", to: "/contests" },
 ];
@@ -85,7 +87,10 @@ export default function Home() {
   };
 
   const realCreators = creators.filter(c => c.creatorCategory === "REAL" && c.active !== false);
-  const aiCharacters = creators.filter(c => c.creatorCategory === "AI_MODEL" && c.active !== false);
+  // Nur was sich zeigen lässt: KI-Charaktere mit Bild UND Geschichte.
+  const aiCharacters = creators.filter(
+    c => c.creatorCategory === "AI_MODEL" && c.active !== false && c.avatar && (c.shortStory || c.bio)
+  );
   const artanis = creators.find(c => c.stageName === "Artanis");
   const tania = creators.find(c => c.stageName === "Tania");
   const couple = creators.find(c => c.stageName === "Artanis × Tania");
@@ -140,37 +145,42 @@ export default function Home() {
         <div className="absolute inset-x-0 top-0 h-[150px] z-20 pointer-events-none bg-gradient-to-b from-background to-transparent" />
         <div className="absolute inset-x-0 top-0 h-[470px] z-20 pointer-events-none bg-gradient-to-b from-transparent via-background/20 to-background" />
 
+        {/* Schriftzug links, die Storys rutschen rechts daneben herein. */}
         <div className="relative z-30 min-h-[860px] max-w-[1600px] mx-auto px-4 lg:px-8 pointer-events-none [&>*]:pointer-events-auto flex flex-col justify-end pt-[260px] lg:pt-[320px] pb-20">
-          <div className="mb-10">
-            <HeroNews items={newsItems} />
-          </div>
+          <div className="flex flex-col lg:flex-row lg:items-end gap-10 lg:gap-16">
+            <div className="flex-1 min-w-0">
+              {spotlight && (
+                <div className="mb-6">
+                  <StatusBadge status={spotlight.onlineStatus} />
+                </div>
+              )}
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] leading-[1.05] text-foreground">
+                <BrandWordmark />
+                <span className="block text-gradient-warm mt-2">Interaktives Archiv</span>
+              </h1>
+              <p className="text-muted-foreground text-sm lg:text-base mt-4 max-w-xl">
+                Exklusive Inhalte, interaktive Szenen und private Stunden — von Artanis, Tania und ihrer gemeinsamen Welt.
+              </p>
 
-          {spotlight && (
-            <div className="mb-6">
-              <StatusBadge status={spotlight.onlineStatus} />
+              <div className="flex flex-wrap gap-3 mt-8">
+                <Link to="/explore" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-gloss">
+                  Entdecken <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link to="/live" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Live / Online
+                </Link>
+                <Link to="/interactive" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
+                  <Sparkles className="w-4 h-4 text-primary" /> Interaktive Szene
+                </Link>
+                <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
+                  <MessageSquare className="w-4 h-4" /> Privater Chat
+                </Link>
+              </div>
             </div>
-          )}
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-[56px] leading-[1.1] text-foreground max-w-3xl">
-            <BrandWordmark />
-            <span className="block text-gradient-warm mt-2">Interaktives Archiv</span>
-          </h1>
-          <p className="text-muted-foreground text-sm lg:text-base mt-4 max-w-xl">
-            Exklusive Inhalte, interaktive Szenen und private Stunden — von Artanis, Tania und ihrer gemeinsamen Welt.
-          </p>
 
-          <div className="flex flex-wrap gap-3 mt-8">
-            <Link to="/explore" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn glass-btn-accent text-sm font-semibold text-gloss">
-              Entdecken <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link to="/live" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Live / Online
-            </Link>
-            <Link to="/interactive" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
-              <Sparkles className="w-4 h-4 text-primary" /> Interaktive Szene
-            </Link>
-            <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
-              <MessageSquare className="w-4 h-4" /> Privater Chat
-            </Link>
+            <div className="w-full lg:w-[440px] flex-shrink-0">
+              <HeroNews items={newsItems} />
+            </div>
           </div>
         </div>
       </section>
@@ -201,7 +211,7 @@ export default function Home() {
           <div className="lg:col-span-8 space-y-12">
             {/* Featured Personas */}
             <div>
-              <h2 className="font-display text-2xl text-foreground mb-4">Im Rampenlicht</h2>
+              <h2 className="font-display text-2xl text-foreground mb-4">Meine Charaktere</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {artanis && <PersonaCard creator={artanis} />}
                 {tania && <PersonaCard creator={tania} />}
