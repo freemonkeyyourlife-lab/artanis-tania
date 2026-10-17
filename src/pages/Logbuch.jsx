@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import LogbuchComposer from "@/components/logbuch/LogbuchComposer";
 import LogbuchBoard from "@/components/logbuch/LogbuchBoard";
 import RoadmapBoard from "@/components/logbuch/RoadmapBoard";
+import BauberichtBoard from "@/components/logbuch/BauberichtBoard";
 import { logLine, STATUS } from "@/lib/logbuch";
 import { sortByOrder, withOrder } from "@/lib/roadmap";
 import { runTask } from "@/lib/logbuchRunner";
@@ -115,6 +116,11 @@ export default function Logbuch() {
           </span>
         </div>
       )}
+
+      {/* Der Abschlussbericht steht ganz oben — mit grünem Licht je Block. */}
+      <div className="mt-8">
+        <BauberichtBoard />
+      </div>
 
       <div className="mt-8">
         <LogbuchComposer onCreated={addTask} />

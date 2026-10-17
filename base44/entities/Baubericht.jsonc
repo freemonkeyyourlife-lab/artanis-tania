@@ -1,0 +1,78 @@
+{
+  "name": "Baubericht",
+  "type": "object",
+  "properties": {
+    "blockKey": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "FERTIG",
+        "TEILWEISE",
+        "OFFEN"
+      ],
+      "default": "OFFEN"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "done": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "missing": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verifyPath": {
+      "type": "string"
+    },
+    "verifyLabel": {
+      "type": "string"
+    },
+    "proofImages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "blockKey",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
