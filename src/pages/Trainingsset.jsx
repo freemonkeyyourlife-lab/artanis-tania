@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import UploadZone from "@/components/trainingsset/UploadZone";
 import SetCard from "@/components/trainingsset/SetCard";
-import { ArrowRight, Loader2, Wand2, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowRight, Loader2, Wand2, AlertTriangle, Sparkles, Archive } from "lucide-react";
+import JSZip from "jszip";
 
 const sign = async (uri) => {
   try {
@@ -180,6 +181,40 @@ export default function Trainingsset() {
     }
   };
 
+  // Alle Sets auf einmal als Trainings-ZIPs packen — eins pro Person.
+  const downloadAllZips = async () => {
+    if (!sets.length || busy) return;
+    setBusy(true);
+    try {
+      for (const s of sets) {
+        const all = [...(s.images || []), ...(s.generatedImages || [])];
+        if (!all.length) continue;
+        const zip = new JSZip();
+        let i = 0;
+        for (const u of all) {
+          const url = u.startsWith("http") ? u : await sign(u);
+          if (!url) continue;
+          try {
+            const blob = await (await fetch(url)).blob();
+            zip.file(`bild_${String(i + 1).padStart(2, "0")}.jpg`, blob);
+            i += 1;
+          } catch {
+            /* einzelnes Bild überspringen */
+          }
+        }
+        if (!i) continue;
+        const out = await zip.generateAsync({ type: "blob" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(out);
+        a.download = `${s.personName}-trainingsset.zip`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const underTarget = sets.filter(
     (s) => (s.images?.length || 0) + (s.generatedImages?.length || 0) < (s.targetCount || 12)
   );
@@ -309,7 +344,19 @@ export default function Trainingsset() {
       )}
 
       <section className="mt-8 space-y-3">
-        <h2 className="font-heading text-foreground">Sets pro Person</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-heading text-foreground">Sets pro Person</h2>
+          {sets.length > 0 && (
+            <button
+              onClick={downloadAllZips}
+              disabled={busy}
+              className="glass-btn inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50"
+            >
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
+              Alle als ZIP
+            </button>
+          )}
+        </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Lade …</p>
         ) : sets.length === 0 ? (
