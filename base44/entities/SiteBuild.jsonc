@@ -1,0 +1,71 @@
+{
+  "name": "SiteBuild",
+  "type": "object",
+  "properties": {
+    "repoUrl": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "repo": {
+      "type": "string"
+    },
+    "branch": {
+      "type": "string",
+      "default": "main"
+    },
+    "subpath": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "GELADEN",
+        "GEBAUT",
+        "FERTIG",
+        "FEHLER"
+      ],
+      "default": "GEBAUT"
+    },
+    "fileCount": {
+      "type": "number",
+      "default": 0
+    },
+    "note": {
+      "type": "string"
+    },
+    "builtAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "repoUrl"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
