@@ -10,6 +10,7 @@ import GodTrainingsPanel from "@/components/god/GodTrainingsPanel";
 import GodSiteBuilder from "@/components/god/GodSiteBuilder";
 import GodHelpWorkflow from "@/components/god/GodHelpWorkflow";
 import GodFantasyFlow from "@/components/god/GodFantasyFlow";
+import GodPaketPanel from "@/components/god/GodPaketPanel";
 
 // Die Konsole am rechten Rand: sie schreibt mit, auf welcher Seite du bist und
 // worüber deine Maus gerade steht. Du tippst hinein, was du meinst — die Notiz
@@ -108,6 +109,7 @@ export default function GuideConsole() {
             { key: "training", label: "Trainingsdaten" },
             { key: "sites", label: "Sites" },
             { key: "erzaehlen", label: "Erzählen" },
+            { key: "pakete", label: "Pakete" },
           ].map((t) => (
             <button
               key={t.key}
@@ -139,6 +141,8 @@ export default function GuideConsole() {
         <GodSiteBuilder />
       ) : tab === "erzaehlen" ? (
         <div className="flex-1 overflow-y-auto p-3"><GodFantasyFlow /></div>
+      ) : tab === "pakete" ? (
+        <div className="flex-1 overflow-y-auto"><GodPaketPanel /></div>
       ) : (
       <>
       <div className="px-4 py-3 border-b-2 border-border space-y-2">

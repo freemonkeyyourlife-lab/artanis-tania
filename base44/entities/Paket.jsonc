@@ -1,0 +1,91 @@
+{
+  "name": "Paket",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "art": {
+      "type": "string",
+      "enum": [
+        "VIP_ABO",
+        "KAPITEL"
+      ],
+      "default": "VIP_ABO"
+    },
+    "beschreibung": {
+      "type": "string"
+    },
+    "betragCents": {
+      "type": "number",
+      "default": 0
+    },
+    "waehrung": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "wiederkehrend": {
+      "type": "boolean",
+      "default": true
+    },
+    "intervall": {
+      "type": "string",
+      "enum": [
+        "WEEK",
+        "MONTH",
+        "YEAR"
+      ],
+      "default": "MONTH"
+    },
+    "stripeProductId": {
+      "type": "string"
+    },
+    "stripePriceId": {
+      "type": "string"
+    },
+    "stripeLinkId": {
+      "type": "string"
+    },
+    "stripeLinkUrl": {
+      "type": "string"
+    },
+    "stripeLinkActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "aktiv": {
+      "type": "boolean",
+      "default": true
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "name",
+    "art"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
