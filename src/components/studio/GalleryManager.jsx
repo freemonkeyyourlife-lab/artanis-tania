@@ -5,8 +5,9 @@ import { Loader2, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Image } from "@/components/ui/image";
 import GalleryGrid from "@/components/studio/GalleryGrid";
-import GalleryUpload from "@/components/studio/GalleryUpload";
+import UniversalIngest from "@/components/studio/UniversalIngest";
 import { collectImages, groupByCreator } from "@/lib/gallery";
+import { loadArchiveQuellen, signQuelleUrl } from "@/lib/quelleArchive";
 
 // Alle im Chat erzeugten Bilder eines Charakters auf einen Blick.
 export default function GalleryManager({ creators = [] }) {
@@ -19,11 +20,28 @@ export default function GalleryManager({ creators = [] }) {
 
   const load = async () => {
     try {
-      const [convs, msgs] = await Promise.all([
+      const [convs, msgs, quellen] = await Promise.all([
         base44.entities.Conversation.list("-created_date", 500),
         base44.entities.Message.list("-created_date", 1000),
+        loadArchiveQuellen(200).catch(() => []),
       ]);
-      setItems(collectImages(convs, msgs, creators));
+      const chat = collectImages(convs, msgs, creators);
+      const archived = [];
+      for (const q of quellen) {
+        if (q.kind !== "BILD" && q.kind !== "GIF") continue;
+        const url = await signQuelleUrl(q);
+        if (!url) continue;
+        archived.push({
+          url,
+          label: q.kind,
+          locked: false,
+          creatorId: "ARCHIV",
+          creatorName: "Archiv",
+          userName: "",
+          createdAt: q.created_date,
+        });
+      }
+      setItems([...archived, ...chat]);
     } catch (e) {
       console.error(e);
     } finally {
@@ -46,7 +64,7 @@ export default function GalleryManager({ creators = [] }) {
       </p>
 
       <div className="mb-5">
-        <GalleryUpload onUploaded={load} kind="ALLGEMEIN" />
+        <UniversalIngest onIngested={load} />
       </div>
 
       {items.length === 0 ? (
