@@ -1,5 +1,5 @@
 {
-  "description": "Neue Archiv-Quelle automatisch dem passenden Charakter zuordnen, dann das Trainingsset daf\u00fcr aufbauen \u2014 Upload \u2192 Tagging \u2192 sortiert \u2192 bereit f\u00fcrs Modelltraining.",
+  "description": "Neue Archiv-Quelle automatisch dem passenden Charakter zuordnen, dann das Trainingsset daf\u00fcr aufbauen und bei zu wenig Bildern mit passenden (nicht zuf\u00e4lligen) KI-Bildern auff\u00fcllen \u2014 Upload \u2192 Tagging \u2192 sortiert \u2192 aufgef\u00fcllt \u2192 bereit f\u00fcrs Modelltraining.",
   "name": "Trainings-Pipeline",
   "trigger": {
     "condition": null,
@@ -15,7 +15,7 @@
     "document": {
       "dsl": "1.0.0",
       "name": "trainings_pipeline",
-      "version": "1.0",
+      "version": "1.1",
       "namespace": "base44"
     },
     "do": [
@@ -59,10 +59,41 @@
               "characterId": "${ .tag_quelle.characterId }"
             }
           },
-          "then": "end",
+          "then": "pruefe_status",
           "x-base44": {
             "title": "Trainingsset aufbauen",
             "description": "Bilder sammeln & Status setzen"
+          }
+        }
+      },
+      {
+        "pruefe_status": {
+          "switch": [
+            {
+              "when": "${ (.build_set.status // \"SAMMLUNG\") == \"BEREIT\" }",
+              "then": "end"
+            },
+            {
+              "when": "${ true }",
+              "then": "fill_set"
+            }
+          ]
+        }
+      },
+      {
+        "fill_set": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "trainFillSet",
+            "args": {
+              "setId": "${ .build_set.setId }",
+              "characterName": "${ .build_set.characterName }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Set mit passenden Bildern auff\u00fcllen",
+            "description": "Fehlende Bilder per KI erzeugen \u2014 gleiche Person, passende Pose"
           }
         }
       }

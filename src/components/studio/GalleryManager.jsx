@@ -5,6 +5,7 @@ import { Loader2, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Image } from "@/components/ui/image";
 import GalleryGrid from "@/components/studio/GalleryGrid";
+import GalleryUpload from "@/components/studio/GalleryUpload";
 import { collectImages, groupByCreator } from "@/lib/gallery";
 
 // Alle im Chat erzeugten Bilder eines Charakters auf einen Blick.
@@ -43,6 +44,10 @@ export default function GalleryManager({ creators = [] }) {
       <p className="text-xs text-muted-foreground mb-5">
         {items.length} {items.length === 1 ? "Bild" : "Bilder"} aus allen Chats — Charakter wählen, Bild anklicken zum Vergrößern.
       </p>
+
+      <div className="mb-5">
+        <GalleryUpload onUploaded={load} kind="ALLGEMEIN" />
+      </div>
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-16 text-muted-foreground">
