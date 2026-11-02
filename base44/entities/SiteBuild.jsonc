@@ -21,6 +21,17 @@
     "domain": {
       "type": "string"
     },
+    "deployTarget": {
+      "type": "string",
+      "enum": [
+        "OFFEN",
+        "NETLIFY",
+        "VERCEL",
+        "GITHUB_PAGES",
+        "EIGENER"
+      ],
+      "default": "OFFEN"
+    },
     "status": {
       "type": "string",
       "enum": [

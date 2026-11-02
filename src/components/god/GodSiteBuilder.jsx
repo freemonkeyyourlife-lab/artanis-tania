@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import JSZip from "jszip";
-import { Loader2, Download, Globe, Github, FolderGit2, RefreshCw, ExternalLink, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { Loader2, Download, Globe, Github, FolderGit2, RefreshCw, ExternalLink, CheckCircle2, AlertTriangle, Info, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Wohin das fertige ZIP hochgeladen werden kann, damit die Seite unter der
+// Domain steht. Base44 hostet nur diese App — die Veröffentlichung des
+// gebauten Projekts passiert beim gewählten Ziel.
+const DEPLOY_TARGETS = [
+  { key: "OFFEN", label: "Ziel offen", url: "" },
+  { key: "NETLIFY", label: "Netlify Drop", url: "https://app.netlify.com/drop" },
+  { key: "VERCEL", label: "Vercel", url: "https://vercel.com/new" },
+  { key: "GITHUB_PAGES", label: "GitHub Pages", url: "https://pages.github.com/" },
+  { key: "EIGENER", label: "Eigener Webspace", url: "" },
+];
 
 // GitHub-Seitenbauer: zieht ein öffentliches GitHub-Projekt, packt alle Dateien
 // in ein fertiges ZIP (bereit zum Download bzw. Hochladen bei einem Hoster) und
@@ -105,6 +116,13 @@ export default function GodSiteBuilder() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const setTarget = async (s, target) => {
+    try {
+      await base44.entities.SiteBuild.update(s.id, { deployTarget: target });
+      await loadSaved();
+    } catch {}
   };
 
   const saveSite = async (status = "FERTIG") => {
@@ -240,8 +258,28 @@ export default function GodSiteBuilder() {
           <div className="rounded-xl bg-background border border-border px-3 py-2 flex gap-2">
             <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-snug">
-              Das ZIP ist fertig zum Hochladen. Base44 hostet nur diese App — lade das ZIP bei deinem Hoster unter der Domain hoch, dann steht die Seite.
+              Das ZIP ist fertig zum Hochladen. Base44 hostet nur diese App — lade das ZIP bei einem Ziel unter deiner Domain hoch, dann steht die Seite.
             </p>
+          </div>
+
+          <div className="rounded-xl bg-elevated border border-border p-2.5">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-1.5">
+              <Rocket className="w-3 h-3" /> Veröffentlichen unter
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {DEPLOY_TARGETS.filter((t) => t.url).map((t) => (
+                <a
+                  key={t.key}
+                  href={t.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="glass-btn inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold"
+                >
+                  <ExternalLink className="w-3 h-3" /> {t.label}
+                </a>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1.5">Nach dem Ablegen unten das Ziel wählen — dann ist der Eintrag fertig.</p>
           </div>
         </>
       )}
@@ -260,7 +298,7 @@ export default function GodSiteBuilder() {
               <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                 <Globe className="w-3 h-3" /> {s.domain || "keine Domain"} · {s.fileCount} Dateien
               </p>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5 items-center">
                 <button
                   onClick={() => rebuild(s)}
                   disabled={busy}
@@ -278,6 +316,26 @@ export default function GodSiteBuilder() {
                     <ExternalLink className="w-3 h-3" /> Öffnen
                   </a>
                 )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-muted-foreground font-bold">Ziel:</span>
+                <select
+                  value={s.deployTarget || "OFFEN"}
+                  onChange={(e) => setTarget(s, e.target.value)}
+                  className="flex-1 px-2 py-1 rounded-full bg-background border border-border text-[11px] font-bold text-foreground focus:outline-none focus:border-primary/50"
+                >
+                  {DEPLOY_TARGETS.map((t) => (
+                    <option key={t.key} value={t.key}>{t.label}</option>
+                  ))}
+                </select>
+                {(() => {
+                  const t = DEPLOY_TARGETS.find((d) => d.key === (s.deployTarget || "OFFEN"));
+                  return t?.url ? (
+                    <a href={t.url} target="_blank" rel="noreferrer" className="glass-btn inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold">
+                      <ExternalLink className="w-3 h-3" /> {t.label}
+                    </a>
+                  ) : null;
+                })()}
               </div>
             </div>
           ))}
