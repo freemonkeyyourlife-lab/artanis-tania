@@ -9,6 +9,7 @@ import CharacterStoryCard from "@/components/CharacterStoryCard";
 import ContentCard from "@/components/ContentCard";
 import HeroCloud from "@/components/HeroCloud";
 import HeroNews from "@/components/hero/HeroNews";
+import HomeSearch from "@/components/home/HomeSearch";
 import BrandWordmark from "@/components/BrandWordmark";
 import RequestCard from "@/components/RequestCard";
 import { useRequestVotes } from "@/hooks/useRequestVotes";
@@ -175,6 +176,16 @@ export default function Home() {
                 <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
                   <MessageSquare className="w-4 h-4" /> Privater Chat
                 </Link>
+              </div>
+
+              <div className="mt-6">
+                <HomeSearch
+                  isOwner={isAdmin}
+                  creators={creators}
+                  content={content}
+                  stories={stories}
+                  topics={topics}
+                />
               </div>
             </div>
 
