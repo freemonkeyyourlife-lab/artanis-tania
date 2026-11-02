@@ -52,6 +52,15 @@ export async function signatureOf(file) {
   return gray.map((g) => (g > avg ? 1 : 0)).join("");
 }
 
+// Holt ein Bild per URL, schneidet es auf 3:4-Porträt und gibt eine Datei zurück.
+// Nutzt fetch + blob, damit auch private (signierte) Archiv-Adressen gehen.
+export async function cropUrlToPortrait(url, ratio = 3 / 4, maxH = 1024) {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const file = new File([blob], "archiv.jpg", { type: blob.type || "image/jpeg" });
+  return cropToPortrait(file, ratio, maxH);
+}
+
 // Schärfe-Messung (Gradienten-Betrag) — höhere Werte = schärferes Bild.
 export async function sharpnessOf(file) {
   const bitmap = await loadBitmap(file);

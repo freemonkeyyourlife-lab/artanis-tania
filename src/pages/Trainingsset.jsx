@@ -5,6 +5,9 @@ import UploadZone from "@/components/trainingsset/UploadZone";
 import VideoFrameGrabber from "@/components/trainingsset/VideoFrameGrabber";
 import LinkGrabber from "@/components/trainingsset/LinkGrabber";
 import SetCard from "@/components/trainingsset/SetCard";
+import ArchivePicker from "@/components/trainingsset/ArchivePicker";
+import { cropUrlToPortrait } from "@/lib/trainImage";
+import { signQuelleUrl } from "@/lib/quelleArchive";
 import {
   ArrowRight,
   Loader2,
@@ -279,55 +282,115 @@ export default function Trainingsset() {
     }
   };
 
-  // Aus einem Set einen Charakter ziehen — vorhandenen aktualisieren statt
-  // doppelt anzulegen.
+  // Kern: aus einem Set einen Charakter ziehen — vorhandenen aktualisieren
+  // statt doppelt anzulegen. Ohne eigenes busy/toast, damit es sich in die
+  // durchgängige Pipeline einfügen lässt.
+  const extractCore = async (set) => {
+    const refUri = (set.images || [])[0];
+    const refUrl = refUri ? await sign(refUri) : null;
+    let appearance = "";
+    if (refUrl) {
+      const r = await base44.integrations.Core.InvokeLLM({
+        prompt:
+          "Beschreibe das Aussehen der Person auf diesem Bild in 2-3 Sätzen, auf Deutsch. Erwachsene Person.",
+        file_urls: [refUrl],
+      });
+      appearance = typeof r === "string" ? r : String(r || "");
+    }
+    const page = await base44.entities.Character.filter(
+      { name: set.personName },
+      { limit: 1 }
+    );
+    const existing = (page.items || [])[0];
+    if (existing) {
+      await base44.entities.Character.update(existing.id, {
+        appearance: appearance || existing.appearance,
+        avatar: refUri || existing.avatar,
+        images: Array.from(
+          new Set([...(existing.images || []), ...(set.images || [])])
+        ),
+      });
+    } else {
+      await base44.entities.Character.create({
+        name: set.personName,
+        adultAge: 25,
+        appearance,
+        avatar: refUri || "",
+        images: set.images || [],
+        fictional: true,
+        createdByRole: "DAVID",
+      });
+    }
+    await base44.entities.TrainingSet.update(set.id, { status: "BEREIT" });
+  };
+
   const extract = async (set) => {
     setBusy(true);
     try {
-      const refUri = (set.images || [])[0];
-      const refUrl = refUri ? await sign(refUri) : null;
-      let appearance = "";
-      if (refUrl) {
-        const r = await base44.integrations.Core.InvokeLLM({
-          prompt:
-            "Beschreibe das Aussehen der Person auf diesem Bild in 2-3 Sätzen, auf Deutsch. Erwachsene Person.",
-          file_urls: [refUrl],
-        });
-        appearance = typeof r === "string" ? r : String(r || "");
-      }
-      const page = await base44.entities.Character.filter(
-        { name: set.personName },
-        { limit: 1 }
-      );
-      const existing = (page.items || [])[0];
-      if (existing) {
-        await base44.entities.Character.update(existing.id, {
-          appearance: appearance || existing.appearance,
-          avatar: refUri || existing.avatar,
-          images: Array.from(
-            new Set([...(existing.images || []), ...(set.images || [])])
-          ),
-        });
-        toast({ title: "Charakter aktualisiert", description: set.personName });
-      } else {
-        await base44.entities.Character.create({
-          name: set.personName,
-          adultAge: 25,
-          appearance,
-          avatar: refUri || "",
-          images: set.images || [],
-          fictional: true,
-          createdByRole: "DAVID",
-        });
-        toast({ title: "Charakter angelegt", description: set.personName });
-      }
-      await base44.entities.TrainingSet.update(set.id, { status: "BEREIT" });
+      await extractCore(set);
       await load();
+      toast({ title: "Charakter übernommen", description: set.personName });
     } catch (e) {
       toast({
         variant: "destructive",
         title: "Fehlgeschlagen",
         description: e?.message || "Charakter konnte nicht gezogen werden.",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Durchgängige Archiv-Pipeline: gewählte Archivbilder → zuschneiden (3:4)
+  // → ins Set der Person → auffüllen → Charakter ziehen → als trainiert
+  // markieren → Meldung zurück. Ein Klick, keine Unterbrechung.
+  const onArchiveTrain = async (selected, personRaw) => {
+    const person = (personRaw || "").trim();
+    if (!selected?.length || !person) return;
+    setBusy(true);
+    try {
+      let target = await ensureSet(person);
+      const existing = new Set(target.images || []);
+      const images = [...(target.images || [])];
+      let avatar = target.avatar;
+      let taken = 0;
+      for (const q of selected) {
+        const url = await signQuelleUrl(q);
+        if (!url) continue;
+        try {
+          const cropped = await cropUrlToPortrait(url);
+          const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file: cropped });
+          if (file_uri && !existing.has(file_uri)) {
+            images.push(file_uri);
+            existing.add(file_uri);
+            if (!avatar) avatar = file_uri;
+            taken += 1;
+          }
+        } catch { /* einzelnes Bild überspringen */ }
+      }
+      if (!taken) {
+        toast({ variant: "destructive", title: "Nichts übernommen", description: "Bilder ließen sich nicht zuschneiden." });
+        return;
+      }
+      await base44.entities.TrainingSet.update(target.id, { images, avatar });
+      await load();
+      await fillToTarget(target.id);
+      await load();
+      const fresh = await base44.entities.TrainingSet.get(target.id).catch(() => null);
+      if (fresh) {
+        await extractCore(fresh);
+        await base44.entities.TrainingSet.update(target.id, { status: "TRAINIERT" });
+      }
+      await load();
+      toast({
+        title: "Trainings-Datensatz fertig",
+        description: `${taken} aus Archiv → ${person}: zugeschnitten, aufgefüllt und trainiert. Meldung zurück!`,
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Pipeline abgebrochen",
+        description: e?.message || "Fehler.",
       });
     } finally {
       setBusy(false);
@@ -665,6 +728,7 @@ export default function Trainingsset() {
           <UploadZone onBatch={onBatch} />
           <VideoFrameGrabber onFrames={onFrames} />
           <LinkGrabber onLinks={onLinks} />
+          <ArchivePicker onTrain={onArchiveTrain} sets={sets} />
         </div>
 
         <section className="rounded-2xl border border-border bg-card p-4">
