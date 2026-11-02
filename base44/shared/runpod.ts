@@ -1,68 +1,56 @@
-// RunPod serverless LoRA-Training — gemeinsame Helfer für runpodTrain und
-// runpodStatus. Beide Funktionen sprechen dieselbe API, deshalb hier
-// zentral, damit der Vertrag nur an einer Stelle steht.
+// RunPod-Pod-Anbindung (kein Serverless): auf dem Pod läuft ein kleines
+// HTTP-Service (siehe runpod_pod/train_server.py). Die App spricht darüber:
+//   POST {POD_URL}/train   -> { job_id }            (Job anstoßen)
+//   GET  {POD_URL}/status/{id}  -> { status, error, model_url? }  (pollen)
+//   GET  {POD_URL}/model/{id}   -> .safetensors-Bytes (herunterladen)
 //
-// Vertrag für den Serverless-Handler (Endpoint, den du bei RunPod
-// deployest): das `input`-Objekt beim /run-Aufruf:
-//   {
-//     name:         "<Personenname>",     // Triggerwort & Dateiname
-//     trigger_word: "<Personenname>",
-//     images:       ["https://..", ...],  // 12 signierte Bild-URLs
-//     steps:        1200,
-//     base_model:   "stable-diffusion-xl-base-1.0"
-//   }
-// Ergebnis in job.output — mindestens einer dieser Schlüssel mit einer
-// öffentlichen URL zur .safetensors:
-//   { model_url } | { lora_url } | { safetensors_url } | { url }
+// Secrets: RUNPOD_POD_URL, RUNPOD_POD_TOKEN (Dashboard → Secrets).
 
 import { secrets } from "base44:runtime";
 
-const API = "https://api.runpod.ai/v2";
-
-function creds() {
-  const key = secrets.get("RUNPOD_API_KEY");
-  const endpoint = secrets.get("RUNPOD_ENDPOINT_ID");
-  if (!key || !endpoint) throw new Error("RUNPOD_API_KEY / RUNPOD_ENDPOINT_ID fehlen (Dashboard → Secrets).");
-  return { key, endpoint };
+function cfg() {
+  const url = (secrets.get("RUNPOD_POD_URL") || "").replace(/\/+$/, "");
+  const token = secrets.get("RUNPOD_POD_TOKEN");
+  if (!url || !token) throw new Error("RUNPOD_POD_URL / RUNPOD_POD_TOKEN fehlen (Dashboard → Secrets).");
+  return { url, token };
 }
 
-// Job beim Serverless-Endpoint einreichen. Gibt die RunPod-Job-ID zurück.
+// Job auf dem Pod anstoßen. Gibt die Pod-Job-ID zurück.
 export async function runJob(input) {
-  const { key, endpoint } = creds();
-  const res = await fetch(`${API}/${endpoint}/run`, {
+  const { url, token } = cfg();
+  const res = await fetch(`${url}/train`, {
     method: "POST",
-    headers: {
-      "Authorization": `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ input }),
+    headers: { "Content-Type": "application/json", "X-Token": token },
+    body: JSON.stringify(input),
     signal: AbortSignal.timeout(20000),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.id) {
-    throw new Error(data?.error || `RunPod /run ${res.status}`);
+  if (!res.ok || !data.job_id) {
+    throw new Error(data?.error || `Pod /train ${res.status}`);
   }
-  return data.id;
+  return data.job_id;
 }
 
-// Status eines Jobs abholen. Liefert { status, output, error }.
+// Status eines Pod-Jobs abholen.
+// Liefert { status: "queued"|"running"|"completed"|"failed", error, model_url }.
 export async function getStatus(jobId) {
-  const { key, endpoint } = creds();
-  const res = await fetch(`${API}/${endpoint}/status/${jobId}`, {
-    headers: { "Authorization": `Bearer ${key}` },
+  const { url, token } = cfg();
+  const res = await fetch(`${url}/status/${jobId}`, {
+    headers: { "X-Token": token },
     signal: AbortSignal.timeout(15000),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || `RunPod /status ${res.status}`);
+  if (!res.ok) throw new Error(data?.error || `Pod /status ${res.status}`);
   return {
-    status: data.status, // IN_QUEUE | IN_PROGRESS | COMPLETED | FAILED | CANCELLED
-    output: data.output,
+    status: data.status,
     error: data.error,
+    model_url: data.model_url || null,
   };
 }
 
-// Aus dem Job-Ergebnis die Modell-URL ziehen (verschiedene übliche Schlüssel).
-export function modelUrlFromOutput(output) {
-  if (!output || typeof output !== "object") return null;
-  return output.model_url || output.lora_url || output.safetensors_url || output.url || null;
+// Normiert den Pod-Status auf die internen Trainings-Status.
+export function mapStatus(s) {
+  if (s === "completed") return "FERTIG";
+  if (s === "failed") return "FEHLER";
+  return "LÄUFT"; // queued | running
 }
