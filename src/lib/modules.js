@@ -47,6 +47,10 @@ export const MODULE_TYPES = [
   { path: "/prompt", label: "Prompt-Generator", description: "Idee sprechen oder tippen — heraus kommt ein fertiger Prompt fürs externe Studio." },
   { path: "/sandbox", label: "Testsandbox", description: "Die Menüführung durchklicken, bevor sie für alle gilt." },
   { path: "/vorschau", label: "Vorschau als Nutzer", description: "Die Leiste so sehen, wie ein normaler Nutzer sie sieht." },
+  { path: "/erzaehler", label: "Erzähler", description: "Story-Teller-Studio: Szenen sprechen, Bilder und Stimmen setzen." },
+  { path: "/trainingsset", label: "Training", description: "Trainings-Sets anlegen, befüllen und exportieren." },
+  { path: "/hilfe", label: "Hilfe & Wegweiser", description: "Wo ist was — und wie kommt man dahin." },
+  { path: "/vorleser", label: "Vorleser", description: "Texte vorlesen lassen, stimmungsabhängig." },
 ];
 
 export const MODULE_LIMITS = [
@@ -152,6 +156,10 @@ export const NAV_GROUPS = {
   "/sandbox": "Verwalten",
   "/vorschau": "Verwalten",
   "/story-dashboard": "Verwalten",
+  "/erzaehler": "Bauen",
+  "/trainingsset": "Bauen",
+  "/hilfe": "Für mich",
+  "/vorleser": "Für mich",
 };
 
 export const NAV_GROUP_FALLBACK = "Mehr";
@@ -214,6 +222,10 @@ export const FIXED_AREAS = [
       { label: "Nano Banana", path: "/banana" },
       { label: "Neigungen und Bausteine", path: "/palette" },
       { label: "Chat-Modul", path: "/chatmodul" },
+      { label: "Erzähler", path: "/erzaehler" },
+      { label: "Training", path: "/trainingsset" },
+      { label: "Hilfe & Wegweiser", path: "/hilfe" },
+      { label: "Vorleser", path: "/vorleser" },
     ],
   },
   {
