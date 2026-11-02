@@ -27,6 +27,8 @@ export default function Trainingsset() {
   const [loading, setLoading] = useState(true);
   const [newPerson, setNewPerson] = useState({});
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState([]);
+  const [bulkPerson, setBulkPerson] = useState("");
 
   const load = async () => {
     const page = await base44.entities.TrainingSet.filter(
@@ -146,6 +148,50 @@ export default function Trainingsset() {
     }
   };
 
+  // Mehrere Pool-Einträge auf einmal derselben Person zuweisen.
+  const assignMany = async () => {
+    const person = (bulkPerson || "").trim();
+    const items = pool.filter((p) => selected.includes(p.uri));
+    if (!person || !items.length) return;
+    setBusy(true);
+    try {
+      let target = sets.find((s) => s.personName === person);
+      if (!target) {
+        target = await base44.entities.TrainingSet.create({
+          personName: person,
+          name: `Set ${person}`,
+          images: [],
+          generatedImages: [],
+          sourceMedia: [],
+          targetCount: 12,
+        });
+      }
+      const images = [...(target.images || [])];
+      const sourceMedia = [...(target.sourceMedia || [])];
+      let avatar = target.avatar;
+      for (const p of items) {
+        if (p.type === "IMAGE") {
+          images.push(p.uri);
+          if (!avatar) avatar = p.uri;
+        } else if (p.type === "VIDEO") {
+          sourceMedia.push(p.uri);
+        }
+      }
+      await base44.entities.TrainingSet.update(target.id, { images, sourceMedia, avatar });
+      setPool((cur) => cur.filter((p) => !selected.includes(p.uri)));
+      setSelected([]);
+      setBulkPerson("");
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggle = (uri) =>
+    setSelected((s) => (s.includes(uri) ? s.filter((x) => x !== uri) : [...s, uri]));
+
+  const allSelected = pool.length > 0 && selected.length === pool.length;
+
   // Automatisch zuordnen: trifft der Dateiname den Namen einer vorhandenen
   // Person, landet das Medium direkt in deren Set — der Rest bleibt im Pool.
   const autoSort = async () => {
@@ -250,8 +296,40 @@ export default function Trainingsset() {
             </p>
           ) : (
             <div className="mt-3 max-h-80 space-y-2 overflow-y-auto scrollbar-hide">
+              <div className="sticky top-0 z-10 flex items-center gap-2 rounded-xl bg-card/95 p-2 backdrop-blur">
+                <button
+                  onClick={() => setSelected(allSelected ? [] : pool.map((p) => p.uri))}
+                  className="glass-btn rounded-full px-2 py-1 text-xs"
+                >
+                  {allSelected ? "Keine" : "Alle"}
+                </button>
+                <span className="text-xs text-muted-foreground">{selected.length} gewählt</span>
+                <div className="flex flex-1 items-center gap-2">
+                  <input
+                    list="persons"
+                    value={bulkPerson}
+                    onChange={(e) => setBulkPerson(e.target.value)}
+                    placeholder="Person für alle Gewählten"
+                    className="flex-1 rounded-lg bg-background px-3 py-1.5 text-sm text-foreground"
+                  />
+                  <button
+                    onClick={assignMany}
+                    disabled={busy || !selected.length || !bulkPerson.trim()}
+                    className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50"
+                  >
+                    {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRight className="h-3.5 w-3.5" />}
+                    Alle zuweisen
+                  </button>
+                </div>
+              </div>
               {pool.map((p) => (
                 <div key={p.uri} className="flex items-center gap-3 rounded-xl bg-elevated p-2">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(p.uri)}
+                    onChange={() => toggle(p.uri)}
+                    className="h-4 w-4 accent-primary"
+                  />
                   <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-background">
                     {p.type === "IMAGE" && poolUrls[p.uri] ? (
                       <Image src={poolUrls[p.uri]} fittingType="fill" className="h-full w-full" />
