@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { isGodMode, subscribeGodMode } from "@/lib/godMode";
 import { getViewAs, setViewAs, subscribeViewAs, testUsers } from "@/lib/viewAs";
 import { useFocus, useFocusTracker } from "@/lib/godFocus";
+import GodLinksRoadmap from "@/components/god/GodLinksRoadmap";
 
 // Die Konsole am rechten Rand: sie schreibt mit, auf welcher Seite du bist und
 // worüber deine Maus gerade steht. Du tippst hinein, was du meinst — die Notiz
@@ -18,6 +19,7 @@ export default function GuideConsole() {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState([]);
+  const [tab, setTab] = useState("notizen");
 
   const visible = isAdmin && (god || !!viewAs);
   const focus = useFocus();
@@ -94,6 +96,23 @@ export default function GuideConsole() {
             {viewAs ? "Nutzer-Ansicht" : "God Mode"}
           </span>
         </div>
+        <div className="flex gap-1">
+          {[
+            { key: "notizen", label: "Notizen" },
+            { key: "links", label: "Links & Roadmap" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "px-3 py-1 rounded-full text-[12px] font-bold transition-colors",
+                tab === t.key ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-foreground"
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setOpen(false)}
           className="w-7 h-7 rounded-full glass-btn flex items-center justify-center text-muted-foreground hover:text-foreground"
@@ -102,6 +121,10 @@ export default function GuideConsole() {
         </button>
       </div>
 
+      {tab === "links" ? (
+        <GodLinksRoadmap />
+      ) : (
+      <>
       <div className="px-4 py-3 border-b-2 border-border space-y-2">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Du bist hier</p>
@@ -165,6 +188,8 @@ export default function GuideConsole() {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }
