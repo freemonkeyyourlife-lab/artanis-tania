@@ -72,20 +72,30 @@ export default function GodTrainArchiv() {
     } catch {}
   };
 
+  // Wenn kein Charakter explizit gewählt ist, versuchen wir es am Dateinamen:
+    // enthält er einen bekannten Charakternamen, wird automatisch zugeordnet.
+    const detectChar = (name) => {
+      const low = String(name || "").toLowerCase();
+      return characters.find((c) => c.name && low.includes(c.name.toLowerCase())) || null;
+    };
+
   const upload = async (files) => {
     if (!files?.length || busy) return;
     setBusy(true);
     try {
-      const cName = assignChar ? charName(assignChar) : "";
       for (const f of files) {
+        const hit = assignChar ? null : detectChar(f.name);
+        const charId = assignChar || hit?.id || "";
+        const cName = charId ? charName(charId) : "";
         const up = await base44.integrations.Core.UploadPrivateFile({ file: f });
         await base44.entities.Quelle.create({
           name: f.name,
           kind: kindForFile(f),
           fileUri: up.file_uri,
           source: "UPLOAD",
-          characterId: assignChar || undefined,
+          characterId: charId || undefined,
           characterName: cName || undefined,
+          tags: hit ? ["auto-zugeordnet", hit.name] : undefined,
         });
       }
       await load();

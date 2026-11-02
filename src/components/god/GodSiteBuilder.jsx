@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import JSZip from "jszip";
 import { Loader2, Download, Globe, Github, FolderGit2, RefreshCw, ExternalLink, CheckCircle2, AlertTriangle, Info, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
+import GodDomainConnect from "@/components/god/GodDomainConnect";
 
 // Wohin das fertige ZIP hochgeladen werden kann, damit die Seite unter der
 // Domain steht. Base44 hostet nur diese App — die Veröffentlichung des
@@ -337,6 +338,9 @@ export default function GodSiteBuilder() {
                   ) : null;
                 })()}
               </div>
+              {s.domain && s.deployTarget && s.deployTarget !== "OFFEN" && (
+                <GodDomainConnect target={s.deployTarget} domain={s.domain} />
+              )}
             </div>
           ))}
         </div>

@@ -8,6 +8,7 @@ import { useFocus, useFocusTracker } from "@/lib/godFocus";
 import GodLinksRoadmap from "@/components/god/GodLinksRoadmap";
 import GodTrainingsPanel from "@/components/god/GodTrainingsPanel";
 import GodSiteBuilder from "@/components/god/GodSiteBuilder";
+import GodHelpWorkflow from "@/components/god/GodHelpWorkflow";
 
 // Die Konsole am rechten Rand: sie schreibt mit, auf welcher Seite du bist und
 // worüber deine Maus gerade steht. Du tippst hinein, was du meinst — die Notiz
@@ -101,6 +102,7 @@ export default function GuideConsole() {
         <div className="flex gap-1">
           {[
             { key: "notizen", label: "Notizen" },
+            { key: "hilfe", label: "Hilfe" },
             { key: "links", label: "Links & Roadmap" },
             { key: "training", label: "Trainingsdaten" },
             { key: "sites", label: "Sites" },
@@ -125,7 +127,9 @@ export default function GuideConsole() {
         </button>
       </div>
 
-      {tab === "links" ? (
+      {tab === "hilfe" ? (
+        <div className="flex-1 overflow-y-auto"><GodHelpWorkflow /></div>
+      ) : tab === "links" ? (
         <GodLinksRoadmap />
       ) : tab === "training" ? (
         <GodTrainingsPanel />
