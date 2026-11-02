@@ -172,7 +172,7 @@ export default function Layout() {
       <header className="fixed top-0 left-0 right-0 lg:left-64 z-50 glass-milky" style={{ height: "72px" }}>
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Link to="/">
+            <Link to="/" className="lg:hidden">
               <BrandWordmark className="text-lg lg:text-xl text-foreground" />
             </Link>
             {memberStatus === "GOLD" && (

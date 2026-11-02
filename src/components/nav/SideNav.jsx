@@ -15,9 +15,9 @@ export default function SideNav({ groups = [], isOwner = false }) {
   const { pathname } = useLocation();
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 z-40 flex-col glass-strong border-r border-border/40 pt-[72px]">
-      {/* Ganz oben links: die Marke. Direkt darunter: Einladen. */}
-      <div className="px-3 pt-4 pb-3 border-b border-border/40">
+    <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 z-40 flex-col glass-strong border-r border-border/40">
+      {/* Ganz oben links: die Marke — direkt an der oberen Kante. Darunter: Einladen. */}
+      <div className="px-3 pt-5 pb-3 border-b border-border/40">
         <Link to="/" className="block px-2 py-1.5">
           <BrandWordmark className="text-[17px] text-foreground" />
         </Link>
