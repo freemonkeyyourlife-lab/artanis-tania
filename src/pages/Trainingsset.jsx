@@ -4,6 +4,7 @@ import { Image } from "@/components/ui/image";
 import UploadZone from "@/components/trainingsset/UploadZone";
 import SetCard from "@/components/trainingsset/SetCard";
 import { ArrowRight, Loader2, Wand2, AlertTriangle, Sparkles, Archive } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import JSZip from "jszip";
 
 const sign = async (uri) => {
@@ -21,6 +22,7 @@ const sign = async (uri) => {
 // Trainingsset: Upload von überall → pro Person sortieren → bei zu wenig
 // Bildern Set auffüllen → daraus einen Charakter ziehen.
 export default function Trainingsset() {
+  const { toast } = useToast();
   const [pool, setPool] = useState([]);
   const [poolUrls, setPoolUrls] = useState({});
   const [sets, setSets] = useState([]);
@@ -86,7 +88,19 @@ export default function Trainingsset() {
         avatar: target.avatar || (item.type === "IMAGE" ? uri : target.avatar),
       });
       setPool((p) => p.filter((x) => x.uri !== uri));
+      setNewPerson((m) => {
+        const n = { ...m };
+        delete n[uri];
+        return n;
+      });
       await load();
+      toast({ title: "Zugeordnet", description: `${item.name || "Datei"} → ${person}` });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Zuordnen fehlgeschlagen",
+        description: e?.message || "Keine Rechte oder Verbindung — Admin-Login nötig.",
+      });
     } finally {
       setBusy(false);
     }
@@ -182,6 +196,13 @@ export default function Trainingsset() {
       setSelected([]);
       setBulkPerson("");
       await load();
+      toast({ title: "Zugeordnet", description: `${items.length} Dateien → ${person}` });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Zuordnen fehlgeschlagen",
+        description: e?.message || "Keine Rechte oder Verbindung — Admin-Login nötig.",
+      });
     } finally {
       setBusy(false);
     }
