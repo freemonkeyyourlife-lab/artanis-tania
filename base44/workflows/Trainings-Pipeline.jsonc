@@ -1,0 +1,71 @@
+{
+  "description": "Neue Archiv-Quelle automatisch dem passenden Charakter zuordnen, dann das Trainingsset daf\u00fcr aufbauen \u2014 Upload \u2192 Tagging \u2192 sortiert \u2192 bereit f\u00fcrs Modelltraining.",
+  "name": "Trainings-Pipeline",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Quelle"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "trainings_pipeline",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "tag_quelle": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "trainTagQuelle",
+            "args": {
+              "quelleId": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "hat_charakter",
+          "x-base44": {
+            "title": "Quelle automatisch taggen",
+            "description": "Charakter aus Name erkennen & zuordnen"
+          }
+        }
+      },
+      {
+        "hat_charakter": {
+          "switch": [
+            {
+              "when": "${ (.tag_quelle.characterName // \"\") != \"\" }",
+              "then": "build_set"
+            },
+            {
+              "when": "${ true }",
+              "then": "end"
+            }
+          ]
+        }
+      },
+      {
+        "build_set": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "trainBuildSet",
+            "args": {
+              "characterName": "${ .tag_quelle.characterName }",
+              "characterId": "${ .tag_quelle.characterId }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Trainingsset aufbauen",
+            "description": "Bilder sammeln & Status setzen"
+          }
+        }
+      }
+    ]
+  }
+}
