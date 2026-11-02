@@ -2,7 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { Image as ImageIcon } from "@/components/ui/image";
-import { Loader2, Search, Trash2, Upload, FileAudio, FileVideo, FileText, Image as ImgIcon, Sparkles, Film, Mic, User } from "lucide-react";
+import { Loader2, Search, Trash2, Upload, FileAudio, FileVideo, FileText, Image as ImgIcon, Sparkles, Film, Mic, User, CheckSquare } from "lucide-react";
+import GodTrainDropZone from "@/components/god/train/GodTrainDropZone";
+import GodTrainBulkBar from "@/components/god/train/GodTrainBulkBar";
+import GodTrainCoverage from "@/components/god/train/GodTrainCoverage";
 
 // Das private Quellen-Archiv im Godmode: alles was wir sammeln — Bilder, Videos,
 // Audio, GIFs, Texte, Stories, Stimmen, Modelle, Charaktere — landet hier, ist
@@ -45,7 +48,26 @@ export default function GodTrainArchiv() {
   const [query, setQuery] = useState("");
   const [signed, setSigned] = useState({});
   const [gen, setGen] = useState({ id: null, kind: null });
+  const [selected, setSelected] = useState(() => new Set());
+  const [bulk, setBulk] = useState({ active: false, done: 0, total: 0, label: "" });
   const fileRef = useRef(null);
+
+  const toggleSel = (id) => setSelected((s) => {
+    const n = new Set(s);
+    if (n.has(id)) n.delete(id); else n.add(id);
+    return n;
+  });
+  const clearSel = () => setSelected(new Set());
+  const selectAllVisible = () => {
+    const ids = filtered.map((q) => q.id);
+    const allSelected = ids.length > 0 && ids.every((id) => selected.has(id));
+    setSelected((s) => {
+      const n = new Set(s);
+      if (allSelected) ids.forEach((id) => n.delete(id));
+      else ids.forEach((id) => n.add(id));
+      return n;
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -65,11 +87,15 @@ export default function GodTrainArchiv() {
   const charName = (id) => characters.find((c) => c.id === id)?.name || "";
 
   const ensureSigned = async (q) => {
-    if (!q.fileUri || signed[q.id]) return;
+    if (!q.fileUri) return null;
+    if (signed[q.id]) return signed[q.id];
     try {
       const res = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: q.fileUri, expires_in: 3600 });
       setSigned((s) => ({ ...s, [q.id]: res.signed_url }));
-    } catch {}
+      return res.signed_url;
+    } catch {
+      return null;
+    }
   };
 
   // Wenn kein Charakter explizit gewählt ist, versuchen wir es am Dateinamen:
@@ -108,8 +134,7 @@ export default function GodTrainArchiv() {
   const transcribe = async (q) => {
     setBusy(true);
     try {
-      await ensureSigned(q);
-      const url = signed[q.id];
+      const url = await ensureSigned(q);
       if (!url) throw new Error("Kein Zugriff auf die Datei.");
       const text = await base44.integrations.Core.TranscribeAudio({ audio_url: url });
       await base44.entities.Quelle.create({
@@ -171,6 +196,80 @@ export default function GodTrainArchiv() {
   const remove = async (q) => {
     await base44.entities.Quelle.delete(q.id);
     setItems((xs) => xs.filter((x) => x.id !== q.id));
+    setSelected((s) => { const n = new Set(s); n.delete(q.id); return n; });
+  };
+
+  // Massen-Aktionen — eine Auswahl, ein Knopf, alles auf einmal.
+  const selItems = () => items.filter((q) => selected.has(q.id));
+
+  const runBulk = async (label, list, fn) => {
+    if (!list.length) return;
+    setBusy(true);
+    setBulk({ active: true, done: 0, total: list.length, label });
+    try {
+      for (let i = 0; i < list.length; i++) {
+        await fn(list[i], i);
+        setBulk((b) => ({ ...b, done: i + 1 }));
+      }
+      await load();
+    } finally {
+      setBusy(false);
+      setBulk({ active: false, done: 0, total: 0, label: "" });
+    }
+  };
+
+  const bulkAssign = async (charId) => {
+    const cName = charId ? charName(charId) : "";
+    await runBulk("Zuordnen", selItems(), async (q) => {
+      await base44.entities.Quelle.update(q.id, { characterId: charId || undefined, characterName: cName || undefined });
+    });
+    clearSel();
+  };
+
+  const bulkTranscribe = async () => {
+    const list = selItems().filter((q) => q.kind === "AUDIO" || q.kind === "VIDEO");
+    await runBulk("Transkribieren", list, async (q) => {
+      const url = await ensureSigned(q);
+      if (!url) return;
+      const text = await base44.integrations.Core.TranscribeAudio({ audio_url: url });
+      await base44.entities.Quelle.create({
+        name: `Transkript · ${q.name}`,
+        kind: "TEXT",
+        text: typeof text === "string" ? text : text?.text || JSON.stringify(text),
+        source: "EXTRAKT",
+        characterId: q.characterId,
+        characterName: q.characterName,
+        tags: ["Transkript", q.name],
+      });
+    });
+    clearSel();
+  };
+
+  const bulkGenerate = async (kind) => {
+    const list = selItems().filter((q) => (q.text || q.note || q.name));
+    await runBulk(kind === "BILD" ? "Bilder erzeugen" : "Videos erzeugen", list, async (q) => {
+      const prompt = q.text || q.note || q.name || "";
+      if (kind === "BILD") {
+        const res = await base44.integrations.Core.GenerateImage({ prompt });
+        await base44.entities.Quelle.create({
+          name: `Generiert · ${q.name}`, kind: "BILD", url: res.url, source: "GENERIERT",
+          characterId: q.characterId, characterName: q.characterName, tags: ["generiert", q.name],
+        });
+      } else {
+        const res = await base44.integrations.Core.GenerateVideo({ prompt });
+        await base44.entities.Quelle.create({
+          name: `Generiert · ${q.name}`, kind: "VIDEO", url: res.url, source: "GENERIERT",
+          characterId: q.characterId, characterName: q.characterName, tags: ["generiert", q.name],
+        });
+      }
+    });
+    clearSel();
+  };
+
+  const bulkDelete = async () => {
+    if (!confirm(`${selected.size} Quellen wirklich löschen?`)) return;
+    await runBulk("Löschen", selItems(), async (q) => { await base44.entities.Quelle.delete(q.id); });
+    clearSel();
   };
 
   const filtered = useMemo(() => {
@@ -209,29 +308,17 @@ export default function GodTrainArchiv() {
 
   return (
     <div className="flex flex-col gap-3">
+      <GodTrainDropZone onFiles={upload} busy={busy} />
+
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-btn glass-btn-accent text-[12px] font-bold text-gloss disabled:opacity-50"
-        >
-          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Hochladen
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={(e) => upload(Array.from(e.target.files || []))}
-        />
         <label className="inline-flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
-          <User className="w-3.5 h-3.5" /> zu Charakter:
+          <User className="w-3.5 h-3.5" /> beim Upload zu Charakter:
           <select
             value={assignChar}
             onChange={(e) => setAssignChar(e.target.value)}
             className="bg-elevated border border-border rounded-full px-2 py-1 text-[11px] text-foreground focus:outline-none max-w-[160px]"
           >
-            <option value="">— ohne —</option>
+            <option value="">— automatisch —</option>
             {characters.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -289,6 +376,23 @@ export default function GodTrainArchiv() {
         ))}
       </div>
 
+      <GodTrainCoverage items={items} characters={characters} onSelectChar={(id) => setCharFilter(id)} />
+
+      <GodTrainBulkBar
+        count={selected.size}
+        total={filtered.length}
+        busy={busy || bulk.active}
+        progress={bulk.active ? `${bulk.label} ${bulk.done}/${bulk.total}` : ""}
+        characters={characters}
+        onAssign={bulkAssign}
+        onTranscribe={bulkTranscribe}
+        onGenerateImage={() => bulkGenerate("BILD")}
+        onGenerateVideo={() => bulkGenerate("VIDEO")}
+        onDelete={bulkDelete}
+        onSelectAll={selectAllVisible}
+        onClear={clearSel}
+      />
+
       {loading ? (
         <div className="flex items-center gap-2 text-[12px] text-muted-foreground py-6">
           <Loader2 className="w-4 h-4 animate-spin" /> Archiv wird geladen …
@@ -307,15 +411,21 @@ export default function GodTrainArchiv() {
                 <span className="text-muted-foreground font-normal">{qs.length}</span>
               </p>
               <div className="grid grid-cols-2 gap-2">
-                {qs.map((q) => (
-                  <div key={q.id} className="rounded-xl border border-border bg-elevated p-2 flex flex-col gap-2">
-                    <QuellePreview q={q} signed={signed[q.id]} ensureSigned={() => ensureSigned(q)} />
-                    <div className="min-w-0">
-                      <p className="text-[12px] font-bold text-foreground truncate">{q.name}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                        {q.kind} · {q.source}
-                      </p>
+                {qs.map((q) => {
+                  const isSel = selected.has(q.id);
+                  return (
+                  <div key={q.id} className={cn("rounded-xl border bg-elevated p-2 flex flex-col gap-2 transition-colors", isSel ? "border-primary" : "border-border")}>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => toggleSel(q.id)}
+                        className={cn("w-5 h-5 rounded-md flex items-center justify-center border-2 transition-colors", isSel ? "bg-primary border-primary text-primary-foreground" : "border-border text-transparent")}
+                      >
+                        <CheckSquare className="w-3 h-3" />
+                      </button>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider ml-auto">{q.kind} · {q.source}</p>
                     </div>
+                    <QuellePreview q={q} signed={signed[q.id]} ensureSigned={() => ensureSigned(q)} />
+                    <p className="text-[12px] font-bold text-foreground truncate">{q.name}</p>
                     {(q.kind === "AUDIO" || q.kind === "VIDEO") && (
                       <button
                         onClick={() => transcribe(q)}
@@ -358,7 +468,8 @@ export default function GodTrainArchiv() {
                       ))}
                     </select>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
