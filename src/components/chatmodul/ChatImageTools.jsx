@@ -1,27 +1,25 @@
 import React, { useState } from "react";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { ImagePlus, Video, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getChatModule } from "@/lib/chatModule";
 import { generateWithModel } from "@/lib/imageGen";
 
-// Bild aus dem Chat heraus: Wunsch beschreiben, die Stimmung färbt es ein, und
-// das Ergebnis landet im Gespräch — und dauerhaft im Archiv.
-export default function ChatImageTools({ accent, moodStyle, onImage }) {
+// Medien aus dem Chat heraus: ein Wunsch, die Stimmung färbt es ein, und das
+// Ergebnis landet im Gespräch — und dauerhaft im Archiv. Bilder und Videos.
+export default function ChatImageTools({ accent, moodStyle, onImage, onVideo }) {
   const [wish, setWish] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
 
   const make = async () => {
     const wishText = wish.trim();
     if (!wishText || busy) return;
-    setBusy(true);
+    setBusy("image");
     setError("");
     try {
       const prompt = moodStyle ? `${wishText}. ${moodStyle}` : wishText;
-      // Ist in den Einstellungen ein Modell gewählt, zeichnet es — sonst der
-      // Standard der Plattform.
       const chosen = getChatModule().imageModelId;
       let url = "";
       if (chosen) {
@@ -34,7 +32,6 @@ export default function ChatImageTools({ accent, moodStyle, onImage }) {
       }
       if (!url) throw new Error("Es kam kein Bild zurück.");
 
-      // Jedes Bild bleibt im Archiv — dort ist es jederzeit wiederzufinden.
       try {
         await base44.entities.ImageArchive.create({
           name: wishText.slice(0, 60),
@@ -51,7 +48,30 @@ export default function ChatImageTools({ accent, moodStyle, onImage }) {
     } catch (e) {
       setError(e?.message || "Das Bild kam nicht durch.");
     } finally {
-      setBusy(false);
+      setBusy("");
+    }
+  };
+
+  const makeVideo = async () => {
+    const wishText = wish.trim();
+    if (!wishText || busy) return;
+    setBusy("video");
+    setError("");
+    try {
+      const prompt = moodStyle ? `${wishText}. ${moodStyle}` : wishText;
+      const res = await base44.integrations.Core.GenerateVideo({
+        prompt,
+        duration: 6,
+        aspect_ratio: "9:16",
+      });
+      const url = res?.url;
+      if (!url) throw new Error("Es kam kein Video zurück.");
+      setWish("");
+      await onVideo(url, wishText);
+    } catch (e) {
+      setError(e?.message || "Das Video kam nicht durch.");
+    } finally {
+      setBusy("");
     }
   };
 
@@ -67,21 +87,30 @@ export default function ChatImageTools({ accent, moodStyle, onImage }) {
               make();
             }
           }}
-          placeholder="Bild beschreiben … (Enter zeichnet es)"
+          placeholder="Bild oder Video beschreiben … (Enter = Bild)"
           className="h-9"
         />
         <Button
           onClick={make}
-          disabled={busy || !wish.trim()}
+          disabled={!!busy || !wish.trim()}
           className="h-9 shrink-0"
           style={accent ? { backgroundColor: accent } : undefined}
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+          {busy === "image" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
           <span className="ml-1.5 text-xs">Bild</span>
+        </Button>
+        <Button
+          onClick={makeVideo}
+          disabled={!!busy || !wish.trim()}
+          variant="outline"
+          className="h-9 shrink-0"
+        >
+          {busy === "video" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
+          <span className="ml-1.5 text-xs">Video</span>
         </Button>
       </div>
       {moodStyle && !error && (
-        <p className="pt-1.5 text-[11px] text-muted-foreground">Stimmung fließt ins Bild: {moodStyle}</p>
+        <p className="pt-1.5 text-[11px] text-muted-foreground">Stimmung fließt ein: {moodStyle}</p>
       )}
       {error && <p className="pt-1.5 text-xs text-destructive">{error}</p>}
     </div>

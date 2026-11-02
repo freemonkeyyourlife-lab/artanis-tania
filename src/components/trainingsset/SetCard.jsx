@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Sparkles, UserPlus, Loader2, Trash2 } from "lucide-react";
+import JSZip from "jszip";
+import { Sparkles, UserPlus, Loader2, Trash2, Archive } from "lucide-react";
 
 const sign = async (uri) => {
   try {
@@ -69,6 +70,32 @@ export default function SetCard({ set, onChanged, onExtract }) {
     onChanged();
   };
 
+  // Alle Bilder des Sets als ZIP — zum Mitnehmen zu einem Trainingsserver.
+  const exportZip = async () => {
+    setBusy(true);
+    try {
+      const zip = new JSZip();
+      const all = [...(set.images || []), ...(set.generatedImages || [])];
+      let i = 0;
+      for (const u of all) {
+        const url = u.startsWith("http") ? u : urls[u] || (await sign(u));
+        if (!url) continue;
+        const blob = await (await fetch(url)).blob();
+        zip.file(`bild_${String(i + 1).padStart(2, "0")}.jpg`, blob);
+        i += 1;
+      }
+      if (i === 0) return;
+      const out = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(out);
+      a.download = `${set.personName}-trainingsset.zip`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-border bg-elevated p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -95,6 +122,14 @@ export default function SetCard({ set, onChanged, onExtract }) {
             className="glass-btn glass-btn-accent inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs"
           >
             <UserPlus className="h-3.5 w-3.5" /> Zu Charakter
+          </button>
+          <button
+            onClick={exportZip}
+            disabled={busy || (count === 0 && generated === 0)}
+            className="glass-btn inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
+            Als ZIP
           </button>
         </div>
       </div>

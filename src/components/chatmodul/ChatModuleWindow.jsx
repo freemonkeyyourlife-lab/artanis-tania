@@ -316,6 +316,16 @@ export default function ChatModuleWindow() {
                       className="mt-2 max-h-64 w-full rounded-xl object-cover"
                     />
                   ))}
+                {(m.attachments || [])
+                  .filter((a) => a?.type === "video" && a.url)
+                  .map((a, i) => (
+                    <video
+                      key={`v${i}`}
+                      src={a.url}
+                      controls
+                      className="mt-2 max-h-64 w-full rounded-xl object-cover"
+                    />
+                  ))}
               </div>
               {!mine && !blocks && (
                 <ChatSpeakButton
@@ -349,6 +359,19 @@ export default function ChatModuleWindow() {
             senderType: "AI",
             text: prompt,
             attachments: [{ type: "image", url }],
+            channel: "PLATFORM",
+          });
+          await base44.entities.Conversation.update(conv.id, {
+            lastMessageAt: new Date().toISOString(),
+          });
+        }}
+        onVideo={async (url, prompt) => {
+          await base44.entities.Message.create({
+            conversationId: conv.id,
+            sender: "Assistent",
+            senderType: "AI",
+            text: prompt,
+            attachments: [{ type: "video", url }],
             channel: "PLATFORM",
           });
           await base44.entities.Conversation.update(conv.id, {
