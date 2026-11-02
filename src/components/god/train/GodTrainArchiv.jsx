@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { Image as ImageIcon } from "@/components/ui/image";
-import { Loader2, Search, Trash2, Upload, FileAudio, FileVideo, FileText, Image as ImgIcon, Sparkles, Film, Mic, User, CheckSquare } from "lucide-react";
+import { Loader2, Search, Trash2, Upload, FileAudio, FileVideo, FileText, Image as ImgIcon, Sparkles, Film, Mic, User, CheckSquare, HelpCircle } from "lucide-react";
 import GodTrainDropZone from "@/components/god/train/GodTrainDropZone";
 import GodTrainBulkBar from "@/components/god/train/GodTrainBulkBar";
 import GodTrainCoverage from "@/components/god/train/GodTrainCoverage";
@@ -308,6 +308,7 @@ export default function GodTrainArchiv() {
 
   return (
     <div className="flex flex-col gap-3">
+      <ArchivHelp />
       <GodTrainDropZone onFiles={upload} busy={busy} />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -498,4 +499,38 @@ function QuellePreview({ q, signed, ensureSigned }) {
     return <audio src={src} controls className="w-full" />;
   }
   return <div className="h-12 rounded-lg bg-background flex items-center justify-center text-[10px] text-muted-foreground uppercase">{q.kind}</div>;
+}
+
+// Schritt-für-Schritt-Hilfe: wie alles automatisch nach Charakter sortiert wird.
+function ArchivHelp() {
+  const steps = [
+    { icon: Upload, t: "1. Medien reinwerfen", d: "Bilder, Videos, Audio oder Texte oben in die Ablage ziehen. Beim Speichern wird jeder Charaktername im Dateinamen automatisch erkannt und zugeordnet — oder du wählst oben einen festen Charakter vor dem Upload." },
+    { icon: User, t: "2. Automatische Sortierung", d: "Extrahierte Stimmen, Video-Frames und Transkripte übernehmen den Charakter der Quelle. Alles landet unten gruppiert nach Charakter — ohne Zuordnung kommt ans Ende." },
+    { icon: Mic, t: "3. Stimmen & Videos", d: "Audio- und Videoquellen einzeln oder in der Auswahl transkribieren. Das Transkript wird selbst eine durchsuchbare Textquelle und bleibt beim selben Charakter." },
+    { icon: Sparkles, t: "4. Weiterverwenden", d: "Aus jeder Quelle direkt ein Bild oder Video erzeugen — das Ergebnis übernimmt denselben Charakter und taucht sofort in seiner Gruppe auf." },
+  ];
+  return (
+    <details className="rounded-2xl border-2 border-primary/30 bg-background/40 p-3">
+      <summary className="cursor-pointer list-none flex items-center gap-1.5 text-[12px] font-bold text-primary">
+        <HelpCircle className="w-4 h-4" /> So sortiert das Archiv automatisch nach Charakteren — Schritt für Schritt
+      </summary>
+      <div className="mt-2 flex flex-col gap-1.5">
+        {steps.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <div key={i} className="flex items-start gap-2 rounded-xl bg-elevated border border-border p-2">
+              <Icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[12px] font-bold text-foreground">{s.t}</p>
+                <p className="text-[11px] text-muted-foreground leading-snug">{s.d}</p>
+              </div>
+            </div>
+          );
+        })}
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1">
+          <User className="w-3.5 h-3.5" /> Tipp: Stimmen und Videos bleiben immer bei ihrem Charakter — auch nach dem Transkribieren.
+        </p>
+      </div>
+    </details>
+  );
 }

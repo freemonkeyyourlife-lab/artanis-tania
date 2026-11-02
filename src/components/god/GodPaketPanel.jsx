@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import {
-  Loader2, Plus, Copy, Check, Trash2, RefreshCw, Power, Link2, CreditCard, Crown, BookOpen,
+  Loader2, Plus, Copy, Check, Trash2, RefreshCw, Power, Link2, CreditCard, Crown, BookOpen, QrCode, MessageSquare, ChevronDown, ChevronUp,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 // Godmode-Paketverwaltung: hier legst du VIP-Abos und Story-Kapitel-Einzelkaeufe
 // an, vergleichst und aenderst die Preise selbst. Pro Paket entsteht ein offener
@@ -25,6 +26,7 @@ export default function GodPaketPanel() {
   const [form, setForm] = useState({ name: "", art: "VIP_ABO", betrag: "", intervall: "MONTH", beschreibung: "" });
   const [editBetrag, setEditBetrag] = useState({});
   const [copied, setCopied] = useState(null);
+  const [qrOpen, setQrOpen] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -235,6 +237,46 @@ export default function GodPaketPanel() {
                     <button onClick={() => newLink(p)} disabled={busy} title="Neuen offenen Link erzeugen" className="w-7 h-7 rounded-full glass-btn flex items-center justify-center text-muted-foreground hover:text-foreground">
                       <RefreshCw className="w-3 h-3" />
                     </button>
+                  </div>
+                )}
+
+                {p.stripeLinkUrl && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setQrOpen(qrOpen === p.id ? null : p.id)}
+                      title="QR-Code anzeigen — zum Scannen am Tisch, auf Flyern oder im Chat"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-btn text-[11px] font-bold text-foreground"
+                    >
+                      <QrCode className="w-3.5 h-3.5" /> QR-Code
+                      {qrOpen === p.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
+                    <a
+                      href={`sms:?&body=${encodeURIComponent(`${p.name} — ${eur(p.betragCents)}${p.wiederkehrend ? " / " + (INTERVALL[p.intervall] || "Monat") : ""}\n${p.stripeLinkUrl}`)}`}
+                      title="Link per SMS verschicken"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-btn text-[11px] font-bold text-foreground"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" /> SMS
+                    </a>
+                    <a
+                      href={p.stripeLinkUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Zahlungsseite öffnen"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-btn text-[11px] font-bold text-foreground"
+                    >
+                      <CreditCard className="w-3.5 h-3.5" /> Öffnen
+                    </a>
+                  </div>
+                )}
+
+                {qrOpen === p.id && p.stripeLinkUrl && (
+                  <div className="flex flex-col items-center gap-2 rounded-2xl bg-background border border-border p-3">
+                    <div className="rounded-xl bg-white p-3">
+                      <QRCodeSVG value={p.stripeLinkUrl} size={156} level="M" />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground text-center leading-snug">
+                      Scannen öffnet die Zahlungsseite — Kreditkarte mit und ohne 3D Secure, mobiles Bezahlen.
+                    </p>
                   </div>
                 )}
 
