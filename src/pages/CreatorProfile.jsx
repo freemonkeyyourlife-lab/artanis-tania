@@ -4,7 +4,9 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { MessageSquare, Heart, Sparkles, Pencil } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
+import ReadAloudButton from "@/components/ReadAloudButton";
 import ContentCard from "@/components/ContentCard";
+import StoryCard from "@/components/StoryCard";
 import CharacterForm from "@/components/studio/CharacterForm";
 import { cn } from "@/lib/utils";
 
@@ -96,6 +98,7 @@ export default function CreatorProfile({ personaType }) {
           </p>
           {creator.tagline && <p className="text-primary text-base font-semibold mt-3">{creator.tagline}</p>}
           <p className="text-sm text-muted-foreground mt-4 max-w-2xl leading-relaxed">{creator.bio}</p>
+          {creator.bio && <div className="mt-2"><ReadAloudButton text={creator.bio} /></div>}
 
           <div className="flex flex-wrap justify-center gap-3 mt-7">
             <button
@@ -171,11 +174,7 @@ export default function CreatorProfile({ personaType }) {
           {tab === "story" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {stories.map((story) => (
-                <div key={story.id} className="p-5 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
-                  <h3 className="font-display text-lg text-foreground">{story.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{story.preview || story.content}</p>
-                  {story.series && <p className="text-xs text-primary mt-3">{story.series} · Ep. {story.episode || 1}</p>}
-                </div>
+                <StoryCard key={story.id} story={story} />
               ))}
               {stories.length === 0 && <p className="text-muted-foreground col-span-2 text-center py-12">Noch keine Storys</p>}
             </div>
