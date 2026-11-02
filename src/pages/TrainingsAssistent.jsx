@@ -22,6 +22,9 @@ import {
   Archive,
   PartyPopper,
   RefreshCw,
+  Cpu,
+  Download,
+  AlertTriangle,
 } from "lucide-react";
 import {
   signUri,
@@ -41,9 +44,12 @@ const STEPS = [
   { n: 1, title: "Sammeln", icon: Upload, hint: "Bilder, Video, Ordner oder Archiv" },
   { n: 2, title: "Zuordnen", icon: Users, hint: "Pool → Person" },
   { n: 3, title: "Auffüllen", icon: Sparkles, hint: "bis 12 pro Person" },
-  { n: 4, title: "Charakter", icon: Wand2, hint: "ziehen & übernehmen" },
-  { n: 5, title: "Fertig", icon: PartyPopper, hint: "ZIP & Charakter" },
+  { n: 4, title: "GPU-Training", icon: Cpu, hint: "LoRA auf RunPod trainieren" },
+  { n: 5, title: "Charakter", icon: Wand2, hint: "ziehen & übernehmen" },
+  { n: 6, title: "Fertig", icon: PartyPopper, hint: "Modell, ZIP & Charakter" },
 ];
+
+const TRAIN_LABEL = { OFFEN: "noch nicht", LÄUFT: "trainiert …", FERTIG: "Modell fertig", FEHLER: "fehlgeschlagen" };
 
 // Geführter Trainings-Assistent: Schritt für Schritt vom Upload bis zum
 // fertigen Charakter — jeder Schritt zeigt, was wo landet und was als
@@ -63,6 +69,7 @@ export default function TrainingsAssistent() {
   const [selected, setSelected] = useState([]);
   const [bulkPerson, setBulkPerson] = useState("");
   const [charIds, setCharIds] = useState({});
+  const [modelUrls, setModelUrls] = useState({});
 
   const load = async () => {
     const items = await loadSets();
@@ -92,9 +99,28 @@ export default function TrainingsAssistent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pool]);
 
+  // Läuft auf der RunPod-GPU ein Job? Alle 15 s nachfassen, bis fertig.
+  useEffect(() => {
+    const running = sets.filter((s) => s.trainStatus === "LÄUFT");
+    if (!running.length) return;
+    const t = setInterval(async () => {
+      for (const s of running) {
+        try {
+          const res = await base44.functions.invoke("runpodStatus", { setId: s.id });
+          if (res?.data?.trainStatus === "FERTIG" || res?.data?.trainStatus === "FEHLER") {
+            await load();
+          }
+        } catch { /* später erneut */ }
+      }
+    }, 15000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sets]);
+
   const totals = useMemo(() => {
     const bilder = sets.reduce((a, s) => a + setTotal(s), 0);
-    return { sets: sets.length, bilder, pool: pool.length };
+    const modelle = sets.filter((s) => s.trainStatus === "FERTIG").length;
+    return { sets: sets.length, bilder, pool: pool.length, modelle };
   }, [sets, pool]);
 
   const reload = async () => { await load(); };
@@ -121,6 +147,7 @@ export default function TrainingsAssistent() {
   // --- Schritt-Übergänge ---
   const underTarget = sets.filter((s) => setMissing(s) > 0);
   const needsRef = sets.filter((s) => setTotal(s) === 0);
+  const readyForGpu = sets.filter((s) => setTotal(s) >= (s.targetCount || 12));
   const readyForChar = sets.filter((s) => setTotal(s) > 0 && s.status !== "TRAINIERT");
   const allTrained = sets.length > 0 && readyForChar.length === 0 && needsRef.length === 0;
 
@@ -128,11 +155,12 @@ export default function TrainingsAssistent() {
     1: totals.pool > 0 || sets.some((s) => setTotal(s) > 0),
     2: pool.length === 0 && sets.some((s) => setTotal(s) > 0),
     3: underTarget.filter((s) => setTotal(s) > 0).length === 0,
-    4: readyForChar.length === 0,
-    5: true,
+    4: readyForGpu.length > 0 && readyForGpu.every((s) => s.trainStatus === "FERTIG" || s.trainStatus === "FEHLER"),
+    5: readyForChar.length === 0,
+    6: true,
   };
 
-  const next = () => setStep((s) => Math.min(5, s + 1));
+  const next = () => setStep((s) => Math.min(6, s + 1));
   const back = () => setStep((s) => Math.max(1, s - 1));
 
   // --- Aktionen ---
@@ -207,7 +235,7 @@ export default function TrainingsAssistent() {
         title: "Durchgelaufen",
         description: `${taken} aus Archiv → ${person}: zugeschnitten, aufgefüllt, Charakter gezogen.`,
       });
-      setStep(5);
+      setStep(6);
     } catch (e) {
       toast({ variant: "destructive", title: "Pipeline abgebrochen", description: e?.message });
     } finally {
@@ -316,6 +344,49 @@ export default function TrainingsAssistent() {
     }
   };
 
+  // --- GPU-Training (RunPod) ---
+  const trainOne = async (s) => {
+    setBusy(true);
+    try {
+      const res = await base44.functions.invoke("runpodTrain", { setId: s.id });
+      if (res?.data?.error) throw new Error(res.data.error);
+      await load();
+      toast({ title: "Auf GPU geschickt", description: `${s.personName} — LoRA-Training läuft auf RunPod.` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Nicht gestartet", description: e?.message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const refreshStatus = async (s) => {
+    try {
+      const res = await base44.functions.invoke("runpodStatus", { setId: s.id });
+      if (res?.data?.error) toast({ variant: "destructive", title: "Status", description: res.data.error });
+      await load();
+    } catch (e) {
+      toast({ variant: "destructive", title: "Fehlgeschlagen", description: e?.message });
+    }
+  };
+
+  const downloadModel = async (s) => {
+    if (!s.modelUri) return;
+    setBusy(true);
+    try {
+      const url = modelUrls[s.id] || (s.modelUri.startsWith("http") ? s.modelUri : await signUri(s.modelUri));
+      if (!url) { toast({ variant: "destructive", title: "Nicht freigebbar" }); return; }
+      if (!modelUrls[s.id]) setModelUrls((m) => ({ ...m, [s.id]: url }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${s.personName || "lora"}.safetensors`;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.click();
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const extractOne = async (s) => {
     setBusy(true);
     try {
@@ -399,7 +470,7 @@ export default function TrainingsAssistent() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="font-display text-4xl text-foreground text-gloss">Trainings-Assistent</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Schritt für Schritt zum fertigen Charakter. Jeder Schritt zeigt, was wo landet.
+        Schritt für Schritt zum fertigen Charakter — inklusive echtem LoRA-Training auf deiner RunPod-GPU.
       </p>
 
       {/* Stepper */}
@@ -433,7 +504,7 @@ export default function TrainingsAssistent() {
           <b className="text-foreground">{STEPS[step - 1].title}:</b>
         )} {STEPS[step - 1].hint}
         <span className="ml-3 text-muted-foreground/70">
-          • {totals.pool} im Pool • {totals.sets} Sets • {totals.bilder} Bilder
+          • {totals.pool} im Pool • {totals.sets} Sets • {totals.bilder} Bilder • {totals.modelle} Modell(e)
         </span>
       </div>
 
@@ -546,7 +617,7 @@ export default function TrainingsAssistent() {
             </div>
             {underTarget.length === 0 ? (
               <p className="rounded-xl bg-elevated p-4 text-sm text-muted-foreground">
-                Alle Sets voll — weiter zu Schritt 4.
+                Alle Sets voll — weiter zu Schritt 4 (GPU-Training).
               </p>
             ) : (
               <ul className="space-y-2">
@@ -579,6 +650,64 @@ export default function TrainingsAssistent() {
         )}
 
         {step === 4 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">
+                Fertige Sets (≥12 Bilder) als echtes LoRA auf deiner RunPod-GPU trainieren. Status wird alle 15 s automatisch aktualisiert.
+              </p>
+            </div>
+            {readyForGpu.length === 0 ? (
+              <p className="rounded-xl bg-elevated p-4 text-sm text-muted-foreground">
+                Noch kein Set bereit — erst in Schritt 3 auf 12 auffüllen.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {readyForGpu.map((s) => {
+                  const t = s.trainStatus || "OFFEN";
+                  return (
+                    <li key={s.id} className="rounded-xl bg-elevated p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span className="text-sm text-foreground">
+                          <b>{s.personName}</b> — {setTotal(s)} Bilder — {TRAIN_LABEL[t] || t}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {t === "FERTIG" && s.modelUri && (
+                            <button onClick={() => downloadModel(s)} disabled={busy}
+                              className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50">
+                              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} .safetensors
+                            </button>
+                          )}
+                          {t === "LÄUFT" && (
+                            <button onClick={() => refreshStatus(s)} disabled={busy}
+                              className="glass-btn inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50">
+                              <RefreshCw className="h-3.5 w-3.5" /> Aktualisieren
+                            </button>
+                          )}
+                          {(t === "OFFEN" || t === "FEHLER") && (
+                            <button onClick={() => trainOne(s)} disabled={busy}
+                              className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50">
+                              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Cpu className="h-3.5 w-3.5" />} Auf GPU trainieren
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {t === "FEHLER" && s.trainError && (
+                        <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-400">
+                          <AlertTriangle className="h-3.5 w-3.5" /> {s.trainError}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Voraussetzung: RunPod-Serverless-Endpoint mit einem LoRA-Handler. Siehe Dashboard → Secrets (RUNPOD_API_KEY, RUNPOD_ENDPOINT_ID).
+            </p>
+          </div>
+        )}
+
+        {step === 5 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm text-muted-foreground">
@@ -622,10 +751,10 @@ export default function TrainingsAssistent() {
           </div>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Fertig — hier sind alle Trainings-Sets. ZIP pro Person laden oder direkt zum Charakter.
+              Fertig — hier sind alle Trainings-Sets. Modell (.safetensors), ZIP pro Person oder direkt zum Charakter.
               {allTrained && " 🎉 Alle trainiert."}
             </p>
             {sets.length === 0 ? (
@@ -635,12 +764,20 @@ export default function TrainingsAssistent() {
                 {sets.map((s) => {
                   const trained = s.status === "TRAINIERT";
                   const cid = charIds[s.id];
+                  const hasModel = s.trainStatus === "FERTIG" && s.modelUri;
                   return (
-                    <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl bg-elevated p-3">
+                    <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-elevated p-3">
                       <span className="text-sm text-foreground">
                         <b>{s.personName}</b> — {setTotal(s)} Bilder — {trained ? "trainiert" : s.status}
+                        {hasModel && <span className="ml-1 text-primary">• LoRA ✓</span>}
                       </span>
                       <div className="flex items-center gap-2">
+                        {hasModel && (
+                          <button onClick={() => downloadModel(s)} disabled={busy}
+                            className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50">
+                            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} Modell
+                          </button>
+                        )}
                         <button onClick={() => downloadZip(s)} disabled={busy}
                           className="glass-btn inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50">
                           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Archive className="h-3.5 w-3.5" />} ZIP
@@ -672,7 +809,7 @@ export default function TrainingsAssistent() {
           className="glass-btn inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm disabled:opacity-40">
           <ArrowLeft className="h-4 w-4" /> Zurück
         </button>
-        {step < 5 ? (
+        {step < 6 ? (
           <button onClick={next} disabled={busy || !canNext[step]}
             className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm disabled:opacity-40">
             Weiter <ArrowRight className="h-4 w-4" />

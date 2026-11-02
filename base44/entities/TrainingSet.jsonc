@@ -45,6 +45,31 @@
     "avatar": {
       "type": "string"
     },
+    "trainJobId": {
+      "type": "string"
+    },
+    "trainStatus": {
+      "type": "string",
+      "enum": [
+        "OFFEN",
+        "L\u00c4UFT",
+        "FERTIG",
+        "FEHLER"
+      ],
+      "default": "OFFEN"
+    },
+    "trainError": {
+      "type": "string"
+    },
+    "trainParams": {
+      "type": "object"
+    },
+    "modelUri": {
+      "type": "string"
+    },
+    "modelUrl": {
+      "type": "string"
+    },
     "order": {
       "type": "number",
       "default": 0
