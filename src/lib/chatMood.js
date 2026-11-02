@@ -1,5 +1,5 @@
 import { base44 } from "@/api/base44Client";
-import { MOODS } from "@/lib/moodStyle";
+import { MOODS, moodVoice } from "@/lib/moodStyle";
 
 // Der Stimmungs-Regler des Chat-Moduls: liest aus dem Gespräch, wo es gerade
 // steht — und übersetzt das in Ton und Bildsprache. Gemerkt wird es am Gerät,
@@ -62,11 +62,15 @@ GESPRÄCH:
   const res = await base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: SCHEMA });
   const data = typeof res === "string" ? JSON.parse(res) : res;
 
+  const moodIds = (data?.moodIds || []).filter((id) => MOODS.some((m) => m.id === id));
   return {
-    moodIds: (data?.moodIds || []).filter((id) => MOODS.some((m) => m.id === id)),
+    moodIds,
     tone: data?.tone || "",
     imageStyle: data?.imageStyle || "",
     summary: data?.summary || "",
+    // Die Stimmung als konkrete Stimmwerte — Tempo, Tonhöhe, Intensität — damit
+    // der Vorleser sie hören lässt, nicht nur beschreibt.
+    voice: moodVoice(moodIds),
     at: new Date().toISOString(),
   };
 }

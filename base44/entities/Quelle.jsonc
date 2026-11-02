@@ -21,6 +21,12 @@
       ],
       "default": "BILD"
     },
+    "characterId": {
+      "type": "string"
+    },
+    "characterName": {
+      "type": "string"
+    },
     "fileUri": {
       "type": "string"
     },

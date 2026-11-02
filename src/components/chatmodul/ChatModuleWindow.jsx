@@ -43,18 +43,21 @@ export default function ChatModuleWindow() {
   };
 
   // Vorlesen: mit Besetzung spricht jede Figur mit ihrer eigenen Stimme.
+  // Die Stimmung des Gesprächs färbt Tempo und Tonhöhe — passend zur Situation.
   const speakReply = (reply) => {
+    const voiceMood = mood?.voice;
     if (cast.length) {
       speakSequence(
         splitCast(reply, cast).map((b) => ({
           text: b.text,
           voiceName: voiceForName(cast, b.name).voiceName || settings.voiceName,
           voiceId: voiceForName(cast, b.name).voiceId || settings.voiceId,
-        }))
+        })),
+        { mood: voiceMood }
       );
       return;
     }
-    speakText(reply, { voiceName: settings.voiceName, voiceId: settings.voiceId });
+    speakText(reply, { voiceName: settings.voiceName, voiceId: settings.voiceId, mood: voiceMood });
   };
 
   // Das Gespräch holen oder anlegen. Ändert sich die Spiegelung, wandert es mit.

@@ -86,19 +86,20 @@ export async function speakText(text, { voiceId, voiceName, mood, onEnd } = {}) 
     return "pool";
   }
 
-  if (speak(clean, voiceName, onEnd, mood?.speed)) return "device";
+  if (speak(clean, voiceName, onEnd, mood?.speed, mood?.pitch)) return "device";
   return null;
 }
 
 // Eine Reihe von Zeilen sprechen — nacheinander, jede mit ihrer eigenen Stimme.
 // So klingt jede Figur wie sie selbst, statt dass alle gleich klingen.
-export async function speakSequence(blocks, { voiceName, voiceId } = {}) {
+export async function speakSequence(blocks, { voiceName, voiceId, mood } = {}) {
   stopAll();
   for (const block of blocks || []) {
     await new Promise((resolve) => {
       speakText(block.text, {
         voiceId: block.voiceId || voiceId,
         voiceName: block.voiceName || voiceName,
+        mood: block.mood || mood,
         onEnd: resolve,
       })
         .then((how) => {

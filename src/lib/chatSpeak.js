@@ -5,7 +5,7 @@ export function listVoices() {
   return window.speechSynthesis.getVoices();
 }
 
-export function speak(text, voiceName, onEnd, rate) {
+export function speak(text, voiceName, onEnd, rate, pitch) {
   const clean = String(text || "").trim();
   if (!clean || typeof window === "undefined" || !window.speechSynthesis) return false;
   window.speechSynthesis.cancel();
@@ -15,8 +15,10 @@ export function speak(text, voiceName, onEnd, rate) {
   // sie fertig ist.
   utter.onend = () => onEnd?.();
   utter.onerror = () => onEnd?.();
-  // Die Stimmung der Figur färbt das Tempo — schneller bei Hitze, ruhiger bei Sanftheit.
-  if (typeof rate === "number" && rate) utter.rate = rate;
+  // Die Stimmung der Figur färbt Tempo und Tonhöhe — schneller und heller bei
+  // Hitze, ruhig und tiefer bei Sanftheit.
+  if (typeof rate === "number" && rate) utter.rate = Math.max(0.5, Math.min(2, rate));
+  if (typeof pitch === "number" && pitch) utter.pitch = Math.max(0, Math.min(2, pitch));
   if (voiceName) {
     const voice = listVoices().find((v) => v.name === voiceName);
     if (voice) {

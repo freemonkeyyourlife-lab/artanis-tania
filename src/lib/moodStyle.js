@@ -11,6 +11,28 @@ export const MOODS = [
   { id: "TABULOS", label: "tabulos", prompt: "Tabulos: keine Grenze in der Sprache. Unverblümt, schamlos und dreckig — sie benennt alles beim Namen." },
 ];
 
+// Jede Stimmung färbt nicht nur die Worte, sondern auch die Stimme: Tempo und
+// Tonhöhe verschieben sich passend zur Situation der Figur. Werte zwischen
+// 0.5 (tief/langsam) und 2 (hell/schnell); 1 ist neutral.
+export const MOOD_VOICE = {
+  SINNLICH: { speed: 0.92, pitch: 0.95, intensity: 0.7 },
+  ERREGT: { speed: 1.18, pitch: 1.15, intensity: 1.0 },
+  ZAERTLICH: { speed: 0.9, pitch: 0.98, intensity: 0.6 },
+  VERSPIELT: { speed: 1.08, pitch: 1.1, intensity: 0.8 },
+  DOMINANT: { speed: 1.0, pitch: 0.9, intensity: 1.0 },
+  HART: { speed: 1.05, pitch: 0.85, intensity: 1.0 },
+  TABULOS: { speed: 1.0, pitch: 1.0, intensity: 0.9 },
+};
+
+// Aus ein bis drei Stimmungen die passenden Stimmwerte mitteln. Ohne Stimmung
+// bleibt alles neutral — die Figur klingt wie sie selbst.
+export function moodVoice(ids) {
+  const list = (ids || []).map((id) => MOOD_VOICE[id]).filter(Boolean);
+  if (!list.length) return null;
+  const avg = (f) => list.reduce((a, v) => a + (v[f] || 0), 0) / list.length;
+  return { speed: avg("speed"), pitch: avg("pitch"), intensity: avg("intensity") };
+}
+
 const KEY = "artanis_mood";
 let cache = null;
 
