@@ -27,7 +27,14 @@ export default async function (req) {
       return Response.json({ error: 'Kein Trainings-Job hinterlegt.' }, { status: 400 });
     }
 
-    const { status, output, error } = await getStatus(set.trainJobId);
+    let status, output, error;
+    try {
+      ({ status, output, error } = await getStatus(set.trainJobId));
+    } catch (e) {
+      // RunPod nicht erreichbar / falsch konfiguriert — kein harter 500,
+      // sondern sauber zurückmelden, damit die Abfrage weiterlaufen kann.
+      return Response.json({ ok: false, trainStatus: 'LÄUFT', transient: true, error: e.message });
+    }
 
     if (status === 'IN_QUEUE' || status === 'IN_PROGRESS') {
       return Response.json({ ok: true, trainStatus: 'LÄUFT', runpod: status });
