@@ -6,6 +6,7 @@ import { isGodMode, subscribeGodMode } from "@/lib/godMode";
 import { getViewAs, setViewAs, subscribeViewAs, testUsers } from "@/lib/viewAs";
 import { useFocus, useFocusTracker } from "@/lib/godFocus";
 import GodLinksRoadmap from "@/components/god/GodLinksRoadmap";
+import GodTrainingsPanel from "@/components/god/GodTrainingsPanel";
 
 // Die Konsole am rechten Rand: sie schreibt mit, auf welcher Seite du bist und
 // worüber deine Maus gerade steht. Du tippst hinein, was du meinst — die Notiz
@@ -100,6 +101,7 @@ export default function GuideConsole() {
           {[
             { key: "notizen", label: "Notizen" },
             { key: "links", label: "Links & Roadmap" },
+            { key: "training", label: "Trainingsdaten" },
           ].map((t) => (
             <button
               key={t.key}
@@ -123,6 +125,8 @@ export default function GuideConsole() {
 
       {tab === "links" ? (
         <GodLinksRoadmap />
+      ) : tab === "training" ? (
+        <GodTrainingsPanel />
       ) : (
       <>
       <div className="px-4 py-3 border-b-2 border-border space-y-2">
