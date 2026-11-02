@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { ArrowLeft, Mic, BookOpen } from "lucide-react";
 import { Image } from "@/components/ui/image";
+import { useSignedImage } from "@/lib/mediaSign";
 import Mischpult from "@/components/charakter/Mischpult";
 import CharacterLogbook from "@/components/charakter/CharacterLogbook";
 import { PALETTE } from "@/lib/palette";
@@ -18,6 +19,8 @@ export default function CharakterDetail() {
   const [modules, setModules] = useState([]);
   const [voices, setVoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const avatarSrc = useSignedImage(character?.avatar);
+  const bgSrc = useSignedImage(character?.backgroundImage);
 
   const load = async () => {
     const c = await base44.entities.Character.get(id).catch(() => null);
@@ -76,10 +79,16 @@ export default function CharakterDetail() {
       </Link>
 
       <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-        <div>
-          {character.avatar ? (
+        <div className="relative">
+          {bgSrc ? (
+            <div
+              className="absolute inset-0 rounded-3xl bg-cover bg-center -z-10"
+              style={{ backgroundImage: `url(${bgSrc})` }}
+            />
+          ) : null}
+          {avatarSrc ? (
             <Image
-              src={character.avatar}
+              src={avatarSrc}
               fittingType="fill"
               className="aspect-[3/4] w-full rounded-3xl"
             />

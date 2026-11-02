@@ -21,6 +21,7 @@ export default function CharacterSheet({ initial, me, onSaved, onCancel }) {
   const [modules, setModules] = useState([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -55,12 +56,27 @@ export default function CharacterSheet({ initial, me, onSaved, onCancel }) {
     if (!file) return;
     setUploading(true);
     try {
-      const res = await base44.integrations.Core.UploadPublicFile({ file });
-      set("avatar", res.file_url);
+      const res = await base44.integrations.Core.UploadPrivateFile({ file });
+      set("avatar", res.file_uri);
     } catch (e) {
       setError("Das Bild konnte nicht hochgeladen werden.");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const pickBackground = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setUploadingBg(true);
+    try {
+      const res = await base44.integrations.Core.UploadPrivateFile({ file });
+      set("backgroundImage", res.file_uri);
+    } catch (e) {
+      setError("Das Hintergrundbild konnte nicht hochgeladen werden.");
+    } finally {
+      setUploadingBg(false);
     }
   };
 
@@ -89,6 +105,7 @@ export default function CharacterSheet({ initial, me, onSaved, onCancel }) {
         voiceId: form.voiceId || "",
         moduleIds: form.moduleIds || [],
         avatar: form.avatar || "",
+        backgroundImage: form.backgroundImage || "",
         images: form.images || [],
       };
       if (initial?.id) await base44.entities.Character.update(initial.id, data);
@@ -220,6 +237,17 @@ export default function CharacterSheet({ initial, me, onSaved, onCancel }) {
               <input type="file" accept="image/*" onChange={pickAvatar} className="hidden" />
             </label>
             {form.avatar && <Image src={form.avatar} fittingType="fill" className="h-20 w-20 rounded-2xl" />}
+          </div>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="mb-1.5 block text-xs text-muted-foreground">Hintergrundbild der Figur</label>
+          <div className="flex items-center gap-3">
+            <label className="glass-btn inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-muted-foreground">
+              <Upload className="h-4 w-4" /> {uploadingBg ? "Lädt …" : "Hintergrund wählen"}
+              <input type="file" accept="image/*" onChange={pickBackground} className="hidden" />
+            </label>
+            {form.backgroundImage && <Image src={form.backgroundImage} fittingType="fill" className="h-20 w-32 rounded-2xl" />}
           </div>
         </div>
       </div>

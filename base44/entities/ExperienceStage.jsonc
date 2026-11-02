@@ -38,6 +38,14 @@
     },
     "overlayText": {
       "type": "string"
+    },
+    "tempo": {
+      "type": "number",
+      "default": 1
+    },
+    "intensity": {
+      "type": "number",
+      "default": 1
     }
   },
   "required": [

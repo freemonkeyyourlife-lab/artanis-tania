@@ -64,6 +64,9 @@
     "avatar": {
       "type": "string"
     },
+    "backgroundImage": {
+      "type": "string"
+    },
     "images": {
       "type": "array",
       "items": {

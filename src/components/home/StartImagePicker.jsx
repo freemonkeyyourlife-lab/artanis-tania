@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Loader2, X, Sparkles, Save, Image as ImageIcon } from "lucide-react";
+import { Loader2, X, Sparkles, Save, Image as ImageIcon, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Jeder Nutzer sucht sich seine eigenen Startbilder aus — aus der Galerie oder
@@ -24,10 +24,24 @@ export default function StartImagePicker({ userId, prefId, current = [], onSaved
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(null);
   const [tab, setTab] = useState("auswahl");
+  const fileRef = useRef(null);
 
   const add = (src, title) => {
     if (images.length >= 7) return;
     setImages((prev) => [...prev, { src, title }]);
+  };
+
+  const upload = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || busy) return;
+    setBusy("up");
+    try {
+      const res = await base44.integrations.Core.UploadPrivateFile({ file });
+      add(res.file_uri, file.name.slice(0, 30));
+    } finally {
+      setBusy(null);
+    }
   };
   const removeAt = (i) => setImages((prev) => prev.filter((_, idx) => idx !== i));
 
@@ -91,9 +105,10 @@ export default function StartImagePicker({ userId, prefId, current = [], onSaved
           )}
         </div>
 
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           <button onClick={() => setTab("auswahl")} className={cn("px-3 py-1 rounded-full text-[12px] font-bold", tab === "auswahl" ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-foreground")}>Aus Galerie wählen</button>
-          <button onClick={() => setTab("generieren")} className={cn("px-3 py-1 rounded-full text-[12px] font-bold", tab === "generieren" ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-foreground")}>Eigenes generieren</button>
+          <button onClick={() => setTab("upload")} className={cn("px-3 py-1 rounded-full text-[12px] font-bold", tab === "upload" ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-foreground")}>Eigenes hochladen</button>
+          <button onClick={() => setTab("generieren")} className={cn("px-3 py-1 rounded-full text-[12px] font-bold", tab === "generieren" ? "glass-btn glass-btn-accent text-gloss" : "glass-btn text-foreground")}>Per KI erstellen</button>
         </div>
 
         {tab === "auswahl" ? (
@@ -112,6 +127,27 @@ export default function StartImagePicker({ userId, prefId, current = [], onSaved
                 </button>
               );
             })}
+          </div>
+        ) : tab === "upload" ? (
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-8 px-4 text-center">
+            <Upload className="w-7 h-7 text-primary" />
+            <p className="text-[12px] text-muted-foreground">Eigenes Bild hochladen (stored privately)</p>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={upload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={busy === "up" || images.length >= 7}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-btn glass-btn-accent text-[13px] font-bold text-gloss disabled:opacity-50"
+            >
+              {busy === "up" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              Datei wählen
+            </button>
+            {images.length >= 7 && <p className="text-[11px] text-muted-foreground">Maximum erreicht — entferne erst ein Bild.</p>}
           </div>
         ) : (
           <div className="flex flex-col gap-2">

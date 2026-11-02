@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { Loader2, BarChart3, TrendingDown, Clock, MessageSquare, Star, Users, ChevronRight, BookOpen } from "lucide-react";
 import StageEditor from "@/components/story/StageEditor";
-import StageQuickAdjust from "@/components/story/StageQuickAdjust";
+import StageIntensitySliders from "@/components/story/StageIntensitySliders";
 
 // Story-Analytics-Dashboard: welche Kapitel am meisten interagiert werden,
 // wo die Nutzer hängen bleiben, und ein Editor der jedes Kapitel sexier oder
@@ -125,7 +125,7 @@ export default function StoryDashboard() {
                     <span className="inline-flex items-center gap-0.5"><BarChart3 className="w-3 h-3" /> {stage.triggerType}</span>
                     {stage.overlayText && <span className="truncate">{stage.overlayText.slice(0, 60)}…</span>}
                   </div>
-                  <StageQuickAdjust
+                  <StageIntensitySliders
                     stage={stage}
                     onSaved={(updated) => setStages((ss) => ss.map((s) => (s.id === updated.id ? { ...s, ...updated } : s)))}
                   />
