@@ -3,9 +3,18 @@ import JSZip from "jszip";
 import { base44 } from "@/api/base44Client";
 import { Upload, FolderUp, Loader2 } from "lucide-react";
 
-// Eine offene Ablage: Bilder und Videos hochladen — einzelne Dateien, ZIPs
-// oder ganze Ordner per Drag-and-Drop. Ordner werden rekursiv durchlaufen
-// (Entry-API), jeder passende Treffer gespeichert. Die Dateien bleiben privat.
+const isImage = (name) => /\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(name || "");
+const isVideo = (name) => /\.(mp4|mov|webm|avi|mkv|m4v)$/i.test(name || "");
+const isZip = (name) => /\.zip$/i.test(name || "");
+const isMedia = (f) =>
+  isImage(f.name) ||
+  isVideo(f.name) ||
+  isZip(f.name) ||
+  (f.type && (f.type.startsWith("image") || f.type.startsWith("video") || f.type === "application/zip"));
+
+// Offene Ablage: Bilder, Videos, ZIPs oder ganze Ordner per Drag-and-Drop.
+// Ordner werden rekursiv durchlaufen (Entry-API) — der Ordnername wird als
+// Personenname mitgegeben, damit Auto-Sortieren ihn direkt einsortiert.
 export default function UploadZone({ onUploaded }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(0);
@@ -21,17 +30,9 @@ export default function UploadZone({ onUploaded }) {
     }
   }, []);
 
-  const isImage = (name) => /\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(name || "");
-  const isVideo = (name) => /\.(mp4|mov|webm|avi|mkv|m4v)$/i.test(name || "");
-  const isZip = (name) => /\.zip$/i.test(name || "");
-  const isMedia = (f) =>
-    isImage(f.name) ||
-    isVideo(f.name) ||
-    isZip(f.name) ||
-    (f.type && (f.type.startsWith("image") || f.type.startsWith("video") || f.type === "application/zip"));
-
   const uploadEntry = async (blob, type, name) => {
-    const file = new File([blob], name || "datei", { type: type === "VIDEO" ? "video/mp4" : "image/jpeg" });
+    const safe = (name || "datei").split(/[\\/]/).pop();
+    const file = new File([blob], safe, { type: type === "VIDEO" ? "video/mp4" : "image/jpeg" });
     const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
     onUploaded(file_uri, type, name);
   };
@@ -41,18 +42,19 @@ export default function UploadZone({ onUploaded }) {
     const entries = Object.values(zip.files).filter((e) => !e.dir && isImage(e.name));
     for (const entry of entries) {
       const blob = await entry.async("blob");
-      await uploadEntry(blob, "IMAGE", entry.name.split("/").pop());
+      await uploadEntry(blob, "IMAGE", entry.name);
     }
   };
 
-  const uploadOne = async (file) => {
+  const uploadOne = async (file, pathName) => {
+    const name = pathName || file.webkitRelativePath || file.name;
     if (isZip(file.name) || file.type === "application/zip") {
       await handleZip(file);
       return;
     }
     const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
     const type = isVideo(file.name) || file.type?.startsWith("video") ? "VIDEO" : "IMAGE";
-    onUploaded(file_uri, type, file.name);
+    onUploaded(file_uri, type, name);
   };
 
   const handle = async (files) => {
@@ -68,13 +70,12 @@ export default function UploadZone({ onUploaded }) {
     setBusy(false);
   };
 
-  // Ganze Ordner rekursiv durchlaufen — Drag-and-Drop via Entry-API.
   const readEntries = (reader) => new Promise((res) => reader.readEntries((e) => res(e), () => res([])));
   const collect = async (entry, acc) => {
     if (!entry) return;
     if (entry.isFile) {
       const file = await new Promise((res, rej) => entry.file(res, rej));
-      acc.push(file);
+      acc.push({ file, path: entry.fullPath || file.name });
     } else if (entry.isDirectory) {
       const reader = entry.createReader();
       let batch = await readEntries(reader);
@@ -94,7 +95,16 @@ export default function UploadZone({ onUploaded }) {
     if (entries.length) {
       const acc = [];
       for (const en of entries) await collect(en, acc);
-      await handle(acc);
+      const list = acc.filter((a) => isMedia(a.file));
+      if (!list.length) { handle(e.dataTransfer.files); return; }
+      setBusy(true);
+      setTotal(list.length);
+      setDone(0);
+      for (const { file, path } of list) {
+        try { await uploadOne(file, path); } catch { /* einzelne Datei überspringen */ }
+        setDone((d) => d + 1);
+      }
+      setBusy(false);
     } else {
       handle(e.dataTransfer.files);
     }
@@ -116,7 +126,7 @@ export default function UploadZone({ onUploaded }) {
         {busy ? `Lade hoch … ${done}/${total || "?"}` : "Bilder, Videos, ZIP oder ganzen Ordner ablegen"}
       </span>
       <span className="text-xs text-muted-foreground">
-        Per Drag & Drop reinziehen — auch ganze Ordner. Alles bleibt privat bei der App.
+        Per Drag & Drop reinziehen — auch ganze Ordner. Der Ordnername wird zur Person.
       </span>
       <div className="mt-2 flex gap-2">
         <button

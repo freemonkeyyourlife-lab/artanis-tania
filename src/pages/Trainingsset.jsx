@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import UploadZone from "@/components/trainingsset/UploadZone";
+import VideoFrameGrabber from "@/components/trainingsset/VideoFrameGrabber";
+import LinkGrabber from "@/components/trainingsset/LinkGrabber";
 import SetCard from "@/components/trainingsset/SetCard";
 import {
   ArrowRight,
@@ -70,7 +72,7 @@ export default function Trainingsset() {
       const map = {};
       for (const p of pool) {
         if (!poolUrls[p.uri] && p.type === "IMAGE") {
-          map[p.uri] = await sign(p.uri);
+          map[p.uri] = p.uri.startsWith("http") ? p.uri : await sign(p.uri);
         }
       }
       if (Object.keys(map).length) setPoolUrls((m) => ({ ...m, ...map }));
@@ -101,6 +103,31 @@ export default function Trainingsset() {
 
   const onUploaded = (uri, type, name) => {
     setPool((p) => [...p, { uri, type, name }]);
+  };
+
+  // Video-Frames kommen direkt in den Pool — der Videoname passt als
+  // Personen-Vorschlag, damit „Sortieren & auffüllen" sie sofort einsortiert.
+  const onFrames = (uris, suggestedName) => {
+    const name = (suggestedName || "Video").trim();
+    setPool((p) => [
+      ...p,
+      ...uris.map((u, i) => ({ uri: u, type: "IMAGE", name: `${name}/frame_${i + 1}.jpg` })),
+    ]);
+    setNewPerson((m) => {
+      const n = { ...m };
+      for (const u of uris) n[u] = name;
+      return n;
+    });
+  };
+
+  // Link-Quellen (Bilder/Videos von fremden Seiten) direkt in den Pool.
+  const onLinks = (items) => {
+    if (!items?.length) return;
+    setPool((p) => [
+      ...p,
+      ...items.map((it) => ({ uri: it.url, type: it.type || "IMAGE", name: it.name || it.url })),
+    ]);
+    toast({ title: "Quellen übernommen", description: `${items.length} Medienlink(s) im Pool.` });
   };
 
   // Pool-Eintrag verwerfen — war versehentlich hochgeladen.
@@ -329,48 +356,110 @@ export default function Trainingsset() {
 
   const allSelected = pool.length > 0 && selected.length === pool.length;
 
-  // Automatisch zuordnen: trifft der Dateiname den Namen einer vorhandenen
-  // Person, landet das Medium direkt in deren Set — der Rest bleibt im Pool.
-  const autoSort = async () => {
-    const byName = {};
+  // Person aus Ordner-/Dateiname ableiten: erstes Pfadsegment = Person.
+  const personFromName = (name) => {
+    const parts = (name || "").split(/[\\/]/).filter(Boolean);
+    if (parts.length > 1) return parts[0].trim();
+    return "";
+  };
+
+  const autoSortCore = async () => {
+    const byPerson = {};
     pool.forEach((p) => {
-      const fn = (p.name || "").toLowerCase();
-      const s = sets.find((x) => fn.includes(x.personName.toLowerCase()));
-      if (s) (byName[s.id] = byName[s.id] || { set: s, items: [] }).items.push(p);
+      let person = personFromName(p.name);
+      if (!person) {
+        const s = sets.find((x) => (p.name || "").toLowerCase().includes(x.personName.toLowerCase()));
+        if (s) person = s.personName;
+      }
+      if (person) (byPerson[person] = byPerson[person] || { items: [] }).items.push(p);
     });
-    const matched = Object.values(byName).flatMap((g) => g.items);
-    if (!matched.length) {
-      toast({
-        title: "Kein Treffer",
-        description: "Kein Dateiname passt zu einer vorhandenen Person — manuell zuordnen.",
-      });
-      return;
+    const matched = Object.values(byPerson).flatMap((g) => g.items);
+    if (!matched.length) return { matched: 0, persons: 0 };
+
+    const created = [...sets];
+    for (const [person, g] of Object.entries(byPerson)) {
+      let target = created.find((s) => s.personName === person);
+      if (!target) {
+        target = await base44.entities.TrainingSet.create({
+          personName: person,
+          name: `Set ${person}`,
+          images: [],
+          generatedImages: [],
+          sourceMedia: [],
+          targetCount: 12,
+        });
+        created.push(target);
+      }
+      const images = [...(target.images || [])];
+      const sourceMedia = [...(target.sourceMedia || [])];
+      let avatar = target.avatar;
+      for (const p of g.items) {
+        if (p.type === "IMAGE") {
+          images.push(p.uri);
+          if (!avatar) avatar = p.uri;
+        } else if (p.type === "VIDEO") {
+          sourceMedia.push(p.uri);
+        }
+      }
+      await base44.entities.TrainingSet.update(target.id, { images, sourceMedia, avatar });
     }
+    setPool((cur) => cur.filter((p) => !matched.includes(p)));
+    return { matched: matched.length, persons: Object.keys(byPerson).length };
+  };
+
+  // Automatisch zuordnen: Ordner-/Dateiname trifft eine Person — sonst Pool.
+  const autoSort = async () => {
     setBusy(true);
     try {
-      for (const id of Object.keys(byName)) {
-        const g = byName[id];
-        const images = [...(g.set.images || [])];
-        const sourceMedia = [...(g.set.sourceMedia || [])];
-        let avatar = g.set.avatar;
-        for (const p of g.items) {
-          if (p.type === "IMAGE") {
-            images.push(p.uri);
-            if (!avatar) avatar = p.uri;
-          } else if (p.type === "VIDEO") {
-            sourceMedia.push(p.uri);
-          }
-        }
-        await base44.entities.TrainingSet.update(id, { images, sourceMedia, avatar });
+      const res = await autoSortCore();
+      if (!res.matched) {
+        toast({
+          title: "Kein Treffer",
+          description: "Lege einen Ordnernamen an oder wähle eine Person manuell.",
+        });
+      } else {
+        await load();
+        toast({ title: "Zugeordnet", description: `${res.matched} Dateien → ${res.persons} Person(en).` });
       }
-      setPool((cur) => cur.filter((p) => !matched.includes(p)));
-      await load();
-      toast({ title: "Zugeordnet", description: `${matched.length} Dateien automatisch zugeordnet` });
     } catch (e) {
       toast({
         variant: "destructive",
         title: "Auto-Sortieren fehlgeschlagen",
         description: e?.message || "Abgebrochen.",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Ein-Klick-Pipeline: Pool sortieren (Ordner-/Dateiname) und alle Sets
+  // mit Referenzbild auffüllen — damit nach dem Upload nichts hängen bleibt.
+  const runPipeline = async () => {
+    setBusy(true);
+    try {
+      await autoSortCore();
+      await load();
+      const page = await base44.entities.TrainingSet.filter(
+        {},
+        { sort: "-created_date", limit: 100 }
+      );
+      const fillable = (page.items || []).filter((s) => {
+        const have = (s.images?.length || 0) + (s.generatedImages?.length || 0);
+        return have > 0 && have < (s.targetCount || 12);
+      });
+      for (const s of fillable) await fillSetCore(s);
+      await load();
+      toast({
+        title: "Pipeline fertig",
+        description: fillable.length
+          ? `Sortiert und ${fillable.length} Set(s) aufgefüllt.`
+          : "Pool sortiert — nichts zum Auffüllen (jedes Set braucht erst ein Bild).",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Pipeline abgebrochen",
+        description: e?.message || "Fehler im Ablauf.",
       });
     } finally {
       setBusy(false);
@@ -443,8 +532,26 @@ export default function Trainingsset() {
         Set auffüllen und daraus einen Charakter ziehen.
       </p>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <UploadZone onUploaded={onUploaded} />
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <button
+          onClick={runPipeline}
+          disabled={busy}
+          className="glass-btn glass-btn-accent inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+          Sortieren & auffüllen
+        </button>
+        <span className="text-xs text-muted-foreground">
+          Ein Klick: Pool einsortieren, alle Sets mit Referenz auffüllen.
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+          <UploadZone onUploaded={onUploaded} />
+          <VideoFrameGrabber onFrames={onFrames} />
+          <LinkGrabber onLinks={onLinks} />
+        </div>
 
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between gap-2">
