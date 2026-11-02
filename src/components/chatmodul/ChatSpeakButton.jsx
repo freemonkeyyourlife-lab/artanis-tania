@@ -4,7 +4,7 @@ import { speakText, stopAll } from "@/lib/chatVoice";
 
 // Liest eine Nachricht vor — nochmal drücken hält sie an. Mit einer Stimme aus
 // dem Pool klingt sie wie im Studio, sonst spricht das Gerät.
-export default function ChatSpeakButton({ text, voiceName, voiceId, accent }) {
+export default function ChatSpeakButton({ text, voiceName, voiceId, accent, mood }) {
   const [state, setState] = useState("idle");
   const timer = useRef(null);
 
@@ -37,6 +37,7 @@ export default function ChatSpeakButton({ text, voiceName, voiceId, accent }) {
       const how = await speakText(text, {
         voiceId,
         voiceName,
+        mood,
         onEnd: () => setState("idle"),
       });
       if (!how) {

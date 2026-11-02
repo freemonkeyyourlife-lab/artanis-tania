@@ -27,23 +27,28 @@ async function loadVoice(id) {
 }
 
 // Die Stimme sprechen lassen und den Ton ablegen — mit denselben Werten, die
-// auch im Studio gelten, damit sie hier genauso klingt.
-async function speakWithVoice(voice, text) {
+// auch im Studio gelten, damit sie hier genauso klingt. Die Stimmung der Figur
+// überschreibt Tempo, Klang und Intensität, wenn sie mitgegeben wird.
+async function speakWithVoice(voice, text, mood) {
+  const tune = cloudTuning(voice);
+  const voiceMood = mood?.mood || voice.mood;
+  const intensity = typeof mood?.intensity === "number" ? mood.intensity : tune.intensity;
+
   if (voice.provider === "ELEVENLABS" && voice.externalVoiceId) {
-    const tune = cloudTuning(voice);
     const res = await base44.functions.invoke("elevenLabs", {
       voiceId: voice.externalVoiceId,
       text,
       speed: tune.apiSpeed,
-      mood: voice.mood,
-      intensity: tune.intensity,
+      mood: voiceMood,
+      intensity,
       ending: voice.ending,
       modelId: voice.modelId,
       tuning: fineTuning(voice),
     });
     if (res.data?.error) throw new Error(res.data.error);
     if (!res.data?.url) throw new Error("Die Stimme kam nicht zurück.");
-    return { url: res.data.url, rate: tune.pitch, volume: playVolume(voice) };
+    const rate = typeof mood?.speed === "number" && mood.speed ? mood.speed : tune.pitch;
+    return { url: res.data.url, rate, volume: playVolume(voice) };
   }
 
   // Eine Grundstimme spricht die Plattform selbst.
@@ -52,17 +57,18 @@ async function speakWithVoice(voice, text) {
     voice: resolveVoice(voice).baseVoice,
   });
   if (!res?.url) throw new Error("Die Stimme kam nicht zurück.");
-  return { url: res.url, rate: resolveVoice(voice).audioRate, volume: playVolume(voice) };
+  const rate = typeof mood?.speed === "number" && mood.speed ? mood.speed : resolveVoice(voice).audioRate;
+  return { url: res.url, rate, volume: playVolume(voice) };
 }
 
-export async function speakText(text, { voiceId, voiceName, onEnd } = {}) {
+export async function speakText(text, { voiceId, voiceName, mood, onEnd } = {}) {
   stopAll();
   const clean = String(text || "").trim();
   if (!clean) return null;
 
   const voice = await loadVoice(voiceId);
   if (voice) {
-    const tone = await speakWithVoice(voice, clean);
+    const tone = await speakWithVoice(voice, clean, mood);
     audio = new Audio(tone.url);
     audio.preservesPitch = false;
     audio.webkitPreservesPitch = false;
@@ -80,7 +86,7 @@ export async function speakText(text, { voiceId, voiceName, onEnd } = {}) {
     return "pool";
   }
 
-  if (speak(clean, voiceName, onEnd)) return "device";
+  if (speak(clean, voiceName, onEnd, mood?.speed)) return "device";
   return null;
 }
 

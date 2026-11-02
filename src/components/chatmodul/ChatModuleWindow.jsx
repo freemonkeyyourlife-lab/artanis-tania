@@ -299,6 +299,7 @@ export default function ChatModuleWindow() {
                           voiceName={voiceForName(cast, b.name).voiceName || settings.voiceName}
                           voiceId={voiceForName(cast, b.name).voiceId || settings.voiceId}
                           accent={settings.accent}
+                          mood={mood?.voice}
                         />
                       </div>
                     ))}
@@ -329,11 +330,12 @@ export default function ChatModuleWindow() {
               </div>
               {!mine && !blocks && (
                 <ChatSpeakButton
-                  text={m.text}
-                  voiceName={settings.voiceName}
-                  voiceId={settings.voiceId}
-                  accent={settings.accent}
-                />
+                   text={m.text}
+                   voiceName={settings.voiceName}
+                   voiceId={settings.voiceId}
+                   accent={settings.accent}
+                   mood={mood?.voice}
+                 />
               )}
               {mine && <User className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />}
             </div>

@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import UploadZone from "@/components/trainingsset/UploadZone";
 import SetCard from "@/components/trainingsset/SetCard";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, Wand2, AlertTriangle, Sparkles } from "lucide-react";
 
 const sign = async (uri) => {
   try {
@@ -119,6 +119,71 @@ export default function Trainingsset() {
     }
   };
 
+  // Ein Set auffüllen — erzeugt ein weiteres Bild derselben Person.
+  const fillSet = async (set) => {
+    setBusy(true);
+    try {
+      const ref = (set.images || [])[0] || (set.generatedImages || [])[0];
+      const refUrls = ref ? [ref.startsWith("http") ? ref : await sign(ref)] : [];
+      const res = await base44.integrations.Core.GenerateImage({
+        prompt:
+          `Porträt einer Person namens ${set.personName}. ` +
+          "Neue Pose, gleiche Person, fotorealistisch, neutraler Hintergrund, gleiches Licht. Erwachsene Person, keine realen Personen.",
+        existing_image_urls: refUrls,
+      });
+      if (res?.url) {
+        const generatedImages = [...(set.generatedImages || []), res.url];
+        const total = (set.images?.length || 0) + generatedImages.length;
+        await base44.entities.TrainingSet.update(set.id, {
+          generatedImages,
+          status: total >= (set.targetCount || 12) ? "BEREIT" : "SAMMLUNG",
+        });
+        await load();
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Automatisch zuordnen: trifft der Dateiname den Namen einer vorhandenen
+  // Person, landet das Medium direkt in deren Set — der Rest bleibt im Pool.
+  const autoSort = async () => {
+    const byName = {};
+    pool.forEach((p) => {
+      const fn = (p.name || "").toLowerCase();
+      const s = sets.find((x) => fn.includes(x.personName.toLowerCase()));
+      if (s) (byName[s.id] = byName[s.id] || { set: s, items: [] }).items.push(p);
+    });
+    const matched = Object.values(byName).flatMap((g) => g.items);
+    if (!matched.length) return;
+    setBusy(true);
+    try {
+      for (const id of Object.keys(byName)) {
+        const g = byName[id];
+        const images = [...(g.set.images || [])];
+        const sourceMedia = [...(g.set.sourceMedia || [])];
+        let avatar = g.set.avatar;
+        for (const p of g.items) {
+          if (p.type === "IMAGE") {
+            images.push(p.uri);
+            if (!avatar) avatar = p.uri;
+          } else if (p.type === "VIDEO") {
+            sourceMedia.push(p.uri);
+          }
+        }
+        await base44.entities.TrainingSet.update(id, { images, sourceMedia, avatar });
+      }
+      setPool((cur) => cur.filter((p) => !matched.includes(p)));
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const underTarget = sets.filter(
+    (s) => (s.images?.length || 0) + (s.generatedImages?.length || 0) < (s.targetCount || 12)
+  );
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="font-display text-4xl text-foreground text-gloss">Trainingsset</h1>
@@ -131,7 +196,19 @@ export default function Trainingsset() {
         <UploadZone onUploaded={onUploaded} />
 
         <section className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="font-heading text-foreground">Pool — noch nicht zugeordnet</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-heading text-foreground">Pool — noch nicht zugeordnet</h2>
+            {pool.length > 0 && (
+              <button
+                onClick={autoSort}
+                disabled={busy}
+                className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                Auto-Sortieren
+              </button>
+            )}
+          </div>
           {pool.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
               Lade Bilder hoch, dann ordne sie hier einer Person zu.
@@ -183,6 +260,53 @@ export default function Trainingsset() {
           )}
         </section>
       </div>
+
+      {(underTarget.length > 0 || pool.length > 0) && (
+        <section className="mt-6 rounded-2xl border-2 border-dashed border-primary/30 bg-card p-4">
+          <h2 className="font-heading text-foreground flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-primary" /> Vorschläge
+          </h2>
+          <ul className="mt-3 space-y-2">
+            {underTarget.map((s) => {
+              const have = (s.images?.length || 0) + (s.generatedImages?.length || 0);
+              const miss = (s.targetCount || 12) - have;
+              return (
+                <li
+                  key={s.id}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-elevated px-3 py-2"
+                >
+                  <span className="text-sm text-foreground">
+                    <b>{s.personName}</b> — {have}/{s.targetCount || 12}, {miss} fehlen
+                  </span>
+                  <button
+                    onClick={() => fillSet(s)}
+                    disabled={busy}
+                    className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50"
+                  >
+                    {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    Auffüllen
+                  </button>
+                </li>
+              );
+            })}
+            {pool.length > 0 && (
+              <li className="flex items-center justify-between gap-3 rounded-xl bg-elevated px-3 py-2">
+                <span className="text-sm text-foreground">
+                  {pool.length} im Pool — automatisch zuordnen?
+                </span>
+                <button
+                  onClick={autoSort}
+                  disabled={busy}
+                  className="glass-btn inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50"
+                >
+                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                  Auto-Sortieren
+                </button>
+              </li>
+            )}
+          </ul>
+        </section>
+      )}
 
       <section className="mt-8 space-y-3">
         <h2 className="font-heading text-foreground">Sets pro Person</h2>
