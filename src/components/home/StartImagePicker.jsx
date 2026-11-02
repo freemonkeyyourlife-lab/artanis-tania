@@ -19,11 +19,36 @@ const GALLERY = [
   { src: "https://media.base44.com/images/public/6aaaf0f2a95eaf5ac21b377f/0097a75a2_generated_image.png", title: "Teaser 3" },
 ];
 
+// Schneidet ein hochgeladenes Bild mittig auf 3:4 zu, damit es verzerrungsfrei
+// in die Hero-Kacheln und den Hintergrund passt.
+async function cropToAspect(file, aspect = 3 / 4) {
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = URL.createObjectURL(file);
+  });
+  const { width: w, height: h } = img;
+  let sw = w, sh = h, sx = 0, sy = 0;
+  if (w / h > aspect) { sw = h * aspect; sx = (w - sw) / 2; }
+  else { sh = w / aspect; sy = (h - sh) / 2; }
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(sw);
+  canvas.height = Math.round(sh);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  URL.revokeObjectURL(img.src);
+  return new Promise((res) =>
+    canvas.toBlob((b) => res(new File([b], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" })), "image/jpeg", 0.92)
+  );
+}
+
 export default function StartImagePicker({ userId, prefId, current = [], onSaved, onClose }) {
   const [images, setImages] = useState(current || []);
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(null);
   const [tab, setTab] = useState("auswahl");
+  const [query, setQuery] = useState("");
   const fileRef = useRef(null);
 
   const add = (src, title) => {
@@ -37,7 +62,8 @@ export default function StartImagePicker({ userId, prefId, current = [], onSaved
     if (!file || busy) return;
     setBusy("up");
     try {
-      const res = await base44.integrations.Core.UploadPrivateFile({ file });
+      const cropped = await cropToAspect(file).catch(() => file);
+      const res = await base44.integrations.Core.UploadPrivateFile({ file: cropped });
       add(res.file_uri, file.name.slice(0, 30));
     } finally {
       setBusy(null);
@@ -112,21 +138,38 @@ export default function StartImagePicker({ userId, prefId, current = [], onSaved
         </div>
 
         {tab === "auswahl" ? (
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
-            {GALLERY.map((g) => {
-              const taken = images.some((i) => i.src === g.src);
+          <div className="flex flex-col gap-2">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Suchen — z. B. Tania, Live, Storys, Chat …"
+              className="w-full px-3 py-2 rounded-xl bg-background border border-border text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+            />
+            {(() => {
+              const q = query.trim().toLowerCase();
+              const hits = q ? GALLERY.filter((g) => g.title.toLowerCase().includes(q)) : GALLERY;
+              if (!hits.length) {
+                return <p className="text-[12px] text-muted-foreground py-3 text-center">Nichts gefunden für „{query}“. Versuch es mit einem anderen Wort oder generiere eigenes.</p>;
+              }
               return (
-                <button
-                  key={g.src}
-                  onClick={() => !taken && add(g.src, g.title)}
-                  disabled={taken || images.length >= 7}
-                  className={cn("relative rounded-lg overflow-hidden aspect-[3/4] border-2 transition-colors", taken ? "border-primary opacity-50" : "border-border hover:border-primary/50")}
-                >
-                  <Image src={g.src} fittingType="fill" className="w-full h-full" />
-                  <span className="absolute bottom-0 left-0 right-0 bg-background/70 text-[9px] font-bold text-foreground px-1 py-0.5 truncate">{taken ? "✓ " : ""}{g.title}</span>
-                </button>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                  {hits.map((g) => {
+                    const taken = images.some((i) => i.src === g.src);
+                    return (
+                      <button
+                        key={g.src}
+                        onClick={() => !taken && add(g.src, g.title)}
+                        disabled={taken || images.length >= 7}
+                        className={cn("relative rounded-lg overflow-hidden aspect-[3/4] border-2 transition-colors", taken ? "border-primary opacity-50" : "border-border hover:border-primary/50")}
+                      >
+                        <Image src={g.src} fittingType="fill" className="w-full h-full" />
+                        <span className="absolute bottom-0 left-0 right-0 bg-background/70 text-[9px] font-bold text-foreground px-1 py-0.5 truncate">{taken ? "✓ " : ""}{g.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               );
-            })}
+            })()}
           </div>
         ) : tab === "upload" ? (
           <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-8 px-4 text-center">

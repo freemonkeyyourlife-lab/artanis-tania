@@ -5,6 +5,7 @@ import { Coins, Plus, X } from "lucide-react";
 import PaymentLinkForm from "@/components/pay/PaymentLinkForm";
 import PaymentLinkCard from "@/components/pay/PaymentLinkCard";
 import PayMessageTemplate from "@/components/pay/PayMessageTemplate";
+import PaketGrid from "@/components/pay/PaketGrid";
 
 export default function PayLinks() {
   const [mine, setMine] = useState([]);
@@ -57,6 +58,14 @@ export default function PayLinks() {
       </div>
 
       <PayMessageTemplate onCreated={load} />
+
+      <section className="mb-10">
+        <h2 className="font-display text-xl text-foreground mb-1">VIP-Stufen & PPV-Kapitel</h2>
+        <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
+          Bezahl direkt per Karte (mit und ohne 3D Secure), scanne den QR-Code oder schick den Link per SMS.
+        </p>
+        <PaketGrid />
+      </section>
 
       <div className="flex flex-wrap gap-3 mb-8">
         {!showForm ? (

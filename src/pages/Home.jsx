@@ -11,6 +11,7 @@ import HeroCloud from "@/components/HeroCloud";
 import HeroNews from "@/components/hero/HeroNews";
 import HomeSearch from "@/components/home/HomeSearch";
 import StartImagePicker from "@/components/home/StartImagePicker";
+import StartBackground from "@/components/home/StartBackground";
 import BrandWordmark from "@/components/BrandWordmark";
 import { Settings2 } from "lucide-react";
 import RequestCard from "@/components/RequestCard";
@@ -157,6 +158,8 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/40" />
           <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-transparent to-transparent" />
         </div>
+
+        <StartBackground images={userPref?.startImages} />
 
         <HeroCloud items={heroItems} />
         {/* Die Bilder lösen sich nach oben und unten in den Hintergrund auf — keine harten Kanten. */}

@@ -54,12 +54,25 @@ async function makeLink(paket) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
+    const body = await req.json().catch(() => ({}));
+    const action = String(body.action || 'list');
+
+    // Oeffentliche Liste aller aktiven Pakete — nur teilbare Felder, kein Admin noetig.
+    if (action === 'publicList') {
+      const page = await base44.entities.Paket.filter({ aktiv: true }, { sort: 'order', limit: 100 });
+      const items = (page.items || []).map((p) => ({
+        id: p.id, name: p.name, art: p.art, beschreibung: p.beschreibung || '',
+        betragCents: p.betragCents, waehrung: p.waehrung || 'EUR',
+        wiederkehrend: p.wiederkehrend, intervall: p.intervall || 'MONTH',
+        stripeLinkUrl: p.stripeLinkUrl || '', stripeLinkActive: p.stripeLinkActive !== false,
+      }));
+      return Response.json({ items });
+    }
+
     const user = await base44.auth.me().catch(() => null);
     if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Nur Admin' }, { status: 403 });
     }
-    const body = await req.json().catch(() => ({}));
-    const action = String(body.action || 'list');
 
     if (action === 'list') {
       const page = await base44.entities.Paket.filter({}, { sort: 'order', limit: 100 });
