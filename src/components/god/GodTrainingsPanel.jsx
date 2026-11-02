@@ -5,9 +5,11 @@ import GodTrainSources from "@/components/god/train/GodTrainSources";
 import GodTrainMultiply from "@/components/god/train/GodTrainMultiply";
 import GodTrainAnbindung from "@/components/god/train/GodTrainAnbindung";
 import GodTrainAnleitung from "@/components/god/train/GodTrainAnleitung";
+import GodTrainArchiv from "@/components/god/train/GodTrainArchiv";
 
 const TABS = [
   { key: "ueber", label: "Übersicht" },
+  { key: "archiv", label: "Archiv" },
   { key: "quellen", label: "Quellen" },
   { key: "mehr", label: "Vervielfältigen" },
   { key: "anbindung", label: "Anbindung" },
@@ -33,6 +35,7 @@ export default function GodTrainingsPanel() {
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {tab === "ueber" && <GodTrainOverview />}
+        {tab === "archiv" && <GodTrainArchiv />}
         {tab === "quellen" && <GodTrainSources />}
         {tab === "mehr" && <GodTrainMultiply />}
         {tab === "anbindung" && <GodTrainAnbindung />}
