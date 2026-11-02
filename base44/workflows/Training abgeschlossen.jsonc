@@ -1,0 +1,42 @@
+{
+  "name": "Training abgeschlossen",
+  "description": "Meldet dir per E-Mail und Telegram, sobald ein Trainings-Datensatz fertig ist",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "TrainingSet",
+      "events": [
+        "update"
+      ]
+    },
+    "condition": "${ .trigger.data.status == \"TRAINIERT\" and .trigger.old_data.status != \"TRAINIERT\" }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "training_abgeschlossen",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "melde_training": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "notifyAdmin",
+            "args": {
+              "title": "Training abgeschlossen",
+              "message": "Trainings-Datensatz f\u00fcr ${ .trigger.data.personName } ist fertig \u2014 zugeschnitten, aufgef\u00fcllt und als Charakter \u00fcbernommen.",
+              "link": "/trainingsset"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Melde abgeschlossenes Training",
+            "description": "E-Mail und Telegram an dich"
+          }
+        }
+      }
+    ]
+  }
+}

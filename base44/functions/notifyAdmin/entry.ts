@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { secrets } from 'base44:runtime';
 
-const APP_URL = "https://artanis-tania-live.base44.app";
+const APP_URL = "https://artanis-tania.base44.app";
 
 // Schickt eine Meldung an alle Admins — aufgerufen von den Automatik-Regeln.
 export default async function (req) {
@@ -42,7 +43,33 @@ export default async function (req) {
       }
     }
 
-    return Response.json({ ok: true, sent });
+    // Zusätzlich aufs Handy: Telegram-Nachricht an den hinterlegten Empfänger.
+    let telegram = false;
+    try {
+      const setups = await base44.asServiceRole.entities.ChannelSetup.list("-created_date", 1);
+      const chatId = String(setups[0]?.telegramChatId || "").trim();
+      if (chatId) {
+        const token = (secrets.get && secrets.get("TELEGRAM_BOT_TOKEN")) || "";
+        if (token) {
+          const tgText =
+            "🖤 " + title + "\n" +
+            (message ? message + "\n" : "") +
+            (link ? "Öffnen: " + APP_URL + link : "");
+          const res = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, text: tgText }),
+          });
+          const data = await res.json();
+          telegram = Boolean(data.ok);
+          if (!data.ok) console.error("notifyAdmin telegram: " + (data.description || "unbekannt"));
+        }
+      }
+    } catch (e) {
+      console.error("notifyAdmin telegram error: " + (e && e.message));
+    }
+
+    return Response.json({ ok: true, sent, telegram });
   } catch (error) {
     console.error("notifyAdmin error: " + (error && error.message));
     return Response.json({ error: error && error.message }, { status: 500 });
