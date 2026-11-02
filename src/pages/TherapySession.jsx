@@ -12,6 +12,7 @@ import SessionPlan from "@/components/therapy/SessionPlan";
 import TherapySummaryCard from "@/components/therapy/TherapySummaryCard";
 import TherapyInviteBar from "@/components/therapy/TherapyInviteBar";
 import TherapySideChat from "@/components/therapy/TherapySideChat";
+import TherapyVisualize from "@/components/therapy/TherapyVisualize";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import TherapyReadButton from "@/components/therapy/TherapyReadButton";
@@ -432,6 +433,9 @@ export default function TherapySession() {
               onRegie={setRegie}
               disabled={sending}
             />
+            {lastAi?.text && (
+              <TherapyVisualize session={session} sceneText={lastAi.text} disabled={sending} />
+            )}
           </div>
         )}
 

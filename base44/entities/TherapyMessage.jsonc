@@ -26,6 +26,20 @@
         "type": "string"
       }
     },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "videos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "channel": {
       "type": "string",
       "enum": [

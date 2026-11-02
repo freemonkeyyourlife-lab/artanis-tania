@@ -1,6 +1,21 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import ChatText from "@/components/chat/ChatText";
+import { Image } from "@/components/ui/image";
+
+function MediaBlock({ msg }) {
+  if (!(msg.images?.length || msg.videos?.length)) return null;
+  return (
+    <div className="flex flex-col gap-2 mb-2">
+      {msg.images?.map((src, i) => (
+        <Image key={`img-${i}`} src={src} className="w-full rounded-2xl" />
+      ))}
+      {msg.videos?.map((src, i) => (
+        <video key={`vid-${i}`} src={src} controls playsInline className="w-full rounded-2xl" />
+      ))}
+    </div>
+  );
+}
 
 const label = (msg) => {
   if (msg.senderType === "AI") return msg.senderName || "Tania";
@@ -33,6 +48,7 @@ export default function TherapyThread({ messages }) {
               >
                 {label(msg)}
               </p>
+              <MediaBlock msg={msg} />
               <div
                 className={cn(
                   "px-4 py-3 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap",
