@@ -64,6 +64,18 @@ export default async function (req) {
     const char = chars.find((c) => c.name && c.name.toLowerCase() === (set.personName || '').toLowerCase());
     appearance = char?.appearance || '';
 
+    // Ohne Referenzbild UND ohne Aussehen-Beschreibung wuerden nur sinnlose
+    // Bilder entstehen — dann nicht erzeugen, sondern abbrechen mit Hinweis.
+    if (!refUrl && !appearance) {
+      return Response.json({
+        ok: false,
+        reason: 'no_reference',
+        message: 'Kein Referenzbild und kein Aussehen hinterlegt — bitte erst ein echtes Bild zuordnen.',
+        total,
+        status: set.status || 'SAMMLUNG',
+      });
+    }
+
     const toGen = Math.min(need, CAP);
     const newGen = [...genImages];
     for (let i = 0; i < toGen; i++) {

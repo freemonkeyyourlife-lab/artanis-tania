@@ -17,7 +17,9 @@ const sign = async (uri) => {
 };
 
 // Ein Set pro Person: eigene Bilder, erzeugte Bilder, Status und Aktionen.
-export default function SetCard({ set, onChanged, onExtract }) {
+// Auffüllen braucht mindestens ein echtes Bild als Referenz — sonst entstehen
+// sinnlose Bilder. Ein falsches Set lässt sich löschen.
+export default function SetCard({ set, onChanged, onExtract, onDelete }) {
   const [urls, setUrls] = useState({});
   const [busy, setBusy] = useState(false);
 
@@ -36,12 +38,14 @@ export default function SetCard({ set, onChanged, onExtract }) {
   const generated = (set.generatedImages || []).length;
   const target = set.targetCount || 12;
   const ready = count + generated >= target;
+  const noRef = count === 0 && generated === 0;
 
   const fill = async () => {
+    if (noRef) return;
     setBusy(true);
     try {
       const ref = (set.images || [])[0] || (set.generatedImages || [])[0];
-      const refUrls = ref ? [urls[ref] || (ref.startsWith("http") ? ref : await sign(ref))] : [];
+      const refUrls = [urls[ref] || (ref.startsWith("http") ? ref : await sign(ref))];
       const res = await base44.integrations.Core.GenerateImage({
         prompt:
           `Porträt einer Person namens ${set.personName}. ` +
@@ -106,12 +110,14 @@ export default function SetCard({ set, onChanged, onExtract }) {
             <span className={ready ? "text-emerald-400" : "text-amber-400"}>
               {ready ? "bereit" : "zu wenig"}
             </span>
+            {noRef && <span className="ml-1 text-amber-400">— erst Bild zuordnen</span>}
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={fill}
-            disabled={busy || (count === 0 && generated === 0)}
+            disabled={busy || noRef}
+            title={noRef ? "Erst ein Bild zuordnen, dann auffüllen" : "Set auffüllen"}
             className="glass-btn inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
@@ -125,12 +131,21 @@ export default function SetCard({ set, onChanged, onExtract }) {
           </button>
           <button
             onClick={exportZip}
-            disabled={busy || (count === 0 && generated === 0)}
+            disabled={busy || noRef}
             className="glass-btn inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
             Als ZIP
           </button>
+          {onDelete && (
+            <button
+              onClick={() => onDelete(set)}
+              title="Set löschen"
+              className="glass-btn inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

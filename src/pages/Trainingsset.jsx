@@ -3,7 +3,17 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import UploadZone from "@/components/trainingsset/UploadZone";
 import SetCard from "@/components/trainingsset/SetCard";
-import { ArrowRight, Loader2, Wand2, AlertTriangle, Sparkles, Archive } from "lucide-react";
+import {
+  ArrowRight,
+  Loader2,
+  Wand2,
+  AlertTriangle,
+  Sparkles,
+  Archive,
+  Trash2,
+  Lock,
+  Zap,
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import JSZip from "jszip";
 
@@ -20,9 +30,14 @@ const sign = async (uri) => {
 };
 
 // Trainingsset: Upload von überall → pro Person sortieren → bei zu wenig
-// Bildern Set auffüllen → daraus einen Charakter ziehen.
+// Bildern Set auffüllen → daraus einen Charakter ziehen. Keine Sackgasse:
+// Pool-Einträge lassen sich entfernen, leere Sets löschen, Auffüllen braucht
+// ein Referenzbild (sonst entstehen sinnlose Bilder), Charaktere werden nicht
+// doppelt angelegt.
 export default function Trainingsset() {
   const { toast } = useToast();
+  const [me, setMe] = useState(null);
+  const [meLoading, setMeLoading] = useState(true);
   const [pool, setPool] = useState([]);
   const [poolUrls, setPoolUrls] = useState({});
   const [sets, setSets] = useState([]);
@@ -42,6 +57,11 @@ export default function Trainingsset() {
   };
 
   useEffect(() => {
+    base44.auth
+      .me()
+      .then((u) => setMe(u))
+      .catch(() => setMe(null))
+      .finally(() => setMeLoading(false));
     load().catch(() => setLoading(false));
   }, []);
 
@@ -57,9 +77,53 @@ export default function Trainingsset() {
     })();
   }, [pool]);
 
+  if (meLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Trainingssets sind admin-only (RLS) — ohne Admin-Rechte geht hier nichts.
+  if (!me || me.role !== "admin") {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <Lock className="mx-auto h-8 w-8 text-muted-foreground" />
+        <h1 className="mt-3 font-display text-2xl text-foreground">Nur für Admin</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Trainingssets lassen sich nur mit Admin-Rechten ansehen und bearbeiten.
+          Melde dich als Admin an.
+        </p>
+      </div>
+    );
+  }
+
   const onUploaded = (uri, type, name) => {
     setPool((p) => [...p, { uri, type, name }]);
   };
+
+  // Pool-Eintrag verwerfen — war versehentlich hochgeladen.
+  const removePool = (uri) => {
+    setPool((p) => p.filter((x) => x.uri !== uri));
+    setSelected((s) => s.filter((x) => x !== uri));
+    setNewPerson((m) => {
+      const n = { ...m };
+      delete n[uri];
+      return n;
+    });
+  };
+
+  const ensureSet = async (person) =>
+    sets.find((s) => s.personName === person) ||
+    (await base44.entities.TrainingSet.create({
+      personName: person,
+      name: `Set ${person}`,
+      images: [],
+      generatedImages: [],
+      sourceMedia: [],
+      targetCount: 12,
+    }));
 
   const assignOne = async (uri) => {
     const person = (newPerson[uri] || "").trim();
@@ -67,17 +131,7 @@ export default function Trainingsset() {
     const item = pool.find((p) => p.uri === uri);
     setBusy(true);
     try {
-      let target = sets.find((s) => s.personName === person);
-      if (!target) {
-        target = await base44.entities.TrainingSet.create({
-          personName: person,
-          name: `Set ${person}`,
-          images: [],
-          generatedImages: [],
-          sourceMedia: [],
-          targetCount: 12,
-        });
-      }
+      const target = await ensureSet(person);
       const images =
         item.type === "IMAGE" ? [...(target.images || []), uri] : target.images || [];
       const sourceMedia =
@@ -87,12 +141,7 @@ export default function Trainingsset() {
         sourceMedia,
         avatar: target.avatar || (item.type === "IMAGE" ? uri : target.avatar),
       });
-      setPool((p) => p.filter((x) => x.uri !== uri));
-      setNewPerson((m) => {
-        const n = { ...m };
-        delete n[uri];
-        return n;
-      });
+      removePool(uri);
       await load();
       toast({ title: "Zugeordnet", description: `${item.name || "Datei"} → ${person}` });
     } catch (e) {
@@ -106,6 +155,8 @@ export default function Trainingsset() {
     }
   };
 
+  // Aus einem Set einen Charakter ziehen — vorhandenen aktualisieren statt
+  // doppelt anzulegen.
   const extract = async (set) => {
     setBusy(true);
     try {
@@ -120,43 +171,118 @@ export default function Trainingsset() {
         });
         appearance = typeof r === "string" ? r : String(r || "");
       }
-      await base44.entities.Character.create({
-        name: set.personName,
-        adultAge: 25,
-        appearance,
-        avatar: refUri || "",
-        images: set.images || [],
-        fictional: true,
-        createdByRole: "DAVID",
-      });
+      const page = await base44.entities.Character.filter(
+        { name: set.personName },
+        { limit: 1 }
+      );
+      const existing = (page.items || [])[0];
+      if (existing) {
+        await base44.entities.Character.update(existing.id, {
+          appearance: appearance || existing.appearance,
+          avatar: refUri || existing.avatar,
+          images: Array.from(
+            new Set([...(existing.images || []), ...(set.images || [])])
+          ),
+        });
+        toast({ title: "Charakter aktualisiert", description: set.personName });
+      } else {
+        await base44.entities.Character.create({
+          name: set.personName,
+          adultAge: 25,
+          appearance,
+          avatar: refUri || "",
+          images: set.images || [],
+          fictional: true,
+          createdByRole: "DAVID",
+        });
+        toast({ title: "Charakter angelegt", description: set.personName });
+      }
       await base44.entities.TrainingSet.update(set.id, { status: "BEREIT" });
       await load();
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Fehlgeschlagen",
+        description: e?.message || "Charakter konnte nicht gezogen werden.",
+      });
     } finally {
       setBusy(false);
     }
   };
 
-  // Ein Set auffüllen — erzeugt ein weiteres Bild derselben Person.
+  // Kern des Auffüllens — erzeugt ein passendes Bild derselben Person.
+  // Ohne Referenzbild wird nichts erzeugt (sonst entstehen sinnlose Bilder).
+  const fillSetCore = async (set) => {
+    const ref = (set.images || [])[0] || (set.generatedImages || [])[0];
+    if (!ref) return false;
+    const refUrls = [ref.startsWith("http") ? ref : await sign(ref)];
+    const res = await base44.integrations.Core.GenerateImage({
+      prompt:
+        `Porträt einer Person namens ${set.personName}. ` +
+        "Neue Pose, gleiche Person, fotorealistisch, neutraler Hintergrund, gleiches Licht. Erwachsene Person, keine realen Personen.",
+      existing_image_urls: refUrls,
+    });
+    if (res?.url) {
+      const generatedImages = [...(set.generatedImages || []), res.url];
+      const total = (set.images?.length || 0) + generatedImages.length;
+      await base44.entities.TrainingSet.update(set.id, {
+        generatedImages,
+        status: total >= (set.targetCount || 12) ? "BEREIT" : "SAMMLUNG",
+      });
+      return true;
+    }
+    return false;
+  };
+
   const fillSet = async (set) => {
+    const have = (set.images?.length || 0) + (set.generatedImages?.length || 0);
+    if (have === 0) {
+      toast({
+        variant: "destructive",
+        title: "Kein Referenzbild",
+        description: "Ordne erst mindestens ein echtes Bild zu — sonst entstehen sinnlose Bilder.",
+      });
+      return;
+    }
     setBusy(true);
     try {
-      const ref = (set.images || [])[0] || (set.generatedImages || [])[0];
-      const refUrls = ref ? [ref.startsWith("http") ? ref : await sign(ref)] : [];
-      const res = await base44.integrations.Core.GenerateImage({
-        prompt:
-          `Porträt einer Person namens ${set.personName}. ` +
-          "Neue Pose, gleiche Person, fotorealistisch, neutraler Hintergrund, gleiches Licht. Erwachsene Person, keine realen Personen.",
-        existing_image_urls: refUrls,
+      await fillSetCore(set);
+      await load();
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Auffüllen fehlgeschlagen",
+        description: e?.message || "Bild-Generierung nicht verfügbar.",
       });
-      if (res?.url) {
-        const generatedImages = [...(set.generatedImages || []), res.url];
-        const total = (set.images?.length || 0) + generatedImages.length;
-        await base44.entities.TrainingSet.update(set.id, {
-          generatedImages,
-          status: total >= (set.targetCount || 12) ? "BEREIT" : "SAMMLUNG",
-        });
-        await load();
-      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Alle unterfüllten Sets auf einmal auffüllen — aber nur die mit Referenzbild.
+  const fillAll = async () => {
+    const fillable = underTarget.filter(
+      (s) => (s.images?.length || 0) + (s.generatedImages?.length || 0) > 0
+    );
+    if (!fillable.length) {
+      toast({
+        variant: "destructive",
+        title: "Nichts aufzufüllen",
+        description: "Jedes Set braucht erst ein echtes Bild als Referenz.",
+      });
+      return;
+    }
+    setBusy(true);
+    try {
+      for (const s of fillable) await fillSetCore(s);
+      await load();
+      toast({ title: "Aufgefüllt", description: `${fillable.length} Sets ergänzt.` });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Auffüllen fehlgeschlagen",
+        description: e?.message || "Abgebrochen.",
+      });
     } finally {
       setBusy(false);
     }
@@ -169,17 +295,7 @@ export default function Trainingsset() {
     if (!person || !items.length) return;
     setBusy(true);
     try {
-      let target = sets.find((s) => s.personName === person);
-      if (!target) {
-        target = await base44.entities.TrainingSet.create({
-          personName: person,
-          name: `Set ${person}`,
-          images: [],
-          generatedImages: [],
-          sourceMedia: [],
-          targetCount: 12,
-        });
-      }
+      const target = await ensureSet(person);
       const images = [...(target.images || [])];
       const sourceMedia = [...(target.sourceMedia || [])];
       let avatar = target.avatar;
@@ -223,7 +339,13 @@ export default function Trainingsset() {
       if (s) (byName[s.id] = byName[s.id] || { set: s, items: [] }).items.push(p);
     });
     const matched = Object.values(byName).flatMap((g) => g.items);
-    if (!matched.length) return;
+    if (!matched.length) {
+      toast({
+        title: "Kein Treffer",
+        description: "Kein Dateiname passt zu einer vorhandenen Person — manuell zuordnen.",
+      });
+      return;
+    }
     setBusy(true);
     try {
       for (const id of Object.keys(byName)) {
@@ -243,6 +365,13 @@ export default function Trainingsset() {
       }
       setPool((cur) => cur.filter((p) => !matched.includes(p)));
       await load();
+      toast({ title: "Zugeordnet", description: `${matched.length} Dateien automatisch zugeordnet` });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Auto-Sortieren fehlgeschlagen",
+        description: e?.message || "Abgebrochen.",
+      });
     } finally {
       setBusy(false);
     }
@@ -277,6 +406,26 @@ export default function Trainingsset() {
         a.click();
         URL.revokeObjectURL(a.href);
       }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Set samt Eintrag löschen — aus einer falschen Person wird keine Sackgasse.
+  const deleteSet = async (set) => {
+    if (!set?.id) return;
+    if (!window.confirm(`Set „${set.personName}" wirklich löschen? Bilder bleiben im Archiv.`)) return;
+    setBusy(true);
+    try {
+      await base44.entities.TrainingSet.delete(set.id);
+      await load();
+      toast({ title: "Gelöscht", description: `Set ${set.personName} entfernt.` });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Löschen fehlgeschlagen",
+        description: e?.message || "Abgebrochen.",
+      });
     } finally {
       setBusy(false);
     }
@@ -388,6 +537,13 @@ export default function Trainingsset() {
                     )}
                     Zu
                   </button>
+                  <button
+                    onClick={() => removePool(p.uri)}
+                    title="Aus dem Pool entfernen"
+                    className="rounded-full bg-black/40 p-1.5 text-white hover:bg-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -397,13 +553,26 @@ export default function Trainingsset() {
 
       {(underTarget.length > 0 || pool.length > 0) && (
         <section className="mt-6 rounded-2xl border-2 border-dashed border-primary/30 bg-card p-4">
-          <h2 className="font-heading text-foreground flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-primary" /> Vorschläge
-          </h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-heading text-foreground flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-primary" /> Vorschläge
+            </h2>
+            {underTarget.length > 0 && (
+              <button
+                onClick={fillAll}
+                disabled={busy}
+                className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                Alle auffüllen
+              </button>
+            )}
+          </div>
           <ul className="mt-3 space-y-2">
             {underTarget.map((s) => {
               const have = (s.images?.length || 0) + (s.generatedImages?.length || 0);
               const miss = (s.targetCount || 12) - have;
+              const noRef = have === 0;
               return (
                 <li
                   key={s.id}
@@ -411,10 +580,13 @@ export default function Trainingsset() {
                 >
                   <span className="text-sm text-foreground">
                     <b>{s.personName}</b> — {have}/{s.targetCount || 12}, {miss} fehlen
+                    {noRef && (
+                      <span className="ml-1 text-amber-400">(erst Bild zuordnen)</span>
+                    )}
                   </span>
                   <button
                     onClick={() => fillSet(s)}
-                    disabled={busy}
+                    disabled={busy || noRef}
                     className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50"
                   >
                     {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
@@ -464,7 +636,13 @@ export default function Trainingsset() {
           </p>
         ) : (
           sets.map((s) => (
-            <SetCard key={s.id} set={s} onChanged={load} onExtract={extract} />
+            <SetCard
+              key={s.id}
+              set={s}
+              onChanged={load}
+              onExtract={extract}
+              onDelete={deleteSet}
+            />
           ))
         )}
       </section>
