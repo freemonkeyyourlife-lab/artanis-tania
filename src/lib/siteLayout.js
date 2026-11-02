@@ -20,6 +20,7 @@ export const DEFAULT_MENU = [
   { id: "library", label: "Bibliothek", path: "/library", hidden: false },
   { id: "planung", label: "Content-Planer", path: "/planung", hidden: false },
   { id: "owner", label: "Besitzer-Konsole", path: "/owner", hidden: false },
+  { id: "hilfe", label: "Hilfe & Wegweiser", path: "/hilfe", hidden: false },
 ];
 
 export const DEFAULT_FONT = { size: 15, weight: 700, gap: 8 };
