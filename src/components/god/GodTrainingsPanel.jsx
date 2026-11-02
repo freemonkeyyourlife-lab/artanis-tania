@@ -8,8 +8,10 @@ import GodTrainAnleitung from "@/components/god/train/GodTrainAnleitung";
 import GodTrainArchiv from "@/components/god/train/GodTrainArchiv";
 import GodTrainPaket from "@/components/god/train/GodTrainPaket";
 import GodTrainVideo from "@/components/god/train/GodTrainVideo";
+import GodTrainAutoExtract from "@/components/god/train/GodTrainAutoExtract";
 
 const TABS = [
+  { key: "auto", label: "Auto-Extraktor" },
   { key: "paket", label: "Paket" },
   { key: "video", label: "Video" },
   { key: "ueber", label: "Übersicht" },
@@ -23,7 +25,7 @@ const TABS = [
 // Werkstatt im Godmode: die ganze Trainingsdaten-Steuerung in einem Reiter —
 // Verzeichnis, Quellen-Suche, Vervielfältigung, ZIP, Anbindung, Anleitung.
 export default function GodTrainingsPanel() {
-  const [tab, setTab] = useState("paket");
+  const [tab, setTab] = useState("auto");
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-wrap gap-1 px-3 py-2 border-b-2 border-border">
@@ -38,6 +40,7 @@ export default function GodTrainingsPanel() {
         ))}
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
+        {tab === "auto" && <GodTrainAutoExtract />}
         {tab === "paket" && <GodTrainPaket />}
         {tab === "video" && <GodTrainVideo />}
         {tab === "ueber" && <GodTrainOverview />}
