@@ -9,9 +9,11 @@ import GodTrainArchiv from "@/components/god/train/GodTrainArchiv";
 import GodTrainPaket from "@/components/god/train/GodTrainPaket";
 import GodTrainVideo from "@/components/god/train/GodTrainVideo";
 import GodTrainAutoExtract from "@/components/god/train/GodTrainAutoExtract";
+import GodTrainMassImport from "@/components/god/train/GodTrainMassImport";
 
 const TABS = [
   { key: "auto", label: "Auto-Extraktor" },
+  { key: "massen", label: "Massen-Import" },
   { key: "paket", label: "Paket" },
   { key: "video", label: "Video" },
   { key: "ueber", label: "Übersicht" },
@@ -41,6 +43,7 @@ export default function GodTrainingsPanel() {
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {tab === "auto" && <GodTrainAutoExtract />}
+        {tab === "massen" && <GodTrainMassImport />}
         {tab === "paket" && <GodTrainPaket />}
         {tab === "video" && <GodTrainVideo />}
         {tab === "ueber" && <GodTrainOverview />}

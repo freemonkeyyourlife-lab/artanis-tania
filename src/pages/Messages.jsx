@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Send, Play, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Phone, Loader2, Banknote, Cast } from "lucide-react";
+import NarratorAvatar3D from "@/components/narrator/NarratorAvatar3D";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -1485,11 +1486,12 @@ export default function Messages() {
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-display text-primary">{(dmParticipantName || "?")[0]}</div>
                 ) : (
                   <Link to={`/creator/${activeChat}`} title="Profil ansehen" className="flex-shrink-0">
-                    {creators.find(c => c.id === activeChat)?.avatar ? (
-                      <Image src={creators.find(c => c.id === activeChat).avatar} fittingType="fit" className="w-14 h-14 rounded-full bg-elevated transition-opacity hover:opacity-80" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-display text-primary">{creators.find(c => c.id === activeChat)?.stageName[0]}</div>
-                    )}
+                    <NarratorAvatar3D
+                      narrator={{ name: creators.find(c => c.id === activeChat)?.stageName || "Charakter", avatar: creators.find(c => c.id === activeChat)?.avatar }}
+                      speaking={sending}
+                      size={56}
+                      showName={false}
+                    />
                   </Link>
                 )}
                 <div className="flex-1 min-w-0">

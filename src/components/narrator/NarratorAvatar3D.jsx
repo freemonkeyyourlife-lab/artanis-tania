@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 // Die Erzählerin, sichtbar und lebendig: ein realistisches Porträt auf einer
 // 3D-Ebene, das dem Zeiger folgt, sanft atmet und beim Sprechen pulsiert.
 // Kein totes Bild — sie bewegt sich, als stünde sie echt im Raum.
-export default function NarratorAvatar3D({ narrator, speaking, size = 220 }) {
+export default function NarratorAvatar3D({ narrator, speaking, size = 220, showName = true }) {
   const ref = useRef(null);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -72,12 +72,14 @@ export default function NarratorAvatar3D({ narrator, speaking, size = 220 }) {
           />
         </motion.div>
       </motion.div>
-      <div className="text-center" style={{ transform: "translateZ(40px)" }}>
-        <p className="text-[14px] font-bold text-foreground">{name}</p>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-primary">
-          {speaking ? "erzählt …" : "Erzählerin"}
-        </p>
-      </div>
+      {showName && (
+        <div className="text-center" style={{ transform: "translateZ(40px)" }}>
+          <p className="text-[14px] font-bold text-foreground">{name}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-primary">
+            {speaking ? "erzählt …" : "Erzählerin"}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
