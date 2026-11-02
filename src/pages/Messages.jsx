@@ -20,7 +20,7 @@ import StoryExportButton from "@/components/chat/StoryExportButton";
 import ChatPromptButton from "@/components/chat/ChatPromptButton";
 import ChatCastMenu from "@/components/chat/ChatCastMenu";
 import MoodQuickMenu from "@/components/chat/MoodQuickMenu";
-import { moodFor, setMoodFor, moodPrompt } from "@/lib/moodStyle";
+import { moodFor, setMoodFor, moodPrompt, moodVoice } from "@/lib/moodStyle";
 import { takePendingMood, setSceneNote, sceneNotePrompt, setVoiceOverride, voiceOverrideFor } from "@/lib/moodMode";
 import { speechPrompt, styleFor, setStyleFor, SPEECH_STYLES } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
@@ -456,7 +456,7 @@ export default function Messages() {
     const override = c?.id ? voiceOverrideFor(c.id) : null;
     return override ? { ...base, ...override } : base;
   };
-  const readScene = (text, speakerName, key) => playScene(splitScene(text, speakerName), voiceForName(speakerName), key);
+  const readScene = (text, speakerName, key) => playScene(splitScene(text, speakerName), voiceForName(speakerName), key, moodVoice(moods));
   // Jede neue Zeile wird von selbst vorgelesen — solange Vorlesen an ist.
   const autoRead = (chatKey, text, speakerName, key) => {
     if (!text || chatKey !== activeChatRef.current || !voiceNotesOn(chatKey, true)) return;

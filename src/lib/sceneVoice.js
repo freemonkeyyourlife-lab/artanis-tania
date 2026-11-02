@@ -47,13 +47,17 @@ export function stopScene() {
   emit();
 }
 
-function playOne(url, profile) {
+function playOne(url, profile, mood) {
   return new Promise((resolve) => {
     const a = new Audio(url);
-    const rate = profile?.provider === "ELEVENLABS" ? cloudTuning(profile).pitch : resolveVoice(profile).audioRate;
+    const baseRate = profile?.provider === "ELEVENLABS" ? cloudTuning(profile).pitch : resolveVoice(profile).audioRate;
+    // Die Stimmung der Figur färbt Tempo und Tonhöhe — schneller und heller bei
+    // Hitze, ruhig und tiefer bei Sanftheit. preservesPitch=false lässt die
+    // Tonhöhe dem Tempo folgen, deshalb reicht ein Regler für beide.
+    const moodSpeed = typeof mood?.speed === "number" && mood.speed ? mood.speed : 1;
     a.preservesPitch = false;
     a.webkitPreservesPitch = false;
-    a.playbackRate = Math.max(0.5, Math.min(2, rate));
+    a.playbackRate = Math.max(0.5, Math.min(2, baseRate * moodSpeed));
     a.volume = playVolume(profile);
     a.onended = () => resolve();
     a.onerror = () => resolve();
@@ -65,7 +69,7 @@ function playOne(url, profile) {
 
 // Alle Abschnitte nacheinander — jede Figur mit ihrer eigenen Stimme. Die
 // Stimmen werden schon im Voraus erzeugt, damit kaum Pausen entstehen.
-export async function playScene(segments, voiceFor, key = "scene") {
+export async function playScene(segments, voiceFor, key = "scene", mood) {
   stopScene();
   if (!segments.length) return;
   const mine = token;
@@ -78,7 +82,7 @@ export async function playScene(segments, voiceFor, key = "scene") {
   for (const job of jobs) {
     const { url, profile } = await job;
     if (mine !== token) return;
-    if (url) await playOne(url, profile);
+    if (url) await playOne(url, profile, mood);
     if (mine !== token) return;
   }
   playingKey = null;

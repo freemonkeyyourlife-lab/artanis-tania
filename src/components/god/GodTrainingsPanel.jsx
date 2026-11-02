@@ -6,8 +6,10 @@ import GodTrainMultiply from "@/components/god/train/GodTrainMultiply";
 import GodTrainAnbindung from "@/components/god/train/GodTrainAnbindung";
 import GodTrainAnleitung from "@/components/god/train/GodTrainAnleitung";
 import GodTrainArchiv from "@/components/god/train/GodTrainArchiv";
+import GodTrainPaket from "@/components/god/train/GodTrainPaket";
 
 const TABS = [
+  { key: "paket", label: "Paket" },
   { key: "ueber", label: "Übersicht" },
   { key: "archiv", label: "Archiv" },
   { key: "quellen", label: "Quellen" },
@@ -19,7 +21,7 @@ const TABS = [
 // Werkstatt im Godmode: die ganze Trainingsdaten-Steuerung in einem Reiter —
 // Verzeichnis, Quellen-Suche, Vervielfältigung, ZIP, Anbindung, Anleitung.
 export default function GodTrainingsPanel() {
-  const [tab, setTab] = useState("ueber");
+  const [tab, setTab] = useState("paket");
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-wrap gap-1 px-3 py-2 border-b-2 border-border">
@@ -34,6 +36,7 @@ export default function GodTrainingsPanel() {
         ))}
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
+        {tab === "paket" && <GodTrainPaket />}
         {tab === "ueber" && <GodTrainOverview />}
         {tab === "archiv" && <GodTrainArchiv />}
         {tab === "quellen" && <GodTrainSources />}
