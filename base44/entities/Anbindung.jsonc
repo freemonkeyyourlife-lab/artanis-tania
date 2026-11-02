@@ -1,0 +1,90 @@
+{
+  "name": "Anbindung",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Eindeutiger Service-Schl\u00fcssel, z.B. FAL_KEY, HF_MODEL_ID, ELEVEN_VOICE_ID"
+    },
+    "label": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "BILD",
+        "VIDEO",
+        "STIMME",
+        "CHAT",
+        "ZAHLUNG",
+        "TELEGRAM",
+        "MODELL",
+        "SONSTIGES"
+      ],
+      "default": "SONSTIGES"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "SECRET",
+        "ID",
+        "URL",
+        "BOOL"
+      ],
+      "default": "ID"
+    },
+    "value": {
+      "type": "string"
+    },
+    "boolValue": {
+      "type": "boolean",
+      "default": false
+    },
+    "secretName": {
+      "type": "string",
+      "description": "Bei kind=SECRET: der Name unter Dashboard \u2192 Secrets"
+    },
+    "helpUrl": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "key",
+    "label",
+    "category",
+    "kind"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
