@@ -1,8 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { getStatus, modelUrlFromOutput } from '../../shared/runpod.ts';
+import { getStatus } from '../../shared/runpod.ts';
 
-// Trainings-Pipeline — Schritt 4 (GPU): Status des RunPod-Jobs abholen.
-// Bei COMPLETED wird das .safetensors heruntergeladen und stored privately
+// Trainings-Pipeline — Schritt 4 (GPU): Status des Pod-Jobs abholen.
+// Bei COMPLETED wird das .safetensors vom Pod geladen und stored privately
 // abgelegt; das Set geht auf TRAINIERT. Bei FAILED wird der Fehler
 // gespeichert. Der Aufruf ist idempotent — schon fertige Sets bleiben so.
 export default async function (req) {
@@ -27,35 +27,34 @@ export default async function (req) {
       return Response.json({ error: 'Kein Trainings-Job hinterlegt.' }, { status: 400 });
     }
 
-    let status, output, error;
+    let status, error, modelUrl;
     try {
-      ({ status, output, error } = await getStatus(set.trainJobId));
+      ({ status, error, model_url: modelUrl } = await getStatus(set.trainJobId));
     } catch (e) {
-      // RunPod nicht erreichbar / falsch konfiguriert — kein harter 500,
+      // Pod nicht erreichbar / falsch konfiguriert — kein harter 500,
       // sondern sauber zurückmelden, damit die Abfrage weiterlaufen kann.
       return Response.json({ ok: false, trainStatus: 'LÄUFT', transient: true, error: e.message });
     }
 
-    if (status === 'IN_QUEUE' || status === 'IN_PROGRESS') {
+    if (status === 'queued' || status === 'running') {
       return Response.json({ ok: true, trainStatus: 'LÄUFT', runpod: status });
     }
 
-    if (status === 'COMPLETED') {
-      const modelUrl = modelUrlFromOutput(output);
+    if (status === 'completed') {
       if (!modelUrl) {
         await base44.asServiceRole.entities.TrainingSet.update(set.id, {
           trainStatus: 'FEHLER',
-          trainError: 'Job fertig, aber keine Modell-URL im Ergebnis.',
+          trainError: 'Job fertig, aber keine Modell-URL vom Pod.',
         });
         return Response.json({ ok: false, trainStatus: 'FEHLER', error: 'no model url' }, { status: 502 });
       }
-      // Modell herunterladen und stored privately ablegen.
+      // Modell vom Pod herunterladen und stored privately ablegen.
       const blob = await fetch(modelUrl, { signal: AbortSignal.timeout(120000) })
         .then((r) => r.blob()).catch(() => null);
       if (!blob) {
         await base44.asServiceRole.entities.TrainingSet.update(set.id, {
           trainStatus: 'FEHLER',
-          trainError: 'Modell ließ sich nicht herunterladen.',
+          trainError: 'Modell ließ sich nicht vom Pod laden.',
         });
         return Response.json({ ok: false, trainStatus: 'FEHLER', error: 'download failed' }, { status: 502 });
       }
@@ -72,7 +71,7 @@ export default async function (req) {
       return Response.json({ ok: true, trainStatus: 'FERTIG', modelUri });
     }
 
-    // FAILED / CANCELLED / sonstiges.
+    // failed / sonstiges.
     const msg = error || status || 'unbekannt';
     await base44.asServiceRole.entities.TrainingSet.update(set.id, {
       trainStatus: 'FEHLER',
