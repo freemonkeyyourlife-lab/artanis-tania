@@ -10,7 +10,9 @@ import ContentCard from "@/components/ContentCard";
 import HeroCloud from "@/components/HeroCloud";
 import HeroNews from "@/components/hero/HeroNews";
 import HomeSearch from "@/components/home/HomeSearch";
+import StartImagePicker from "@/components/home/StartImagePicker";
 import BrandWordmark from "@/components/BrandWordmark";
+import { Settings2 } from "lucide-react";
 import RequestCard from "@/components/RequestCard";
 import { useRequestVotes } from "@/hooks/useRequestVotes";
 import { cn } from "@/lib/utils";
@@ -49,13 +51,22 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("Alle");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userPref, setUserPref] = useState(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const { userId, vote } = useRequestVotes();
 
   useEffect(() => { loadData(); }, []);
 
-  // Der Content-Planer ist ein Besitzer-Werkzeug — deshalb nur für den Admin sichtbar.
+  // Admin-Prüfung und persönliche Startbilder des Nutzers laden.
   useEffect(() => {
-    base44.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => setIsAdmin(false));
+    base44.auth.me().then(async (u) => {
+      setIsAdmin(u?.role === "admin");
+      if (!u) return;
+      try {
+        const prefs = await base44.entities.UserPreference.filter({ userId: u.id }, "-created_date", 5);
+        if (prefs[0]) setUserPref(prefs[0]);
+      } catch (e) { /* noch keine Preferences */ }
+    }).catch(() => setIsAdmin(false));
   }, []);
 
   // Eine Stimme für einen Community-Wunsch — zählt genau einmal pro Person.
@@ -131,6 +142,12 @@ export default function Home() {
   ];
   const newsItems = news.length ? news : newsFallback;
 
+  // Persönliche Startbilder des Nutzers — falls vorhanden, ersetzen sie die
+  // Standard-Hero-Bilder. Sonst gelten die festen HERO_ITEMS.
+  const heroItems = userPref?.startImages?.length
+    ? userPref.startImages.map((img, i) => ({ src: img.src, title: img.title || `Mein Bild ${i + 1}`, text: "", to: "/" }))
+    : HERO_ITEMS;
+
   return (
     <div>
       {/* Hero */}
@@ -141,7 +158,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-transparent to-transparent" />
         </div>
 
-        <HeroCloud items={HERO_ITEMS} />
+        <HeroCloud items={heroItems} />
         {/* Die Bilder lösen sich nach oben und unten in den Hintergrund auf — keine harten Kanten. */}
         <div className="absolute inset-x-0 top-0 h-[150px] z-20 pointer-events-none bg-gradient-to-b from-background to-transparent" />
         <div className="absolute inset-x-0 top-0 h-[470px] z-20 pointer-events-none bg-gradient-to-b from-transparent via-background/20 to-background" />
@@ -176,6 +193,14 @@ export default function Home() {
                 <Link to="/messages" className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss">
                   <MessageSquare className="w-4 h-4" /> Privater Chat
                 </Link>
+                {userId && (
+                  <button
+                    onClick={() => setPickerOpen(true)}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-full glass-btn text-foreground text-sm font-semibold text-gloss"
+                  >
+                    <Settings2 className="w-4 h-4 text-primary" /> Meine Startbilder
+                  </button>
+                )}
               </div>
 
               <div className="mt-6">
@@ -425,6 +450,19 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {pickerOpen && (
+        <StartImagePicker
+          userId={userId}
+          prefId={userPref?.id}
+          current={userPref?.startImages || []}
+          onSaved={(imgs) => {
+            setUserPref((prev) => ({ ...(prev || { userId }), startImages: imgs }));
+            setPickerOpen(false);
+          }}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
     </div>
   );
 }
