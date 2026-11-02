@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import JSZip from "jszip";
 import { base44 } from "@/api/base44Client";
 import { Upload, FolderUp, Loader2 } from "lucide-react";
+import { cropToPortrait, signatureOf } from "@/lib/trainImage";
 
 const isImage = (name) => /\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(name || "");
 const isVideo = (name) => /\.(mp4|mov|webm|avi|mkv|m4v)$/i.test(name || "");
@@ -13,9 +14,10 @@ const isMedia = (f) =>
   (f.type && (f.type.startsWith("image") || f.type.startsWith("video") || f.type === "application/zip"));
 
 // Offene Ablage: Bilder, Videos, ZIPs oder ganze Ordner per Drag-and-Drop.
-// Ordner werden rekursiv durchlaufen (Entry-API) — der Ordnername wird als
-// Personenname mitgegeben, damit Auto-Sortieren ihn direkt einsortiert.
-export default function UploadZone({ onUploaded }) {
+// Bilder werden VOR dem Upload auf 3:4-Porträt zugeschnitten und entdoppelt
+// (perceptueller Hash). Der Ordnername wird als Personenname mitgegeben.
+// Am Ende geht ein Batch an die Pipeline — direkt in die Sets und aufgefüllt.
+export default function UploadZone({ onBatch }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(0);
   const [total, setTotal] = useState(0);
@@ -30,44 +32,51 @@ export default function UploadZone({ onUploaded }) {
     }
   }, []);
 
-  const uploadEntry = async (blob, type, name) => {
-    const safe = (name || "datei").split(/[\\/]/).pop();
-    const file = new File([blob], safe, { type: type === "VIDEO" ? "video/mp4" : "image/jpeg" });
-    const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
-    onUploaded(file_uri, type, name);
+  const addImage = async (file, name, out, sigs) => {
+    let proc = file;
+    try { proc = await cropToPortrait(file); } catch { /* ohne Zuschnitt weiter */ }
+    let sig = "";
+    try { sig = await signatureOf(proc); } catch { /* ohne Hash weiter */ }
+    if (sig && sigs.has(sig)) return; // entdoppelt
+    if (sig) sigs.add(sig);
+    const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file: proc });
+    out.push({ uri: file_uri, type: "IMAGE", name });
   };
 
-  const handleZip = async (file) => {
-    const zip = await JSZip.loadAsync(file);
-    const entries = Object.values(zip.files).filter((e) => !e.dir && isImage(e.name));
-    for (const entry of entries) {
-      const blob = await entry.async("blob");
-      await uploadEntry(blob, "IMAGE", entry.name);
-    }
-  };
-
-  const uploadOne = async (file, pathName) => {
-    const name = pathName || file.webkitRelativePath || file.name;
+  const processFile = async (file, name, out, sigs) => {
     if (isZip(file.name) || file.type === "application/zip") {
-      await handleZip(file);
+      const zip = await JSZip.loadAsync(file);
+      const entries = Object.values(zip.files).filter((e) => !e.dir && isImage(e.name));
+      for (const entry of entries) {
+        const blob = await entry.async("blob");
+        const f = new File([blob], entry.name.split("/").pop(), { type: "image/jpeg" });
+        await addImage(f, entry.name, out, sigs);
+      }
       return;
     }
-    const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
-    const type = isVideo(file.name) || file.type?.startsWith("video") ? "VIDEO" : "IMAGE";
-    onUploaded(file_uri, type, name);
+    if (isVideo(file.name) || file.type?.startsWith("video")) {
+      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+      out.push({ uri: file_uri, type: "VIDEO", name });
+      return;
+    }
+    if (isImage(file.name) || file.type?.startsWith("image")) {
+      await addImage(file, name, out, sigs);
+    }
   };
 
-  const handle = async (files) => {
-    const list = Array.from(files || []).filter(isMedia);
-    if (!list.length) return;
+  const run = async (files) => {
+    const out = [];
+    const sigs = new Set();
     setBusy(true);
-    setTotal(list.length);
+    setTotal(files.length);
     setDone(0);
-    for (const file of list) {
-      try { await uploadOne(file); } catch { /* einzelne Datei überspringen */ }
+    for (const { file, path } of files) {
+      const name = path || file.webkitRelativePath || file.name;
+      try { await processFile(file, name, out, sigs); } catch { /* einzelne Datei überspringen */ }
       setDone((d) => d + 1);
     }
     setBusy(false);
+    if (out.length) onBatch?.(out);
   };
 
   const readEntries = (reader) => new Promise((res) => reader.readEntries((e) => res(e), () => res([])));
@@ -96,18 +105,10 @@ export default function UploadZone({ onUploaded }) {
       const acc = [];
       for (const en of entries) await collect(en, acc);
       const list = acc.filter((a) => isMedia(a.file));
-      if (!list.length) { handle(e.dataTransfer.files); return; }
-      setBusy(true);
-      setTotal(list.length);
-      setDone(0);
-      for (const { file, path } of list) {
-        try { await uploadOne(file, path); } catch { /* einzelne Datei überspringen */ }
-        setDone((d) => d + 1);
-      }
-      setBusy(false);
-    } else {
-      handle(e.dataTransfer.files);
+      if (list.length) { await run(list); return; }
     }
+    const list = Array.from(e.dataTransfer.files || []).filter(isMedia).map((file) => ({ file }));
+    if (list.length) await run(list);
   };
 
   return (
@@ -123,10 +124,10 @@ export default function UploadZone({ onUploaded }) {
         <Upload className="h-6 w-6 text-primary" />
       )}
       <span className="font-heading text-foreground">
-        {busy ? `Lade hoch … ${done}/${total || "?"}` : "Bilder, Videos, ZIP oder ganzen Ordner ablegen"}
+        {busy ? `Verarbeite … ${done}/${total || "?"}` : "Bilder, Videos, ZIP oder ganzen Ordner ablegen"}
       </span>
       <span className="text-xs text-muted-foreground">
-        Per Drag & Drop reinziehen — auch ganze Ordner. Der Ordnername wird zur Person.
+        Bilder werden auf 3:4 zugeschnitten, entdoppelt und direkt einsortiert (stored privately).
       </span>
       <div className="mt-2 flex gap-2">
         <button
@@ -150,14 +151,14 @@ export default function UploadZone({ onUploaded }) {
         multiple
         accept="image/*,video/*"
         className="hidden"
-        onChange={(e) => { handle(e.target.files); e.target.value = ""; }}
+        onChange={(e) => { const list = Array.from(e.target.files || []).filter(isMedia).map((file) => ({ file })); if (list.length) run(list); e.target.value = ""; }}
       />
       <input
         ref={folderRef}
         type="file"
         multiple
         className="hidden"
-        onChange={(e) => { handle(e.target.files); e.target.value = ""; }}
+        onChange={(e) => { const list = Array.from(e.target.files || []).filter(isMedia).map((file) => ({ file })); if (list.length) run(list); e.target.value = ""; }}
       />
     </div>
   );

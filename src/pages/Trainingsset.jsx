@@ -101,23 +101,120 @@ export default function Trainingsset() {
     );
   }
 
-  const onUploaded = (uri, type, name) => {
-    setPool((p) => [...p, { uri, type, name }]);
+  // Upload-Batch: zugeschnittene, entdoppelte Bilder direkt in die Sets der
+  // Personen (Ordnername) übernehmen und auf Ziel auffüllen. Dateien ohne
+  // Ordnernamen landen im Pool zur manuellen Zuordnung.
+  const onBatch = async (items) => {
+    if (!items?.length) return;
+    const grouped = {};
+    const loose = [];
+    for (const it of items) {
+      const person = personFromName(it.name);
+      if (person) (grouped[person] = grouped[person] || []).push(it);
+      else loose.push(it);
+    }
+    if (loose.length) setPool((p) => [...p, ...loose]);
+    const persons = Object.keys(grouped);
+    if (!persons.length) {
+      toast({
+        title: "Im Pool",
+        description: `${loose.length} Datei(en) ohne Ordnernamen — Person manuell wählen oder „Sortieren & auffüllen".`,
+      });
+      return;
+    }
+    setBusy(true);
+    try {
+      const createdIds = [];
+      for (const person of persons) {
+        let target = sets.find((s) => s.personName === person);
+        if (!target) {
+          target = await base44.entities.TrainingSet.create({
+            personName: person,
+            name: `Set ${person}`,
+            images: [],
+            generatedImages: [],
+            sourceMedia: [],
+            targetCount: 12,
+          });
+        }
+        const existing = new Set(target.images || []);
+        const images = [...(target.images || [])];
+        const sourceMedia = [...(target.sourceMedia || [])];
+        let avatar = target.avatar;
+        for (const it of grouped[person]) {
+          if (it.type === "IMAGE" && !existing.has(it.uri)) {
+            images.push(it.uri);
+            existing.add(it.uri);
+            if (!avatar) avatar = it.uri;
+          } else if (it.type === "VIDEO") {
+            sourceMedia.push(it.uri);
+          }
+        }
+        await base44.entities.TrainingSet.update(target.id, { images, sourceMedia, avatar });
+        createdIds.push(target.id);
+      }
+      await load();
+      for (const id of createdIds) await fillToTarget(id);
+      await load();
+      toast({
+        title: "Übernommen",
+        description: `${items.length} Datei(en) zugeschnitten, entdoppelt und aufgefüllt.`,
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Pipeline abgebrochen",
+        description: e?.message || "Fehler.",
+      });
+    } finally {
+      setBusy(false);
+    }
   };
 
-  // Video-Frames kommen direkt in den Pool — der Videoname passt als
-  // Personen-Vorschlag, damit „Sortieren & auffüllen" sie sofort einsortiert.
-  const onFrames = (uris, suggestedName) => {
+  // Video-Frames direkt ins Set der Person (Videoname) übernehmen und auffüllen.
+  const onFrames = async (uris, suggestedName) => {
     const name = (suggestedName || "Video").trim();
-    setPool((p) => [
-      ...p,
-      ...uris.map((u, i) => ({ uri: u, type: "IMAGE", name: `${name}/frame_${i + 1}.jpg` })),
-    ]);
-    setNewPerson((m) => {
-      const n = { ...m };
-      for (const u of uris) n[u] = name;
-      return n;
-    });
+    if (!uris?.length) return;
+    setBusy(true);
+    try {
+      let target = sets.find((s) => s.personName === name);
+      if (!target) {
+        target = await base44.entities.TrainingSet.create({
+          personName: name,
+          name: `Set ${name}`,
+          images: [],
+          generatedImages: [],
+          sourceMedia: [],
+          targetCount: 12,
+        });
+      }
+      const existing = new Set(target.images || []);
+      const images = [...(target.images || [])];
+      let avatar = target.avatar;
+      for (const u of uris) {
+        if (!existing.has(u)) {
+          images.push(u);
+          existing.add(u);
+          if (!avatar) avatar = u;
+        }
+      }
+      await base44.entities.TrainingSet.update(target.id, { images, avatar });
+      await load();
+      await fillToTarget(target.id);
+      await load();
+      toast({
+        title: "Video übernommen",
+        description: `${uris.length} Frames → ${name}, Set aufgefüllt.`,
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Video übernehmen fehlgeschlagen",
+        description: e?.message || "Fehler.",
+      });
+    } finally {
+      setBusy(false);
+    }
   };
 
   // Link-Quellen (Bilder/Videos von fremden Seiten) direkt in den Pool.
@@ -261,6 +358,23 @@ export default function Trainingsset() {
     return false;
   };
 
+  // Ein Set bis zum Ziel auffüllen (Loop, max. 10 Generierungen pro Aufruf).
+  const fillToTarget = async (setId) => {
+    const target = (set) => set?.targetCount || 12;
+    let cur = await base44.entities.TrainingSet.get(setId)
+      .catch((e) => (e.status === 404 ? null : Promise.reject(e)));
+    if (!cur) return;
+    for (let i = 0; i < 10; i++) {
+      const have = (cur.images?.length || 0) + (cur.generatedImages?.length || 0);
+      if (have >= target(cur)) break;
+      const ok = await fillSetCore(cur);
+      if (!ok) break;
+      cur = await base44.entities.TrainingSet.get(setId)
+        .catch((e) => (e.status === 404 ? null : Promise.reject(e)));
+      if (!cur) break;
+    }
+  };
+
   const fillSet = async (set) => {
     const have = (set.images?.length || 0) + (set.generatedImages?.length || 0);
     if (have === 0) {
@@ -301,7 +415,7 @@ export default function Trainingsset() {
     }
     setBusy(true);
     try {
-      for (const s of fillable) await fillSetCore(s);
+      for (const s of fillable) await fillToTarget(s.id);
       await load();
       toast({ title: "Aufgefüllt", description: `${fillable.length} Sets ergänzt.` });
     } catch (e) {
@@ -447,7 +561,7 @@ export default function Trainingsset() {
         const have = (s.images?.length || 0) + (s.generatedImages?.length || 0);
         return have > 0 && have < (s.targetCount || 12);
       });
-      for (const s of fillable) await fillSetCore(s);
+      for (const s of fillable) await fillToTarget(s.id);
       await load();
       toast({
         title: "Pipeline fertig",
@@ -548,7 +662,7 @@ export default function Trainingsset() {
 
       <div className="mt-4 grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <UploadZone onUploaded={onUploaded} />
+          <UploadZone onBatch={onBatch} />
           <VideoFrameGrabber onFrames={onFrames} />
           <LinkGrabber onLinks={onLinks} />
         </div>
