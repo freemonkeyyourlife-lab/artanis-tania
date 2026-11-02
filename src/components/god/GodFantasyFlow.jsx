@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Loader2, Mic, Wand2, Play, RefreshCw, User } from "lucide-react";
 import VoiceInput from "@/components/VoiceInput";
+import NarratorAvatar3D from "@/components/narrator/NarratorAvatar3D";
+import { speakAsVoice } from "@/lib/voiceChat";
 import { cn } from "@/lib/utils";
 
 // Der Fantasie-Workflow: Entwurf einsprechen oder tippen → daraus eine Story
@@ -11,11 +13,17 @@ export default function GodFantasyFlow() {
   const navigate = useNavigate();
   const [creators, setCreators] = useState([]);
   const [creatorId, setCreatorId] = useState("");
+  const [narrators, setNarrators] = useState([]);
+  const [narratorId, setNarratorId] = useState("");
+  const [narrator, setNarrator] = useState(null);
+  const [voiceProfile, setVoiceProfile] = useState(null);
+  const [speaking, setSpeaking] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState("entwurf"); // entwurf | fertig
   const [built, setBuilt] = useState(null); // { storyId, experienceId, title, preview }
   const [error, setError] = useState("");
+  const audioRef = useRef(null);
 
   useEffect(() => {
     base44.entities.Creator.list()
@@ -26,6 +34,55 @@ export default function GodFantasyFlow() {
       })
       .catch(() => {});
   }, []);
+
+  // Die Erzählerin holen — mit ihrer Stimme. Sie ist das Gesicht der KI hier.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await base44.entities.Narrator.filter({ active: { $ne: false } }, "order", 1);
+        const list = res?.items || [];
+        setNarrators(list);
+        const lead = list[0] || null;
+        if (lead) setNarratorId(lead.id);
+      } catch {}
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!narratorId) return;
+    const n = narrators.find((x) => x.id === narratorId) || null;
+    setNarrator(n);
+    (async () => {
+      if (n?.voiceProfileId) {
+        try {
+          const v = await base44.entities.Voice.filter({ id: n.voiceProfileId });
+          setVoiceProfile(v?.items?.[0] || { baseVoice: n.voice || "honey" });
+        } catch { setVoiceProfile({ baseVoice: n.voice || "honey" }); }
+      } else {
+        setVoiceProfile({ baseVoice: n?.voice || "honey" });
+      }
+    })();
+  }, [narratorId, narrators]);
+
+  const say = async (text) => {
+    if (!text || !voiceProfile) return;
+    try {
+      setSpeaking(true);
+      const url = await speakAsVoice(voiceProfile, text, { fast: true });
+      if (url) {
+        audioRef.current?.pause();
+        const a = new Audio(url);
+        audioRef.current = a;
+        a.onended = () => setSpeaking(false);
+        a.onerror = () => setSpeaking(false);
+        a.play().catch(() => setSpeaking(false));
+      } else {
+        setSpeaking(false);
+      }
+    } catch { setSpeaking(false); }
+  };
+
+  useEffect(() => () => audioRef.current?.pause(), []);
 
   const creatorName = creators.find((c) => c.id === creatorId)?.stageName || "";
 
@@ -86,8 +143,11 @@ export default function GodFantasyFlow() {
         });
       }
 
-      setBuilt({ storyId: story.id, experienceId: exp.id, title: llm.title || "Fantasie", preview: llm.preview || "" });
+      const built = { storyId: story.id, experienceId: exp.id, title: llm.title || "Fantasie", preview: llm.preview || "" };
+      setBuilt(built);
       setStep("fertig");
+      // Sie erzählt, was entstanden ist — die KI ist die Erzählerin.
+      if (built.preview) say(built.preview);
     } catch (e) {
       console.error(e);
       setError(e?.message || "Beim Bauen ging etwas schief.");
@@ -110,6 +170,21 @@ export default function GodFantasyFlow() {
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Sprich oder schreib deinen Entwurf — daraus entsteht eine Story und eine spielbare Szene.
         </p>
+      </div>
+
+      <div className="flex flex-col items-center gap-2 py-1">
+        <NarratorAvatar3D narrator={narrator} speaking={speaking || busy} />
+        {narrators.length > 1 && (
+          <select
+            value={narratorId}
+            onChange={(e) => setNarratorId(e.target.value)}
+            className="bg-elevated border border-border rounded-full px-2 py-1 text-[11px] text-foreground focus:outline-none max-w-[200px]"
+          >
+            {narrators.map((n) => (
+              <option key={n.id} value={n.id}>{n.name}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {step === "entwurf" && (
@@ -165,6 +240,12 @@ export default function GodFantasyFlow() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full glass-btn glass-btn-accent text-[13px] font-bold text-gloss"
             >
               <Play className="w-4 h-4" /> Durchspielen
+            </button>
+            <button
+              onClick={() => say(built.preview)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full glass-btn text-[13px] font-bold text-foreground"
+            >
+              <Mic className="w-4 h-4" /> Erzählerin anhören
             </button>
             <button
               onClick={() => navigate("/stories")}
