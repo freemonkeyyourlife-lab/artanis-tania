@@ -7,9 +7,11 @@ import GodTrainAnbindung from "@/components/god/train/GodTrainAnbindung";
 import GodTrainAnleitung from "@/components/god/train/GodTrainAnleitung";
 import GodTrainArchiv from "@/components/god/train/GodTrainArchiv";
 import GodTrainPaket from "@/components/god/train/GodTrainPaket";
+import GodTrainVideo from "@/components/god/train/GodTrainVideo";
 
 const TABS = [
   { key: "paket", label: "Paket" },
+  { key: "video", label: "Video" },
   { key: "ueber", label: "Übersicht" },
   { key: "archiv", label: "Archiv" },
   { key: "quellen", label: "Quellen" },
@@ -37,6 +39,7 @@ export default function GodTrainingsPanel() {
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {tab === "paket" && <GodTrainPaket />}
+        {tab === "video" && <GodTrainVideo />}
         {tab === "ueber" && <GodTrainOverview />}
         {tab === "archiv" && <GodTrainArchiv />}
         {tab === "quellen" && <GodTrainSources />}
