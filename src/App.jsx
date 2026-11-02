@@ -76,6 +76,7 @@ import Palette from '@/pages/Palette';
 import CharakterStudio from '@/pages/CharakterStudio';
 import Mitmachen from '@/pages/Mitmachen';
 import BotImport from '@/pages/BotImport';
+import Trainingsset from '@/pages/Trainingsset';
 import CharakterDetail from '@/pages/CharakterDetail';
 import Logbuch from '@/pages/Logbuch';
 import ChatModul from '@/pages/ChatModul';
@@ -186,6 +187,7 @@ const AuthenticatedApp = () => {
         <Route path="/charakter/:id" element={<CharakterDetail />} />
         <Route path="/mitmachen" element={<Mitmachen />} />
         <Route path="/botimport" element={<BotImport />} />
+        <Route path="/trainingsset" element={<Trainingsset />} />
         <Route path="/logbuch" element={<Logbuch />} />
         <Route path="/modellplan" element={<ModelPlan />} />
         <Route path="/archiv" element={<Archive />} />
