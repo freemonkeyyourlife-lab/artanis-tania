@@ -10,6 +10,8 @@ import { buildTherapyPrompt, THERAPY_MODES, INTENSITIES, ROLE_SETUPS, FREILAUF_P
 import SessionControls from "@/components/therapy/SessionControls";
 import SessionPlan from "@/components/therapy/SessionPlan";
 import TherapySummaryCard from "@/components/therapy/TherapySummaryCard";
+import TherapyInviteBar from "@/components/therapy/TherapyInviteBar";
+import TherapySideChat from "@/components/therapy/TherapySideChat";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import TherapyReadButton from "@/components/therapy/TherapyReadButton";
@@ -36,6 +38,13 @@ const THERAPIST_LINES = [
 
 export default function TherapySession() {
   const { id } = useParams();
+  const guestName = (() => {
+    try {
+      const v = new URLSearchParams(window.location.search).get("g");
+      return v ? decodeURIComponent(v) : "";
+    } catch { return ""; }
+  })();
+  const isGuest = !!guestName;
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [me, setMe] = useState(null);
@@ -105,7 +114,7 @@ export default function TherapySession() {
   }, [messages, sending]);
 
   const isOwner = !!me && !!session && (session.userId === me.id || session.created_by_id === me.id);
-  const canWrite = isOwner && session?.status !== "DONE";
+  const canWrite = (isOwner || isGuest) && session?.status !== "DONE";
 
   // Live gehen: derselbe Video-Call-Raum, den die Zuschauer von hier aus öffnen.
   const goLive = () => {
@@ -124,7 +133,10 @@ export default function TherapySession() {
     .map((m) => `${m.senderType === "AI" ? (session.actor?.active ? "Szene" : therapistName(session)) : "Klient"}: ${m.text}`)
     .join("\n");
 
-  const buildGuests = (list) => list.filter((m) => m.senderType === "GUEST").slice(-5).map((m) => m.text);
+  // Seitenchat (channel SIDE) fließt nicht in Tanias Prompt — nur echte
+  // Gast-Notizen aus dem Therapieverlauf.
+  const buildGuests = (list) =>
+    list.filter((m) => m.senderType === "GUEST" && m.channel !== "SIDE").slice(-5).map((m) => m.text);
 
   const speak = async (prompt) => {
     const res = await base44.integrations.Core.InvokeLLM({ prompt });
@@ -168,7 +180,9 @@ export default function TherapySession() {
       const mine = await base44.entities.TherapyMessage.create({
         sessionId: session.id,
         senderType: "USER",
-        senderName: session.anonymous ? "Anonym" : (me?.full_name || me?.email || "Du"),
+        senderName: isGuest
+          ? (guestName || "Freundin")
+          : (session.anonymous ? "Anonym" : (me?.full_name || me?.email || "Du")),
         text,
       });
       setMessages((prev) => (prev.some((m) => m.id === mine.id) ? prev : [...prev, mine]));
@@ -312,14 +326,21 @@ export default function TherapySession() {
   const intensity = INTENSITIES.find((i) => i.value === session.intensity);
   const name = therapistName(session);
   const quickLines = session.roleSetup === "USER_THERAPIST" ? THERAPIST_LINES : CLIENT_LINES;
-  const lastAi = [...messages].reverse().find((m) => m.senderType === "AI");
-  const isLast = messages.length > 0 && messages[messages.length - 1]?.id === lastAi?.id;
+  const therapyMessages = messages.filter((m) => m.channel !== "SIDE");
+  const sideMessages = messages.filter((m) => m.channel === "SIDE");
+  const lastAi = [...therapyMessages].reverse().find((m) => m.senderType === "AI");
+  const isLast = therapyMessages.length > 0 && therapyMessages[therapyMessages.length - 1]?.id === lastAi?.id;
 
   return (
-    <div className="max-w-[900px] mx-auto px-4 lg:px-8 py-6">
+    <div className="max-w-[1140px] mx-auto px-4 lg:px-8 py-6">
       <Link to="/therapy" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="w-3.5 h-3.5" /> Sprechstunde
       </Link>
+
+      <TherapyInviteBar session={session} isOwner={isOwner} isGuest={isGuest} guestName={guestName} />
+
+      <div className="lg:grid lg:grid-cols-[1fr_19rem] lg:gap-4 items-start">
+      <div>
 
       <SessionPlan session={session} />
 
@@ -436,10 +457,10 @@ export default function TherapySession() {
       </Dialog>
 
       <div className="rounded-2xl border border-border bg-card p-4 lg:p-6 mb-4">
-        {messages.length === 0 && !sending ? (
+        {therapyMessages.length === 0 && !sending ? (
           <p className="text-sm text-muted-foreground text-center py-8">Die Sitzung beginnt gleich …</p>
         ) : (
-          <TherapyThread messages={messages} />
+          <TherapyThread messages={therapyMessages} />
         )}
 
         {sending && (
@@ -552,6 +573,12 @@ export default function TherapySession() {
       ) : (
         <p className="text-xs text-muted-foreground text-center">Diese Sitzung ist vertraulich.</p>
       )}
+      </div>
+
+      {(isOwner || isGuest) && (
+        <TherapySideChat session={session} messages={sideMessages} me={me} guestName={guestName} isGuest={isGuest} />
+      )}
+      </div>
     </div>
   );
 }

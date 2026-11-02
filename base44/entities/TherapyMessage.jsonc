@@ -25,6 +25,14 @@
       "items": {
         "type": "string"
       }
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "THERAPY",
+        "SIDE"
+      ],
+      "default": "THERAPY"
     }
   },
   "required": [
