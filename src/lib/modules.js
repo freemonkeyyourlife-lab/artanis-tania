@@ -151,6 +151,7 @@ export const NAV_GROUPS = {
   "/creator-studio": "Verwalten",
   "/sandbox": "Verwalten",
   "/vorschau": "Verwalten",
+  "/story-dashboard": "Verwalten",
 };
 
 export const NAV_GROUP_FALLBACK = "Mehr";
@@ -229,6 +230,7 @@ export const FIXED_AREAS = [
       { label: "Leitfaden", path: "/leitfaden" },
       { label: "Lern-Ordner", path: "/lernordner" },
       { label: "Spickzettel", path: "/spickzettel" },
+      { label: "Story-Dashboard", path: "/story-dashboard" },
     ],
   },
 ];

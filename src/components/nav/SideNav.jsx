@@ -10,9 +10,29 @@ import BrandWordmark from "@/components/BrandWordmark";
 
 // Die ganze Leiste links, in dieser Reihenfolge:
 // ganz oben „Artanis × Tania", darunter Einladen, dann alle Punkte in ihren
-// Themen-Blöcken. Den Rest der Höhe nimmt die Erzählerin ein — in groß.
+// Themen-Blöcken — und innerhalb jedes Blocks noch einmal nach Untergruppe
+// geordnet, damit nichts in einer langen Liste verschwindet. Den Rest der Höhe
+// nimmt die Erzählerin ein — in groß.
 export default function SideNav({ groups = [], isOwner = false }) {
   const { pathname } = useLocation();
+
+  const renderLink = (item) => {
+    const active = pathname === item.path;
+    return (
+      <Link
+        key={item.path}
+        to={item.path}
+        className={cn(
+          "block truncate rounded-xl px-3 py-2 text-[14px] font-bold transition-colors",
+          active
+            ? "bg-primary/10 text-primary"
+            : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+        )}
+      >
+        {item.label}
+      </Link>
+    );
+  };
 
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 z-40 flex-col glass-strong border-r border-border/40">
@@ -24,34 +44,35 @@ export default function SideNav({ groups = [], isOwner = false }) {
         <InviteShareButton className="mt-3 w-full justify-center" />
       </div>
 
-      {/* Alle Punkte — in Themen-Blöcken, in der Reihenfolge des Besitzers. */}
+      {/* Alle Punkte — in Themen-Blöcken, in der Reihenfolge des Besitzers.
+          Hat ein Block mehrere Untergruppen, bekommen diese eigene
+          Zwischenüberschriften, statt alles in eine flache Liste zu kippen. */}
       <div className="shrink-0 max-h-[46vh] overflow-y-auto scrollbar-hide px-3 py-4 space-y-5">
-        {groups.map((group) => (
-          <div key={group.label}>
-            <p className="mb-1.5 px-2 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
-              {group.label}
-            </p>
-            <div className="space-y-0.5">
-              {group.items.map((item) => {
-                const active = pathname === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      "block truncate rounded-xl px-3 py-2.5 text-[15px] font-bold transition-colors",
-                      active
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
+        {groups.map((group) => {
+          const subs = group.groups || [];
+          const showSubs = subs.length > 1;
+          return (
+            <div key={group.label}>
+              <p className="mb-1.5 px-2 text-[12px] font-bold uppercase tracking-wider text-primary">
+                {group.label}
+              </p>
+              {showSubs ? (
+                <div className="space-y-2.5">
+                  {subs.map((sub) => (
+                    <div key={sub.label}>
+                      <p className="mb-0.5 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                        {sub.label}
+                      </p>
+                      <div className="space-y-0.5">{sub.items.map(renderLink)}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-0.5">{group.items.map(renderLink)}</div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Die Erzählerin in groß — volle Breite, die restliche Höhe. */}

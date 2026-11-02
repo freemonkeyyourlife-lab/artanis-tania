@@ -42,6 +42,7 @@ const MORE_LINKS = [
   { label: "Community", path: "/community" },
   { label: "Börse", path: "/coins" },
   { label: "Bibliothek", path: "/library" },
+  { label: "Story-Dashboard", path: "/story-dashboard" },
 ];
 
 const MOBILE_NAV = [

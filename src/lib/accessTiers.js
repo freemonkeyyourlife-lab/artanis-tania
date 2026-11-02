@@ -47,6 +47,7 @@ const ADMIN_PATHS = new Set([
   "/banana",
   "/lernordner",
   "/spickzettel",
+  "/story-dashboard",
 ]);
 
 // Nur für dich: hier wird nichts veröffentlicht, hier wird geprüft und gesteuert.
