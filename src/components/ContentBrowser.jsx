@@ -38,12 +38,37 @@ export default function ContentBrowser({ defaultContentType, title, subtitle }) 
   if (priceFilter === "free") filtered = filtered.filter(c => c.isFree);
   if (priceFilter === "vip") filtered = filtered.filter(c => c.visibility === "VIP");
   if (priceFilter === "ppv") filtered = filtered.filter(c => c.visibility === "PPV");
-  if (search) filtered = filtered.filter(c =>
-    c.title?.toLowerCase().includes(search.toLowerCase()) ||
-    c.description?.toLowerCase().includes(search.toLowerCase()) ||
-    c.creatorName?.toLowerCase().includes(search.toLowerCase())
-  );
-  if (sort === "popular") filtered = [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+
+  // Smarter Filter: erkennt, wonach gesucht wird, bewertet jeden Treffer und
+  // hebt die besten hervor. Titel wiegt am stärksten, dann Ersteller, Themen, Beschreibung.
+  const q = search.trim().toLowerCase();
+  const terms = q ? q.split(/\s+/).filter(Boolean) : [];
+  const scoreOf = (c) => {
+    if (!q) return 0;
+    const title = (c.title || "").toLowerCase();
+    const cn = (c.creatorName || "").toLowerCase();
+    const desc = (c.description || "").toLowerCase();
+    const tops = (c.topics || []).join(" ").toLowerCase();
+    let s = 0;
+    for (const t of terms) {
+      if (title.includes(t)) s += 3;
+      if (cn.includes(t)) s += 2;
+      if (tops.includes(t)) s += 1.5;
+      if (desc.includes(t)) s += 1;
+    }
+    if (title.includes(q)) s += 2;
+    if (cn.includes(q)) s += 1;
+    return s;
+  };
+  let result = filtered;
+  if (q) {
+    const scored = filtered.map(c => ({ c, s: scoreOf(c) })).filter(x => x.s > 0);
+    scored.sort((a, b) => b.s - a.s);
+    result = scored.map(x => x.c);
+  } else if (sort === "popular") {
+    result = [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+  }
+  const highlightIds = new Set(q ? result.slice(0, 3).map(c => c.id) : []);
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
@@ -83,7 +108,7 @@ export default function ContentBrowser({ defaultContentType, title, subtitle }) 
         </select>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-4">{filtered.length} Einträge</p>
+      <p className="text-sm text-muted-foreground mb-4">{result.length} Einträge{q ? " · beste Treffer zuerst" : ""}</p>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -91,8 +116,8 @@ export default function ContentBrowser({ defaultContentType, title, subtitle }) 
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map(item => <ContentCard key={item.id} content={item} />)}
-          {filtered.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">Nichts gefunden</p>}
+          {result.map(item => <ContentCard key={item.id} content={item} highlight={highlightIds.has(item.id)} />)}
+          {result.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">Nichts gefunden</p>}
         </div>
       )}
     </div>

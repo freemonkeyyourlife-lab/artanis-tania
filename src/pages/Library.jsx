@@ -2,24 +2,29 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Heart, Library as LibIcon } from "lucide-react";
 import ContentCard from "@/components/ContentCard";
+import StoryCard from "@/components/StoryCard";
 import PersonaCard from "@/components/PersonaCard";
 import { getFavorites } from "@/lib/favorites";
+import { BookOpen } from "lucide-react";
 
 export default function Library() {
   const [content, setContent] = useState([]);
   const [creators, setCreators] = useState([]);
+  const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
 
   useEffect(() => { load(); }, []);
   const load = async () => {
     try {
-      const [c, cr] = await Promise.all([
+      const [c, cr, st] = await Promise.all([
         base44.entities.Content.filter({ published: true }, "-created_date", 100),
         base44.entities.Creator.list(),
+        base44.entities.Story.filter({ published: true }, "-created_date", 100),
       ]);
       setContent(c);
       setCreators(cr);
+      setStories(st);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -33,6 +38,7 @@ export default function Library() {
 
   const favContent = content.filter(c => favorites.includes(`content:${c.id}`));
   const favCreators = creators.filter(c => favorites.includes(`creator:${c.id}`));
+  const favStories = stories.filter(s => favorites.includes(`story:${s.id}`));
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
@@ -65,6 +71,21 @@ export default function Library() {
         ) : (
           <div className="p-8 rounded-2xl border border-border bg-card text-center">
             <p className="text-muted-foreground text-sm">No favorite content yet. Tap the heart on any content to save it here.</p>
+          </div>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="font-display text-xl text-foreground mb-4 flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-primary" /> Gemerkte Storys
+        </h2>
+        {favStories.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {favStories.map(s => <StoryCard key={s.id} story={s} />)}
+          </div>
+        ) : (
+          <div className="p-8 rounded-2xl border border-border bg-card text-center">
+            <p className="text-muted-foreground text-sm">Noch keine Storys gemerkt. Tippe das Herz an einer Story, um sie hier zu speichern.</p>
           </div>
         )}
       </section>

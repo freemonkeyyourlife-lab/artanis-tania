@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { BookOpen, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import StoryListRow from "@/components/StoryListRow";
 
 export default function Stories() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => { load(); }, []);
@@ -17,10 +17,28 @@ export default function Stories() {
     finally { setLoading(false); }
   };
 
-  const filtered = stories.filter(s =>
-    s.title?.toLowerCase().includes(search.toLowerCase()) ||
-    s.preview?.toLowerCase().includes(search.toLowerCase())
-  );
+  // Smarter Filter: bewertet Treffer und sortiert die besten nach oben.
+  const q = search.trim().toLowerCase();
+  const terms = q ? q.split(/\s+/).filter(Boolean) : [];
+  const scoreOf = (s) => {
+    if (!q) return 0;
+    const title = (s.title || "").toLowerCase();
+    const cn = (s.creatorName || "").toLowerCase();
+    const prev = (s.preview || "").toLowerCase();
+    const tops = (s.topics || []).join(" ").toLowerCase();
+    let sc = 0;
+    for (const t of terms) {
+      if (title.includes(t)) sc += 3;
+      if (cn.includes(t)) sc += 2;
+      if (tops.includes(t)) sc += 1.5;
+      if (prev.includes(t)) sc += 1;
+    }
+    return sc;
+  };
+  const filtered = q
+    ? stories.map(s => ({ s, sc: scoreOf(s) })).filter(x => x.sc > 0).sort((a, b) => b.sc - a.sc).map(x => x.s)
+    : stories;
+  const highlightIds = new Set(q ? filtered.slice(0, 3).map(s => s.id) : []);
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
@@ -36,32 +54,7 @@ export default function Stories() {
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>
       ) : (
         <div className="space-y-4">
-          {filtered.map(story => (
-            <div key={story.id} className="rounded-2xl border border-border bg-card overflow-hidden">
-              <button onClick={() => setExpanded(expanded === story.id ? null : story.id)} className="w-full p-5 text-left flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BookOpen className="w-4 h-4 text-primary" />
-                    {story.series && <span className="text-xs text-primary">{story.series} · Ep. {story.episode || 1}</span>}
-                  </div>
-                  <h3 className="font-display text-xl text-foreground">{story.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{story.creatorName}</p>
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{story.preview}</p>
-                  {story.topics && story.topics.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {story.topics.map((t, i) => <span key={i} className="px-2 py-0.5 rounded-full glass text-[11px] text-muted-foreground">{t}</span>)}
-                    </div>
-                  )}
-                </div>
-                {expanded === story.id ? <ChevronUp className="w-5 h-5 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" />}
-              </button>
-              {expanded === story.id && (
-                <div className="px-5 pb-5 border-t border-border pt-4">
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{story.content}</p>
-                </div>
-              )}
-            </div>
-          ))}
+          {filtered.map(story => <StoryListRow key={story.id} story={story} highlight={highlightIds.has(story.id)} />)}
           {filtered.length === 0 && <p className="text-muted-foreground text-center py-12">Keine Storys gefunden</p>}
         </div>
       )}

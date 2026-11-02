@@ -16,7 +16,7 @@ const VISIBILITY_CONFIG = {
   UNLISTED: { label: "UNLISTED", icon: Lock, color: "text-muted-foreground" },
 };
 
-export default function ContentCard({ content, className }) {
+export default function ContentCard({ content, className, highlight }) {
   const [fav, setFav] = useState(() => isFavorite("content", content.id));
   const [open, setOpen] = useState(false);
   const vis = VISIBILITY_CONFIG[content.visibility] || VISIBILITY_CONFIG.PUBLIC;
@@ -25,8 +25,11 @@ export default function ContentCard({ content, className }) {
   const mediaUrl = content.fullAsset || content.previewAsset || content.thumbnail;
 
   return (
-    <div className={cn("group cursor-pointer", className)}>
+    <div className={cn("group cursor-pointer", highlight && "ring-2 ring-primary rounded-2xl", className)}>
       <div onClick={() => setOpen(true)} className="relative overflow-hidden rounded-2xl border border-border bg-card aspect-video">
+        {highlight && (
+          <span className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">Bester Treffer</span>
+        )}
         {content.thumbnail ? (
           <>
             {/* Das Bild steht komplett drin, dahinter dieselbe Aufnahme weichgezeichnet — nichts wird abgeschnitten. */}
