@@ -66,6 +66,7 @@ import Sandbox from '@/pages/Sandbox';
 import UserPreview from '@/pages/UserPreview';
 import Legal from '@/pages/Legal';
 import NarratorStudio from '@/pages/NarratorStudio';
+import Struktur from '@/pages/Struktur';
 import Spickzettel from '@/pages/Spickzettel';
 import IdeenOrdner from '@/pages/IdeenOrdner';
 import BananaStudio from '@/pages/BananaStudio';
@@ -205,6 +206,7 @@ const AuthenticatedApp = () => {
         <Route path="/sandbox" element={<Sandbox />} />
         <Route path="/vorschau" element={<UserPreview />} />
         <Route path="/erzaehler" element={<NarratorStudio />} />
+      <Route path="/struktur" element={<Struktur />} />
         <Route path="/recht" element={<Legal />} />
         <Route path="/recht/:section" element={<Legal />} />
       </Route>

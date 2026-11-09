@@ -49,6 +49,7 @@ export const MODULE_TYPES = [
   { path: "/vorschau", label: "Vorschau als Nutzer", description: "Die Leiste so sehen, wie ein normaler Nutzer sie sieht." },
   { path: "/erzaehler", label: "Erzähler", description: "Story-Teller-Studio: Szenen sprechen, Bilder und Stimmen setzen." },
   { path: "/trainingsset", label: "Training", description: "Trainings-Sets anlegen, befüllen und exportieren." },
+  { path: "/struktur", label: "Struktur-Übersicht", description: "Alle Seiten als Karten und Verzweigung — sieh, wo sich Menüs überschneiden." },
   { path: "/hilfe", label: "Hilfe & Wegweiser", description: "Wo ist was — und wie kommt man dahin." },
   { path: "/vorleser", label: "Vorleser", description: "Texte vorlesen lassen, stimmungsabhängig." },
 ];
@@ -151,6 +152,7 @@ export const NAV_GROUPS = {
   "/leitfaden": "Verwalten",
   "/spickzettel": "Verwalten",
   "/owner": "Verwalten",
+  "/struktur": "Verwalten",
   "/logbuch": "Verwalten",
   "/creator-studio": "Verwalten",
   "/sandbox": "Verwalten",
@@ -235,6 +237,7 @@ export const FIXED_AREAS = [
       { label: "Verwaltung", path: "/admin" },
       { label: "Leitstand", path: "/leitstand" },
       { label: "Besitzer-Konsole", path: "/owner" },
+      { label: "Struktur-Übersicht", path: "/struktur" },
       { label: "Logbuch", path: "/logbuch" },
       { label: "Testsandbox", path: "/sandbox" },
       { label: "Vorschau als Nutzer", path: "/vorschau" },
