@@ -11,6 +11,7 @@ import HeroCloud from "@/components/HeroCloud";
 import HeroNews from "@/components/hero/HeroNews";
 import HomeSearch from "@/components/home/HomeSearch";
 import StartImagePicker from "@/components/home/StartImagePicker";
+import AudioMoments from "@/components/home/AudioMoments";
 import StartBackground from "@/components/home/StartBackground";
 import BrandWordmark from "@/components/BrandWordmark";
 import { Settings2 } from "lucide-react";
@@ -291,6 +292,9 @@ export default function Home() {
                 )}
               </div>
             </div>
+
+            {/* Audio-Momente */}
+            <AudioMoments />
 
             {/* Interactive Experiences */}
             {experiences.length > 0 && (
