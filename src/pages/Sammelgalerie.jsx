@@ -4,7 +4,8 @@ import { Image } from "@/components/ui/image";
 import { useToast } from "@/components/ui/use-toast";
 import { uploadToArchive, loadArchive } from "@/lib/imageArchive";
 import CanvasGrid from "@/components/canvas/CanvasGrid";
-import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic } from "lucide-react";
+import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic, Crop } from "lucide-react";
+import GalleryImageEditor from "@/components/gallery/GalleryImageEditor";
 
 // Private Sammel-Galerie — hier landet alles, was du überall findest: Bilder
 // per Drag-and-Drop, Links zum Einsaugen. Nur im privaten Bereich, nur Admin.
@@ -34,6 +35,7 @@ export default function Sammelgalerie() {
   const [linkKind, setLinkKind] = useState("ALLGEMEIN");
   const [filter, setFilter] = useState("");
   const [kindFilter, setKindFilter] = useState("");
+  const [editing, setEditing] = useState(null);
   const dropRef = useRef(null);
   const fileInput = useRef(null);
 
@@ -122,24 +124,30 @@ export default function Sammelgalerie() {
   // Ein Galerie-Stück direkt in einen offenen Trainings-Satz übernehmen.
   const sendToTraining = async (it) => {
     try {
-      const page = await base44.entities.TrainingSet.filter(
-        { status: { $in: ["SAMMLUNG", "BEREIT"] } },
-        { sort: "-created_date", limit: 1 }
-      );
-      let set = page.items?.[0];
-      if (!set) {
-        set = await base44.entities.TrainingSet.create({
-          personName: "Sammel-Galerie",
-          status: "SAMMLUNG",
-          sourceMedia: [],
-        });
-      }
-      const next = Array.isArray(set.sourceMedia) ? [...set.sourceMedia, it.url] : [it.url];
-      await base44.entities.TrainingSet.update(set.id, { sourceMedia: next });
-      toast({ title: "Ins Training übernommen", description: `${it.name || "Medien"} zu „${set.personName}" hinzugefügt.` });
+      await pushUrlToTraining(it.url);
+      toast({ title: "Ins Training übernommen", description: `${it.name || "Medien"} zu einem Trainingslauf hinzugefügt.` });
     } catch (e) {
       toast({ variant: "destructive", title: "Nicht übernommen", description: e?.message });
     }
+  };
+
+  // Übernimmt eine (bearbeitete) URL in den aktuell offenen Trainings-Satz.
+  const pushUrlToTraining = async (url) => {
+    const page = await base44.entities.TrainingSet.filter(
+      { status: { $in: ["SAMMLUNG", "BEREIT"] } },
+      { sort: "-created_date", limit: 1 }
+    );
+    let set = page.items?.[0];
+    if (!set) {
+      set = await base44.entities.TrainingSet.create({
+        personName: "Sammel-Galerie",
+        status: "SAMMLUNG",
+        sourceMedia: [],
+      });
+    }
+    const next = Array.isArray(set.sourceMedia) ? [...set.sourceMedia, url] : [url];
+    await base44.entities.TrainingSet.update(set.id, { sourceMedia: next });
+    return set;
   };
 
   if (meLoading) {
@@ -252,6 +260,10 @@ export default function Sammelgalerie() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setEditing(t.data)} title="Bearbeiten"
+                    className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
+                    <Crop className="h-3.5 w-3.5" />
+                  </button>
                   <button onClick={() => sendToTraining(t.data)} title="Ins Trainingsset übernehmen"
                     className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
                     <Cpu className="h-3.5 w-3.5" />
@@ -276,6 +288,15 @@ export default function Sammelgalerie() {
             )}
           />
         </div>
+      )}
+
+      {editing && (
+        <GalleryImageEditor
+          item={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => load()}
+          onSendTraining={(url) => pushUrlToTraining(url).then(() => {})}
+        />
       )}
     </div>
   );
