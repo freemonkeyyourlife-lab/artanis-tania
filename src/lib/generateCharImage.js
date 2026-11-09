@@ -1,21 +1,49 @@
 import { base44 } from "@/api/base44Client";
 
-// Erzeugt ein Bild für einen Charakter — und zwar mit dem trainierten LoRA,
-// wenn das Set auf FERTIG steht (trainStatus FERTIG + trainJobId). Dann läuft
-// die Generierung über den RunPod-Pod (runpodGenerate), der die LoRA-Datei
-// lädt. Ohne fertiges LoRA fällt es auf die Standard-GenerateImage zurück,
-// damit die Resultate-Seite auch ohne GPU funktioniert.
+// Erzeugt ein Bild für einen Charakter. Solange kein LoRA trainiert ist,
+// greift die Standard-Generierung — die erfindet gerne eine zweite Person
+// oder ein fremdes Gesicht. Deshalb geben wir ihr 1–2 echte Fotos der
+// Person als Referenz mit (existing_image_urls) und verlangen im Prompt
+// eine einzelne Frau als einziges Motiv im Alltag. Ist das Set auf FERTIG
+// trainiert, läuft die Generierung stattdessen über den RunPod-Pod, der
+// die LoRA-Datei lädt (runpodGenerate).
 //
 // ctxPrompt   — der Charakter-Kontext (Name, Aussehen, Persönlichkeit …)
 // scenePrompt — die konkrete Szene/Pose/Outfit
+
+async function refUrls(set) {
+  const raw = [set?.focusImage, ...(set?.images || []), ...(set?.generatedImages || [])].filter(Boolean);
+  const picked = [];
+  const seen = new Set();
+  for (const u of raw) {
+    if (picked.length >= 2) break;
+    const key = u.split("?")[0];
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (u.startsWith("http")) { picked.push(u); continue; }
+    try {
+      const s = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: u, expires_in: 1800 });
+      if (s?.signed_url) picked.push(s.signed_url);
+    } catch { /* private Uri nicht signierbar — überspringen */ }
+  }
+  return picked;
+}
+
 export async function generateCharImage(set, ctxPrompt, scenePrompt) {
-  const full = `${ctxPrompt}${scenePrompt ? `\n\nSzene: ${scenePrompt}.` : ""}. Bildstil: fotorealistisch, stimmungsvoll, durchgearbeitet.`;
+  const scene = scenePrompt || "Alltagssituation";
+  // Wacht: genau eine Frau, keine zweiten Personen, klares Hauptmotiv.
+  const guard = "Foto einer einzelnen Frau, nur eine Person im Bild, keine weiteren Menschen, die Frau ist das klare Hauptmotiv. ";
+  const full = `${guard}${ctxPrompt}\n\nSzene: ${scene}. Bildstil: fotorealistisch, stimmungsvoll, durchgearbeitet.`;
   const trained = set?.trainStatus === "FERTIG" && !!set?.trainJobId;
   if (trained) {
     const res = await base44.functions.invoke("runpodGenerate", { setId: set.id, prompt: full });
     if (res?.data?.error) throw new Error(res.data.error);
     return res?.data?.imageUrl;
   }
-  const res = await base44.integrations.Core.GenerateImage({ prompt: full });
+  const refs = await refUrls(set);
+  const res = await base44.integrations.Core.GenerateImage({
+    prompt: full,
+    ...(refs.length ? { existing_image_urls: refs } : {}),
+  });
   return res?.url;
 }

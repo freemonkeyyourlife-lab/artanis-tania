@@ -13,19 +13,21 @@ import { generateCharImage } from "@/lib/generateCharImage";
 const SCENES = [
   { key: "alltag_sitz", label: "sitzend, Alltag", prompt: "sitzt entspannt auf einem Sofa, lässiges Alltags-Outfit, Jeans und Shirt, warmes Wohnzimmerlicht" },
   { key: "cafe_trinkt", label: "trinkend, Café", prompt: "sitzt in einem Café und trinkt Kaffee, Sommerkleid, sanftes Tageslicht durchs Fenster, leichtes Lächeln" },
+  { key: "business_tel", label: "Business, telefonierend", prompt: "steht in Business-Outfit mit Blazer am Fenster und telefoniert, kühle Bürobeleuchtung, konzentrierter Blick" },
+  { key: "winter_mantel", label: "Wintermantel, spazierend", prompt: "spaziert in einem dicken Wintermantel über einen Schneeweg, Atemwölkchen, weiches winterliches Gegenlicht" },
+  { key: "shirt_kueche", label: "Küche, nur Shirt", prompt: "steht in der Küche mit nur einem übergroßen Shirt und balanciert eine Tasse, ungekämmtes Haar, helles Morgenlicht" },
+  { key: "auto_fahr", label: "Autofahrend", prompt: "fährt Auto, hält das Lenkrad, Sonnenbrille auf, lockeres Outfit, Straßenlicht der Nacht spiegelt im Glas" },
   { key: "lachen_gehen", label: "lachend, laufend", prompt: "lacht herzhaft und läuft über eine belebte Straße, Mantel und Stiefel, dynamische Bewegung, helles Gegenlicht" },
   { key: "weinen_abend", label: "weinend, Abendkleid", prompt: "eine Träne auf der Wange, sitzt allein am Fenster, dunkles Abendkleid, gedämpftes Mondlicht, melancholische Stimmung" },
-  { key: "auto_fahr", label: "Autofahrend", prompt: "fährt Auto, hält das Lenkrad, Sonnenbrille auf, lockeres Outfit, Straßenlicht der Nacht spiegelt im Glas" },
-  { key: "business_tel", label: "Business, telefonierend", prompt: "steht in Business-Outfit mit Blazer am Fenster und telefoniert, kühle Bürobeleuchtung, konzentrierter Blick" },
   { key: "strand_bade", label: "am Strand, Bademode", prompt: "steht am Strand in Bademode, Salztropfen auf der Haut, goldene Stunde, weht der Wind durchs Haar" },
   { key: "leder_liegt", label: "liegend, Leder", prompt: "liegt auf einem Ledersofa, enge Jeans und Top, weiche Leselampe, selbstbewusster Blick in die Kamera" },
   { key: "tanzen_abend", label: "tanzend, Abendkleid", prompt: "tanzt in einem schimmernden Abendkleid, Club-Licht, verschwommene Lichtpunkte im Hintergrund, in Bewegung" },
-  { key: "winter_mantel", label: "Wintermantel, spazierend", prompt: "spaziert in einem dicken Wintermantel über einen Schneeweg, Atemwölkchen, weiches winterliches Gegenlicht" },
   { key: "unterwaesche_liegt", label: "Unterwäsche, liegend", prompt: "liegt auf weißen Laken in Unterwäsche, weiche Morgensonne fällt durch die Jalousie, intime ruhige Stimmung" },
-  { key: "shirt_kueche", label: "Küche, nur Shirt", prompt: "steht in der Küche mit nur einem übergroßen Shirt und balanciert eine Tasse, ungekämmtes Haar, helles Morgenlicht" },
 ];
 
-const DEFAULT_SEL = SCENES.slice(0, 6).map((s) => s.key);
+// Vorauswahl = nur Alltagssituationen — die Person im normalen Leben,
+// nicht gleich in pose-reichen oder expliziten Szenen.
+const DEFAULT_SEL = ["alltag_sitz", "cafe_trinkt", "business_tel", "winter_mantel", "shirt_kueche", "auto_fahr"];
 
 export default function ResultSetGenerator({ row, onUpdated }) {
   const { toast } = useToast();
@@ -115,9 +117,9 @@ export default function ResultSetGenerator({ row, onUpdated }) {
       {open && (
         <div className="mt-3">
           <p className="text-xs text-muted-foreground">
-            Wähle, in welchen Outfits, Posen und Stimmungen der Charakter geprüft werden soll.
-            Jede Szene wird einzeln erzeugt und dem Set hinzugefügt — so siehst du auf einen Blick,
-            ob die Trainingsqualität in jeder Lage hält.
+            Vorausgewählt sind Alltagssituationen — die Person im normalen Leben. Wer
+            weitere Outfits oder Posen will, kann sie unten dazuklicken. Pro Bild werden
+            1–2 echte Fotos als Referenz mitgegeben, damit keine zweite Person erfunden wird.
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {SCENES.map((s) => {
