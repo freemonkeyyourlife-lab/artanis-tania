@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Loader2, X, Cpu, Check } from "lucide-react";
+import { Loader2, X, Cpu, Check, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 // Verknüpft Galerie-Medien direkt mit der Trainings-Werkstatt: wähle einen
@@ -14,6 +15,8 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
   const [selectedId, setSelectedId] = useState(null);
   const [newName, setNewName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(null);
+  const navigate = useNavigate();
 
   const urls = (media || [])
     .map((m) => (typeof m === "string" ? m : m?.url))
@@ -25,6 +28,7 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
     setLoading(true);
     setNewName("");
     setSelectedId(null);
+    setDone(null);
     base44.entities.TrainingSet
       .filter({ status: { $in: ["SAMMLUNG", "BEREIT"] } }, { sort: "order", limit: 50 })
       .then((page) => {
@@ -58,9 +62,9 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
         await base44.entities.TrainingSet.update(selectedId, { sourceMedia: next });
         setName = set?.personName || "Satz";
       }
-      toast({ title: "Ins Training übernommen", description: `${urls.length} Medium(ien) → „${setName}".` });
+      toast({ title: "Ins Training übernommen", description: `${urls.length} Medium(ien) → ${setName}.` });
       onDone?.();
-      onClose();
+      setDone({ name: setName });
     } catch (e) {
       toast({ variant: "destructive", title: "Fehlgeschlagen", description: e?.message });
     } finally {
@@ -69,6 +73,24 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
   };
 
   if (!open) return null;
+
+  if (done) {
+    return (
+      <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 text-center" onClick={(e) => e.stopPropagation()}>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15"><Check className="h-6 w-6 text-primary" /></div>
+          <h2 className="font-display text-xl text-foreground">Ins Training übernommen</h2>
+          <p className="mt-1 text-xs text-muted-foreground">{urls.length} Medium(ien) → {done.name}. Die Werkstatt extrahiert Video-Frames automatisch zu Bildern.</p>
+          <div className="mt-5 flex flex-col gap-2">
+            <button onClick={() => navigate("/trainingsset")} className="glass-btn glass-btn-accent inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2 text-sm">
+              <Cpu className="h-4 w-4" /> Zur Trainings-Werkstatt <ArrowRight className="h-4 w-4" />
+            </button>
+            <button onClick={onClose} className="rounded-full bg-elevated px-5 py-2 text-sm text-muted-foreground hover:text-foreground">Weiter in der Galerie</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
