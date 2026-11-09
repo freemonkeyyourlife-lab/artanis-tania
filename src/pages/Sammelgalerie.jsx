@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { useToast } from "@/components/ui/use-toast";
 import { uploadToArchive, loadArchive } from "@/lib/imageArchive";
-import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images } from "lucide-react";
+import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic } from "lucide-react";
 
 // Private Sammel-Galerie — hier landet alles, was du überall findest: Bilder
 // per Drag-and-Drop, Links zum Einsaugen. Nur im privaten Bereich, nur Admin.
@@ -15,6 +15,11 @@ const KINDS = [
   { value: "CHARAKTER", label: "Charakter" },
   { value: "BAUSATZ", label: "Bausatz" },
 ];
+
+// Media-Typ anhand der Adresse erkennen — Bild, Video oder Audio.
+const isVideo = (u) => /\.(mp4|mov|webm|avi|mkv|m4v|ogv)$/i.test((u || "").split(/[?#]/)[0]);
+const isAudio = (u) => /\.(mp3|wav|ogg|m4a|flac|aac|opus)$/i.test((u || "").split(/[?#]/)[0]);
+const mediaType = (u) => (isVideo(u) ? "video" : isAudio(u) ? "audio" : "image");
 
 export default function Sammelgalerie() {
   const { toast } = useToast();
@@ -46,9 +51,13 @@ export default function Sammelgalerie() {
   }, [load]);
 
   const addFiles = async (files, kind = "ALLGEMEIN", note = "") => {
-    const arr = Array.from(files || []).filter((f) => f.type?.startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(f.name));
+    const arr = Array.from(files || []).filter(
+      (f) =>
+        f.type?.startsWith("image/") || f.type?.startsWith("video/") || f.type?.startsWith("audio/") ||
+        /\.(png|jpe?g|webp|gif|mp4|mov|webm|avi|mkv|m4v|ogv|mp3|wav|ogg|m4a|flac|aac|opus)$/i.test(f.name)
+    );
     if (!arr.length) {
-      toast({ variant: "destructive", title: "Nur Bilder", description: "Die Datei muss ein Bild sein." });
+      toast({ variant: "destructive", title: "Nur Medien", description: "Bilder, Videos oder Audio-Clips werden unterstützt." });
       return;
     }
     setBusy(true);
@@ -109,6 +118,29 @@ export default function Sammelgalerie() {
     }
   };
 
+  // Ein Galerie-Stück direkt in einen offenen Trainings-Satz übernehmen.
+  const sendToTraining = async (it) => {
+    try {
+      const page = await base44.entities.TrainingSet.filter(
+        { status: { $in: ["SAMMLUNG", "BEREIT"] } },
+        { sort: "-created_date", limit: 1 }
+      );
+      let set = page.items?.[0];
+      if (!set) {
+        set = await base44.entities.TrainingSet.create({
+          personName: "Sammel-Galerie",
+          status: "SAMMLUNG",
+          sourceMedia: [],
+        });
+      }
+      const next = Array.isArray(set.sourceMedia) ? [...set.sourceMedia, it.url] : [it.url];
+      await base44.entities.TrainingSet.update(set.id, { sourceMedia: next });
+      toast({ title: "Ins Training übernommen", description: `${it.name || "Medien"} zu „${set.personName}" hinzugefügt.` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Nicht übernommen", description: e?.message });
+    }
+  };
+
   if (meLoading) {
     return <div className="flex justify-center py-24"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
@@ -148,11 +180,11 @@ export default function Sammelgalerie() {
         onClick={() => fileInput.current?.click()}
         className="mt-6 cursor-pointer rounded-2xl border-2 border-dashed border-border bg-card/60 p-8 text-center transition-colors hover:border-primary/50"
       >
-        <input ref={fileInput} type="file" accept="image/*" multiple className="hidden"
+        <input ref={fileInput} type="file" accept="image/*,video/*,audio/*" multiple className="hidden"
           onChange={(e) => e.target.files?.length && addFiles(e.target.files)} />
         <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 text-sm text-foreground font-heading">Bilder hierher ziehen oder klicken</p>
-        <p className="text-xs text-muted-foreground">PNG, JPG, WebP, GIF — wird gespeichert (stored privately) und im Archiv abgelegt.</p>
+        <p className="mt-2 text-sm text-foreground font-heading">Medien hierher ziehen oder klicken</p>
+        <p className="text-xs text-muted-foreground">Bilder, Videos, Audio-Clips — wird im Archiv abgelegt und fürs Training bereitgestellt.</p>
       </div>
 
       {/* Link einsinsaugen */}
@@ -205,10 +237,23 @@ export default function Sammelgalerie() {
           {filtered.map((it) => (
             <div key={it.id} className="group relative overflow-hidden rounded-2xl border border-border bg-elevated">
               <div className="aspect-[3/4] w-full overflow-hidden bg-background">
-                <Image src={it.url} fittingType="fill" className="h-full w-full" />
+                {mediaType(it.url) === "video" ? (
+                  <video src={it.url} className="h-full w-full object-cover" controls muted />
+                ) : mediaType(it.url) === "audio" ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3">
+                    <Mic className="h-8 w-8 text-primary" />
+                    <audio src={it.url} controls className="w-full" />
+                  </div>
+                ) : (
+                  <Image src={it.url} fittingType="fill" className="h-full w-full" />
+                )}
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => sendToTraining(it)} title="Ins Trainingsset übernehmen"
+                  className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
+                  <Cpu className="h-3.5 w-3.5" />
+                </button>
                 <button onClick={() => remove(it.id)} title="Löschen"
                   className="rounded-full bg-black/60 p-1.5 text-white hover:bg-destructive">
                   <Trash2 className="h-3.5 w-3.5" />
