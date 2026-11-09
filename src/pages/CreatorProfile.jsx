@@ -8,6 +8,7 @@ import ReadAloudButton from "@/components/ReadAloudButton";
 import ContentCard from "@/components/ContentCard";
 import StoryCard from "@/components/StoryCard";
 import CharacterForm from "@/components/studio/CharacterForm";
+import CharacterVoicePicker from "@/components/creator/CharacterVoicePicker";
 import { cn } from "@/lib/utils";
 
 export default function CreatorProfile({ personaType }) {
@@ -147,6 +148,9 @@ export default function CreatorProfile({ personaType }) {
             ))}
           </div>
         )}
+
+        {/* Stimme — nur für die Besitzerin sichtbar */}
+        <CharacterVoicePicker creator={creator} onSaved={loadData} />
 
         {/* Tabs */}
         <div className="mt-8 flex gap-2 overflow-x-auto scrollbar-hide border-b border-border pb-px">
