@@ -42,6 +42,17 @@
         "type": "string"
       }
     },
+    "focusImage": {
+      "type": "string",
+      "description": "Das Referenzbild der Fokus-Person \u2014 kommt als erstes ins Training, damit das Modell die richtige Person lernt."
+    },
+    "excludeImages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Bilder, die eine andere Person zeigen und aus dem Training rausbleiben sollen."
+    },
     "avatar": {
       "type": "string"
     },

@@ -19,16 +19,22 @@ export default async function (req) {
       .catch((e) => (e.status === 404 ? null : Promise.reject(e)));
     if (!set) return Response.json({ error: 'Set nicht gefunden' }, { status: 404 });
 
-    // Alle Bilder (echte + erzeugte) zusammenfassen.
-    const all = [...(set.images || []), ...(set.generatedImages || [])].filter(Boolean);
-    if (all.length < 1) {
-      return Response.json({ error: 'Set hat keine Bilder — erst auffüllen.' }, { status: 400 });
+    // Alle Bilder (echte + erzeugte) zusammenfassen — aussortierte (andere
+    // Person) wegwerfen und das Fokus-Bild nach vorne, damit das Modell die
+    // richtige Person lernt.
+    const ex = new Set(set.excludeImages || []);
+    const all = [...(set.images || []), ...(set.generatedImages || [])].filter(Boolean).filter((u) => !ex.has(u));
+    const ordered = set.focusImage && all.includes(set.focusImage)
+      ? [set.focusImage, ...all.filter((u) => u !== set.focusImage)]
+      : all;
+    if (ordered.length < 1) {
+      return Response.json({ error: 'Set hat keine Bilder — erst auffüllen oder Ausschluss prüfen.' }, { status: 400 });
     }
 
     // Private Uris zu temporär signierten öffentlichen URLs machen, damit
     // die RunPod-GPU sie ohne Anmeldung laden kann.
     const imageUrls = [];
-    for (const u of all) {
+    for (const u of ordered) {
       if (u.startsWith('http')) { imageUrls.push(u); continue; }
       const s = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
         file_uri: u, expires_in: 7200,

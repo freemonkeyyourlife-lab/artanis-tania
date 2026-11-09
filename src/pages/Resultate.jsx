@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
 import { Loader2, Lock, Sparkles, Download, Wand2, Package, Images, Cpu } from "lucide-react";
 import JSZip from "jszip";
+import FokusTagging from "@/components/trainingsset/FokusTagging";
 
 // Resultate & Vorschau: alle fertig trainierten KI-Charaktere an einem Ort.
 // Pro Charakter die generierten Bilder sehen, ein neues Bild in Aktion
@@ -206,6 +207,8 @@ export default function Resultate() {
                     {busy === r.set.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Neues Bild
                   </button>
                 </div>
+
+                <FokusTagging set={r.set} onSaved={load} />
               </div>
             );
           })}
