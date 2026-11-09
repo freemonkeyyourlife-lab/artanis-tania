@@ -1,0 +1,56 @@
+{
+  "name": "DesignTheme",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "default": "default",
+      "description": "Eindeutiger Schl\u00fcssel f\u00fcr das aktive Theme (z.B. \"default\")."
+    },
+    "font": {
+      "type": "string",
+      "default": "Montserrat"
+    },
+    "lineHeight": {
+      "type": "number",
+      "default": 1.6
+    },
+    "accentH": {
+      "type": "number",
+      "default": 16
+    },
+    "accentS": {
+      "type": "number",
+      "default": 65
+    },
+    "accentL": {
+      "type": "number",
+      "default": 68
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "key"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
