@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import PartnerInvite from "@/components/private/PartnerInvite";
 import StudioHints from "@/components/studio/StudioHints";
 import MediaDownloadOverlay from "@/components/studio/MediaDownloadOverlay";
+import StudioExportAll from "@/components/studio/StudioExportAll";
 
 // Privates Layout für den Bau- und Trainingsbereich: nur Besitzerin (admin).
 // Nicht-Admins sehen einen Hinweis statt der Werkzeuge — strikte Trennung
@@ -97,6 +98,7 @@ export default function PrivateBuild() {
             <Link to="/werkstatt" className="rounded-full bg-primary px-3 py-1.5 font-semibold text-primary-foreground">
               Werkstatt
             </Link>
+            <StudioExportAll />
             <Link to="/" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
               Zur öffentlichen Seite
             </Link>
