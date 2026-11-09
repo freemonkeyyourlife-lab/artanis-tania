@@ -22,6 +22,7 @@ export const MODULE_TYPES = [
   { path: "/verkauf", label: "Verkaufs-Dashboard", description: "Umsatz, offene Beträge, Abos und die letzten Zahlungen." },
   { path: "/contests", label: "Wettbewerbe", description: "Wettbewerbe und ihre Beiträge." },
   { path: "/studio", label: "Studio", description: "Hier legst du Charaktere, Stimmen und Inhalte an." },
+  { path: "/werkstatt", label: "Werkstatt", description: "Dein privater Raum: Charakter-Fabrik und frei sortierbare Kachel-Leinwand, abseits des App-Verkehrs." },
   { path: "/ideen", label: "Ideen-Ordner", description: "Ideen und Geschichten mit den Menschen, die dazugehören, dem Prompt und den Bildern." },
   { path: "/creator-studio", label: "Creator-Studio", description: "Dasselbe Studio als eigene Seite, ohne Website drumherum — für Charaktere und Stimmen." },
   { path: "/externes-studio", label: "Externes Studio", description: "Der Arbeitsplatz für Bilder: Inhalte, Vorlagen und Modelle auf einen Blick." },
@@ -109,6 +110,7 @@ export const NAV_GROUPS = {
   "/couple": "Die drei",
 
   "/studio": "Bauen",
+  "/werkstatt": "Bauen",
   "/ideen": "Bauen",
   "/externes-studio": "Bauen",
   "/stimmen": "Bauen",
@@ -213,6 +215,7 @@ export const FIXED_AREAS = [
     label: "Selbst erstellen",
     items: [
       { label: "Studio", path: "/studio" },
+      { label: "Werkstatt", path: "/werkstatt" },
       { label: "Ideen-Ordner", path: "/ideen" },
       { label: "Externes Studio", path: "/externes-studio" },
       { label: "Stimmen", path: "/stimmen" },

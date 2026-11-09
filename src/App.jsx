@@ -84,6 +84,7 @@ import Logbuch from '@/pages/Logbuch';
 import ChatModul from '@/pages/ChatModul';
 import Hilfe from '@/pages/Hilfe';
 import StoryDashboard from '@/pages/StoryDashboard';
+import Werkstatt from '@/pages/Werkstatt';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import LiveEdgeChat from '@/components/LiveEdgeChat';
@@ -198,6 +199,7 @@ const AuthenticatedApp = () => {
         <Route path="/logbuch" element={<Logbuch />} />
         <Route path="/hilfe" element={<Hilfe />} />
       <Route path="/story-dashboard" element={<StoryDashboard />} />
+      <Route path="/werkstatt" element={<Werkstatt />} />
         <Route path="/modellplan" element={<ModelPlan />} />
         <Route path="/archiv" element={<Archive />} />
         <Route path="/planung" element={<ContentPlan />} />
