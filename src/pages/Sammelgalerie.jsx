@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { useToast } from "@/components/ui/use-toast";
 import { uploadToArchive, loadArchive } from "@/lib/imageArchive";
+import CanvasGrid from "@/components/canvas/CanvasGrid";
 import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic } from "lucide-react";
 
 // Private Sammel-Galerie — hier landet alles, was du überall findest: Bilder
@@ -227,51 +228,53 @@ export default function Sammelgalerie() {
         </span>
       </div>
 
-      {/* Grid */}
+      {/* Galerie als Canvas — frei anordnen, skalieren, löschen (pro Seite gespeichert) */}
       {loading ? (
         <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Lade Galerie …</div>
-      ) : filtered.length === 0 ? (
-        <p className="mt-8 text-center text-sm text-muted-foreground">Noch nichts gesammelt. Zieh Bilder hierher oder saug einen Link ein.</p>
       ) : (
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {filtered.map((it) => (
-            <div key={it.id} className="group relative overflow-hidden rounded-2xl border border-border bg-elevated">
-              <div className="aspect-[3/4] w-full overflow-hidden bg-background">
-                {mediaType(it.url) === "video" ? (
-                  <video src={it.url} className="h-full w-full object-cover" controls muted />
-                ) : mediaType(it.url) === "audio" ? (
+        <div className="mt-6">
+          <CanvasGrid
+            storageKey="sammelgalerie"
+            tileClassName="aspect-[3/4]"
+            items={filtered.map((it) => ({ key: it.id, data: it }))}
+            emptyText="Noch nichts gesammelt. Zieh Medien hierher oder saug einen Link ein."
+            renderTile={(t) => (
+              <div className="group relative h-full w-full overflow-hidden bg-background">
+                {mediaType(t.data.url) === "video" ? (
+                  <video src={t.data.url} className="h-full w-full object-cover" controls muted />
+                ) : mediaType(t.data.url) === "audio" ? (
                   <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3">
                     <Mic className="h-8 w-8 text-primary" />
-                    <audio src={it.url} controls className="w-full" />
+                    <audio src={t.data.url} controls className="w-full" />
                   </div>
                 ) : (
-                  <Image src={it.url} fittingType="fill" className="h-full w-full" />
+                  <Image src={t.data.url} fittingType="fill" className="h-full w-full" />
                 )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => sendToTraining(t.data)} title="Ins Trainingsset übernehmen"
+                    className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
+                    <Cpu className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => remove(t.data.id)} title="Löschen"
+                    className="rounded-full bg-black/60 p-1.5 text-white hover:bg-destructive">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="truncate text-[11px] text-white/90">{t.data.name || "Ohne Name"}</p>
+                  {t.data.note && <p className="truncate text-[10px] text-white/60">{t.data.note}</p>}
+                  <select value={t.data.kind || "ALLGEMEIN"} onChange={(e) => setKind(t.data, e.target.value)}
+                    className="mt-1 w-full rounded bg-black/60 px-1.5 py-1 text-[10px] text-white">
+                    {KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
+                  </select>
+                </div>
+                <span className="absolute top-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white/90">
+                  {KINDS.find((k) => k.value === t.data.kind)?.label || "Allgemein"}
+                </span>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => sendToTraining(it)} title="Ins Trainingsset übernehmen"
-                  className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
-                  <Cpu className="h-3.5 w-3.5" />
-                </button>
-                <button onClick={() => remove(it.id)} title="Löschen"
-                  className="rounded-full bg-black/60 p-1.5 text-white hover:bg-destructive">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="truncate text-[11px] text-white/90">{it.name || "Ohne Name"}</p>
-                {it.note && <p className="truncate text-[10px] text-white/60">{it.note}</p>}
-                <select value={it.kind || "ALLGEMEIN"} onChange={(e) => setKind(it, e.target.value)}
-                  className="mt-1 w-full rounded bg-black/60 px-1.5 py-1 text-[10px] text-white">
-                  {KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
-                </select>
-              </div>
-              <span className="absolute top-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white/90">
-                {KINDS.find((k) => k.value === it.kind)?.label || "Allgemein"}
-              </span>
-            </div>
-          ))}
+            )}
+          />
         </div>
       )}
     </div>
