@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, Download, MessageSquare, Stethoscope, Archive as ArchiveIcon } from "lucide-react";
+import { Search, Download, MessageSquare, Stethoscope, Archive as ArchiveIcon, Package, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ArchiveRow from "@/components/archive/ArchiveRow";
 import ChatTranscript from "@/components/archive/ChatTranscript";
@@ -8,6 +8,7 @@ import TherapyThread from "@/components/therapy/TherapyThread";
 import SessionPlan from "@/components/therapy/SessionPlan";
 import { downloadSession } from "@/lib/therapyExport";
 import { downloadChat } from "@/lib/chatExport";
+import { exportZip, attachmentsFromMessages, transcriptText } from "@/lib/exportZip";
 
 const TABS = [
   { value: "therapy", label: "Sprechstunde", icon: Stethoscope },
@@ -54,6 +55,7 @@ export default function Archive() {
   const [activeId, setActiveId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [zipping, setZipping] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setQuery(search), 350);
@@ -239,9 +241,35 @@ export default function Archive() {
                 </div>
                 <button
                   onClick={() => (tab === "therapy" ? downloadSession(active, messages) : downloadChat(active, messages))}
+                  title="Nur der Text-Verlauf als Datei"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                 >
-                  <Download className="w-3.5 h-3.5" /> Herunterladen
+                  <Download className="w-3.5 h-3.5" /> Text
+                </button>
+                <button
+                  onClick={async () => {
+                    if (zipping) return;
+                    setZipping(true);
+                    try {
+                      const files = attachmentsFromMessages(messages);
+                      const text = transcriptText(active, messages, tab);
+                      const base = tab === "therapy"
+                        ? `sitzung-${active.topic || active.id}`
+                        : `chat-${active.userName || active.id}`;
+                      const added = await exportZip({ name: base, files, textName: "verlauf.txt", text });
+                      if (added === 0 && files.length === 0) {
+                        // Keine Medien: nur Text-ZIP reicht auch.
+                        await exportZip({ name: base, text, textName: "verlauf.txt" });
+                      }
+                    } finally {
+                      setZipping(false);
+                    }
+                  }}
+                  disabled={zipping}
+                  title="Bilder, Videos und Sprachnachrichten plus Verlauf als ZIP auf die Festplatte"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-[11px] font-semibold text-primary-foreground disabled:opacity-50 flex-shrink-0"
+                >
+                  {zipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Package className="w-3.5 h-3.5" />} ZIP mit Medien
                 </button>
               </div>
 

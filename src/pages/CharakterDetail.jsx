@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Mic, BookOpen } from "lucide-react";
+import { ArrowLeft, Mic, BookOpen, Package, Loader2 } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { useSignedImage } from "@/lib/mediaSign";
 import Mischpult from "@/components/charakter/Mischpult";
@@ -10,6 +10,7 @@ import ErstellenPanel from "@/components/charakter/ErstellenPanel";
 import StudioAnleitung from "@/components/studio/StudioAnleitung";
 import { PALETTE } from "@/lib/palette";
 import { COMBINE_KINDS, modulesOfKind } from "@/lib/combine";
+import { exportZip } from "@/lib/exportZip";
 
 // Eine Figur aufgeschlagen: großes Bild, alle sechs Felder, das Mischpult und
 // die Logbuchaufträge. Hier wird zusammengestellt wie im Baukasten.
@@ -21,6 +22,7 @@ export default function CharakterDetail() {
   const [modules, setModules] = useState([]);
   const [voices, setVoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [zipping, setZipping] = useState(false);
   const avatarSrc = useSignedImage(character?.avatar);
   const bgSrc = useSignedImage(character?.backgroundImage);
 
@@ -102,11 +104,63 @@ export default function CharakterDetail() {
             </div>
           )}
 
-          <h1 className="mt-4 font-display text-4xl text-foreground text-gloss">{character.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {character.adultAge}+ {character.art ? `· ${character.art}` : ""} ·{" "}
-            {character.createdByRole === "DAVID" ? "von David" : "von Gast"}
-          </p>
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="font-display text-4xl text-foreground text-gloss">{character.name}</h1>
+              <p className="text-sm text-muted-foreground">
+                {character.adultAge}+ {character.art ? `· ${character.art}` : ""} ·{" "}
+                {character.createdByRole === "DAVID" ? "von David" : "von Gast"}
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                if (zipping) return;
+                setZipping(true);
+                try {
+                  const files = [
+                    avatarSrc ? { url: avatarSrc, kind: "image", name: "avatar.png" } : null,
+                    bgSrc ? { url: bgSrc, kind: "image", name: "hintergrund.png" } : null,
+                    ...(character.images || []).map((u, i) => ({ url: u, kind: "image", name: `bild-${String(i + 1).padStart(2, "0")}.png` })),
+                    ...stories.flatMap((s) =>
+                      (s.media || []).map((m, i) => ({
+                        url: m.url,
+                        kind: (m.type || "image").toLowerCase(),
+                        name: `story-${String(s.title || "story").replace(/[^\wäöüÄÖÜß-]+/g, "_").slice(0, 30)}-${i + 1}`,
+                      }))
+                    ),
+                  ].filter(Boolean);
+                  const text = [
+                    `Charakter: ${character.name}`,
+                    `Alter: ${character.adultAge}+`,
+                    character.art ? `Art: ${character.art}` : "",
+                    character.appearance ? `Aussehen: ${character.appearance}` : "",
+                    character.behavior ? `Benehmen: ${character.behavior}` : "",
+                    character.understanding ? `Verständnis: ${character.understanding}` : "",
+                    character.personality ? `Persönlichkeit: ${character.personality}` : "",
+                    character.description ? `Beschreibung: ${character.description}` : "",
+                    character.relationship ? `Beziehung: ${character.relationship}` : "",
+                    `Neigungen: ${(character.neigungen || []).join(", ")}`,
+                    "",
+                    `Storys: ${stories.length}`,
+                    ...stories.map((s) => `- ${s.title}`),
+                  ].filter((l) => l !== "").join("\n");
+                  await exportZip({
+                    name: `charakter-${character.name}`,
+                    files,
+                    textName: "charakter.txt",
+                    text,
+                  });
+                } finally {
+                  setZipping(false);
+                }
+              }}
+              disabled={zipping}
+              title="Alle Bilder, Story-Medien und die Charakter-Daten als ZIP auf die Festplatte"
+              className="glass-btn glass-btn-accent inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm disabled:opacity-50"
+            >
+              {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />} Export als ZIP
+            </button>
+          </div>
 
           <div className="mt-4 space-y-3">
             {FIELDS.map(([label, value]) => (
