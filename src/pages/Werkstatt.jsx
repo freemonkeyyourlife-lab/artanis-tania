@@ -1,23 +1,59 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Loader2, Lock, Cpu, Images, Boxes, Mic, Wand2, Users } from "lucide-react";
+import {
+  Loader2, Lock, Cpu, Images, Boxes, Mic, Wand2, Users,
+  Home, Compass, Film, Image as ImageIcon, BookOpen, Hash, Radio, Gamepad2,
+  UsersRound, HeartPulse, Coins, Bookmark, MessageSquare, Stethoscope, Gift,
+  CalendarDays, ShoppingCart, BarChart3, Trophy, Settings, LifeBuoy, Megaphone,
+  LayoutGrid, Star, User, GraduationCap, BookText, Network, FlaskConical,
+} from "lucide-react";
 import FabrikForm from "@/components/werkstatt/FabrikForm";
 import CharakterCanvas from "@/components/werkstatt/CharakterCanvas";
 import WerkstattSpiel from "@/components/werkstatt/WerkstattSpiel";
+import { FIXED_AREAS } from "@/lib/modules";
+import { DEFAULT_MENU } from "@/lib/siteLayout";
 
 // Private Werkstatt — abgetrennt vom öffentlichen App-Verkehr. Nur für die
 // Besitzerin: hier Charaktere als Fabrik anlegen und die Kachel-Leinwand
 // im Bearbeitungsmodus frei sortieren.
 
-const ACTIONS = [
-  { key: "train", label: "Training", to: "/trainingsset", icon: Cpu },
-  { key: "archiv", label: "Galerie / Archiv", to: "/archiv", icon: Images },
-  { key: "baukasten", label: "Baukasten", to: "/baukasten", icon: Boxes },
-  { key: "stimmen", label: "Stimmen", to: "/stimmen", icon: Mic },
-  { key: "charakter", label: "Charaktere", to: "/charakter", icon: Users },
-  { key: "fabrik", label: "Fabrik", to: "/werkstatt", icon: Wand2 },
-];
+// Ikonen für die Menüpunkte — was keinen festen Icon bekommt, bekommt Raster.
+const ICON_BY_PATH = {
+  "/": Home, "/artanis": Star, "/tania": Star, "/couple": Star,
+  "/studio": Wand2, "/werkstatt": Wand2, "/ideen": BookText, "/externes-studio": ImageIcon,
+  "/stimmen": Mic, "/baukasten": Boxes, "/dock": Network, "/planung": CalendarDays,
+  "/paylinks": ShoppingCart, "/prompt": FlaskConical, "/banana": FlaskConical,
+  "/palette": Boxes, "/chatmodul": MessageSquare, "/erzaehler": Megaphone,
+  "/trainingsset": Cpu, "/hilfe": LifeBuoy, "/vorleser": Megaphone,
+  "/explore": Compass, "/videos": Film, "/photos": ImageIcon, "/stories": BookOpen,
+  "/topics": Hash, "/live": Radio, "/interactive": Gamepad2, "/groups": UsersRound,
+  "/community": UsersRound, "/contests": Trophy, "/messages": MessageSquare,
+  "/therapy": Stethoscope, "/request": Gift, "/library": Bookmark, "/coins": Coins,
+  "/account": User, "/tutorial": GraduationCap, "/anleitung": BookOpen,
+  "/archiv": Images, "/admin": Settings, "/leitstand": Settings, "/owner": Settings,
+  "/struktur": LayoutGrid, "/logbuch": BookOpen, "/sandbox": LayoutGrid,
+  "/vorschau": LayoutGrid, "/modellplan": Cpu, "/leitfaden": BookOpen,
+  "/lernordner": BookOpen, "/spickzettel": BookOpen, "/story-dashboard": BarChart3,
+  "/verkauf": BarChart3, "/creator-studio": Wand2,
+};
+const iconFor = (path) => ICON_BY_PATH[path] || LayoutGrid;
+
+// Das ganze Dashboard als Kacheln: Charaktere-Bereich, „Selbst erstellen",
+// Verwaltung und dein Menü — alles frei anordnen, skalieren, löschen.
+const ACTIONS = (() => {
+  const out = [];
+  const seen = new Set();
+  const add = (path, label) => {
+    const key = "nav-" + path;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ key, label, to: path, icon: iconFor(path) });
+  };
+  FIXED_AREAS.forEach((a) => a.items.forEach((it) => add(it.path, it.label)));
+  DEFAULT_MENU.forEach((m) => add(m.path, m.label));
+  return out;
+})();
 
 export default function Werkstatt() {
   const navigate = useNavigate();
