@@ -80,6 +80,9 @@ export default function PrivateBuild() {
             <Link to="/studio-hilfe" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
               Hilfe
             </Link>
+            <Link to="/trainingszentrale" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
+              Trainings-Zentrale
+            </Link>
             <Link to="/schnittstelle" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
               Schnittstelle
             </Link>

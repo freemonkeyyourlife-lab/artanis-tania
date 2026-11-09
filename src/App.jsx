@@ -88,6 +88,7 @@ import Werkstatt from '@/pages/Werkstatt';
 import Sammelgalerie from '@/pages/Sammelgalerie';
 import Schnittstelle from '@/pages/Schnittstelle';
 import StudioHilfe from '@/pages/StudioHilfe';
+import TrainingsZentrale from '@/pages/TrainingsZentrale';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import LiveEdgeChat from '@/components/LiveEdgeChat';
@@ -224,6 +225,7 @@ const AuthenticatedApp = () => {
         <Route path="/sammelgalerie" element={<Sammelgalerie />} />
         <Route path="/schnittstelle" element={<Schnittstelle />} />
         <Route path="/studio-hilfe" element={<StudioHilfe />} />
+        <Route path="/trainingszentrale" element={<TrainingsZentrale />} />
         </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>
