@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
-import { Loader2, Lock, Sparkles, Download, Wand2, Package, Images, Cpu, Trash2, Image as ImageIcon } from "lucide-react";
+import { Loader2, Lock, Sparkles, Download, Wand2, Package, Images, Cpu, Trash2, Image as ImageIcon, Copy } from "lucide-react";
 import JSZip from "jszip";
 import FokusTagging from "@/components/trainingsset/FokusTagging";
 import ResultSetGenerator from "@/components/resultate/ResultSetGenerator";
@@ -116,6 +116,26 @@ export default function Resultate() {
     toast({ title: "Ins Training übernommen", description: "Beim nächsten Lauf mit dabei — feiner wird's." });
   };
 
+  // Dubletten (gleiche URL) aus generierten Bildern und Trainings-Pool entfernen.
+  const dedupe = async (r) => {
+    const gen = r.set.generatedImages || [];
+    const imgs = r.set.images || [];
+    const genUnique = Array.from(new Set(gen));
+    const imgsUnique = Array.from(new Set(imgs));
+    const metaUnique = (r.set.generatedMeta || []).filter(
+      (m, i, arr) => genUnique.includes(m.url) && arr.findIndex((x) => x.url === m.url) === i
+    );
+    if (genUnique.length === gen.length && imgsUnique.length === imgs.length) {
+      toast({ title: "Keine Dubletten", description: "Alles schon einmalig." });
+      return;
+    }
+    const patch = { generatedImages: genUnique, images: imgsUnique, generatedMeta: metaUnique };
+    if (r.set.avatar && gen.includes(r.set.avatar) && !genUnique.includes(r.set.avatar)) patch.avatar = "";
+    await base44.entities.TrainingSet.update(r.set.id, patch);
+    setRows((xs) => xs.map((x) => (x.set.id === r.set.id ? { ...x, set: { ...x.set, ...patch } } : x)));
+    toast({ title: "Dubletten entfernt", description: `${(gen.length - genUnique.length) + (imgs.length - imgsUnique.length)} Duplikat(e) raus.` });
+  };
+
   const downloadImage = (url, name) => {
     const a = document.createElement("a");
     a.href = url;
@@ -220,10 +240,16 @@ export default function Resultate() {
                       {r.char && <Link to={`/charakter/${r.char.id}`} className="text-primary hover:underline">Charakter öffnen</Link>}
                     </div>
                   </div>
-                  <button onClick={() => zipAll(r)} disabled={zipping === r.set.id || !imgs.length} title="Alle Bilder dieses Charakters als ZIP auf die Festplatte speichern"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
-                    {zipping === r.set.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Package className="h-3.5 w-3.5" />} Alles als ZIP
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => zipAll(r)} disabled={zipping === r.set.id || !imgs.length} title="Alle Bilder dieses Charakters als ZIP auf die Festplatte speichern"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
+                      {zipping === r.set.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Package className="h-3.5 w-3.5" />} Alles als ZIP
+                    </button>
+                    <button onClick={() => dedupe(r)} title="Gleiche Bilder (Dubletten) aus diesem Satz entfernen"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-elevated px-3 py-2 text-xs text-muted-foreground hover:text-foreground">
+                      <Copy className="h-3.5 w-3.5" /> Dubletten raus
+                    </button>
+                  </div>
                 </div>
 
                 {imgs.length > 0 ? (

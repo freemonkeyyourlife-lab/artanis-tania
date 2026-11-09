@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Loader2, X, Cpu, Check, ArrowRight } from "lucide-react";
+import { Loader2, X, Cpu, Check, ArrowRight, Target } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Image } from "@/components/ui/image";
 
 // Verknüpft Galerie-Medien direkt mit der Trainings-Werkstatt: wähle einen
 // bestehenden Trainings-Satz (Person) oder lege einen neuen an. Videos werden
@@ -16,6 +17,7 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
   const [newName, setNewName] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(null);
+  const [focusUrl, setFocusUrl] = useState("");
   const navigate = useNavigate();
 
   const urls = (media || [])
@@ -33,6 +35,7 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
     setNewName(suggested);
     setSelectedId(null);
     setDone(null);
+    setFocusUrl(urls[0] || "");
     base44.entities.TrainingSet
       .filter({ status: { $in: ["SAMMLUNG", "BEREIT"] } }, { sort: "order", limit: 50 })
       .then((page) => {
@@ -58,12 +61,15 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
           personName: newName.trim(),
           status: "SAMMLUNG",
           sourceMedia: urls,
+          focusImage: focusUrl || undefined,
         });
         setName = rec.personName;
       } else {
         const set = sets.find((s) => s.id === selectedId);
         const next = Array.isArray(set?.sourceMedia) ? [...set.sourceMedia, ...urls] : urls;
-        await base44.entities.TrainingSet.update(selectedId, { sourceMedia: next });
+        const patch = { sourceMedia: next };
+        if (focusUrl) patch.focusImage = focusUrl;
+        await base44.entities.TrainingSet.update(selectedId, patch);
         setName = set?.personName || "Satz";
       }
       toast({ title: "Ins Training übernommen", description: `${urls.length} Medium(ien) → ${setName}.` });
@@ -128,6 +134,26 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
             <input value={newName} onChange={(e) => { setNewName(e.target.value); if (e.target.value) setSelectedId(null); }}
               placeholder="Person / Satz-Name"
               className="mt-2 w-full rounded-lg bg-background px-3 py-2 text-sm text-foreground" />
+
+            {urls.length > 0 && (
+              <div className="mt-4">
+                <h3 className="font-heading text-sm text-foreground flex items-center gap-1.5">
+                  <Target className="h-4 w-4 text-primary" /> Haupt-Charakter festlegen
+                </h3>
+                <p className="mt-1 text-[11px] text-muted-foreground">Klick das Bild der richtigen Person — sie wird bei Generierung und Training zuerst genommen.</p>
+                <div className="mt-2 grid grid-cols-4 gap-2">
+                  {urls.map((u) => (
+                    <button key={u} type="button" onClick={() => setFocusUrl(u)}
+                      className={"relative aspect-square overflow-hidden rounded-lg border-2 " + (focusUrl === u ? "border-primary" : "border-transparent")}>
+                      <Image src={u} fittingType="fill" className="h-full w-full" />
+                      {focusUrl === u && (
+                        <span className="absolute bottom-0 inset-x-0 bg-primary/85 text-center text-[10px] font-bold text-primary-foreground">Fokus</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 flex justify-end gap-2">
               <button onClick={onClose} className="rounded-full bg-elevated px-4 py-2 text-sm text-muted-foreground hover:text-foreground">Abbrechen</button>
