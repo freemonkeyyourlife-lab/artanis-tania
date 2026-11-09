@@ -26,7 +26,11 @@ export default function SendToTrainingDialog({ open, media, onClose, onDone }) {
     if (!open) return;
     let alive = true;
     setLoading(true);
-    setNewName("");
+    // Vorschlag: der häufigste Personen-Tag unter den gewählten Medien.
+    const tagCount = {};
+    (media || []).forEach((m) => (m?.tags || []).forEach((t) => { tagCount[t] = (tagCount[t] || 0) + 1; }));
+    const suggested = Object.entries(tagCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+    setNewName(suggested);
     setSelectedId(null);
     setDone(null);
     base44.entities.TrainingSet

@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { useToast } from "@/components/ui/use-toast";
 import { uploadToArchive, loadArchive } from "@/lib/imageArchive";
 import CanvasGrid from "@/components/canvas/CanvasGrid";
-import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic, Crop, HardDrive, Package } from "lucide-react";
+import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic, Crop, HardDrive, Package, UserCheck, Copy, Check } from "lucide-react";
 import GalleryImageEditor from "@/components/gallery/GalleryImageEditor";
 import SendToTrainingDialog from "@/components/gallery/SendToTrainingDialog";
 import DriveBrowser from "@/components/gallery/DriveBrowser";
@@ -44,8 +44,68 @@ export default function Sammelgalerie() {
   const [sendMedia, setSendMedia] = useState(null);
   const [driveOpen, setDriveOpen] = useState(false);
   const [zipping, setZipping] = useState(false);
+  const [tagMode, setTagMode] = useState(false);
+  const [selected, setSelected] = useState({});
+  const [personInput, setPersonInput] = useState("");
+  const [personFilter, setPersonFilter] = useState("");
   const dropRef = useRef(null);
   const fileInput = useRef(null);
+
+  // Alle vergebenen Personen-Tags — für die Filter-Auswahl.
+  const persons = useMemo(() => {
+    const set = new Set();
+    items.forEach((it) => (it.tags || []).forEach((t) => t && set.add(t)));
+    return Array.from(set).sort();
+  }, [items]);
+
+  const toggleSel = (id) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+  const selCount = Object.values(selected).filter(Boolean).length;
+
+  // Mehrere Kacheln auf einmal mit einem Personen-Namen versehen — damit die
+  // Zuordnung zu Charakteren und Trainings-Sätzen nicht mehr verrutscht.
+  const applyPersonTag = async () => {
+    const name = personInput.trim();
+    const ids = Object.keys(selected).filter((id) => selected[id]);
+    if (!name || !ids.length) return;
+    setBusy(true);
+    try {
+      for (const id of ids) {
+        const it = items.find((x) => x.id === id);
+        if (!it) continue;
+        const tags = Array.isArray(it.tags) ? it.tags : [];
+        if (!tags.includes(name)) {
+          await base44.entities.ImageArchive.update(id, { tags: [...tags, name] });
+        }
+      }
+      setSelected({});
+      setPersonInput("");
+      setTagMode(false);
+      await load();
+      toast({ title: "Markiert", description: `${ids.length} Einträge als „${name}"` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Fehlgeschlagen", description: e?.message });
+    } finally { setBusy(false); }
+  };
+
+  // Gleiche URL = Dublette. Behält das Exemplar mit den meisten Tags, löscht den Rest.
+  const removeDupes = async () => {
+    const byUrl = {};
+    items.forEach((it) => { if (it.url) (byUrl[it.url] ||= []).push(it); });
+    const dupes = Object.values(byUrl).filter((arr) => arr.length > 1);
+    if (!dupes.length) { toast({ title: "Keine Dubletten", description: "Jede URL ist einmalig." }); return; }
+    setBusy(true);
+    try {
+      let removed = 0;
+      for (const arr of dupes) {
+        const keep = [...arr].sort((a, b) => (b.tags?.length || 0) - (a.tags?.length || 0))[0];
+        for (const it of arr) if (it.id !== keep.id) { await base44.entities.ImageArchive.delete(it.id); removed++; }
+      }
+      await load();
+      toast({ title: "Aufgeräumt", description: `${removed} Dublette(n) entfernt.` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Fehlgeschlagen", description: e?.message });
+    } finally { setBusy(false); }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -163,6 +223,7 @@ export default function Sammelgalerie() {
 
   const filtered = items.filter((it) => {
     if (kindFilter && it.kind !== kindFilter) return false;
+    if (personFilter && !(it.tags || []).includes(personFilter)) return false;
     if (filter) {
       const hay = `${it.name || ""} ${it.note || ""} ${(it.tags || []).join(" ")}`.toLowerCase();
       if (!hay.includes(filter.toLowerCase())) return false;
@@ -236,6 +297,34 @@ export default function Sammelgalerie() {
             {k.label}
           </button>
         ))}
+        <button onClick={() => { setTagMode((v) => !v); setSelected({}); }}
+          className={"inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs " + (tagMode ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}
+          title="Mehrere Kacheln anwählen und einer Person zuordnen">
+          <UserCheck className="h-3.5 w-3.5" /> {tagMode ? "Fertig" : "Person markieren"}
+        </button>
+        {tagMode && (
+          <>
+            <input value={personInput} onChange={(e) => setPersonInput(e.target.value)} placeholder="Person-Name"
+              onKeyDown={(e) => e.key === "Enter" && applyPersonTag()}
+              className="rounded-full bg-elevated px-3 py-2 text-xs text-foreground" />
+            <button onClick={applyPersonTag} disabled={busy || !personInput.trim() || !selCount}
+              className="glass-btn glass-btn-accent inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs disabled:opacity-50">
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Tag className="h-3.5 w-3.5" />} Tag setzen
+            </button>
+            <span className="text-xs text-muted-foreground">{selCount} ausgewählt</span>
+          </>
+        )}
+        {persons.length > 0 && (
+          <select value={personFilter} onChange={(e) => setPersonFilter(e.target.value)}
+            className="rounded-full bg-elevated px-3 py-2 text-xs text-foreground" title="Nur Inhalte einer markierten Person zeigen">
+            <option value="">Alle Personen</option>
+            {persons.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        )}
+        <button onClick={removeDupes} disabled={busy} title="Gleiche URLs werden bis auf ein Exemplar entfernt"
+          className="inline-flex items-center gap-1 rounded-full bg-elevated px-3 py-2 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
+          <Copy className="h-3.5 w-3.5" /> Dubletten raus
+        </button>
         <button onClick={() => setSendMedia(filtered)} disabled={!filtered.length} title="Alle gefilterten Kacheln auf einmal ins Trainingsset schieben"
           className="inline-flex items-center gap-1 rounded-full bg-elevated px-3 py-2 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
           <Cpu className="h-3.5 w-3.5" /> Gefilterte ins Training
@@ -287,7 +376,14 @@ export default function Sammelgalerie() {
             items={filtered.map((it) => ({ key: it.id, data: it }))}
             emptyText="Noch nichts gesammelt. Zieh Medien hierher oder saug einen Link ein."
             renderTile={(t) => (
-              <div className="group relative h-full w-full overflow-hidden bg-background">
+              <div className={"group relative h-full w-full overflow-hidden bg-background " + (selected[t.data.id] ? "ring-2 ring-primary" : "")}>
+                {tagMode && (
+                  <button onClick={(e) => { e.stopPropagation(); toggleSel(t.data.id); }}
+                    className={"absolute top-1.5 left-1.5 z-20 rounded-full p-1.5 " + (selected[t.data.id] ? "bg-primary text-primary-foreground" : "bg-black/60 text-white")}
+                    title={selected[t.data.id] ? "abwählen" : "anwählen"}>
+                    {selected[t.data.id] ? <Check className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
+                  </button>
+                )}
                 {mediaType(t.data.url) === "video" ? (
                   <video src={t.data.url} className="h-full w-full object-cover" controls muted />
                 ) : mediaType(t.data.url) === "audio" ? (
@@ -315,6 +411,13 @@ export default function Sammelgalerie() {
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <p className="truncate text-[11px] text-white/90">{t.data.name || "Ohne Name"}</p>
+                  {(t.data.tags || []).length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {(t.data.tags || []).slice(0, 4).map((tg) => (
+                        <span key={tg} className="rounded-full bg-primary/80 px-1.5 py-0.5 text-[9px] text-primary-foreground">{tg}</span>
+                      ))}
+                    </div>
+                  )}
                   {t.data.note && <p className="truncate text-[10px] text-white/60">{t.data.note}</p>}
                   <select value={t.data.kind || "ALLGEMEIN"} onChange={(e) => setKind(t.data, e.target.value)}
                     className="mt-1 w-full rounded bg-black/60 px-1.5 py-1 text-[10px] text-white">
