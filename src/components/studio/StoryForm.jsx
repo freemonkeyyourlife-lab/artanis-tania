@@ -20,8 +20,20 @@ export default function StoryForm({ initial, creators, onSaved, onCancel }) {
     series: initial?.series || "",
     episode: initial?.episode ?? "",
     price: initial?.price ?? 0,
+    visibility: initial?.visibility || "PUBLIC",
     published: initial?.published || false,
   });
+
+  const VISIBILITY = [
+    { v: "PUBLIC", l: "Öffentlich" },
+    { v: "REGISTERED", l: "Registriert" },
+    { v: "FREE_MEMBER", l: "Mitglied" },
+    { v: "VIP", l: "VIP" },
+    { v: "PPV", l: "Pay-per-View" },
+    { v: "INVITE_ONLY", l: "Nur Einladung" },
+    { v: "PRIVATE", l: "Privat" },
+    { v: "UNLISTED", l: "Versteckt" },
+  ];
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -47,6 +59,7 @@ export default function StoryForm({ initial, creators, onSaved, onCancel }) {
         topics: form.topics.split(",").map((s) => s.trim()).filter(Boolean),
         series: form.series,
         price: Number(form.price) || 0,
+        visibility: form.visibility,
         published: form.published,
       };
       if (form.episode !== "" && form.episode !== null) data.episode = Number(form.episode);
@@ -115,6 +128,15 @@ export default function StoryForm({ initial, creators, onSaved, onCancel }) {
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Folge (optional)</label>
           <input type="number" min="1" value={form.episode} onChange={(e) => set("episode", e.target.value)} placeholder="z. B. 1" className={inputCls} />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="text-xs text-muted-foreground mb-1.5 block">Sichtbarkeit — wer darf die Story sehen</label>
+          <select value={form.visibility} onChange={(e) => set("visibility", e.target.value)} className={inputCls}>
+            {VISIBILITY.map((o) => (
+              <option key={o.v} value={o.v}>{o.l}</option>
+            ))}
+          </select>
         </div>
 
         <div className="sm:col-span-2 flex items-center gap-2">
