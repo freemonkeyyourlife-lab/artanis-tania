@@ -9,6 +9,7 @@ import GalleryImageEditor from "@/components/gallery/GalleryImageEditor";
 import SendToTrainingDialog from "@/components/gallery/SendToTrainingDialog";
 import DriveBrowser from "@/components/gallery/DriveBrowser";
 import StudioAnleitung from "@/components/studio/StudioAnleitung";
+import StudioExportAll from "@/components/studio/StudioExportAll";
 import { exportZip } from "@/lib/exportZip";
 
 // Private Sammel-Galerie — hier landet alles, was du überall findest: Bilder
@@ -171,11 +172,16 @@ export default function Sammelgalerie() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="font-display text-4xl text-foreground text-gloss">Sammel-Galerie</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Dein privater Sammel-Ort. Wirf Bilder hier rein, saug Links ein — alles landet an einer Stelle,
-        bereit zum Wiederverwerten, Trainieren und Einbauen.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-4xl text-foreground text-gloss">Sammel-Galerie</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Dein privater Sammel-Ort. Wirf Bilder hier rein, saug Links ein — alles landet an einer Stelle,
+            bereit zum Wiederverwerten, Trainieren und Einbauen.
+          </p>
+        </div>
+        <StudioExportAll />
+      </div>
 
       <StudioAnleitung pageKey="sammelgalerie" />
 
