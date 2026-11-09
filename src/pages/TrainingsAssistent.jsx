@@ -126,6 +126,19 @@ export default function TrainingsAssistent() {
 
   const reload = async () => { await load(); };
 
+  const gpuJobs = useMemo(
+    () => sets.filter((s) => s.trainStatus && s.trainStatus !== "OFFEN"),
+    [sets]
+  );
+
+  const refreshAllGpu = async () => {
+    const running = sets.filter((s) => s.trainStatus === "LÄUFT");
+    for (const s of running) {
+      try { await base44.functions.invoke("runpodStatus", { setId: s.id }); } catch { /* später */ }
+    }
+    await load();
+  };
+
   if (meLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -473,6 +486,24 @@ export default function TrainingsAssistent() {
       <p className="mt-2 text-sm text-muted-foreground">
         Schritt für Schritt zum fertigen Charakter — inklusive echtem LoRA-Training auf deiner RunPod-GPU.
       </p>
+
+      {gpuJobs.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3 text-xs">
+          <span className="font-heading text-foreground">GPU-Training:</span>
+          {gpuJobs.map((s) => {
+            const t = s.trainStatus;
+            const color = t === "FERTIG" ? "bg-emerald-500/20 text-emerald-300" : t === "FEHLER" ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary";
+            return (
+              <span key={s.id} className={"rounded-full px-2.5 py-1 font-semibold " + color} title={s.trainError || ""}>
+                {s.personName} · {TRAIN_LABEL[t] || t}
+              </span>
+            );
+          })}
+          <button onClick={refreshAllGpu} disabled={busy} className="glass-btn rounded-full px-2.5 py-1 font-semibold text-foreground disabled:opacity-50 inline-flex items-center gap-1">
+            <RefreshCw className="w-3 h-3" /> Aktualisieren
+          </button>
+        </div>
+      )}
 
       {/* Stepper */}
       <ol className="mt-6 flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1">

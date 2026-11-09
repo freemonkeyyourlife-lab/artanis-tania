@@ -81,6 +81,29 @@ async function receive(base44: any, update: any) {
     text,
     channel: CHANNEL,
   });
+
+  // Erste Nachricht an den Bot → als dein Benachrichtigungs-Empfänger merken,
+  // falls noch keine Chat-ID hinterlegt ist. Der Besitzer schreibt dem Bot
+  // typischerweise zuerst; lässt sich im Bedienfeld jederzeit per „Das bin ich"
+  // korrigieren.
+  try {
+    const setups = await base44.asServiceRole.entities.ChannelSetup.list("-created_date", 1);
+    const cur = setups[0];
+    const uname = chat.username ? "@" + chat.username : "";
+    if (cur && !cur.telegramChatId) {
+      await base44.asServiceRole.entities.ChannelSetup.update(cur.id, {
+        telegramChatId: chatId,
+        ...(uname ? { telegramBotUsername: uname } : {}),
+      });
+    } else if (!cur) {
+      await base44.asServiceRole.entities.ChannelSetup.create({
+        telegramChatId: chatId,
+        ...(uname ? { telegramBotUsername: uname } : {}),
+      });
+    }
+  } catch (e) {
+    console.error("telegramBot capture chatId: " + (e && e.message));
+  }
 }
 
 export default async function (req: Request): Promise<Response> {

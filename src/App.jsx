@@ -85,6 +85,7 @@ import Hilfe from '@/pages/Hilfe';
 import StoryDashboard from '@/pages/StoryDashboard';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
+import LiveEdgeChat from '@/components/LiveEdgeChat';
 import NarratorCompanion from '@/components/narrator/NarratorCompanion';
 import CreateConsole from '@/components/creator/CreateConsole';
 import ImportStatusPill from '@/components/import/ImportStatusPill';
@@ -126,6 +127,7 @@ const AuthenticatedApp = () => {
       <TutorialPlayer />
       <FloatingZones />
       <FloatingCall />
+      <LiveEdgeChat />
       <NarratorCompanion />
       <CreateConsole />
       <ImportStatusPill />
