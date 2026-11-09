@@ -88,6 +88,7 @@ import Werkstatt from '@/pages/Werkstatt';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import LiveEdgeChat from '@/components/LiveEdgeChat';
+import PrivateBuild from '@/components/PrivateBuild';
 import NarratorCompanion from '@/components/narrator/NarratorCompanion';
 import CreateConsole from '@/components/creator/CreateConsole';
 import ImportStatusPill from '@/components/import/ImportStatusPill';
@@ -169,8 +170,6 @@ const AuthenticatedApp = () => {
         <Route path="/community" element={<Community />} />
         <Route path="/coins" element={<Coins />} />
         <Route path="/studio" element={<Studio />} />
-        <Route path="/externes-studio" element={<ExternalStudioPage />} />
-        <Route path="/dock" element={<Dock />} />
         <Route path="/leitstand" element={<Leitstand />} />
         <Route path="/owner" element={<OwnerConsole />} />
         <Route path="/therapy" element={<Therapy />} />
@@ -180,37 +179,42 @@ const AuthenticatedApp = () => {
         <Route path="/contests" element={<Contests />} />
         <Route path="/contests/:id" element={<ContestDetail />} />
         <Route path="/tutorial" element={<Tutorial />} />
-        <Route path="/baukasten" element={<Baukasten />} />
-        <Route path="/stimmen" element={<VoiceStudio />} />
         <Route path="/anleitung" element={<Anleitung />} />
         <Route path="/spickzettel" element={<Spickzettel />} />
         <Route path="/ideen" element={<IdeenOrdner />} />
-        <Route path="/banana" element={<BananaStudio />} />
         <Route path="/kulisse" element={<Kulisse />} />
         <Route path="/lernordner" element={<Lernordner />} />
         <Route path="/leitfaden" element={<Leitfaden />} />
-        <Route path="/palette" element={<Palette />} />
         <Route path="/charakter" element={<CharakterStudio />} />
         <Route path="/charakter/:id" element={<CharakterDetail />} />
         <Route path="/mitmachen" element={<Mitmachen />} />
-        <Route path="/botimport" element={<BotImport />} />
-        <Route path="/trainingsset" element={<TrainingsAssistent />} />
         <Route path="/vorleser" element={<Vorleser />} />
-        <Route path="/logbuch" element={<Logbuch />} />
         <Route path="/hilfe" element={<Hilfe />} />
-      <Route path="/story-dashboard" element={<StoryDashboard />} />
-      <Route path="/werkstatt" element={<Werkstatt />} />
-        <Route path="/modellplan" element={<ModelPlan />} />
-        <Route path="/archiv" element={<Archive />} />
         <Route path="/planung" element={<ContentPlan />} />
         <Route path="/verkauf" element={<SalesDashboard />} />
-        <Route path="/prompt" element={<PromptStudio />} />
-        <Route path="/sandbox" element={<Sandbox />} />
         <Route path="/vorschau" element={<UserPreview />} />
-        <Route path="/erzaehler" element={<NarratorStudio />} />
-      <Route path="/struktur" element={<Struktur />} />
+        <Route path="/struktur" element={<Struktur />} />
         <Route path="/recht" element={<Legal />} />
         <Route path="/recht/:section" element={<Legal />} />
+        {/* Privater Bau- und Trainingsbereich — nur Besitzerin (admin). */}
+        <Route element={<PrivateBuild />}>
+          <Route path="/externes-studio" element={<ExternalStudioPage />} />
+          <Route path="/dock" element={<Dock />} />
+          <Route path="/baukasten" element={<Baukasten />} />
+          <Route path="/stimmen" element={<VoiceStudio />} />
+          <Route path="/banana" element={<BananaStudio />} />
+          <Route path="/palette" element={<Palette />} />
+          <Route path="/botimport" element={<BotImport />} />
+          <Route path="/trainingsset" element={<TrainingsAssistent />} />
+          <Route path="/logbuch" element={<Logbuch />} />
+          <Route path="/story-dashboard" element={<StoryDashboard />} />
+          <Route path="/werkstatt" element={<Werkstatt />} />
+          <Route path="/modellplan" element={<ModelPlan />} />
+          <Route path="/archiv" element={<Archive />} />
+          <Route path="/prompt" element={<PromptStudio />} />
+          <Route path="/sandbox" element={<Sandbox />} />
+          <Route path="/erzaehler" element={<NarratorStudio />} />
+        </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>
