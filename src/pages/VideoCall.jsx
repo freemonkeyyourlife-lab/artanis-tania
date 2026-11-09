@@ -15,6 +15,7 @@ import { onUiCommand, takePendingUiCommand, clearUiCommand } from "@/lib/ownerUi
 import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
 import { readPreferredCamera, savePreferredCamera, phoneCameraUrl, markSourceAsked, sourceAlreadyAsked } from "@/lib/videoSource";
 import VideoSourceDialog from "@/components/call/VideoSourceDialog";
+import CallRoleToggle from "@/components/call/CallRoleToggle";
 import VoiceEditorDialog from "@/components/voice/VoiceEditorDialog";
 import { getRooms, addRoom } from "@/lib/callRooms";
 import { publicName } from "@/lib/displayName";
@@ -289,6 +290,7 @@ export default function VideoCall() {
             <VideoIcon className="w-4 h-4" /> <span className="hidden sm:inline">Quelle</span>
           </button>
           <VoiceEditorDialog />
+          <CallRoleToggle />
           {isOwner && (
             <button
               onClick={() => toggleWindow("share")}
