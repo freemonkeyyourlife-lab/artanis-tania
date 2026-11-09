@@ -75,7 +75,7 @@ export default async function (req) {
       });
     } catch { /* set evtl. noch nicht geladen */ }
     const msg = String(error.message || error);
-    const isConfig = /RUNPOD_POD_URL|RUNPOD_POD_TOKEN|fehlen/.i.test(msg);
+    const isConfig = /RUNPOD_POD_URL|RUNPOD_POD_TOKEN|fehlen/i.test(msg);
     return Response.json(
       { error: isConfig ? 'RunPod-Pod nicht eingerichtet: RUNPOD_POD_URL und RUNPOD_POD_TOKEN fehlen (Dashboard → Secrets).' : msg },
       { status: isConfig ? 400 : 500 }
