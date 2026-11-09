@@ -6,6 +6,7 @@ import { Image } from "@/components/ui/image";
 import { useSignedImage } from "@/lib/mediaSign";
 import Mischpult from "@/components/charakter/Mischpult";
 import CharacterLogbook from "@/components/charakter/CharacterLogbook";
+import ErstellenPanel from "@/components/charakter/ErstellenPanel";
 import { PALETTE } from "@/lib/palette";
 import { COMBINE_KINDS, modulesOfKind } from "@/lib/combine";
 
@@ -130,6 +131,8 @@ export default function CharakterDetail() {
 
         <div className="space-y-5">
           <Mischpult character={character} onSaved={load} />
+
+          <ErstellenPanel character={character} />
 
           <div className="glass rounded-2xl border border-border p-4">
             <div className="mb-2 font-display text-lg text-foreground">Was macht man</div>
