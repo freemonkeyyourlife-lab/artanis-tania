@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { User as UserIcon, Crown, Settings, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import InviteRedeem from "@/components/owner/InviteRedeem";
-import FontPicker from "@/components/FontPicker";
 
 export default function Account() {
   const { toast } = useToast();
@@ -80,8 +79,6 @@ export default function Account() {
           <button onClick={save} disabled={saving} className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:accent-glow transition-all">Änderungen speichern</button>
         </div>
       </div>
-
-      <FontPicker />
 
       <InviteRedeem />
 

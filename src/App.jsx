@@ -98,6 +98,7 @@ import GodPencilLayer from '@/components/god/GodPencilLayer';
 import GodNotesBar from '@/components/god/GodNotesBar';
 import GuideConsole from '@/components/god/GuideConsole';
 import FloatingZones from '@/components/floating/FloatingZones';
+import DesignEditorButton from '@/components/design/DesignEditorButton';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -131,6 +132,7 @@ const AuthenticatedApp = () => {
       <OnboardingIntro />
       <TutorialPlayer />
       <FloatingZones />
+      <DesignEditorButton />
       <FloatingCall />
       <LiveEdgeChat />
       <NarratorCompanion />
