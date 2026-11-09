@@ -12,7 +12,13 @@ import { base44 } from "@/api/base44Client";
 // scenePrompt — die konkrete Szene/Pose/Outfit
 
 async function refUrls(set) {
-  const raw = [set?.focusImage, ...(set?.images || []), ...(set?.generatedImages || [])].filter(Boolean);
+  // Haupt-Charakter priorisieren: wenn focusStrict an ist, dient NUR das
+  // Fokus-Bild als Referenz — keine anderen Fotos, die eine zweite Person
+  // einschleppen könnten. Sonst wie gehabt bis zu zwei Fotos.
+  const strict = set?.focusStrict !== false && !!set?.focusImage;
+  const raw = strict
+    ? [set?.focusImage]
+    : [set?.focusImage, ...(set?.images || []), ...(set?.generatedImages || [])].filter(Boolean);
   const picked = [];
   const seen = new Set();
   for (const u of raw) {
@@ -31,8 +37,13 @@ async function refUrls(set) {
 
 export async function generateCharImage(set, ctxPrompt, scenePrompt) {
   const scene = scenePrompt || "Alltagssituation";
+  const strict = set?.focusStrict !== false;
   // Wacht: genau eine Frau, keine zweiten Personen, klares Hauptmotiv.
-  const guard = "Foto einer einzelnen Frau, nur eine Person im Bild, keine weiteren Menschen, die Frau ist das klare Hauptmotiv. ";
+  // Im Strict-Modus noch schärfer: dieselbe Person wie im Referenzfoto,
+  // keine fremden Gesichter, keine Doppelgänger, kein Gesichtstausch.
+  const guard = strict
+    ? "Foto von genau einer einzigen Frau, exakt dieselbe Person wie im Referenzfoto, nur ein Gesicht im Bild, keine zweiten oder dritten Personen, keine fremden Gesichter, keine Doppelgänger, kein Gesichtstausch, die Frau ist das einzige und klare Hauptmotiv. "
+    : "Foto einer einzelnen Frau, nur eine Person im Bild, keine weiteren Menschen, die Frau ist das klare Hauptmotiv. ";
   const full = `${guard}${ctxPrompt}\n\nSzene: ${scene}. Bildstil: fotorealistisch, stimmungsvoll, durchgearbeitet.`;
   const trained = set?.trainStatus === "FERTIG" && !!set?.trainJobId;
   if (trained) {

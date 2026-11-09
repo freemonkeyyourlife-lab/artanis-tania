@@ -72,6 +72,11 @@
       },
       "description": "Bilder, die eine andere Person zeigen und aus dem Training rausbleiben sollen."
     },
+    "focusStrict": {
+      "type": "boolean",
+      "default": true,
+      "description": "Haupt-Charakter erzwingen: nur die Fokus-Person gilt, keine fremden Avatare oder Gesichter."
+    },
     "avatar": {
       "type": "string"
     },

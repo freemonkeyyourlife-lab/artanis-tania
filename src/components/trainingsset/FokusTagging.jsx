@@ -26,6 +26,7 @@ export default function FokusTagging({ set, onSaved }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [focus, setFocus] = useState(set.focusImage || "");
+  const [strict, setStrict] = useState(set.focusStrict !== false);
   const [exclude, setExclude] = useState(() => new Set(set.excludeImages || []));
   const [urls, setUrls] = useState({});
   const [cap, setCap] = useState(120);
@@ -68,6 +69,7 @@ export default function FokusTagging({ set, onSaved }) {
       await base44.entities.TrainingSet.update(set.id, {
         focusImage: focus || null,
         excludeImages: [...exclude],
+        focusStrict: strict,
       });
       toast({ title: "Gespeichert", description: `${effective} Bild(er) kommen ins Training.` });
       onSaved?.();
@@ -84,6 +86,7 @@ export default function FokusTagging({ set, onSaved }) {
       await base44.entities.TrainingSet.update(set.id, {
         focusImage: focus || null,
         excludeImages: [...exclude],
+        focusStrict: strict,
         trainStatus: "OFFEN",
         trainError: "",
       });
@@ -119,6 +122,15 @@ export default function FokusTagging({ set, onSaved }) {
             Klick das <b>Fokus-Bild</b> der richtigen Person (kommt zuerst ins Training). Stell Bilder
             mit der falschen Person auf <b>raus</b>. Dann „Neu trainieren".
           </p>
+          <label className="mt-1 mb-2 flex items-center gap-2 text-xs text-foreground cursor-pointer">
+            <input
+              type="checkbox"
+              checked={strict}
+              onChange={(e) => setStrict(e.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            <span><b>Haupt-Charakter erzwingen</b> — nur die Fokus-Person gilt, keine fremden Avatare oder Gesichter.</span>
+          </label>
           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-2 max-h-80 overflow-y-auto pr-1">
             {shown.map((u) => {
               const isFocus = focus === u;
