@@ -6,6 +6,7 @@ import { uploadToArchive, loadArchive } from "@/lib/imageArchive";
 import CanvasGrid from "@/components/canvas/CanvasGrid";
 import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic, Crop } from "lucide-react";
 import GalleryImageEditor from "@/components/gallery/GalleryImageEditor";
+import SendToTrainingDialog from "@/components/gallery/SendToTrainingDialog";
 
 // Private Sammel-Galerie — hier landet alles, was du überall findest: Bilder
 // per Drag-and-Drop, Links zum Einsaugen. Nur im privaten Bereich, nur Admin.
@@ -36,6 +37,7 @@ export default function Sammelgalerie() {
   const [filter, setFilter] = useState("");
   const [kindFilter, setKindFilter] = useState("");
   const [editing, setEditing] = useState(null);
+  const [sendMedia, setSendMedia] = useState(null);
   const dropRef = useRef(null);
   const fileInput = useRef(null);
 
@@ -118,16 +120,6 @@ export default function Sammelgalerie() {
       setItems((xs) => xs.map((x) => (x.id === it.id ? { ...x, kind } : x)));
     } catch (e) {
       toast({ variant: "destructive", title: "Nicht änderbar", description: e?.message });
-    }
-  };
-
-  // Ein Galerie-Stück direkt in einen offenen Trainings-Satz übernehmen.
-  const sendToTraining = async (it) => {
-    try {
-      await pushUrlToTraining(it.url);
-      toast({ title: "Ins Training übernommen", description: `${it.name || "Medien"} zu einem Trainingslauf hinzugefügt.` });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Nicht übernommen", description: e?.message });
     }
   };
 
@@ -231,7 +223,11 @@ export default function Sammelgalerie() {
             {k.label}
           </button>
         ))}
-        <span className="ml-auto text-xs text-muted-foreground inline-flex items-center gap-1">
+        <button onClick={() => setSendMedia(filtered)} disabled={!filtered.length}
+          className="inline-flex items-center gap-1 rounded-full bg-elevated px-3 py-2 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
+          <Cpu className="h-3.5 w-3.5" /> Gefilterte ins Training
+        </button>
+        <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
           <Images className="h-3.5 w-3.5" /> {filtered.length}
         </span>
       </div>
@@ -264,7 +260,7 @@ export default function Sammelgalerie() {
                     className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
                     <Crop className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={() => sendToTraining(t.data)} title="Ins Trainingsset übernehmen"
+                  <button onClick={() => setSendMedia([t.data])} title="Ins Trainingsset übernehmen"
                     className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
                     <Cpu className="h-3.5 w-3.5" />
                   </button>
@@ -298,6 +294,8 @@ export default function Sammelgalerie() {
           onSendTraining={(url) => pushUrlToTraining(url).then(() => {})}
         />
       )}
+
+      <SendToTrainingDialog open={!!sendMedia} media={sendMedia} onClose={() => setSendMedia(null)} onDone={load} />
     </div>
   );
 }
