@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Platform-Schriften — wählbar im Konto (Schriftart-Auswahl). */
+@font-face { font-family: "Recoleta"; font-weight: 400; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/recoleta-400-normal.woff2') format('woff2'); }
+@font-face { font-family: "Recoleta"; font-weight: 700; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/recoleta-700-normal.woff2') format('woff2'); }
+@font-face { font-family: "Recoleta"; font-weight: 900; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/recoleta-900-normal.woff2') format('woff2'); }
+@font-face { font-family: "Helvetica"; font-weight: 300; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/helvetica-300-normal.woff2') format('woff2'); }
+@font-face { font-family: "Helvetica"; font-weight: 400; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/helvetica-400-normal.woff2') format('woff2'); }
+@font-face { font-family: "Helvetica"; font-weight: 700; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/helvetica-700-normal.woff2') format('woff2'); }
+@font-face { font-family: "Proxima Nova"; font-weight: 400; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/proxima-nova-400-normal.woff2') format('woff2'); }
+@font-face { font-family: "Aether"; font-weight: 400; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/aether-400-normal.woff2') format('woff2'); }
+@font-face { font-family: "Aether"; font-weight: 700; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/aether-700-normal.woff2') format('woff2'); }
+@font-face { font-family: "Benzin"; font-weight: 400; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/benzin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: "Benzin"; font-weight: 700; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/benzin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: "Adobe Caslon"; font-weight: 400; font-style: normal; font-display: swap; src: url('https://media.base44.com/files/public/builder-assets/wix-fonts/adobe-caslon-400-normal.woff2') format('woff2'); }
+
 @layer base {
   :root {
     --background: 220 10% 6%;
