@@ -6,6 +6,7 @@ import UploadZone from "@/components/trainingsset/UploadZone";
 import VideoFrameGrabber from "@/components/trainingsset/VideoFrameGrabber";
 import LinkGrabber from "@/components/trainingsset/LinkGrabber";
 import ArchivePicker from "@/components/trainingsset/ArchivePicker";
+import ArchiveCropPicker from "@/components/trainingsset/ArchiveCropPicker";
 import { useToast } from "@/components/ui/use-toast";
 import JSZip from "jszip";
 import {
@@ -529,6 +530,7 @@ export default function TrainingsAssistent() {
                 <ArchivePicker onTrain={onArchiveTrain} sets={sets} />
               </div>
             </details>
+            <ArchiveCropPicker sets={sets} onDone={reload} />
           </div>
         )}
 

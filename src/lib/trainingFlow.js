@@ -257,5 +257,37 @@ export const autoSortPool = async (pool, sets) => {
   return { matched: matched.length, persons: Object.keys(byPerson).length, sets: created };
 };
 
+// Archiv-Bilder NUR zuschneiden (3:4) und in ein bestehendes Set übernehmen —
+// ohne Auffüllen und ohne Charakter zu ziehen. Für den Fall, dass du für einen
+// laufenden Trainings-Datensatz gezielt Bilder aus dem Archiv holen willst.
+export const cropIntoSet = async (setId, selected) => {
+  const set = await base44.entities.TrainingSet.get(setId).catch((e) =>
+    e.status === 404 ? null : Promise.reject(e)
+  );
+  if (!set) return { taken: 0 };
+  const existing = new Set(set.images || []);
+  const images = [...(set.images || [])];
+  let avatar = set.avatar;
+  let taken = 0;
+  for (const q of selected) {
+    const url = await signQuelleUrl(q);
+    if (!url) continue;
+    try {
+      const cropped = await cropUrlToPortrait(url);
+      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file: cropped });
+      if (file_uri && !existing.has(file_uri)) {
+        images.push(file_uri);
+        existing.add(file_uri);
+        if (!avatar) avatar = file_uri;
+        taken += 1;
+      }
+    } catch {
+      /* einzelnes Bild überspringen */
+    }
+  }
+  if (taken) await base44.entities.TrainingSet.update(setId, { images, avatar });
+  return { taken };
+};
+
 export const setTotal = (s) => (s.images?.length || 0) + (s.generatedImages?.length || 0);
 export const setMissing = (s) => Math.max(0, (s.targetCount || 12) - setTotal(s));
