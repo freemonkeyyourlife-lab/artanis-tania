@@ -8,6 +8,7 @@ import {
   Video, FileText, Wand2, ArrowRight, RefreshCw, Layers,
 } from "lucide-react";
 import GalleryAssignDialog from "@/components/studio/GalleryAssignDialog";
+import StudioAnleitung from "@/components/studio/StudioAnleitung";
 
 // Zentrale Studio-Uebersicht: Status der KI-Modelle, Voice-Daten und
 // Trainingsfortschritte an einem Ort — plus direkte Galerie-Zuweisung
@@ -156,6 +157,8 @@ export default function StudioUebersicht() {
         </div>
       </div>
 
+      <StudioAnleitung pageKey="studio-uebersicht" />
+
       {/* Kennzahlen */}
       <div className="mt-6 grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-10 gap-2">
         <Kpi icon={Boxes} label="Sätze" value={stats.saetze} tone="text-foreground" />
@@ -247,18 +250,18 @@ export default function StudioUebersicht() {
                     <span className={"rounded-full px-2 py-0.5 text-[10px] font-bold " + (TRAIN_STYLE[r.set.trainStatus] || TRAIN_STYLE.OFFEN)}>{r.set.trainStatus}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <button onClick={() => setAssignSet(r.set)} title="Dateien aus der Galerie zuweisen"
+                    <button onClick={() => setAssignSet(r.set)} title="Dateien aus der Sammel-Galerie diesem Trainings-Satz anhängen"
                       className="rounded-full bg-primary/15 px-2.5 py-1.5 text-[11px] text-primary hover:bg-primary/25 inline-flex items-center gap-1">
                       <Images className="h-3.5 w-3.5" /> Galerie zuweisen
                     </button>
                     {r.char && (
-                      <Link to={`/charakter/${r.char.id}`} title="Vorschau & Erstellen"
+                      <Link to={`/charakter/${r.char.id}`} title="Charakter öffnen und Bild/Text/Clip erzeugen"
                         className="rounded-full bg-primary px-2.5 py-1.5 text-[11px] font-bold text-primary-foreground inline-flex items-center gap-1">
                         <Wand2 className="h-3.5 w-3.5" /> Vorschau & Erstellen
                       </Link>
                     )}
                     {(r.set.trainStatus === "LÄUFT" || r.set.trainStatus === "OFFEN") && r.set.trainJobId && (
-                      <button onClick={() => refreshOne(r.set.id)} disabled={busy === r.set.id}
+                      <button onClick={() => refreshOne(r.set.id)} disabled={busy === r.set.id} title="Trainings-Job-Status bei RunPod abfragen"
                         className="rounded-full bg-elevated px-2.5 py-1.5 text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1 disabled:opacity-50">
                         {busy === r.set.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Status
                       </button>

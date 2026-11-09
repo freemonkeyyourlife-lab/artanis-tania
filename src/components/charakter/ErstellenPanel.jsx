@@ -74,7 +74,7 @@ export default function ErstellenPanel({ character }) {
       {/* Art-Wahl */}
       <div className="mt-3 grid grid-cols-3 gap-2">
         {KINDS.map((k) => (
-          <button key={k.id} onClick={() => setKind(k.id)}
+          <button key={k.id} onClick={() => setKind(k.id)} title={k.hint}
             className={"rounded-xl border-2 px-2 py-2 text-center transition-colors " + (kind === k.id ? "border-primary bg-primary/10" : "border-border bg-elevated hover:border-primary/50")}>
             <k.icon className="mx-auto h-4 w-4 text-primary" />
             <p className="mt-1 text-[11px] text-foreground">{k.label}</p>
@@ -90,7 +90,7 @@ export default function ErstellenPanel({ character }) {
         rows={2}
         className="mt-3 w-full rounded-xl bg-background px-3 py-2 text-sm text-foreground" />
 
-      <button onClick={run} disabled={busy}
+      <button onClick={run} disabled={busy} title="Aus dieser Figur die gewählte Art erzeugen"
         className="glass-btn glass-btn-accent mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm disabled:opacity-50">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
         {busy ? "Erstellt …" : `${active.label} erstellen`}

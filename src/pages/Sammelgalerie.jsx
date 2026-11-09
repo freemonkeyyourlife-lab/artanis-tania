@@ -8,6 +8,7 @@ import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mi
 import GalleryImageEditor from "@/components/gallery/GalleryImageEditor";
 import SendToTrainingDialog from "@/components/gallery/SendToTrainingDialog";
 import DriveBrowser from "@/components/gallery/DriveBrowser";
+import StudioAnleitung from "@/components/studio/StudioAnleitung";
 
 // Private Sammel-Galerie — hier landet alles, was du überall findest: Bilder
 // per Drag-and-Drop, Links zum Einsaugen. Nur im privaten Bereich, nur Admin.
@@ -174,6 +175,8 @@ export default function Sammelgalerie() {
         bereit zum Wiederverwerten, Trainieren und Einbauen.
       </p>
 
+      <StudioAnleitung pageKey="sammelgalerie" />
+
       {/* Drop-Zone */}
       <div
         ref={dropRef}
@@ -204,7 +207,7 @@ export default function Sammelgalerie() {
             className="rounded-lg bg-background px-3 py-2 text-sm text-foreground">
             {KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
           </select>
-          <button onClick={addLink} disabled={busy || !linkUrl.trim()}
+          <button onClick={addLink} disabled={busy || !linkUrl.trim()} title="Bild-URL als Archiv-Eintrag speichern"
             className="glass-btn glass-btn-accent rounded-full px-4 py-2 text-sm disabled:opacity-50 inline-flex items-center gap-1">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Einsammeln
           </button>
@@ -225,11 +228,11 @@ export default function Sammelgalerie() {
             {k.label}
           </button>
         ))}
-        <button onClick={() => setSendMedia(filtered)} disabled={!filtered.length}
+        <button onClick={() => setSendMedia(filtered)} disabled={!filtered.length} title="Alle gefilterten Kacheln auf einmal ins Trainingsset schieben"
           className="inline-flex items-center gap-1 rounded-full bg-elevated px-3 py-2 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
           <Cpu className="h-3.5 w-3.5" /> Gefilterte ins Training
         </button>
-        <button onClick={() => setDriveOpen(true)}
+        <button onClick={() => setDriveOpen(true)} title="Dateien aus Google Drive importieren"
           className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-2 text-xs text-primary hover:bg-primary/25">
           <HardDrive className="h-3.5 w-3.5" /> Google Drive
         </button>
@@ -262,15 +265,15 @@ export default function Sammelgalerie() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setEditing(t.data)} title="Bearbeiten"
+                  <button onClick={() => setEditing(t.data)} title="Bild zuschneiden, drehen oder optimieren"
                     className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
                     <Crop className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={() => setSendMedia([t.data])} title="Ins Trainingsset übernehmen"
+                  <button onClick={() => setSendMedia([t.data])} title="Dieses Bild einem Trainings-Satz zuweisen"
                     className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary">
                     <Cpu className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={() => remove(t.data.id)} title="Löschen"
+                  <button onClick={() => remove(t.data.id)} title="Kachel aus dem Archiv entfernen"
                     className="rounded-full bg-black/60 p-1.5 text-white hover:bg-destructive">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

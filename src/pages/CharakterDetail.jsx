@@ -7,6 +7,7 @@ import { useSignedImage } from "@/lib/mediaSign";
 import Mischpult from "@/components/charakter/Mischpult";
 import CharacterLogbook from "@/components/charakter/CharacterLogbook";
 import ErstellenPanel from "@/components/charakter/ErstellenPanel";
+import StudioAnleitung from "@/components/studio/StudioAnleitung";
 import { PALETTE } from "@/lib/palette";
 import { COMBINE_KINDS, modulesOfKind } from "@/lib/combine";
 
@@ -78,6 +79,8 @@ export default function CharakterDetail() {
       <Link to="/charakter" className="inline-flex items-center gap-2 text-sm text-muted-foreground">
         <ArrowLeft className="h-4 w-4" /> Zur Charakter-Werkstatt
       </Link>
+
+      <StudioAnleitung pageKey="charakter" />
 
       <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <div className="relative">

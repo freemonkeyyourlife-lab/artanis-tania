@@ -7,6 +7,7 @@ import {
   Loader2, Lock, Cpu, Images, Layers, CheckCircle2, AlertTriangle, RefreshCw,
   Download, ExternalLink, Boxes, Sparkles, HardDrive,
 } from "lucide-react";
+import StudioAnleitung from "@/components/studio/StudioAnleitung";
 
 // Zentrale Übersicht aller KI-Trainings-Workflows im privaten Studio:
 // Status jedes Modells/Satzes, Fortschritt der Bild-Sammlung und direkte
@@ -127,6 +128,8 @@ export default function TrainingsZentrale() {
         </div>
       </div>
 
+      <StudioAnleitung pageKey="trainingszentrale" />
+
       {/* Kennzahlen */}
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
         {[
@@ -209,29 +212,29 @@ export default function TrainingsZentrale() {
 
                   {/* Aktionen */}
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Link to="/sammelgalerie" title="Bilder aus der Galerie holen"
+                    <Link to="/sammelgalerie" title="Bilder aus der Galerie holen und diesem Satz zuweisen"
                       className="rounded-full bg-elevated px-2.5 py-1.5 text-[11px] text-foreground hover:text-primary inline-flex items-center gap-1">
                       <Images className="h-3.5 w-3.5" /> Galerie
                     </Link>
-                    <Link to={`/trainingsset`} title="In der Werkstatt öffnen"
+                    <Link to={`/trainingsset`} title="Diesen Satz in der Trainings-Werkstatt öffnen"
                       className="rounded-full bg-elevated px-2.5 py-1.5 text-[11px] text-foreground hover:text-primary inline-flex items-center gap-1">
                       <Cpu className="h-3.5 w-3.5" /> Werkstatt
                     </Link>
                     {r.char && (
-                      <Link to={`/charakter/${r.char.id}`} title="Charakter öffnen"
+                      <Link to={`/charakter/${r.char.id}`} title="Zugehörigen Charakter öffnen"
                         className="rounded-full bg-elevated px-2.5 py-1.5 text-[11px] text-foreground hover:text-primary inline-flex items-center gap-1">
                         <ExternalLink className="h-3.5 w-3.5" /> Charakter
                       </Link>
                     )}
                     {(r.set.trainStatus === "LÄUFT" || r.set.trainStatus === "OFFEN") && r.set.trainJobId && (
                       <button onClick={() => refreshOne(r.set.id)} disabled={busy === r.set.id}
-                        title="Trainings-Status abfragen"
+                        title="Aktuellen Trainings-Job-Status bei RunPod abfragen"
                         className="rounded-full bg-elevated px-2.5 py-1.5 text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1 disabled:opacity-50">
                         {busy === r.set.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Status
                       </button>
                     )}
                     {r.set.modelUrl && (
-                      <a href={r.set.modelUrl} target="_blank" rel="noreferrer" title="Fertiges Modell herunterladen"
+                      <a href={r.set.modelUrl} target="_blank" rel="noreferrer" title="Fertiges trainiertes Modell herunterladen"
                         className="rounded-full bg-primary px-2.5 py-1.5 text-[11px] font-bold text-primary-foreground inline-flex items-center gap-1">
                         <Download className="h-3.5 w-3.5" /> Modell
                       </a>
