@@ -77,6 +77,9 @@ export default function PrivateBuild() {
             <button onClick={shareLink} className="inline-flex items-center gap-1 rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
               <Share2 className="h-3.5 w-3.5" /> Link zu dieser Funktion
             </button>
+            <Link to="/studio-hilfe" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
+              Hilfe
+            </Link>
             <Link to="/schnittstelle" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
               Schnittstelle
             </Link>
