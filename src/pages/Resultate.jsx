@@ -7,6 +7,7 @@ import { Loader2, Lock, Sparkles, Download, Wand2, Package, Images, Cpu } from "
 import JSZip from "jszip";
 import FokusTagging from "@/components/trainingsset/FokusTagging";
 import ResultSetGenerator from "@/components/resultate/ResultSetGenerator";
+import { generateCharImage } from "@/lib/generateCharImage";
 
 // Resultate & Vorschau: alle fertig trainierten KI-Charaktere an einem Ort.
 // Pro Charakter die generierten Bilder sehen, ein neues Bild in Aktion
@@ -64,12 +65,11 @@ export default function Resultate() {
     setBusy(r.set.id);
     try {
       const p = (prompt[r.set.id] || "").trim();
-      const full = `${ctx(r)}${p ? `\n\nSzene: ${p}` : ""}. Bildstil: fotorealistisch, stimmungsvoll.`;
-      const res = await base44.integrations.Core.GenerateImage({ prompt: full });
-      const next = [...(r.set.generatedImages || []), res?.url].filter(Boolean);
+      const url = await generateCharImage(r.set, ctx(r), p);
+      const next = [...(r.set.generatedImages || []), url].filter(Boolean);
       await base44.entities.TrainingSet.update(r.set.id, { generatedImages: next });
       setRows((xs) => xs.map((x) => (x.set.id === r.set.id ? { ...x, set: { ...x.set, generatedImages: next } } : x)));
-      toast({ title: "Bild erzeugt" });
+      toast({ title: r.set.trainStatus === "FERTIG" && r.set.trainJobId ? "LoRA-Bild erzeugt" : "Bild erzeugt" });
     } catch (e) {
       toast({ variant: "destructive", title: "Fehlgeschlagen", description: e?.message });
     } finally {

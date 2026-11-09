@@ -16,7 +16,7 @@
 # Die App bekommt dann  RUNPOD_POD_URL = http://<pod-ip>:8080
 #                      RUNPOD_POD_TOKEN = <POD_TOKEN>
 
-import os, json, uuid, threading, subprocess, urllib.request, time, traceback
+import os, json, uuid, threading, subprocess, urllib.request, time, traceback, io
 from pathlib import Path
 from flask import Flask, request, jsonify, send_file, abort
 
@@ -121,6 +121,61 @@ def model(jid):
         j = jobs.get(jid)
     if not j or not j["model_path"]: abort(404)
     return send_file(j["model_path"], as_attachment=True, download_name=f"{jid}.safetensors")
+
+
+# --- LoRA-Inferenz -----------------------------------------------------------
+# Bild mit dem trainierten LoRA erzeugen. Der Pod lädt das SDXL-Basis-Modell
+# und die LoRA-Datei des Jobs, führt die Inference aus und liefert PNG-Bytes.
+# Die Basis-Modell-Datei muss unter BASE_MODEL liegen. Pro LoRA wird die
+# Pipeline einmal geladen und dann gecacht.
+from diffusers import StableDiffusionXLPipeline
+import torch
+
+_pipes = {}  # lora_path -> pipeline
+
+def _pipe_for(lora_path):
+    if lora_path in _pipes:
+        return _pipes[lora_path]
+    pipe = StableDiffusionXLPipeline.from_single_file(BASE_MODEL, torch_dtype=torch.float16, variant="fp16").to("cuda")
+    pipe.load_lora_weights(lora_path)
+    pipe.fuse_lora()
+    _pipes[lora_path] = pipe
+    return pipe
+
+@app.post("/generate")
+def generate():
+    if not check_token(): abort(401)
+    payload = request.get_json(force=True, silent=True) or {}
+    job = payload.get("lora_job_id")
+    if not job:
+        return jsonify({"error": "lora_job_id fehlt"}), 400
+    lora_path = None
+    with lock:
+        j = jobs.get(job)
+        if j and j.get("model_path"):
+            lora_path = j["model_path"]
+    if not lora_path:
+        cand = ROOT / job / "out" / "lora.safetensors"
+        if cand.exists():
+            lora_path = str(cand)
+    if not lora_path:
+        return jsonify({"error": "LoRA nicht gefunden — erst trainieren."}), 404
+    try:
+        pipe = _pipe_for(lora_path)
+        img = pipe(
+            payload.get("prompt", ""),
+            width=int(payload.get("width", 768)),
+            height=int(payload.get("height", 1024)),
+            num_inference_steps=int(payload.get("steps", 28)),
+            guidance_scale=float(payload.get("guidance", 6.0)),
+        ).images[0]
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

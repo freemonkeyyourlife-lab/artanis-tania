@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Wand2, Layers, Check, X } from "lucide-react";
+import { Loader2, Wand2, Layers, Check, X, Cpu } from "lucide-react";
+import { generateCharImage } from "@/lib/generateCharImage";
 
 // Set-Generator für die Resultate-Seite: statt nur ein Bild erzeugt er auf
 // einen Knopf ein ganzes Set — verschiedene Outfits, Posen und Stimmungen —
@@ -55,6 +56,7 @@ export default function ResultSetGenerator({ row, onUpdated }) {
       toast({ variant: "destructive", title: "Nichts ausgewählt", description: "Wähle mindestens eine Szene." });
       return;
     }
+    const trained = row.set?.trainStatus === "FERTIG" && !!row.set?.trainJobId;
     setBusy(true);
     setDone(0);
     setTotal(tasks.length);
@@ -62,9 +64,8 @@ export default function ResultSetGenerator({ row, onUpdated }) {
     let failed = 0;
     for (const t of tasks) {
       try {
-        const full = `${ctx}\n\nSzene: ${t.prompt}. Bildstil: fotorealistisch, stimmungsvoll, durchgearbeitet.`;
-        const res = await base44.integrations.Core.GenerateImage({ prompt: full });
-        if (res?.url) collected.push(res.url);
+        const url = await generateCharImage(row.set, ctx, t.prompt);
+        if (url) collected.push(url);
         else failed++;
       } catch {
         failed++;
@@ -77,8 +78,8 @@ export default function ResultSetGenerator({ row, onUpdated }) {
         await base44.entities.TrainingSet.update(row.set.id, { generatedImages: next });
         onUpdated?.({ ...row, set: { ...row.set, generatedImages: next } });
         toast({
-          title: "Set erzeugt",
-          description: `${collected.length} Bild(er) hinzugefügt${failed ? `, ${failed} fehlgeschlagen` : ""}.`,
+          title: trained ? "LoRA-Set erzeugt" : "Set erzeugt",
+          description: `${collected.length} Bild(er) hinzugefügt${failed ? `, ${failed} fehlgeschlagen` : ""}${trained ? " (mit LoRA)" : ""}.`,
         });
       } catch (e) {
         toast({ variant: "destructive", title: "Speichern fehlgeschlagen", description: e?.message });
@@ -98,6 +99,13 @@ export default function ResultSetGenerator({ row, onUpdated }) {
       >
         <span className="inline-flex items-center gap-1.5 font-heading">
           <Layers className="h-4 w-4 text-primary" /> Set auf einmal erzeugen
+          {row.set?.trainStatus === "FERTIG" && row.set?.trainJobId ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] text-primary">
+              <Cpu className="h-3 w-3" /> mit LoRA
+            </span>
+          ) : (
+            <span className="rounded-full bg-elevated px-2 py-0.5 text-[10px] text-muted-foreground">Standard (kein LoRA)</span>
+          )}
         </span>
         <span className="text-xs text-muted-foreground">
           {busy ? `${done}/${total} …` : `${sel.length} Szene(n) gewählt`}

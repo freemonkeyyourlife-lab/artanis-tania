@@ -9,9 +9,10 @@ kleines HTTP-Service, das **einmal** auf deinem Pod läuft.
 cd /workspace
 git clone https://github.com/kohya-ss/sd-scripts
 cd sd-scripts && pip install -r requirements.txt
-pip install flask requests
+pip install flask requests diffusers peft
 # SDXL-Base-Modell ablegen (oder Pfad über BASE_MODEL anpassen):
-# /workspace/models/sd_xl_base_1.0.safetensors
+# /workspace/models/sd_xl_base_1.0.safetensors  — wird für Training UND
+# LoRA-Generierung (Schritt 5) gebraucht.
 ```
 
 ## 2. Service starten
@@ -37,3 +38,12 @@ nicht mehr gebraucht — lass sie ruhig stehen.)
 Danach „GPU-Training starten" im Assistenten (Schritt 4) stößt den Job auf
 dem Pod an; der Status pollt, bis das LoRA fertig ist, und lädt die
 `.safetensors` direkt in die App.
+
+## 5. LoRA-Bilder erzeugen (gleicher Pod)
+
+Auf derselben Pod läuft zusätzlich `POST /generate` (in `train_server.py`
+enthalten): die Resultate-Seite ruft `runpodGenerate` auf, der Pod lädt das
+Basis-Modell + die LoRA-Datei des Jobs und liefert ein PNG. Dafür muss
+`diffusers` und `peft` installiert sein (siehe oben) und das SDXL-Base-Modell
+muss unter `BASE_MODEL` liegen. Die Pipeline wird pro LoRA einmal geladen und
+gecacht — der erste Aufruf pro Charakter dauert etwas länger.

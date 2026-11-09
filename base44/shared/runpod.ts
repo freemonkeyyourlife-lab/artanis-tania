@@ -48,6 +48,24 @@ export async function getStatus(jobId) {
   };
 }
 
+// Bild mit dem trainierten LoRA auf dem Pod erzeugen.
+// Der Pod lädt Basis-Modell + die LoRA-Datei des Jobs und führt die Inference
+// aus. Gibt die PNG-Bytes zurück. Braucht denselben Pod wie /train.
+export async function runGenerate(input) {
+  const { url, token } = cfg();
+  const res = await fetch(`${url}/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Token": token },
+    body: JSON.stringify(input),
+    signal: AbortSignal.timeout(120000),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Pod /generate ${res.status}: ${text.slice(0, 200)}`);
+  }
+  return await res.blob();
+}
+
 // Normiert den Pod-Status auf die internen Trainings-Status.
 export function mapStatus(s) {
   if (s === "completed") return "FERTIG";
