@@ -6,6 +6,7 @@ import { Image } from "@/components/ui/image";
 import { Loader2, Lock, Sparkles, Download, Wand2, Package, Images, Cpu } from "lucide-react";
 import JSZip from "jszip";
 import FokusTagging from "@/components/trainingsset/FokusTagging";
+import ResultSetGenerator from "@/components/resultate/ResultSetGenerator";
 
 // Resultate & Vorschau: alle fertig trainierten KI-Charaktere an einem Ort.
 // Pro Charakter die generierten Bilder sehen, ein neues Bild in Aktion
@@ -75,6 +76,10 @@ export default function Resultate() {
       setBusy(null);
     }
   };
+
+  // Übernimmt die nach einem Set-Lauf aufgefüllten Bilder in die Ansicht,
+  // ohne neu laden zu müssen.
+  const onSetUpdated = (next) => setRows((xs) => xs.map((x) => (x.set.id === next.set.id ? next : x)));
 
   const downloadImage = (url, name) => {
     const a = document.createElement("a");
@@ -207,6 +212,8 @@ export default function Resultate() {
                     {busy === r.set.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Neues Bild
                   </button>
                 </div>
+
+                <ResultSetGenerator row={r} onUpdated={onSetUpdated} />
 
                 <FokusTagging set={r.set} onSaved={load} />
               </div>
