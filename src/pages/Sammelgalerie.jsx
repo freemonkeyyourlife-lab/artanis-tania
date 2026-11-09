@@ -4,9 +4,10 @@ import { Image } from "@/components/ui/image";
 import { useToast } from "@/components/ui/use-toast";
 import { uploadToArchive, loadArchive } from "@/lib/imageArchive";
 import CanvasGrid from "@/components/canvas/CanvasGrid";
-import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic, Crop } from "lucide-react";
+import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic, Crop, HardDrive } from "lucide-react";
 import GalleryImageEditor from "@/components/gallery/GalleryImageEditor";
 import SendToTrainingDialog from "@/components/gallery/SendToTrainingDialog";
+import DriveBrowser from "@/components/gallery/DriveBrowser";
 
 // Private Sammel-Galerie — hier landet alles, was du überall findest: Bilder
 // per Drag-and-Drop, Links zum Einsaugen. Nur im privaten Bereich, nur Admin.
@@ -38,6 +39,7 @@ export default function Sammelgalerie() {
   const [kindFilter, setKindFilter] = useState("");
   const [editing, setEditing] = useState(null);
   const [sendMedia, setSendMedia] = useState(null);
+  const [driveOpen, setDriveOpen] = useState(false);
   const dropRef = useRef(null);
   const fileInput = useRef(null);
 
@@ -227,6 +229,10 @@ export default function Sammelgalerie() {
           className="inline-flex items-center gap-1 rounded-full bg-elevated px-3 py-2 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
           <Cpu className="h-3.5 w-3.5" /> Gefilterte ins Training
         </button>
+        <button onClick={() => setDriveOpen(true)}
+          className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-2 text-xs text-primary hover:bg-primary/25">
+          <HardDrive className="h-3.5 w-3.5" /> Google Drive
+        </button>
         <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
           <Images className="h-3.5 w-3.5" /> {filtered.length}
         </span>
@@ -296,6 +302,7 @@ export default function Sammelgalerie() {
       )}
 
       <SendToTrainingDialog open={!!sendMedia} media={sendMedia} onClose={() => setSendMedia(null)} onDone={load} />
+      <DriveBrowser open={driveOpen} onClose={() => setDriveOpen(false)} onImported={load} />
     </div>
   );
 }
