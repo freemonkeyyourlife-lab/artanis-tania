@@ -66,6 +66,19 @@ export default async function (req) {
     return Response.json({ ok: true, jobId, trainStatus: 'LÄUFT' });
   } catch (error) {
     console.error('runpodTrain', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    // Fehler am Set festhalten, damit er im Studio sichtbar wird — nicht nur
+    // als flüchtiger 500-Toast, sondern dauerhaft als trainStatus FEHLER.
+    try {
+      await base44.asServiceRole.entities.TrainingSet.update(set?.id, {
+        trainStatus: 'FEHLER',
+        trainError: String(error.message || error),
+      });
+    } catch { /* set evtl. noch nicht geladen */ }
+    const msg = String(error.message || error);
+    const isConfig = /RUNPOD_POD_URL|RUNPOD_POD_TOKEN|fehlen/.i.test(msg);
+    return Response.json(
+      { error: isConfig ? 'RunPod-Pod nicht eingerichtet: RUNPOD_POD_URL und RUNPOD_POD_TOKEN fehlen (Dashboard → Secrets).' : msg },
+      { status: isConfig ? 400 : 500 }
+    );
   }
 }
