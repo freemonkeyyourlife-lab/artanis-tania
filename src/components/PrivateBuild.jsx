@@ -40,5 +40,27 @@ export default function PrivateBuild() {
     );
   }
 
-  return <Outlet />;
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-20 border-b border-border bg-card/80 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-3">
+          <span className="font-display text-lg text-foreground">Privat</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">
+            Trainings-, Modell- und Charakter-Bereich — abgetrennt vom öffentlichen Verkehr
+          </span>
+          <div className="ml-auto flex items-center gap-2 text-xs">
+            <Link to="/werkstatt" className="rounded-full bg-primary px-3 py-1.5 font-semibold text-primary-foreground">
+              Werkstatt
+            </Link>
+            <Link to="/" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
+              Zur öffentlichen Seite
+            </Link>
+          </div>
+        </div>
+      </header>
+      <main className="mx-auto max-w-6xl px-4">
+        <Outlet />
+      </main>
+    </div>
+  );
 }

@@ -196,25 +196,26 @@ const AuthenticatedApp = () => {
         <Route path="/struktur" element={<Struktur />} />
         <Route path="/recht" element={<Legal />} />
         <Route path="/recht/:section" element={<Legal />} />
-        {/* Privater Bau- und Trainingsbereich — nur Besitzerin (admin). */}
-        <Route element={<PrivateBuild />}>
-          <Route path="/externes-studio" element={<ExternalStudioPage />} />
-          <Route path="/dock" element={<Dock />} />
-          <Route path="/baukasten" element={<Baukasten />} />
-          <Route path="/stimmen" element={<VoiceStudio />} />
-          <Route path="/banana" element={<BananaStudio />} />
-          <Route path="/palette" element={<Palette />} />
-          <Route path="/botimport" element={<BotImport />} />
-          <Route path="/trainingsset" element={<TrainingsAssistent />} />
-          <Route path="/logbuch" element={<Logbuch />} />
-          <Route path="/story-dashboard" element={<StoryDashboard />} />
-          <Route path="/werkstatt" element={<Werkstatt />} />
-          <Route path="/modellplan" element={<ModelPlan />} />
-          <Route path="/archiv" element={<Archive />} />
-          <Route path="/prompt" element={<PromptStudio />} />
-          <Route path="/sandbox" element={<Sandbox />} />
-          <Route path="/erzaehler" element={<NarratorStudio />} />
-        </Route>
+      </Route>
+      {/* Privater Bau- und Trainingsbereich — komplett isoliert vom öffentlichen
+          Layout: eigene Hülle, nur Besitzerin (admin). */}
+      <Route element={<PrivateBuild />}>
+        <Route path="/externes-studio" element={<ExternalStudioPage />} />
+        <Route path="/dock" element={<Dock />} />
+        <Route path="/baukasten" element={<Baukasten />} />
+        <Route path="/stimmen" element={<VoiceStudio />} />
+        <Route path="/banana" element={<BananaStudio />} />
+        <Route path="/palette" element={<Palette />} />
+        <Route path="/botimport" element={<BotImport />} />
+        <Route path="/trainingsset" element={<TrainingsAssistent />} />
+        <Route path="/logbuch" element={<Logbuch />} />
+        <Route path="/story-dashboard" element={<StoryDashboard />} />
+        <Route path="/werkstatt" element={<Werkstatt />} />
+        <Route path="/modellplan" element={<ModelPlan />} />
+        <Route path="/archiv" element={<Archive />} />
+        <Route path="/prompt" element={<PromptStudio />} />
+        <Route path="/sandbox" element={<Sandbox />} />
+        <Route path="/erzaehler" element={<NarratorStudio />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>
