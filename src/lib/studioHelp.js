@@ -89,3 +89,61 @@ export const STUDIO_HELP = {
 export function getStudioHelp(key) {
   return STUDIO_HELP[key] || null;
 }
+
+// Baut aus allen Anleitungen ein vollständiges, druckbares HTML-Handbuch
+// ( öffnet im Browser, „Drucken" → „Als PDF speichern" ) und lädt es herunter.
+export function downloadStudioManual() {
+  const esc = (s) => String(s || "").replace(/[&<>]/g, (c) => ({ "&": "&", "<": "<", ">": ">" }[c]));
+  const pages = Object.entries(STUDIO_HELP);
+  const body = pages
+    .map(([key, h]) => {
+      const steps = (h.steps || [])
+        .map((s, i) => `<li>${i + 1}. ${esc(s)}</li>`)
+        .join("");
+      const btns = (h.buttons || [])
+        .map(
+          (b) =>
+            `<tr><td class="lbl">${esc(b.label)}</td><td>${esc(b.meaning)}</td></tr>`
+        )
+        .join("");
+      return `
+        <section>
+          <h2>${esc(h.title)}</h2>
+          <p class="intro">${esc(h.intro)}</p>
+          ${steps ? `<h3>Schritte</h3><ol>${steps}</ol>` : ""}
+          ${btns ? `<h3>Buttons erklärt</h3><table><tbody>${btns}</tbody></table>` : ""}
+        </section>`;
+    })
+    .join("");
+
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>Studio-Anleitung — ARTANIS × TANIA</title>
+<style>
+  body { font-family: "Montserrat", Arial, sans-serif; max-width: 760px; margin: 32px auto; padding: 0 20px; color: #111; line-height: 1.55; }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .sub { color: #666; margin-bottom: 28px; }
+  section { border-top: 2px solid #e29578; padding: 20px 0; }
+  h2 { font-size: 20px; margin: 0 0 8px; }
+  .intro { margin: 0 0 12px; }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: #888; margin: 14px 0 6px; }
+  ol { padding-left: 20px; } li { margin: 3px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  td { border: 1px solid #ddd; padding: 6px 8px; vertical-align: top; font-size: 14px; }
+  td.lbl { white-space: nowrap; background: #f6eee9; font-weight: 600; color: #b5654a; width: 38%; }
+  @media print { body { margin: 0; } section { page-break-inside: avoid; } }
+</style></head><body>
+<h1>Studio-Anleitung</h1>
+<p class="sub">ARTANIS × TANIA · Stand ${new Date().toLocaleDateString("de-DE")}</p>
+${body}
+</body></html>`;
+
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "studio-anleitung.html";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
