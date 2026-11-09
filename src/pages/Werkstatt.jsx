@@ -53,6 +53,7 @@ const ACTIONS = (() => {
   FIXED_AREAS.forEach((a) => a.items.forEach((it) => add(it.path, it.label)));
   DEFAULT_MENU.forEach((m) => add(m.path, m.label));
   add("/sammelgalerie", "Sammel-Galerie");
+  add("/schnittstelle", "Schnittstelle");
   return out;
 })();
 

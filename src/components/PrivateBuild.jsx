@@ -49,6 +49,9 @@ export default function PrivateBuild() {
             Trainings-, Modell- und Charakter-Bereich — abgetrennt vom öffentlichen Verkehr
           </span>
           <div className="ml-auto flex items-center gap-2 text-xs">
+            <Link to="/schnittstelle" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
+              Schnittstelle
+            </Link>
             <Link to="/werkstatt" className="rounded-full bg-primary px-3 py-1.5 font-semibold text-primary-foreground">
               Werkstatt
             </Link>

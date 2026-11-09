@@ -86,6 +86,7 @@ import Hilfe from '@/pages/Hilfe';
 import StoryDashboard from '@/pages/StoryDashboard';
 import Werkstatt from '@/pages/Werkstatt';
 import Sammelgalerie from '@/pages/Sammelgalerie';
+import Schnittstelle from '@/pages/Schnittstelle';
 import { CallProvider } from '@/lib/CallContext';
 import FloatingCall from '@/components/call/FloatingCall';
 import LiveEdgeChat from '@/components/LiveEdgeChat';
@@ -218,6 +219,7 @@ const AuthenticatedApp = () => {
         <Route path="/sandbox" element={<Sandbox />} />
         <Route path="/erzaehler" element={<NarratorStudio />} />
         <Route path="/sammelgalerie" element={<Sammelgalerie />} />
+        <Route path="/schnittstelle" element={<Schnittstelle />} />
         </Route>
       <Route path="*" element={<PageNotFound />} />
       </Routes>
