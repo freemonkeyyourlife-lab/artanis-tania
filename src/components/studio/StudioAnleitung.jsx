@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import { getStudioHelp } from "@/lib/studioHelp";
-import StudioManualModal from "@/components/studio/StudioManualModal";
-import { Info, ChevronDown, MousePointerClick, BookOpen } from "lucide-react";
+import { getStudioHelp, downloadStudioManual } from "@/lib/studioHelp";
+import { Info, ChevronDown, MousePointerClick, Download } from "lucide-react";
 
 // Pro Seite eine Anleitung: ein klappbarer Kasten oben, der erklärt was die
 // Seite tut und was jeder Button bedeutet. Inhalt kommt aus studioHelp.js.
 
 export default function StudioAnleitung({ pageKey }) {
   const [open, setOpen] = useState(false);
-  const [manualOpen, setManualOpen] = useState(false);
   const help = getStudioHelp(pageKey);
   if (!help) return null;
 
@@ -20,9 +18,9 @@ export default function StudioAnleitung({ pageKey }) {
         <Info className="h-4 w-4 text-primary" />
         <span className="font-heading text-sm text-foreground">{help.title}</span>
         <span className="ml-1 hidden text-xs text-muted-foreground sm:inline">Anleitung & was die Buttons bedeuten</span>
-        <button onClick={(e) => { e.stopPropagation(); setManualOpen(true); }} title="Gesamtes Handbuch ansehen und auf die Platte speichern"
+        <button onClick={(e) => { e.stopPropagation(); downloadStudioManual(); }} title="Alle Anleitungen als HTML-Datei auf die Festplatte speichern"
           className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/25">
-          <BookOpen className="h-3.5 w-3.5" /> Handbuch
+          <Download className="h-3.5 w-3.5" /> Auf Platte
         </button>
         <ChevronDown className={"ml-2 h-4 w-4 text-muted-foreground transition-transform " + (open ? "rotate-180" : "")} />
       </button>
@@ -59,8 +57,6 @@ export default function StudioAnleitung({ pageKey }) {
           )}
         </div>
       )}
-
-      <StudioManualModal open={manualOpen} onClose={() => setManualOpen(false)} />
     </div>
   );
 }
