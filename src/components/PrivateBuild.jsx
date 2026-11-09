@@ -5,6 +5,7 @@ import { Loader2, Lock, Share2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PartnerInvite from "@/components/private/PartnerInvite";
 import StudioHints from "@/components/studio/StudioHints";
+import MediaDownloadOverlay from "@/components/studio/MediaDownloadOverlay";
 
 // Privates Layout für den Bau- und Trainingsbereich: nur Besitzerin (admin).
 // Nicht-Admins sehen einen Hinweis statt der Werkzeuge — strikte Trennung
@@ -106,6 +107,7 @@ export default function PrivateBuild() {
         <Outlet />
       </main>
       <StudioHints />
+      <MediaDownloadOverlay />
     </div>
   );
 }
