@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Loader2, Lock, Cpu, Images, Boxes, Mic, Wand2, Users } from "lucide-react";
 import FabrikForm from "@/components/werkstatt/FabrikForm";
 import CharakterCanvas from "@/components/werkstatt/CharakterCanvas";
+import WerkstattSpiel from "@/components/werkstatt/WerkstattSpiel";
 
 // Private Werkstatt — abgetrennt vom öffentlichen App-Verkehr. Nur für die
 // Besitzerin: hier Charaktere als Fabrik anlegen und die Kachel-Leinwand
@@ -66,6 +67,10 @@ export default function Werkstatt() {
           actions={ACTIONS}
           onOpenCharacter={(id) => navigate(`/charakter/${id}`)}
         />
+      </div>
+
+      <div className="mt-4">
+        <WerkstattSpiel characters={characters} />
       </div>
 
       {loading && <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Lade Charaktere …</div>}
