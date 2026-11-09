@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Loader2, Lock, Share2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PartnerInvite from "@/components/private/PartnerInvite";
+import StudioHints from "@/components/studio/StudioHints";
 
 // Privates Layout für den Bau- und Trainingsbereich: nur Besitzerin (admin).
 // Nicht-Admins sehen einen Hinweis statt der Werkzeuge — strikte Trennung
@@ -83,6 +84,9 @@ export default function PrivateBuild() {
             <Link to="/studio-uebersicht" className="rounded-full bg-primary px-3 py-1.5 font-semibold text-primary-foreground">
               Studio-Übersicht
             </Link>
+            <Link to="/resultate" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
+              Resultate
+            </Link>
             <Link to="/trainingszentrale" className="rounded-full bg-elevated px-3 py-1.5 text-muted-foreground hover:text-foreground">
               Trainings-Zentrale
             </Link>
@@ -101,6 +105,7 @@ export default function PrivateBuild() {
       <main className="mx-auto max-w-6xl px-4">
         <Outlet />
       </main>
+      <StudioHints />
     </div>
   );
 }
