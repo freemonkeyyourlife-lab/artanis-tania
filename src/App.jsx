@@ -155,7 +155,6 @@ const AuthenticatedApp = () => {
         <Route path="/artanis" element={<Artanis />} />
         <Route path="/tania" element={<Tania />} />
         <Route path="/couple" element={<Couple />} />
-        <Route path="/admin" element={<Admin />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/videos" element={<Videos />} />
         <Route path="/photos" element={<Photos />} />
@@ -202,6 +201,7 @@ const AuthenticatedApp = () => {
       {/* Privater Bau- und Trainingsbereich — komplett isoliert vom öffentlichen
           Layout: eigene Hülle, nur Besitzerin (admin). */}
       <Route element={<PrivateBuild />}>
+        <Route path="/admin" element={<Admin />} />
         <Route path="/externes-studio" element={<ExternalStudioPage />} />
         <Route path="/dock" element={<Dock />} />
         <Route path="/baukasten" element={<Baukasten />} />
