@@ -4,11 +4,12 @@ import { Image } from "@/components/ui/image";
 import { useToast } from "@/components/ui/use-toast";
 import { uploadToArchive, loadArchive } from "@/lib/imageArchive";
 import CanvasGrid from "@/components/canvas/CanvasGrid";
-import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic, Crop, HardDrive } from "lucide-react";
+import { Loader2, Lock, Upload, Link2, Trash2, Tag, X, Sparkles, Images, Cpu, Mic, Crop, HardDrive, Package } from "lucide-react";
 import GalleryImageEditor from "@/components/gallery/GalleryImageEditor";
 import SendToTrainingDialog from "@/components/gallery/SendToTrainingDialog";
 import DriveBrowser from "@/components/gallery/DriveBrowser";
 import StudioAnleitung from "@/components/studio/StudioAnleitung";
+import { exportZip } from "@/lib/exportZip";
 
 // Private Sammel-Galerie — hier landet alles, was du überall findest: Bilder
 // per Drag-and-Drop, Links zum Einsaugen. Nur im privaten Bereich, nur Admin.
@@ -41,6 +42,7 @@ export default function Sammelgalerie() {
   const [editing, setEditing] = useState(null);
   const [sendMedia, setSendMedia] = useState(null);
   const [driveOpen, setDriveOpen] = useState(false);
+  const [zipping, setZipping] = useState(false);
   const dropRef = useRef(null);
   const fileInput = useRef(null);
 
@@ -231,6 +233,33 @@ export default function Sammelgalerie() {
         <button onClick={() => setSendMedia(filtered)} disabled={!filtered.length} title="Alle gefilterten Kacheln auf einmal ins Trainingsset schieben"
           className="inline-flex items-center gap-1 rounded-full bg-elevated px-3 py-2 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
           <Cpu className="h-3.5 w-3.5" /> Gefilterte ins Training
+        </button>
+        <button
+          onClick={async () => {
+            if (zipping || !filtered.length) return;
+            setZipping(true);
+            try {
+              const files = filtered.map((it, i) => ({
+                url: it.url,
+                kind: mediaType(it.url),
+                name: `${String(i + 1).padStart(3, "0")}_${(it.name || "medium").replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 40)}`,
+              }));
+              const added = await exportZip({
+                name: `sammelgalerie-${new Date().toISOString().slice(0, 10)}`,
+                files,
+                textName: "galerie.txt",
+                text: filtered.map((it, i) => `${i + 1}. ${it.name || "ohne Name"} — ${it.url}${it.note ? ` (${it.note})` : ""}`).join("\n"),
+              });
+              toast({ title: "Gesichert", description: `${added} Datei(en) als ZIP auf die Festplatte.` });
+            } finally {
+              setZipping(false);
+            }
+          }}
+          disabled={zipping || !filtered.length}
+          title="Alle gefilterten Bilder, Videos und Audios als ZIP auf die Festplatte"
+          className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+        >
+          {zipping ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Package className="h-3.5 w-3.5" />} Alles als ZIP
         </button>
         <button onClick={() => setDriveOpen(true)} title="Dateien aus Google Drive importieren"
           className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-2 text-xs text-primary hover:bg-primary/25">
