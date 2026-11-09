@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
-import { Loader2, Lock, Sparkles, Download, Wand2, Package, Images, Cpu } from "lucide-react";
+import { Loader2, Lock, Sparkles, Download, Wand2, Package, Images, Cpu, Trash2, Image as ImageIcon } from "lucide-react";
 import JSZip from "jszip";
 import FokusTagging from "@/components/trainingsset/FokusTagging";
 import ResultSetGenerator from "@/components/resultate/ResultSetGenerator";
@@ -80,6 +80,41 @@ export default function Resultate() {
   // Übernimmt die nach einem Set-Lauf aufgefüllten Bilder in die Ansicht,
   // ohne neu laden zu müssen.
   const onSetUpdated = (next) => setRows((xs) => xs.map((x) => (x.set.id === next.set.id ? next : x)));
+
+  // Pro generiertes Bild: Wer ist zu sehen, was macht sie — am Set speichern.
+  const saveCaption = async (r, url, who, what) => {
+    const meta = (r.set.generatedMeta || []).filter((m) => m.url !== url);
+    meta.push({ url, who: who || "", what: what || "" });
+    await base44.entities.TrainingSet.update(r.set.id, { generatedMeta: meta });
+    setRows((xs) => xs.map((x) => (x.set.id === r.set.id ? { ...x, set: { ...x.set, generatedMeta: meta } } : x)));
+  };
+
+  const deleteImg = async (r, url) => {
+    const imgs = (r.set.generatedImages || []).filter((u) => u !== url);
+    const meta = (r.set.generatedMeta || []).filter((m) => m.url !== url);
+    const patch = { generatedImages: imgs, generatedMeta: meta };
+    if (r.set.avatar === url) patch.avatar = "";
+    await base44.entities.TrainingSet.update(r.set.id, patch);
+    setRows((xs) => xs.map((x) => (x.set.id === r.set.id ? { ...x, set: { ...x.set, ...patch } } : x)));
+    toast({ title: "Gelöscht" });
+  };
+
+  const setAvatar = async (r, url) => {
+    await base44.entities.TrainingSet.update(r.set.id, { avatar: url });
+    setRows((xs) => xs.map((x) => (x.set.id === r.set.id ? { ...x, set: { ...x.set, avatar: url } } : x)));
+    toast({ title: "Als Vorschau gesetzt" });
+  };
+
+  // Gutes Bild zurück in den Trainings-Pool — so wird die Person von Runde zu
+  // Runde feiner (klassischer Finetune-Loop).
+  const insTraining = async (r, url) => {
+    const imgs = Array.isArray(r.set.images) ? r.set.images : [];
+    if (imgs.includes(url)) { toast({ title: "Schon im Training" }); return; }
+    const next = [...imgs, url];
+    await base44.entities.TrainingSet.update(r.set.id, { images: next });
+    setRows((xs) => xs.map((x) => (x.set.id === r.set.id ? { ...x, set: { ...x.set, images: next } } : x)));
+    toast({ title: "Ins Training übernommen", description: "Beim nächsten Lauf mit dabei — feiner wird's." });
+  };
 
   const downloadImage = (url, name) => {
     const a = document.createElement("a");
@@ -167,10 +202,14 @@ export default function Resultate() {
             return (
               <div key={r.set.id} className="rounded-2xl border border-border bg-card p-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-elevated">
-                    {r.set.avatar ? <Image src={r.set.avatar} fittingType="fill" className="h-full w-full" /> :
-                      imgs[0] ? <Image src={imgs[0]} fittingType="fill" className="h-full w-full" /> :
-                      <div className="flex h-full w-full items-center justify-center"><Cpu className="h-5 w-5 text-muted-foreground" /></div>}
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-elevated">
+                    {(() => {
+                      const av = [r.set.avatar, imgs[0], r.set.focusImage, r.set.images?.[0]]
+                        .find((u) => u && String(u).startsWith("http")) || "";
+                      return av
+                        ? <Image src={av} fittingType="fill" className="h-full w-full" />
+                        : <div className="flex h-full w-full items-center justify-center"><Cpu className="h-6 w-6 text-muted-foreground" /></div>;
+                    })()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-heading text-foreground">{r.set.personName || r.set.name || "Ohne Name"}</p>
@@ -188,16 +227,35 @@ export default function Resultate() {
                 </div>
 
                 {imgs.length > 0 ? (
-                  <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                    {imgs.map((u, i) => (
-                      <div key={i} className="group relative aspect-square overflow-hidden rounded-xl bg-elevated">
-                        <Image src={u} fittingType="fill" className="h-full w-full" />
-                        <button onClick={() => downloadImage(u, `${(r.set.personName || "bild").replace(/[^a-z0-9_-]+/gi, "_")}-${i + 1}.png`)} title="Dieses Bild auf die Festplatte speichern"
-                          className="absolute right-1 top-1 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity hover:bg-primary group-hover:opacity-100">
-                          <Download className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {imgs.map((u, i) => {
+                      const m = (r.set.generatedMeta || []).find((x) => x.url === u) || {};
+                      return (
+                        <div key={u || i} className="rounded-xl border border-border bg-elevated/40 p-2">
+                          <div className="group relative aspect-[3/4] overflow-hidden rounded-lg bg-elevated">
+                            <Image src={u} fittingType="fill" className="h-full w-full" />
+                            <div className="absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                              <button onClick={() => downloadImage(u, `${(r.set.personName || "bild").replace(/[^a-z0-9_-]+/gi, "_")}-${i + 1}.png`)} title="Herunterladen"
+                                className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary"><Download className="h-3.5 w-3.5" /></button>
+                              <button onClick={() => setAvatar(r, u)} title="Als Vorschau nehmen"
+                                className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary"><ImageIcon className="h-3.5 w-3.5" /></button>
+                              <button onClick={() => insTraining(r, u)} title="Ins Trainings-Set übernehmen — macht die Person feiner"
+                                className="rounded-full bg-black/60 p-1.5 text-white hover:bg-primary"><Cpu className="h-3.5 w-3.5" /></button>
+                              <button onClick={() => deleteImg(r, u)} title="Löschen"
+                                className="rounded-full bg-black/60 p-1.5 text-white hover:bg-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                            </div>
+                          </div>
+                          <div className="mt-1.5 space-y-1">
+                            <input defaultValue={m.who || ""} placeholder="Wer ist das?"
+                              onBlur={(e) => saveCaption(r, u, e.target.value, m.what || "")}
+                              className="w-full rounded-md bg-background px-2 py-1 text-[11px] text-foreground" />
+                            <input defaultValue={m.what || ""} placeholder="Was macht sie?"
+                              onBlur={(e) => saveCaption(r, u, m.who || "", e.target.value)}
+                              className="w-full rounded-md bg-background px-2 py-1 text-[11px] text-foreground" />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="mt-3 text-xs text-muted-foreground">Noch keine Bilder — gleich eines erzeugen.</p>

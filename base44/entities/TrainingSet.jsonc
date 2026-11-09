@@ -36,6 +36,25 @@
         "type": "string"
       }
     },
+    "generatedMeta": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "who": {
+            "type": "string"
+          },
+          "what": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Pro generiertem Bild: wer zu sehen ist und was sie macht."
+    },
     "sourceMedia": {
       "type": "array",
       "items": {
