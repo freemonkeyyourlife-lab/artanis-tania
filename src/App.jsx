@@ -43,6 +43,7 @@ import AiVideoCall from '@/pages/AiVideoCall';
 import Leitstand from '@/pages/Leitstand';
 import Therapy from '@/pages/Therapy';
 import TherapyArchiv from '@/pages/TherapyArchiv';
+import Beitritt from '@/pages/Beitritt';
 import SitzungsVorlagen from '@/pages/SitzungsVorlagen';
 import PayLinks from '@/pages/PayLinks';
 import Pay from '@/pages/Pay';
@@ -154,6 +155,7 @@ const AuthenticatedApp = () => {
       <GuideConsole />
       <Routes>
       {/* Add your page Route elements here */}
+      <Route path="/beitreten" element={<Beitritt />} />
       <Route path="/experience/:id" element={<ExperiencePlayer />} />
       <Route path="/ai-call/:id" element={<AiVideoCall />} />
       <Route path="/call" element={<StartCall />} />

@@ -395,7 +395,7 @@ export default function TherapySession() {
         <ArrowLeft className="w-3.5 h-3.5" /> Sprechstunde
       </Link>
 
-      <TherapyInviteBar session={session} isOwner={isOwner} isGuest={isGuest} guestName={guestName} />
+      <TherapyInviteBar session={session} isOwner={isOwner} isGuest={isGuest} guestName={guestName} onUpdated={setSession} />
 
       <div className="lg:grid lg:grid-cols-[1fr_19rem] lg:gap-4 items-start">
       <div>

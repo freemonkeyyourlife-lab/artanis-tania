@@ -12,6 +12,10 @@
       "type": "boolean",
       "default": false
     },
+    "inviteCode": {
+      "type": "string",
+      "description": "Geheimer Beitritts-Code \u2014 statt HTTPS-Link teilen. Empf\u00e4ngerin gibt ihn auf /beitreten ein."
+    },
     "roleSetup": {
       "type": "string",
       "enum": [

@@ -1,15 +1,33 @@
-import React, { useState } from "react";
-import { UserPlus, Copy, Check, Eye, EyeOff, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { UserPlus, Copy, Check, Eye, EyeOff, X, KeyRound, RefreshCw, Link as LinkIcon } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
+import { newCallCode, normalizeCallCode } from "@/lib/callLink";
 
-// Einladungs-Leiste für die Sitzung: erzeugt einen Link, mit dem eine
-// Freundin live dazustoßen kann — sie sieht alles und darf mitreden.
-export default function TherapyInviteBar({ session, isOwner, isGuest, guestName }) {
+// Einladungs-Leiste für die Sitzung: teile einen Geheim-Code statt HTTPS-Link.
+// Empfängerin geht auf /beitreten, tippt den Code ein und ist live dabei.
+export default function TherapyInviteBar({ session, isOwner, isGuest, guestName, onUpdated }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showLink, setShowLink] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  const code = session?.inviteCode || "";
+
+  // Beim ersten Öffnen als Gastgeberin: Code erzeugen, falls keiner da ist.
+  useEffect(() => {
+    if (!session) return;
+    if (!open || !isOwner || code || generating) return;
+    setGenerating(true);
+    const c = newCallCode();
+    base44.entities.TherapySession
+      .update(session.id, { inviteCode: c })
+      .then((updated) => onUpdated?.(updated))
+      .catch(() => {})
+      .finally(() => setGenerating(false));
+  }, [open, isOwner, code, generating]);
 
   if (!session) return null;
 
@@ -18,9 +36,10 @@ export default function TherapyInviteBar({ session, isOwner, isGuest, guestName 
     guestName || (isGuest ? "Freundin" : "Gast")
   )}`;
 
-  const copy = async () => {
+  const copyCode = async () => {
+    if (!code) return;
     try {
-      await navigator.clipboard.writeText(link);
+      await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -28,9 +47,22 @@ export default function TherapyInviteBar({ session, isOwner, isGuest, guestName 
     }
   };
 
+  const newCode = async () => {
+    const c = newCallCode();
+    setGenerating(true);
+    try {
+      const updated = await base44.entities.TherapySession.update(session.id, { inviteCode: c });
+      onUpdated?.(updated);
+      toast({ title: "Neuer Code", description: "Der alte Code gilt nicht mehr." });
+    } catch {} finally {
+      setGenerating(false);
+    }
+  };
+
   const makePublic = async () => {
-    await base44.entities.TherapySession.update(session.id, { visibility: "PUBLIC" });
-    toast({ title: "Jetzt offen", description: "Deine Freundin kann den Link öffnen." });
+    const updated = await base44.entities.TherapySession.update(session.id, { visibility: "PUBLIC" });
+    onUpdated?.(updated);
+    toast({ title: "Jetzt offen", description: "Deine Freundin kann den Code benutzen." });
   };
 
   return (
@@ -66,27 +98,53 @@ export default function TherapyInviteBar({ session, isOwner, isGuest, guestName 
 
       {open && isOwner && (
         <div className="mt-3 rounded-xl bg-elevated p-3">
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground mb-1">
-                Diesen Link schickst du deiner Freundin. Sie öffnet die Sitzung live, sieht alles und kann über den Seitenchat mitreden.
+          <div className="flex items-start gap-2 mb-2">
+            <KeyRound className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Geheim-Code zum Teilen</p>
+              <p className="text-[11px] text-muted-foreground">
+                Schick nur diesen Code — keine URL. Die Empfängerin geht auf die Seite, klickt „Mit Code beitreten" und tippt ihn ein. Geht auch dort, wo Links verboten sind.
               </p>
-              <code className="block break-all rounded-lg bg-background px-3 py-2 text-[11px] text-foreground">{link}</code>
-              <div className="mt-2 flex gap-2">
-                <button onClick={copy}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold">
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copied ? "Kopiert" : "Link kopieren"}
-                </button>
-                <button onClick={() => setOpen(false)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background text-muted-foreground text-[11px]">
-                  <X className="w-3.5 h-3.5" /> Schließen
-                </button>
-              </div>
-            </div>
-            <div className="hidden sm:block rounded-xl bg-white p-2">
-              <QRCodeSVG value={link} size={120} />
             </div>
           </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <code className="px-4 py-2.5 rounded-xl bg-background border-2 border-border text-foreground text-xl font-bold tracking-[0.25em]">
+              {generating ? "······" : code}
+            </code>
+            <button
+              onClick={copyCode}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold"
+            >
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copied ? "Kopiert" : "Code kopieren"}
+            </button>
+            <button
+              onClick={newCode}
+              disabled={generating}
+              title="Neuen Code erzeugen — alten ungültig machen"
+              className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-background text-muted-foreground text-[11px] hover:text-foreground disabled:opacity-50"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Neu
+            </button>
+            <button
+              onClick={() => setShowLink((v) => !v)}
+              className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-background text-muted-foreground text-[11px] hover:text-foreground"
+            >
+              <LinkIcon className="w-3.5 h-3.5" /> {showLink ? "Link verbergen" : "Vollständiger Link"}
+            </button>
+            <button onClick={() => setOpen(false)} className="ml-auto inline-flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-background text-muted-foreground text-[11px]">
+              <X className="w-3.5 h-3.5" /> Schließen
+            </button>
+          </div>
+
+          {showLink && (
+            <div className="mt-3 flex flex-wrap items-start gap-3">
+              <code className="flex-1 min-w-[12rem] break-all rounded-lg bg-background px-3 py-2 text-[11px] text-muted-foreground">{link}</code>
+              <div className="hidden sm:block rounded-xl bg-white p-2">
+                <QRCodeSVG value={link} size={96} />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
