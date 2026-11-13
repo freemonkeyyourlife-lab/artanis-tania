@@ -31,6 +31,7 @@ import GuideManager from "@/components/studio/GuideManager";
 import DockManager from "@/components/studio/DockManager";
 import VoiceManager from "@/components/studio/VoiceManager";
 import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
+import Stimmkatalog from "@/components/studio/Stimmkatalog";
 import VoiceTuner from "@/components/studio/VoiceTuner";
 import VoiceProfilesPanel from "@/components/voice/VoiceProfilesPanel";
 import CharacterTransfer from "@/components/studio/CharacterTransfer";
@@ -63,6 +64,7 @@ const TAB_GROUPS = [
       { id: "external", label: "Externes Studio" },
       { id: "dock", label: "Dockingstation" },
       { id: "baukasten", label: "Baukasten" },
+      { id: "stimmkatalog", label: "Stimmkatalog" },
       { id: "voices", label: "Stimmbank" },
       { id: "voiceeditor", label: "Stimmen-Editor" },
       { id: "voiceprofiles", label: "Stimmen-Profile" },
@@ -242,6 +244,7 @@ export default function Studio() {
       {tab === "overview" && <ModelOverview onOpenTab={setTab} />}
       {tab === "logbook" && <AiLogbook />}
       {tab === "dock" && <DockManager />}
+      {tab === "stimmkatalog" && <Stimmkatalog onOpenTab={setTab} />}
       {tab === "voices" && <VoiceManager />}
       {tab === "voiceeditor" && (
         <div className="glass rounded-2xl border-2 border-border p-6">
