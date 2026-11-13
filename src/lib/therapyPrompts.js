@@ -1,6 +1,8 @@
 // Baut den Auftrag für die Therapie-Sitzung: Therapeutin, Rollen, Leitfaden,
 // Setting, Besetzung und Grenzen.
 
+import { grundsettingPrompt } from "./grundsetting";
+
 export const ROLE_SETUPS = [
   {
     value: "TANIA_THERAPIST",
@@ -250,6 +252,9 @@ MODUS "AUSLEBEN IM ROLLENSPIEL": Die Sitzung ist der geschützte Rahmen, in dem 
   } else {
     ctx += `\nINTENSITÄT: TIEF. Direkt und gründlich. Du gehst an die unangenehmen Stellen, aber du lässt ihn zwischendurch atmen.`;
   }
+
+  // ── Grundsetting: devot/dominant/alleine … (mehrfach, jederzeit wechselbar) ──
+  ctx += grundsettingPrompt(session.grundsetting);
 
   // ── Publikum ──
   ctx += `

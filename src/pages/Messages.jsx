@@ -23,6 +23,8 @@ import ChatPromptButton from "@/components/chat/ChatPromptButton";
 import ChatCastMenu from "@/components/chat/ChatCastMenu";
 import MoodQuickMenu from "@/components/chat/MoodQuickMenu";
 import { moodFor, setMoodFor, moodPrompt, moodVoice } from "@/lib/moodStyle";
+import { grundFor, setGrundFor, grundsettingPrompt } from "@/lib/grundsetting";
+import GrundsettingBar from "@/components/chat/GrundsettingBar";
 import { takePendingMood, setSceneNote, sceneNotePrompt, setVoiceOverride, voiceOverrideFor } from "@/lib/moodMode";
 import { speechPrompt, styleFor, setStyleFor, SPEECH_STYLES } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
@@ -155,6 +157,29 @@ export default function Messages() {
     const n = !autoReadOn;
     setAutoReadOn(n);
     setVoiceNotesOn(activeChat, n);
+  };
+
+  // Grundsetting pro Chat — devot/dominant/alleine … immer dieselbe Auswahl,
+  // in jedem Chat. Bleibt pro Chat stehen.
+  const [grund, setGrund] = useState([]);
+  useEffect(() => { setGrund(grundFor(activeChat)); }, [activeChat]);
+
+  // Das aktuelle Grundsetting (plus Stimmung und Rolle) als Vorlage sichern —
+  // steht danach in der Bibliothek zum Wiederverwenden.
+  const saveChatTemplate = async () => {
+    const name = window.prompt("Name für dieses Chat-Grundsetting:", activeCreator?.stageName || "Mein Grundsetting");
+    if (!name || !name.trim()) return;
+    try {
+      await base44.entities.SzenenVorlage.create({
+        name: name.trim(),
+        purpose: "CHAT",
+        note: `Grundsetting: ${(grund || []).join(", ") || "—"}`,
+        vorstellung: JSON.stringify({ grundsetting: grund || [], moods: moods || [], role: role || "" }),
+      });
+      toast({ title: "Vorlage gespeichert", description: `„${name.trim()}" steht in der Bibliothek.` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Speichern fehlgeschlagen", description: e?.message });
+    }
   };
   const toggleMemory = () => setMemoryOn((v) => {
     const n = !v;
@@ -617,6 +642,7 @@ export default function Messages() {
     }
     ctx += playPrompt(playLevel);
     ctx += moodPrompt(moods);
+    ctx += grundsettingPrompt(grund);
     ctx += speechPrompt(activeChat, [activeCreator, ...extraCharacters]);
     ctx += sceneNotePrompt(activeChat);
     ctx += "\n\n⚠️ SPRACHE: Antworte ausschließlich auf Deutsch (Du-Form) — auch wenn der Nutzer englisch schreibt. Kein Sprachwechsel.";
@@ -1637,6 +1663,15 @@ export default function Messages() {
                   <RotateCcw className="w-4 h-4" />
                 </button>
               </div>
+
+              {viewMode === "ai" && (
+                <GrundsettingBar
+                  value={grund}
+                  onChange={(n) => { setGrund(n); setGrundFor(activeChat, n); }}
+                  onStabilize={saveChatTemplate}
+                  className="px-1 pb-2"
+                />
+              )}
 
               {viewMode === "ai" && (
                 <SpeakerBar

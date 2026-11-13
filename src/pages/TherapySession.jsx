@@ -19,6 +19,9 @@ import HoerspielPlayer from "@/components/therapy/HoerspielPlayer";
 import VorlagenKonsole from "@/components/therapy/VorlagenKonsole";
 import TherapyBildButton from "@/components/therapy/TherapyBildButton";
 import TherapyAutoBild from "@/components/therapy/TherapyAutoBild";
+import GrundsettingBar from "@/components/chat/GrundsettingBar";
+import TherapyStageCard from "@/components/therapy/TherapyStageCard";
+import { GRUNDSETTINGS } from "@/lib/grundsetting";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import TherapyReadButton from "@/components/therapy/TherapyReadButton";
@@ -318,6 +321,25 @@ export default function TherapySession() {
   const onMessageImage = (msgId, url) =>
     setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, images: [url] } : m)));
 
+  // Grundsetting (devot/dominant/alleine …) — mehrfach wählbar, jederzeit
+  // wechselbar. Gilt ab der nächsten Antwort; der Wechsel wird im Verlauf notiert.
+  const applyGrund = async (next) => {
+    if (!session) return;
+    try {
+      const updated = await base44.entities.TherapySession.update(session.id, { grundsetting: next || [] });
+      setSession(updated);
+      const labels = (next || []).map((k) => GRUNDSETTINGS.find((g) => g.key === k)?.label).filter(Boolean);
+      if (labels.length) {
+        const note = await base44.entities.TherapyMessage.create({
+          sessionId: session.id,
+          senderType: "SYSTEM",
+          text: `Grundsetting: ${labels.join(", ")}.`,
+        });
+        setMessages((prev) => (prev.some((m) => m.id === note.id) ? prev : [...prev, note]));
+      }
+    } catch (e) { console.error(e); }
+  };
+
   // Das aktuelle Setup sichern — Rollen, Stimmen, Modus, Besetzung — als Vorlage
   // für künftige Sitzungen. Steht danach in der Bibliothek zum Laden bereit.
   const saveAsTemplate = async () => {
@@ -433,6 +455,11 @@ export default function TherapySession() {
       />
 
       <div className="rounded-2xl border border-border bg-card p-4 mb-4">
+        <GrundsettingBar
+          value={session.grundsetting || []}
+          onChange={applyGrund}
+          className="mb-3"
+        />
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setHandsFree((v) => { const n = !v; try { localStorage.setItem("therapy_handsfree", n ? "1" : "0"); } catch {} return n; })}
@@ -565,6 +592,7 @@ export default function TherapySession() {
       </Dialog>
 
       <div className="rounded-2xl border border-border bg-card p-4 lg:p-6 mb-4">
+        <TherapyStageCard session={session} />
         {therapyMessages.length === 0 && !sending ? (
           <p className="text-sm text-muted-foreground text-center py-8">Die Sitzung beginnt gleich …</p>
         ) : (

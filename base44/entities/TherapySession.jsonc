@@ -219,6 +219,14 @@
       ],
       "default": "TIEF"
     },
+    "grundsetting": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Ausrichtung der Sitzung \u2014 devot, dominant, ausgleichend, alleine, zu zweit, gruppe, sanft, hemmungslos. Mehrfach w\u00e4hlbar, jederzeit wechselbar."
+    },
     "status": {
       "type": "string",
       "enum": [
