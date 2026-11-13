@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Pencil, Trash2, Download, Link2, Check, Package, Copy } from "lucide-react";
+import { Pencil, Trash2, Download, Link2, Check, Package, Copy, RotateCcw } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 import { blockMedia } from "@/lib/baukasten";
 
 // Ein fertiges Paket. Eigene kannst du ändern und exportieren, fremde übernehmen.
-export default function KitCard({ kit, blocks, owned, onEdit, onDelete, onClone, onExport }) {
+export default function KitCard({ kit, blocks, owned, onEdit, onDelete, onClone, onExport, onClear }) {
   const [copied, setCopied] = useState(false);
 
   const inner = blocks.filter((b) => (kit.blockIds || []).includes(b.id));
@@ -80,6 +80,14 @@ export default function KitCard({ kit, blocks, owned, onEdit, onDelete, onClone,
                 {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Link2 className="w-3.5 h-3.5" />}
                 {copied ? "Kopiert" : "Link"}
               </button>
+              {onClear && (
+                <button
+                  onClick={() => onClear(kit)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Leeren
+                </button>
+              )}
               {onDelete && (
                 <button
                   onClick={() => onDelete(kit)}

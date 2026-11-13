@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Play, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Phone, Loader2, Banknote, Cast } from "lucide-react";
+import { Send, Play, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Phone, Loader2, Banknote, Cast, Brain } from "lucide-react";
 import NarratorAvatar3D from "@/components/narrator/NarratorAvatar3D";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
@@ -137,6 +137,17 @@ export default function Messages() {
   // Die Stimmung der Szene — Schlagworte, die die Tonlage sofort umstellen.
   const [moods, setMoods] = useState([]);
   const [incomingConversations, setIncomingConversations] = useState([]);
+
+  // Gedächtnis pro Chat — nur auf Wunsch. Aus = sie weiß nicht, was vorher besprochen wurde, und fängt neu an.
+  const [memoryOn, setMemoryOn] = useState(false);
+  useEffect(() => {
+    try { setMemoryOn(activeChat ? localStorage.getItem(`chat_mem_${activeChat}`) === "1" : false); } catch {}
+  }, [activeChat]);
+  const toggleMemory = () => setMemoryOn((v) => {
+    const n = !v;
+    try { if (activeChat) localStorage.setItem(`chat_mem_${activeChat}`, n ? "1" : "0"); } catch {}
+    return n;
+  });
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session, joined } = useCallSession();
@@ -867,12 +878,12 @@ export default function Messages() {
       // Hat der echte Charakter übernommen oder selbst geantwortet, bleibt die KI still.
       // Schreibst du selbst als Figur, antworten die anderen immer.
       if (!asCharacter && await waitForHuman(conv)) return;
-      const hist = (messages[chatKey] || []).slice(-12).map(m => {
+      const hist = memoryOn ? (messages[chatKey] || []).slice(-12).map(m => {
         let t = m.text || "";
         if (m.attachment) t += t ? " [also sent a photo]" : "[sent a photo]";
         const who = m.senderType === "HUMAN" ? "User" : (m.humanOverride && m.sender ? m.sender : "You");
         return `${who}: ${t}`;
-      }).join("\n");
+      }).join("\n") : "";
       const userTurn = direction
         ? `\n\nRegieanweisung vom Nutzer (er spielt nicht mit, er führt Regie): "${msgText}". Setzt sie jetzt sofort um — die Figuren spielen miteinander weiter, abwechselnd, jede mit ihrem Namen in eckigen Klammern.`
         : listening
@@ -1603,6 +1614,9 @@ export default function Messages() {
                   messages={messages[activeChat] || []}
                   title={viewMode === "dm" ? dmParticipantName || "Chat" : activeCreator?.stageName || "Szene"}
                 />
+                <button onClick={toggleMemory} title={memoryOn ? "Gedächtnis an — sie erinnert sich ans Gespräch" : "Gedächtnis aus — sie fängt neu an"} className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors", memoryOn ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>
+                  <Brain className="w-4 h-4" />
+                </button>
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <RotateCcw className="w-4 h-4" />
                 </button>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Blocks, Package, Copy, Search, Upload, Mic, Workflow } from "lucide-react";
+import { Plus, Blocks, Package, Copy, Search, Upload, Mic, Workflow, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import BlockForm from "@/components/baukasten/BlockForm";
@@ -9,7 +9,7 @@ import KitBuilder from "@/components/baukasten/KitBuilder";
 import KitCard from "@/components/baukasten/KitCard";
 import PhraseBank from "@/components/baukasten/PhraseBank";
 import DiagramView from "@/components/baukasten/DiagramView";
-import { exportKit, readKitFile, cloneKit, BLOCK_KINDS } from "@/lib/baukasten";
+import { exportKit, readKitFile, cloneKit, kitFromVorlage, BLOCK_KINDS } from "@/lib/baukasten";
 
 const TABS = [
   { id: "blocks", label: "Bausteine", icon: Blocks },
@@ -33,6 +33,9 @@ export default function Baukasten() {
   const [query, setQuery] = useState("");
   const [kindFilter, setKindFilter] = useState("");
   const [diagramKitId, setDiagramKitId] = useState("");
+  const [vorlagen, setVorlagen] = useState([]);
+  const [vorlagePick, setVorlagePick] = useState("");
+  const [showVorlage, setShowVorlage] = useState(false);
 
   const [blockForm, setBlockForm] = useState(null); // null | {} | block
   const [kitForm, setKitForm] = useState(null); // null | {} | kit
@@ -45,18 +48,20 @@ export default function Baukasten() {
 
   const load = async () => {
     try {
-      const [user, blockData, kitData, phraseData, voiceData] = await Promise.all([
+      const [user, blockData, kitData, phraseData, voiceData, vorlageData] = await Promise.all([
         base44.auth.me().catch(() => null),
         base44.entities.BuildBlock.list("-created_date", 300),
         base44.entities.BuildKit.list("-created_date", 200),
         base44.entities.VoicePhrase.list("-created_date", 300),
         base44.entities.Voice.list(),
+        base44.entities.SzenenVorlage.list("-created_date", 200).catch(() => []),
       ]);
       setMe(user);
       setBlocks(blockData);
       setKits(kitData);
       setPhrases(phraseData);
       setVoices(voiceData);
+      setVorlagen(vorlageData || []);
       const params = new URLSearchParams(window.location.search);
       if (params.get("kit")) setTab("clone");
     } catch (e) {
@@ -93,6 +98,39 @@ export default function Baukasten() {
     await base44.entities.BuildKit.delete(kit.id);
     setNotice("Baukasten gelöscht.");
     load();
+  };
+
+  // Einen Baukasten leeren: alle Bausteine raus, Block-Liste leer — das Paket
+  // bleibt, aber es ist wieder leer und lässt sich neu füllen.
+  const clearKit = async (kit) => {
+    if (!window.confirm(`"${kit.name}" wirklich leeren? Alle Bausteine darin werden gelöscht.`)) return;
+    try {
+      const ids = kit.blockIds || [];
+      if (ids.length) await base44.entities.BuildBlock.deleteMany({ id: { $in: ids } });
+      await base44.entities.BuildKit.update(kit.id, { blockIds: [] });
+      setNotice("Baukasten geleert — wieder leer zum Neu-Füllen.");
+      load();
+    } catch (e) {
+      setNotice("Leeren hat nicht geklappt.");
+    }
+  };
+
+  // Einen neuen Baukasten direkt aus einer Szenen-Vorlage anlegen: jede Pose
+  // und die freie Szene werden zu Bausteinen.
+  const loadFromVorlage = async () => {
+    if (!vorlagePick) return;
+    const v = vorlagen.find((x) => x.id === vorlagePick);
+    if (!v) return;
+    try {
+      await kitFromVorlage(v);
+      setNotice(`„${v.name}" als neuer Baukasten angelegt.`);
+      setVorlagePick("");
+      setShowVorlage(false);
+      setTab("kits");
+      load();
+    } catch (e) {
+      setNotice("Laden hat nicht geklappt.");
+    }
   };
 
   const blocksOfKit = (kit) => blocks.filter((b) => (kit.blockIds || []).includes(b.id));
@@ -262,8 +300,41 @@ export default function Baukasten() {
             >
               <Upload className="w-4 h-4" /> Datei einlesen
             </button>
+            <button
+              onClick={() => setShowVorlage((v) => !v)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn text-[14px] font-bold text-foreground"
+            >
+              <Sparkles className="w-4 h-4" /> Aus Vorlage
+            </button>
             <input ref={fileRef} type="file" accept="application/json" onChange={importFile} className="hidden" />
           </div>
+
+          {showVorlage && (
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <select
+                value={vorlagePick}
+                onChange={(e) => setVorlagePick(e.target.value)}
+                className="px-4 py-2.5 rounded-full bg-card border border-border text-sm font-bold text-foreground"
+              >
+                <option value="">Vorlage wählen …</option>
+                {vorlagen.map((v) => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={loadFromVorlage}
+                disabled={!vorlagePick}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-btn glass-btn-accent text-[14px] font-bold text-gloss disabled:opacity-50"
+              >
+                <Sparkles className="w-4 h-4" /> Als Baukasten laden
+              </button>
+              {vorlagen.length === 0 && (
+                <p className="text-[13px] font-semibold text-muted-foreground">
+                  Noch keine Vorlagen — leg welche unter „Sitzungs-Vorlagen" an.
+                </p>
+              )}
+            </div>
+          )}
 
           {kitForm && (
             <div className="mb-6">
@@ -291,6 +362,7 @@ export default function Baukasten() {
                   owned
                   onEdit={setKitForm}
                   onDelete={deleteKit}
+                  onClear={clearKit}
                   onExport={(kit) => exportKit(kit, blocksOfKit(kit))}
                 />
               ))}

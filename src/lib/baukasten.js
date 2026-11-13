@@ -159,3 +159,36 @@ export const syncSharedBlocks = async (blockIds, shared) => {
     ids.map((id) => base44.entities.BuildBlock.update(id, { shared }).catch(() => {}))
   );
 };
+
+// Einen Baukasten aus einer Szenen-Vorlage füllen: jede Pose/Szene aus der
+// Vorlage wird ein eigener Baustein, die freie Szene ein eigener. So lässt
+// sich der Baukasten neu füllen — mit derselben oder einer anderen Vorlage.
+export const kitFromVorlage = async (vorlage) => {
+  const poses = (vorlage.auswahl || []).filter(Boolean);
+  const blocks = poses.map((p) => ({
+    title: String(p),
+    blockKind: "SITUATION",
+    situation: String(p),
+    tags: [vorlage.name],
+  }));
+  if (vorlage.extra) {
+    blocks.push({
+      title: vorlage.extra.length > 60 ? vorlage.extra.slice(0, 60) + "…" : vorlage.extra,
+      blockKind: "SZENE",
+      situation: vorlage.extra,
+      tags: [vorlage.name],
+    });
+  }
+  if (blocks.length === 0) {
+    blocks.push({ title: vorlage.name, blockKind: "SITUATION", situation: vorlage.note || vorlage.name, tags: [vorlage.name] });
+  }
+  const copies = await base44.entities.BuildBlock.bulkCreate(
+    blocks.map((b) => ({ ...b, shared: false }))
+  );
+  return base44.entities.BuildKit.create({
+    name: vorlage.name,
+    description: vorlage.note || "",
+    blockIds: (copies || []).map((c) => c.id),
+    shared: false,
+  });
+};
