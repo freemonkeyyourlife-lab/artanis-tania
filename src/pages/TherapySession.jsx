@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, Loader2, Eye, EyeOff, Download, Radio, Settings2, Bookmark } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Eye, EyeOff, Download, Radio, Settings2, Bookmark, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -291,6 +291,29 @@ export default function TherapySession() {
     setSession(updated);
   };
 
+  // Neustart: der ganze Verlauf wird gelöscht, Tania eröffnet die Sitzung von
+  // vorn — auch wenn sie schon beendet war.
+  const restartSession = async () => {
+    if (!session) return;
+    if (!window.confirm("Wirklich neu starten? Der ganze Verlauf wird gelöscht und Tania beginnt von vorn.")) return;
+    setSending(true);
+    try {
+      await base44.entities.TherapyMessage.deleteMany({ sessionId: session.id });
+      const patch = { summary: "", summaryBy: "", summaryAt: "" };
+      if (session.status === "DONE") patch.status = "OPEN";
+      const updated = await base44.entities.TherapySession.update(session.id, patch);
+      setSession(updated);
+      setMessages([]);
+      setSelectedSugs([]);
+      openedRef.current = false;
+      toast({ title: "Neu gestartet", description: "Tania eröffnet die Sitzung gleich neu." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Neustart fehlgeschlagen", description: e?.message });
+    } finally {
+      setSending(false);
+    }
+  };
+
   // Wenn Auto-Bild ein Bild erzeugt hat, landet es sofort am Text-Block.
   const onMessageImage = (msgId, url) =>
     setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, images: [url] } : m)));
@@ -482,8 +505,18 @@ export default function TherapySession() {
             <Bookmark className="w-3.5 h-3.5" /> Als Vorlage
           </button>
 
+          {isOwner && (
+            <button
+              onClick={restartSession}
+              disabled={sending}
+              title="Verlauf löschen und Tania neu eröffnen lassen"
+              className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Neustart
+            </button>
+          )}
           {isOwner && session.status !== "DONE" && (
-            <button onClick={endSession} className="ml-auto text-xs text-muted-foreground hover:text-foreground">
+            <button onClick={endSession} className="text-xs text-muted-foreground hover:text-foreground">
               Sitzung beenden
             </button>
           )}
