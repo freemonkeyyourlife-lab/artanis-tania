@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import ChatText from "@/components/chat/ChatText";
+import ChatMessageBar from "@/components/chat/ChatMessageBar";
 import { Image } from "@/components/ui/image";
 
 function MediaBlock({ msg }) {
@@ -68,6 +69,7 @@ export default function TherapyThread({ messages }) {
               >
                 {msg.senderType === "AI" ? <ChatText text={msg.text} /> : msg.text}
               </div>
+              <ChatMessageBar text={msg.text} senderName={label(msg)} />
             </div>
           </div>
         );

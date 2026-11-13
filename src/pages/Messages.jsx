@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import { PERSONA_MODES } from "@/lib/personaPrompts";
+import ChatMessageBar from "@/components/chat/ChatMessageBar";
 import ScenarioSelection from "@/components/ScenarioSelection";
 import VoiceInput from "@/components/VoiceInput";
 import InfoDot from "@/components/InfoDot";
@@ -1884,6 +1885,9 @@ export default function Messages() {
                             {generating ? "Wird erzeugt …" : "Noch ein Bild"}
                           </button>
                         </div>
+                      )}
+                      {msg.text && (
+                        <ChatMessageBar text={msg.text} senderName={msg.sender || activeCreator?.stageName} />
                       )}
                     </div>
                   </div>
