@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Blocks, Package, Copy, Search, Upload, Mic } from "lucide-react";
+import { Plus, Blocks, Package, Copy, Search, Upload, Mic, Workflow } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import BlockForm from "@/components/baukasten/BlockForm";
@@ -8,6 +8,7 @@ import BlockCard from "@/components/baukasten/BlockCard";
 import KitBuilder from "@/components/baukasten/KitBuilder";
 import KitCard from "@/components/baukasten/KitCard";
 import PhraseBank from "@/components/baukasten/PhraseBank";
+import DiagramView from "@/components/baukasten/DiagramView";
 import { exportKit, readKitFile, cloneKit, BLOCK_KINDS } from "@/lib/baukasten";
 
 const TABS = [
@@ -15,6 +16,7 @@ const TABS = [
   { id: "kits", label: "Meine Baukästen", icon: Package },
   { id: "clone", label: "Nachbauen", icon: Copy },
   { id: "phrases", label: "Sprechzeilen", icon: Mic },
+  { id: "diagramm", label: "Diagramm", icon: Workflow },
 ];
 
 // Der Baukasten: Bausteine anlegen, zu Paketen zusammensetzen, andere
@@ -30,6 +32,7 @@ export default function Baukasten() {
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
   const [kindFilter, setKindFilter] = useState("");
+  const [diagramKitId, setDiagramKitId] = useState("");
 
   const [blockForm, setBlockForm] = useState(null); // null | {} | block
   const [kitForm, setKitForm] = useState(null); // null | {} | kit
@@ -329,6 +332,36 @@ export default function Baukasten() {
             </p>
           )}
         </>
+      )}
+
+      {tab === "diagramm" && (
+        <div>
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <p className="text-[15px] font-bold text-foreground">Baukasten wählen:</p>
+            {myKits.length === 0 ? (
+              <p className="text-[15px] font-semibold text-muted-foreground">
+                Erst einen Baukasten anlegen, dann siehst du hier das Diagramm.
+              </p>
+            ) : (
+              <select
+                value={diagramKitId}
+                onChange={(e) => setDiagramKitId(e.target.value)}
+                className="px-4 py-2 rounded-full bg-card border border-border text-sm font-bold text-foreground"
+              >
+                <option value="">— wählen —</option>
+                {myKits.map((k) => (
+                  <option key={k.id} value={k.id}>{k.name}</option>
+                ))}
+              </select>
+            )}
+          </div>
+          {diagramKitId &&
+            (() => {
+              const kit = myKits.find((k) => k.id === diagramKitId);
+              if (!kit) return null;
+              return <DiagramView key={kit.id} kit={kit} blocks={blocks} onChange={load} />;
+            })()}
+        </div>
       )}
     </div>
   );

@@ -72,6 +72,32 @@
     "shared": {
       "type": "boolean",
       "default": false
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "description": "Ziel-Baustein, zu dem diese Verzweigung f\u00fchrt."
+          },
+          "label": {
+            "type": "string",
+            "description": "Beschriftung der Auswahl, z. B. \u201eJa\u201c oder \u201eT\u00fcr \u00f6ffnen\u201c."
+          }
+        }
+      },
+      "default": [],
+      "description": "Story-Verzweigungen: welche Bausteine von hier aus erreichbar sind und mit welcher Auswahl."
+    },
+    "graphX": {
+      "type": "number",
+      "description": "X-Position im Diagramm."
+    },
+    "graphY": {
+      "type": "number",
+      "description": "Y-Position im Diagramm."
     }
   },
   "required": [
