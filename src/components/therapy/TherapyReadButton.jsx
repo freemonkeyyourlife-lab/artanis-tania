@@ -3,6 +3,7 @@ import { Volume2, Square, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { splitScene, playScene, stopScene, onSceneChange } from "@/lib/sceneVoice";
 import { therapistName } from "@/lib/therapyPrompts";
+import { therapyVoiceFor } from "@/lib/therapyVoice";
 
 // Liest die Sitzung als Szene vor: erst er mit seiner Stimme, dann sie mit
 // ihrer — so hörst du beiden zu, ohne selbst zu reden.
@@ -12,27 +13,7 @@ export default function TherapyReadButton({ session, text, sceneKey = "therapy",
 
   useEffect(() => onSceneChange(setPlayingKey), []);
 
-  const voiceFor = (name) => {
-    const key = String(name || "").toLowerCase();
-    if (key === "__narrator__") return { baseVoice: session?.narratorVoice || "river" };
-    const actor = session?.actor;
-    if (actor?.active && actor.name && key === actor.name.toLowerCase()) {
-      if (actor.voiceId) return { provider: "ELEVENLABS", externalVoiceId: actor.voiceId };
-      return { baseVoice: actor.voice || "storm" };
-    }
-    const member = (session?.cast || []).find((c) => c.name && c.name.toLowerCase() === key);
-    if (member) {
-      if (member.voiceId) return { provider: "ELEVENLABS", externalVoiceId: member.voiceId };
-      if (member.voice) return { baseVoice: member.voice };
-    }
-    const tName = (therapistName(session) || "").toLowerCase();
-    if (tName && key === tName) {
-      if (session?.therapistVoiceId) return { provider: "ELEVENLABS", externalVoiceId: session.therapistVoiceId };
-      return { baseVoice: session?.therapistVoice || "honey" };
-    }
-    if (session?.therapistVoiceId) return { provider: "ELEVENLABS", externalVoiceId: session.therapistVoiceId };
-    return { baseVoice: session?.therapistVoice || "honey" };
-  };
+  const voiceFor = (name) => therapyVoiceFor(session, name);
 
   const read = async () => {
     if (!text) return;

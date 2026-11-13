@@ -15,6 +15,7 @@ import TherapyInviteBar from "@/components/therapy/TherapyInviteBar";
 import TherapySideChat from "@/components/therapy/TherapySideChat";
 import TherapyVisualize from "@/components/therapy/TherapyVisualize";
 import RollenCharakter from "@/components/therapy/RollenCharakter";
+import HoerspielPlayer from "@/components/therapy/HoerspielPlayer";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import TherapyReadButton from "@/components/therapy/TherapyReadButton";
@@ -420,6 +421,7 @@ export default function TherapySession() {
             autoPlay={handsFree}
             className="px-2.5 py-1.5 rounded-full bg-elevated"
           />
+          <HoerspielPlayer session={session} messages={therapyMessages} />
           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
             {session.visibility === "PRIVATE" ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
             {session.visibility === "PRIVATE" ? "vertraulich" : "offen für Mitleser"}
