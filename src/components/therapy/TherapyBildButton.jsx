@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { Image as ImageIcon, Loader2, Upload, Send, Share2, Download, X } from "lucide-react";
+import React, { useState } from "react";
+import { Image as ImageIcon, Loader2, Send, Share2, Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { therapistName } from "@/lib/therapyPrompts";
 import { sceneImagePrompt, charRefImages } from "@/lib/therapyVisual";
@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
+import QuellenPicker from "@/components/quellen/QuellenPicker";
 
 // Bild direkt aus dem Therapie-Chat: aus Text, aus einem hochgeladenen
 // Vorlagen-Bild oder beides gemischt. Das Ergebnis fällt als AI-Nachricht
@@ -14,39 +15,22 @@ import { cn } from "@/lib/utils";
 export default function TherapyBildButton({ session, initialText, disabled, className }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const [upload, setUpload] = useState("");
-  const [uploading, setUploading] = useState(false);
+  const [ref, setRef] = useState(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState("");
-  const fileRef = useRef(null);
   const { toast } = useToast();
 
   const openDialog = () => {
     setText(initialText || "");
-    setUpload("");
+    setRef(null);
     setResult("");
     setError("");
     setOpen(true);
   };
 
-  const onFile = async (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setUploading(true);
-    setError("");
-    try {
-      const up = await base44.integrations.Core.UploadPublicFile({ file: f });
-      setUpload(up.file_url);
-    } catch {
-      setError("Upload fehlgeschlagen.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const generate = async () => {
-    if ((!text.trim() && !upload) || busy) return;
+    if ((!text.trim() && !ref?.url) || busy) return;
     setBusy(true);
     setError("");
     setResult("");
@@ -55,7 +39,7 @@ export default function TherapyBildButton({ session, initialText, disabled, clas
       // Die Originalcharaktere der Sitzung stehen immer vorne — nur so bleibt
       // jedes Bild bei ihrem Aussehen. Ein hochgeladenes Vorlagen-Bild kommt
       // zusätzlich dazu, ersetzt sie aber nie.
-      const refs = [...charRefImages(session), ...(upload ? [upload] : [])];
+      const refs = [...charRefImages(session), ...(ref?.url ? [ref.url] : [])];
       const r = await base44.integrations.Core.GenerateImage({
         prompt,
         existing_image_urls: refs.length ? refs : undefined,
@@ -124,30 +108,10 @@ export default function TherapyBildButton({ session, initialText, disabled, clas
             className="w-full px-4 py-3 rounded-2xl bg-background border border-border text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none mb-3"
           />
 
-          {upload ? (
-            <div className="relative mb-3">
-              <Image src={upload} className="w-full rounded-2xl max-h-52" fittingType="fit" />
-              <button
-                type="button"
-                onClick={() => setUpload("")}
-                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 border border-border flex items-center justify-center"
-                title="Vorlage entfernen"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="w-full mb-3 px-4 py-3 rounded-2xl border-2 border-dashed border-border text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
-            >
-              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-              {uploading ? "Lade Vorlage hoch …" : "Bild als Vorlage hochladen (optional)"}
-            </button>
-          )}
-          <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
+          <div className="mb-3">
+            <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground mb-1.5">Vorlagen-Bild</p>
+            <QuellenPicker value={ref} onChange={setRef} placeholder="Aus Bibliothek oder Internet …" />
+          </div>
 
           {error && <p className="text-[11px] text-destructive mb-3">{error}</p>}
 
@@ -181,7 +145,7 @@ export default function TherapyBildButton({ session, initialText, disabled, clas
             <button
               type="button"
               onClick={generate}
-              disabled={busy || (!text.trim() && !upload)}
+              disabled={busy || (!text.trim() && !ref?.url)}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50"
             >
               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}

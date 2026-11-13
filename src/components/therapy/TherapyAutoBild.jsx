@@ -3,6 +3,7 @@ import { Image as ImageIcon, Search, Loader2, Wand2, Sparkles } from "lucide-rea
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 import { charRefImages, CHAR_CONSISTENCY } from "@/lib/therapyVisual";
+import QuellenPicker from "@/components/quellen/QuellenPicker";
 
 // Auto-Bild: zu jedem Text-Block in der Sitzung automatisch ein Bild erzeugen
 // — anhand einer Vorlage oder eines Charakters, den du durchsuchen und
@@ -10,7 +11,8 @@ import { charRefImages, CHAR_CONSISTENCY } from "@/lib/therapyVisual";
 // Bild; „Für alle Texte" füllt bestehende Blöcke nach.
 
 export default function TherapyAutoBild({ session, messages, onMessageImage }) {
-  const [src, setSrc] = useState("CHARACTER"); // "CHARACTER" | "VORLAGE"
+  const [src, setSrc] = useState("CHARACTER"); // "CHARACTER" | "VORLAGE" | "INTERNET"
+  const [netRef, setNetRef] = useState(null);
   const [vorlagen, setVorlagen] = useState([]);
   const [characters, setCharacters] = useState([]);
   const [sourceId, setSourceId] = useState("");
@@ -68,6 +70,10 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
       parts.push(`Szene: ${scene}`);
       return `Kinorealistisches Bild einer intimen Szene. ${parts.join(". ")}. Erwachsene Personen ab 18, einvernehmlich. Stimmungsvolles Licht, fotografisch. Keine realen Personen.`;
     }
+    // Internet-Quelle: nur die Szene, das Referenzbild prägt den Stil.
+    if (src === "INTERNET" && netRef?.url) {
+      return `Kinorealistisches Bild einer intimen Szene im Stil des Referenzbildes. Szene: ${scene}. Erwachsene Personen ab 18, einvernehmlich. Stimmungsvolles Licht, fotografisch. Keine realen Personen.`;
+    }
     return `Kinorealistisches Bild einer intimen Szene. Szene: ${scene}. Erwachsene Personen ab 18, einvernehmlich. Stimmungsvolles Licht.`;
   };
 
@@ -75,9 +81,11 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
     const charRefs = src === "CHARACTER" && chosen
       ? [...(chosen.images || []), chosen.avatar].filter(Boolean).slice(0, 2)
       : [];
+    const netRefs = src === "INTERNET" && netRef?.url ? [netRef.url] : [];
     // Die Originalcharaktere der Sitzung kommen immer dazu — egal ob ein
-    // Charakter oder eine Vorlage gewählt ist — damit jedes Bild gleich bleibt.
-    const all = [...charRefs, ...charRefImages(session)];
+    // Charakter, eine Vorlage oder eine Internet-Quelle gewählt ist — damit
+    // jedes Bild gleich bleibt.
+    const all = [...charRefs, ...netRefs, ...charRefImages(session)];
     const seen = [...new Set(all)];
     return seen.length ? seen.slice(0, 4) : undefined;
   };
@@ -106,7 +114,8 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
 
   // Auto-Modus: neue AI-Text-Antwort → Bild dazu.
   useEffect(() => {
-    if (!auto || !readyRef.current || !sourceId || busy) return;
+    const hasSrc = src === "INTERNET" ? !!netRef?.url : !!sourceId;
+    if (!auto || !readyRef.current || !hasSrc || busy) return;
     const lastAi = [...messages].reverse().find((m) => m.senderType === "AI" && m.text && !(m.images || []).length);
     if (!lastAi || lastAi.id === lastRef.current) return;
     lastRef.current = lastAi.id;
@@ -125,6 +134,7 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
     setSrc(s);
     setSourceId("");
     setQuery("");
+    if (s !== "INTERNET") setNetRef(null);
   };
 
   const backfillAll = async () => {
@@ -142,7 +152,7 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
         <Wand2 className="w-3.5 h-3.5" /> Auto-Bild
       </span>
       <div className="flex gap-1">
-        {["CHARACTER", "VORLAGE"].map((s) => (
+        {["CHARACTER", "VORLAGE", "INTERNET"].map((s) => (
           <button
             key={s}
             type="button"
@@ -152,49 +162,55 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
               src === s ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"
             )}
           >
-            {s === "CHARACTER" ? "Charakter" : "Vorlage"}
+            {s === "CHARACTER" ? "Charakter" : s === "VORLAGE" ? "Vorlage" : "Internet"}
           </button>
         ))}
       </div>
 
-      <div className="relative">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated border border-border">
-          <Search className="w-3.5 h-3.5 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setOpen(true)}
-            placeholder={chosen ? chosen.name : "Vorlage/Charakter suchen …"}
-            className="bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground focus:outline-none w-44"
-          />
+      {src === "INTERNET" ? (
+        <div className="w-64">
+          <QuellenPicker value={netRef} onChange={setNetRef} placeholder="Bild aus dem Internet …" />
         </div>
-        {open && (
-          <div className="absolute z-50 mt-1 w-72 max-h-60 overflow-auto rounded-xl border border-border bg-popover shadow-xl">
-            {filtered.length === 0 ? (
-              <p className="px-3 py-2 text-[12px] text-muted-foreground">Nichts gefunden.</p>
-            ) : (
-              filtered.slice(0, 60).map((x) => (
-                <button
-                  key={x.id}
-                  type="button"
-                  onClick={() => { setSourceId(x.id); setQuery(""); setOpen(false); }}
-                  className={cn(
-                    "w-full text-left px-3 py-2 text-[12px] hover:bg-elevated transition-colors truncate",
-                    x.id === sourceId ? "text-primary font-bold" : "text-foreground"
-                  )}
-                >
-                  {x.name}
-                </button>
-              ))
-            )}
+      ) : (
+        <div className="relative">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated border border-border">
+            <Search className="w-3.5 h-3.5 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setOpen(true)}
+              placeholder={chosen ? chosen.name : "Vorlage/Charakter suchen …"}
+              className="bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground focus:outline-none w-44"
+            />
           </div>
-        )}
-      </div>
+          {open && (
+            <div className="absolute z-50 mt-1 w-72 max-h-60 overflow-auto rounded-xl border border-border bg-popover shadow-xl">
+              {filtered.length === 0 ? (
+                <p className="px-3 py-2 text-[12px] text-muted-foreground">Nichts gefunden.</p>
+              ) : (
+                filtered.slice(0, 60).map((x) => (
+                  <button
+                    key={x.id}
+                    type="button"
+                    onClick={() => { setSourceId(x.id); setQuery(""); setOpen(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 text-[12px] hover:bg-elevated transition-colors truncate",
+                      x.id === sourceId ? "text-primary font-bold" : "text-foreground"
+                    )}
+                  >
+                    {x.name}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <button
         type="button"
         onClick={toggleAuto}
-        disabled={!sourceId}
+        disabled={src === "INTERNET" ? !netRef?.url : !sourceId}
         className={cn(
           "px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-colors disabled:opacity-40",
           auto ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"
@@ -208,7 +224,7 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
       <button
         type="button"
         onClick={backfillAll}
-        disabled={!sourceId || busy}
+        disabled={(src === "INTERNET" ? !netRef?.url : !sourceId) || busy}
         className="px-2.5 py-1.5 rounded-full bg-elevated text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
         title="Für alle Text-Blöcke ohne Bild eins erzeugen"
       >
