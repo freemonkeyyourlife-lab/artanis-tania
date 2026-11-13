@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Image as ImageIcon, Search, Loader2, Wand2, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
+import { charRefImages, CHAR_CONSISTENCY } from "@/lib/therapyVisual";
 
 // Auto-Bild: zu jedem Text-Block in der Sitzung automatisch ein Bild erzeugen
 // — anhand einer Vorlage oder eines Charakters, den du durchsuchen und
@@ -71,11 +72,14 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
   };
 
   const refsFor = () => {
-    if (src !== "CHARACTER" || !chosen) return undefined;
-    const imgs = (chosen.images || []).filter(Boolean);
-    if (imgs.length) return imgs.slice(0, 2);
-    if (chosen.avatar) return [chosen.avatar];
-    return undefined;
+    const charRefs = src === "CHARACTER" && chosen
+      ? [...(chosen.images || []), chosen.avatar].filter(Boolean).slice(0, 2)
+      : [];
+    // Die Originalcharaktere der Sitzung kommen immer dazu — egal ob ein
+    // Charakter oder eine Vorlage gewählt ist — damit jedes Bild gleich bleibt.
+    const all = [...charRefs, ...charRefImages(session)];
+    const seen = [...new Set(all)];
+    return seen.length ? seen.slice(0, 4) : undefined;
   };
 
   const generateFor = async (msg) => {
@@ -84,7 +88,7 @@ export default function TherapyAutoBild({ session, messages, onMessageImage }) {
     setBusy(true);
     try {
       const r = await base44.integrations.Core.GenerateImage({
-        prompt: buildPrompt(msg.text),
+        prompt: buildPrompt(msg.text) + CHAR_CONSISTENCY,
         existing_image_urls: refsFor(),
       });
       const url = r?.url;

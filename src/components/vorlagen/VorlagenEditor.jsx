@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, Loader2, Save, MessageSquare } from "lucide-react";
+import { Plus, Trash2, Loader2, Save, MessageSquare, Upload } from "lucide-react";
 
 const PURPOSES = [
   { value: "MEDIEN", label: "Medien", hint: "Videos, Audios, Bilder — verlinkt aus vorhandenem Material." },
@@ -55,6 +55,37 @@ export default function VorlagenEditor({ open, onClose, onSaved }) {
   const addMedia = () => setMedia((m) => [...m, { kind: "VIDEO", url: "", title: "" }]);
   const setMediaAt = (i, patch) => setMedia((m) => m.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
   const removeMedia = (i) => setMedia((m) => m.filter((_, idx) => idx !== i));
+
+  const kindForFile = (file) => {
+    const t = file?.type || "";
+    if (t.startsWith("video")) return "VIDEO";
+    if (t.startsWith("audio")) return "AUDIO";
+    return "BILD";
+  };
+
+  // Datei hochladen (stored publicly — anyone with the link can open them)
+  // und direkt als Medien-Link in diese Zeile setzen.
+  const uploadMedia = async (i, file) => {
+    if (!file) return;
+    setSaving(true);
+    try {
+      const r = await base44.integrations.Core.UploadPublicFile({ file });
+      if (r?.file_url) setMediaAt(i, { url: r.file_url, kind: kindForFile(file) });
+      else toast({ variant: "destructive", title: "Upload fehlgeschlagen" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Upload fehlgeschlagen", description: e?.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Eine neue Medien-Zeile anlegen und sofort eine Datei dafür hochladen.
+  const addAndUpload = async (file) => {
+    if (!file) return;
+    setMedia((m) => [...m, { kind: kindForFile(file), url: "", title: "" }]);
+    const idx = media.length;
+    await uploadMedia(idx, file);
+  };
 
   const toggleChat = (c) => {
     const label = c.participantName || c.creatorName || "Chat";
@@ -140,12 +171,18 @@ export default function VorlagenEditor({ open, onClose, onSaved }) {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Medien-Links</p>
-                <button onClick={addMedia} type="button" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                  <Plus className="w-3.5 h-3.5" /> Link hinzufügen
-                </button>
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" /> Datei hochladen
+                    <input type="file" accept="video/*,audio/*,image/*" className="hidden" onChange={(e) => { addAndUpload(e.target.files?.[0]); e.target.value = ""; }} />
+                  </label>
+                  <button onClick={addMedia} type="button" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                    <Plus className="w-3.5 h-3.5" /> Link hinzufügen
+                  </button>
+                </div>
               </div>
               {media.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Noch keine Links. Füge Videos, Audios oder Bilder aus vorhandenem Material hinzu.</p>
+                <p className="text-xs text-muted-foreground">Noch keine Medien. Lade eine Datei hoch oder füge einen Link zu Video, Audio oder Bild hinzu.</p>
               ) : (
                 <div className="space-y-2">
                   {media.map((m, i) => (
@@ -169,6 +206,10 @@ export default function VorlagenEditor({ open, onClose, onSaved }) {
                         placeholder="Titel (optional)"
                         className="w-36 px-3 py-2 rounded-full bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
                       />
+                      <label className="cursor-pointer rounded-full bg-elevated p-2 text-muted-foreground hover:text-foreground" title="Datei hochladen und als Link setzen">
+                        <Upload className="w-3.5 h-3.5" />
+                        <input type="file" accept="video/*,audio/*,image/*" className="hidden" onChange={(e) => { uploadMedia(i, e.target.files?.[0]); e.target.value = ""; }} />
+                      </label>
                       <button onClick={() => removeMedia(i)} type="button" className="rounded-full bg-elevated p-2 text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Image as ImageIcon, Loader2, Upload, Send, Share2, Download, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { therapistName } from "@/lib/therapyPrompts";
-import { sceneImagePrompt } from "@/lib/therapyVisual";
+import { sceneImagePrompt, charRefImages } from "@/lib/therapyVisual";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Image } from "@/components/ui/image";
@@ -52,9 +52,13 @@ export default function TherapyBildButton({ session, initialText, disabled, clas
     setResult("");
     try {
       const prompt = sceneImagePrompt(session, text.trim());
+      // Die Originalcharaktere der Sitzung stehen immer vorne — nur so bleibt
+      // jedes Bild bei ihrem Aussehen. Ein hochgeladenes Vorlagen-Bild kommt
+      // zusätzlich dazu, ersetzt sie aber nie.
+      const refs = [...charRefImages(session), ...(upload ? [upload] : [])];
       const r = await base44.integrations.Core.GenerateImage({
         prompt,
-        existing_image_urls: upload ? [upload] : undefined,
+        existing_image_urls: refs.length ? refs : undefined,
       });
       const url = r?.url;
       if (!url) throw new Error("Kein Ergebnis vom Generator.");

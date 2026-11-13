@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Play, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Phone, Loader2, Banknote, Cast, Brain } from "lucide-react";
+import { Send, Play, ArrowLeft, ImagePlus, Mic, Square, Lock, UserPlus, RotateCcw, ArrowDown, X, Video, Phone, Loader2, Banknote, Cast, Brain, Volume2 } from "lucide-react";
 import NarratorAvatar3D from "@/components/narrator/NarratorAvatar3D";
 import { useToast } from "@/components/ui/use-toast";
 import { Image } from "@/components/ui/image";
@@ -34,7 +34,7 @@ import { playLevelFor, setPlayLevelFor, playPrompt } from "@/lib/playStyle";
 import VoiceConvertButton from "@/components/voice/VoiceConvertButton";
 import VoiceConvertToggle from "@/components/voice/VoiceConvertToggle";
 import useVoiceRecorder from "@/hooks/useVoiceRecorder";
-import { speakAsVoice, voiceNotesOn, myVoiceConvertOn, myVoiceConvertDecided, setMyVoiceConvertOn } from "@/lib/voiceChat";
+import { speakAsVoice, voiceNotesOn, setVoiceNotesOn, myVoiceConvertOn, myVoiceConvertDecided, setMyVoiceConvertOn } from "@/lib/voiceChat";
 import DownloadButton from "@/components/DownloadButton";
 import { coinsForPrice } from "@/lib/coins";
 import { CARTOON_STYLE, CHARACTER_ALLURE, CONSISTENCY_RULES, IMAGE_SAFE_RULES, PHOTOREAL } from "@/lib/appearance";
@@ -144,6 +144,18 @@ export default function Messages() {
   useEffect(() => {
     try { setMemoryOn(activeChat ? localStorage.getItem(`chat_mem_${activeChat}`) === "1" : false); } catch {}
   }, [activeChat]);
+
+  // Automatisches Vorlesen — pro Chat gemerkt, standardmäßig an. Einmal
+  // anmachen und es bleibt über jeden Neustart hinweg stehen, ohne dass du
+  // jedes Mal „Vorlesen" wieder drücken musst.
+  const [autoReadOn, setAutoReadOn] = useState(false);
+  useEffect(() => { setAutoReadOn(voiceNotesOn(activeChat, true)); }, [activeChat, voices]);
+  const toggleAutoRead = () => {
+    if (!activeChat) return;
+    const n = !autoReadOn;
+    setAutoReadOn(n);
+    setVoiceNotesOn(activeChat, n);
+  };
   const toggleMemory = () => setMemoryOn((v) => {
     const n = !v;
     try { if (activeChat) localStorage.setItem(`chat_mem_${activeChat}`, n ? "1" : "0"); } catch {}
@@ -1617,6 +1629,9 @@ export default function Messages() {
                 />
                 <button onClick={toggleMemory} title={memoryOn ? "Gedächtnis an — sie erinnert sich ans Gespräch" : "Gedächtnis aus — sie fängt neu an"} className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors", memoryOn ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>
                   <Brain className="w-4 h-4" />
+                </button>
+                <button onClick={toggleAutoRead} title={autoReadOn ? "Automatisches Vorlesen an — jede Antwort wird gesprochen" : "Automatisches Vorlesen aus — nur manuell pro Nachricht"} className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors", autoReadOn ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>
+                  <Volume2 className="w-4 h-4" />
                 </button>
                 <button onClick={resetChat} title="Chat zurücksetzen" className="w-8 h-8 rounded-full bg-elevated text-muted-foreground flex items-center justify-center flex-shrink-0 hover:text-foreground transition-colors">
                   <RotateCcw className="w-4 h-4" />

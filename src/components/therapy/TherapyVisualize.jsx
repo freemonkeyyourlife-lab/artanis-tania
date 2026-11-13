@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Image as ImageIcon, Video as VideoIcon, Images, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { therapistName } from "@/lib/therapyPrompts";
-import { sceneImagePrompt, sceneVideoPrompt } from "@/lib/therapyVisual";
+import { sceneImagePrompt, sceneVideoPrompt, charRefImages } from "@/lib/therapyVisual";
 import BildergeschichteGenerator from "@/components/therapy/BildergeschichteGenerator";
 
 // Macht aus der letzten Szene ein Bild oder einen kurzen Clip. Das Ergebnis
@@ -18,9 +18,11 @@ export default function TherapyVisualize({ session, sceneText, disabled }) {
     setError("");
     try {
       let url = "";
+      const refs = charRefImages(session);
       if (kind === "image") {
         const r = await base44.integrations.Core.GenerateImage({
           prompt: sceneImagePrompt(session, sceneText),
+          existing_image_urls: refs.length ? refs : undefined,
         });
         url = r?.url;
       } else {
