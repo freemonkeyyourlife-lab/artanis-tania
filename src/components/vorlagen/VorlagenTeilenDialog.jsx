@@ -8,6 +8,7 @@ import { THERAPY_MODES, INTENSITIES, roleLabel } from "@/lib/therapyPrompts";
 
 const VOICE_LABEL = { storm: "Tief", river: "Ruhig", honey: "Warm", sunny: "Hell", spark: "Schnell" };
 const APP_URL = "https://artanis-tania.base44.app";
+const PARTNER_EMAIL = "freemonkeyyourlife@gmail.com";
 
 const PURPOSE_NAME = {
   SITZUNG: "Sitzungs-Setup",
@@ -77,7 +78,7 @@ function buildEmail(v, message) {
 // beide dasselbe Setup für eure gemeinsamen Sitzungen nutzt.
 export default function VorlagenTeilenDialog({ open, onClose, vorlage }) {
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(PARTNER_EMAIL);
   const [role, setRole] = useState("admin");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -108,7 +109,7 @@ export default function VorlagenTeilenDialog({ open, onClose, vorlage }) {
         html: buildEmail(vorlage, message.trim()),
       });
       toast({ title: "Gesendet", description: `Einladung + Vorlage an ${e} geschickt.` });
-      setEmail(""); setMessage("");
+      setEmail(PARTNER_EMAIL); setMessage("");
       onClose?.();
     } catch (err) {
       toast({ variant: "destructive", title: "Senden fehlgeschlagen", description: err?.message });

@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { Clock, Users, ArrowDownUp, Archive as ArchiveIcon, ArrowLeft } from "lucide-react";
+import { Clock, Users, ArrowDownUp, Archive as ArchiveIcon, ArrowLeft, Share2 } from "lucide-react";
 import { THERAPY_MODES, ROLE_SETUPS, roleLabel, therapistName, formatLabel } from "@/lib/therapyPrompts";
 import { cn } from "@/lib/utils";
+import VorlagenTeilenDialog from "@/components/vorlagen/VorlagenTeilenDialog";
 
 const SORTS = [
   { id: "newest", label: "Datum · neu" },
@@ -45,6 +46,25 @@ const participantsOf = (s) => {
   return list;
 };
 
+const sessionToVorlage = (s) => ({
+  name: s.topic || "Sitzungs-Setup",
+  purpose: "SITZUNG",
+  setup: {
+    roleSetup: s.roleSetup,
+    mode: s.mode,
+    intensity: s.intensity,
+    therapistName: therapistName(s),
+    therapistAge: s.therapistAge,
+    therapistType: s.therapistType,
+    therapistStyle: s.therapistStyle,
+    therapistRole: s.therapistRole,
+    therapistVoice: s.therapistVoice,
+    cast: s.cast || [],
+    actor: s.actor || {},
+    topic: s.topic,
+  },
+});
+
 const Avatar = ({ name }) => (
   <span className="w-7 h-7 rounded-full bg-elevated border border-border flex items-center justify-center text-[11px] font-bold text-foreground">
     {(name || "?").trim().slice(0, 1).toUpperCase()}
@@ -55,6 +75,7 @@ export default function TherapyArchiv() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("newest");
+  const [teilen, setTeilen] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -180,6 +201,13 @@ export default function TherapyArchiv() {
                       {ppl.length > 4 && <span className="ml-1 text-[11px] text-muted-foreground">+{ppl.length - 4}</span>}
                     </div>
                     <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><Users className="w-3 h-3" /> {ppl.length}</span>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTeilen(sessionToVorlage(s)); }}
+                      title="Setup per E-Mail an Partnerin senden"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated border border-border text-[11px] text-foreground hover:border-primary/50 transition-colors"
+                    >
+                      <Share2 className="w-3.5 h-3.5" /> An Partnerin
+                    </button>
                   </div>
                 </div>
               </Link>
@@ -187,6 +215,8 @@ export default function TherapyArchiv() {
           })}
         </div>
       )}
+
+      <VorlagenTeilenDialog open={!!teilen} vorlage={teilen} onClose={() => setTeilen(null)} />
     </div>
   );
 }
