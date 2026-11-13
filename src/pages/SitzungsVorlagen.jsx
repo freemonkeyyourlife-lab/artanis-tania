@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Bookmark, Trash2, Loader2, ArrowLeft, Play, Plus, MessageSquare, FileText, Film, Music, Image as ImageIcon, Package } from "lucide-react";
+import { Bookmark, Trash2, Loader2, ArrowLeft, Play, Plus, MessageSquare, FileText, Film, Music, Image as ImageIcon, Package, Share2 } from "lucide-react";
 import { THERAPY_MODES, INTENSITIES, roleLabel } from "@/lib/therapyPrompts";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { Image } from "@/components/ui/image";
 import VorlagenEditor from "@/components/vorlagen/VorlagenEditor";
+import VorlagenTeilenDialog from "@/components/vorlagen/VorlagenTeilenDialog";
 
 const VOICE_LABEL = { storm: "Tief", river: "Ruhig", honey: "Warm", sunny: "Hell", spark: "Schnell" };
 
@@ -31,6 +32,7 @@ export default function SitzungsVorlagen() {
   const [creating, setCreating] = useState(null);
   const [filter, setFilter] = useState("ALL");
   const [editorOpen, setEditorOpen] = useState(false);
+  const [teilen, setTeilen] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -145,17 +147,18 @@ export default function SitzungsVorlagen() {
       ) : (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
           {shown.map((v) => (
-            <VorlageCard key={v.id} v={v} onStart={startFrom} onRemove={remove} creating={creating === v.id} />
+            <VorlageCard key={v.id} v={v} onStart={startFrom} onRemove={remove} onTeilen={setTeilen} creating={creating === v.id} />
           ))}
         </div>
       )}
 
       <VorlagenEditor open={editorOpen} onClose={() => setEditorOpen(false)} onSaved={load} />
+      <VorlagenTeilenDialog open={!!teilen} vorlage={teilen} onClose={() => setTeilen(null)} />
     </div>
   );
 }
 
-function VorlageCard({ v, onStart, onRemove, creating }) {
+function VorlageCard({ v, onStart, onRemove, onTeilen, creating }) {
   const purpose = PURPOSES.find((p) => p.value === v.purpose) || PURPOSES[0];
   const PurposeIcon = purpose.icon;
 
@@ -168,9 +171,14 @@ function VorlageCard({ v, onStart, onRemove, creating }) {
           </span>
           <p className="font-display text-lg text-foreground leading-tight truncate">{v.name}</p>
         </div>
-        <button onClick={() => onRemove(v.id)} title="Vorlage löschen" className="rounded-full bg-elevated p-1.5 text-muted-foreground hover:text-destructive flex-shrink-0">
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button onClick={() => onTeilen(v)} title="Per E-Mail an Partnerin senden" className="rounded-full bg-elevated p-1.5 text-muted-foreground hover:text-primary">
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => onRemove(v.id)} title="Vorlage löschen" className="rounded-full bg-elevated p-1.5 text-muted-foreground hover:text-destructive">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {v.note && <p className="text-xs text-muted-foreground mb-3">{v.note}</p>}
