@@ -46,23 +46,43 @@ export const MOODS = [
   { id: "PORTRÄT", label: "Porträt", tone: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30" },
 ];
 
+// Wofür ein Modell steht — heiß, denkerisch, faktisch oder kalt. Das Maß sagt,
+// wie stark dieser Charakter bei diesem Modell ausgeprägt ist.
+export const CHARAKTERE = [
+  { id: "HEISS", label: "Heiß", tone: "bg-orange-500/15 text-orange-300 border-orange-500/30" },
+  { id: "DENKERISCH", label: "Denkerisch", tone: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30" },
+  { id: "FAKTISCH", label: "Faktisch", tone: "bg-slate-500/15 text-slate-300 border-slate-500/30" },
+  { id: "KALT", label: "Kalt", tone: "bg-blue-500/15 text-blue-300 border-blue-500/30" },
+];
+
+export const MASS_STUFEN = [
+  { id: 1, label: "leicht" },
+  { id: 2, label: "mittel" },
+  { id: 3, label: "stark" },
+];
+
 const find = (list, id) => list.find((o) => o.id === id) || null;
 
 export const styleOptions = (kind) => STYLES[kind] || STYLES.BILD;
 export const styleOption = (kind, id) => find(styleOptions(kind), id);
 export const explicitOption = (id) => find(EXPLICIT_LEVELS, id);
 export const moodOption = (id) => find(MOODS, id);
+export const charakterOption = (id) => find(CHARAKTERE, id);
+export const massLabel = (n) => MASS_STUFEN.find((m) => m.id === n)?.label || "";
 
 export const styleLabel = (kind, id) => styleOption(kind, id)?.label || id;
 export const explicitLabel = (id) => explicitOption(id)?.label || id;
 export const moodLabel = (id) => moodOption(id)?.label || id;
+export const charakterLabel = (id) => charakterOption(id)?.label || id;
 
-export const emptyTags = () => ({ style: "", explicit: "", moods: [] });
+export const emptyTags = () => ({ style: "", explicit: "", moods: [], charakter: "", mass: 0 });
 
 export const tagsOf = (model) => ({
   style: model?.style || "",
   explicit: model?.explicit || "",
   moods: Array.isArray(model?.moods) ? model.moods : [],
+  charakter: model?.charakter || "",
+  mass: typeof model?.mass === "number" ? model.mass : 0,
 });
 
 // Nur das anzeigen, was in der eigenen Liste auch wirklich vorkommt.
@@ -72,21 +92,23 @@ export function usedOptions(models, kind) {
   return {
     styles: styleOptions(kind).filter((s) => list.some((m) => m.style === s.id)),
     explicits: EXPLICIT_LEVELS.filter((e) => list.some((m) => m.explicit === e.id)),
+    charakters: CHARAKTERE.filter((c) => list.some((m) => m.charakter === c.id)),
     moods: MOODS.filter((mo) => list.some((m) => (m.moods || []).includes(mo.id))),
-    any: has("style") || has("explicit") || has("moods"),
+    any: has("style") || has("explicit") || has("moods") || has("charakter"),
   };
 }
 
 export function matchesFilter(model, filter = {}) {
   if (filter.style && model?.style !== filter.style) return false;
   if (filter.explicit && model?.explicit !== filter.explicit) return false;
+  if (filter.charakter && model?.charakter !== filter.charakter) return false;
   const moods = filter.moods || [];
   if (moods.length && !moods.some((m) => (model?.moods || []).includes(m))) return false;
   return true;
 }
 
 export const filterEmpty = (filter) =>
-  !filter?.style && !filter?.explicit && !(filter?.moods || []).length;
+  !filter?.style && !filter?.explicit && !filter?.charakter && !(filter?.moods || []).length;
 
 // Das beste Modell für eine Stimmung: Treffer in der Stimmung zählen am meisten,
 // Stil und Freizügigkeit danach, ein Favorit bekommt den letzten Ausschlag.

@@ -13,6 +13,7 @@ import TherapySummaryCard from "@/components/therapy/TherapySummaryCard";
 import TherapyInviteBar from "@/components/therapy/TherapyInviteBar";
 import TherapySideChat from "@/components/therapy/TherapySideChat";
 import TherapyVisualize from "@/components/therapy/TherapyVisualize";
+import RollenCharakter from "@/components/therapy/RollenCharakter";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import TherapyReadButton from "@/components/therapy/TherapyReadButton";
@@ -447,6 +448,10 @@ export default function TherapySession() {
               <TherapyVisualize session={session} sceneText={lastAi.text} disabled={sending} />
             )}
           </div>
+        )}
+
+        {isOwner && (
+          <RollenCharakter session={session} onUpdated={setSession} />
         )}
 
         <p className="text-xs text-muted-foreground mt-3">

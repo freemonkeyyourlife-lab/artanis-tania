@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { EXPLICIT_LEVELS, MOODS, styleOptions } from "@/lib/modelTags";
+import { CHARAKTERE, EXPLICIT_LEVELS, MASS_STUFEN, MOODS, charakterOption, massLabel, styleOptions } from "@/lib/modelTags";
 import ModelTagsPicker from "@/components/studio/ModelTagsPicker";
 
 const chip = "inline-flex items-center px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider";
@@ -14,11 +14,12 @@ export default function ModelTags({ kind = "BILD", model, editable = false, onSa
 
   const style = styleOptions(kind).find((s) => s.id === model?.style);
   const explicit = EXPLICIT_LEVELS.find((e) => e.id === model?.explicit);
+  const charakter = charakterOption(model?.charakter);
   const moods = MOODS.filter((m) => (model?.moods || []).includes(m.id));
-  const any = style || explicit || moods.length;
+  const any = style || explicit || charakter || moods.length;
 
   const start = () => {
-    setDraft({ style: model?.style || "", explicit: model?.explicit || "", moods: model?.moods || [] });
+    setDraft({ style: model?.style || "", explicit: model?.explicit || "", moods: model?.moods || [], charakter: model?.charakter || "", mass: model?.mass || 0 });
     setOpen(true);
   };
 
@@ -54,6 +55,7 @@ export default function ModelTags({ kind = "BILD", model, editable = false, onSa
     <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
       {style && <span className={cn(chip, style.tone)}>{style.label}</span>}
       {explicit && <span className={cn(chip, explicit.tone)}>{explicit.label}</span>}
+      {charakter && <span className={cn(chip, charakter.tone)}>{charakter.label}{model?.mass ? ` · ${massLabel(model.mass)}` : ""}</span>}
       {moods.map((m) => (
         <span key={m.id} className={cn(chip, m.tone)}>{m.label}</span>
       ))}

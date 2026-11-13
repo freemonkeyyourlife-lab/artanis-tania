@@ -77,6 +77,18 @@ export function therapistName(session) {
   return (session?.therapistName || "").trim() || "Tania";
 }
 
+// Charakter einer Rolle — heiß, denkerisch, faktisch oder kalt — plus das Tempo.
+// Jede Rolle einzeln, jederzeit wechselbar, färbt wie diese Figur redet und reagiert.
+const CHARAKTER_TEXT = {
+  HEISS: "heiß — leidenschaftlich, körpernah, gibt dem Feuer nach, geht direkt zur Sache",
+  DENKERISCH: "denkerisch — ordnet ein, fragt nach dem Warum, bleibt einen gedanklichen Schritt darüber",
+  FAKTISCH: "faktisch — nüchtern und konkret, nennt Dinge beim Namen ohne Umschweife",
+  KALT: "kalt — distanziert und kontrolliert, wenig Wärme, beobachtet eher als dass sie mitspielt",
+};
+const TEMPO_TEXT = { 1: ", Tempo langsam", 2: "", 3: ", Tempo schnell" };
+export const charakterText = (id) => CHARAKTER_TEXT[id] || "";
+export const tempoText = (n) => TEMPO_TEXT[n] || "";
+
 // „Dr. Held, 46, Sexualtherapeutin“ — nur was eingetragen ist.
 export function therapistLine(session) {
   const bits = [therapistName(session)];
@@ -174,6 +186,18 @@ export function buildTherapyPrompt(session, history, guestThoughts, direction) {
     ctx += "\nWER INFORMIERT IST (nicht anwesend — du kennst sie aus seinen Erzählungen und darfst nach ihnen fragen und sie erwähnen):\n";
     informed.forEach((c) => { ctx += `- ${c.name}${c.note ? `: ${c.note}` : ""}\n`; });
     ctx += "Sie sind nicht im Raum. Nur wenn der Klient sie hereinholt, werden sie anwesend.\n";
+  }
+
+  // ── Charakter & Tempo jeder Rolle (jeder einzeln, jederzeit wechselbar) ──
+  const charLines = [];
+  if (session.therapistCharakter) charLines.push(`${name}: ${charakterText(session.therapistCharakter)}${tempoText(session.therapistTempo)}`);
+  if (actor) {
+    if (actor.charakter) charLines.push(`${(actor.name || "Er").trim()}: ${charakterText(actor.charakter)}${tempoText(actor.tempo)}`);
+  }
+  present.forEach((c) => { if (c.charakter) charLines.push(`${c.name}: ${charakterText(c.charakter)}${tempoText(c.tempo)}`); });
+  if (charLines.length) {
+    ctx += "\nCHARAKTER & TEMPO JEDER ROLLE (so redet und reagiert diese Rolle — halt dich daran, jeder einzeln):\n";
+    charLines.forEach((l) => { ctx += `- ${l}\n`; });
   }
 
   // ── Haltung ──

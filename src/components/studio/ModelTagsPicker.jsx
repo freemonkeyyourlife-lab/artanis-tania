@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { EXPLICIT_LEVELS, MOODS, emptyTags, styleOptions } from "@/lib/modelTags";
+import { CHARAKTERE, EXPLICIT_LEVELS, MASS_STUFEN, MOODS, emptyTags, styleOptions } from "@/lib/modelTags";
 
 const chip = (on, tone) =>
   cn(
@@ -49,6 +49,32 @@ export default function ModelTagsPicker({ kind = "BILD", value, onChange }) {
             className={chip(tags.explicit === e.id, e.tone)}
           >
             {e.label}
+          </button>
+        ))}
+      </Group>
+
+      <Group label="Charakter — wofür steht es?">
+        {CHARAKTERE.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => set({ charakter: tags.charakter === c.id ? "" : c.id })}
+            className={chip(tags.charakter === c.id, c.tone)}
+          >
+            {c.label}
+          </button>
+        ))}
+      </Group>
+
+      <Group label="In welchem Maß?">
+        {MASS_STUFEN.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => set({ mass: tags.mass === m.id ? 0 : m.id })}
+            className={chip(tags.mass === m.id, "bg-primary/15 text-primary border-primary/30")}
+          >
+            {m.label}
           </button>
         ))}
       </Group>

@@ -28,6 +28,21 @@
         "HART"
       ]
     },
+    "charakter": {
+      "type": "string",
+      "enum": [
+        "HEISS",
+        "DENKERISCH",
+        "FAKTISCH",
+        "KALT"
+      ],
+      "description": "Wof\u00fcr dieses Modell steht: hei\u00df, denkerisch, faktisch oder kalt."
+    },
+    "mass": {
+      "type": "number",
+      "default": 0,
+      "description": "In welchem Ma\u00df der Charakter ausgepr\u00e4gt ist: 1 leicht, 2 mittel, 3 stark. 0 = nicht gesetzt."
+    },
     "moods": {
       "type": "array",
       "items": {

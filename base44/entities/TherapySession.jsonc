@@ -99,6 +99,21 @@
       ],
       "default": "honey"
     },
+    "therapistCharakter": {
+      "type": "string",
+      "enum": [
+        "HEISS",
+        "DENKERISCH",
+        "FAKTISCH",
+        "KALT"
+      ],
+      "description": "Charakter der Therapeutin: hei\u00df, denkerisch, faktisch oder kalt. Jederzeit wechselbar."
+    },
+    "therapistTempo": {
+      "type": "number",
+      "default": 2,
+      "description": "Tempo der Therapeutin: 1 langsam, 2 mittel, 3 schnell."
+    },
     "actor": {
       "type": "object",
       "properties": {
@@ -122,6 +137,19 @@
           ],
           "default": "storm"
         },
+        "charakter": {
+          "type": "string",
+          "enum": [
+            "HEISS",
+            "DENKERISCH",
+            "FAKTISCH",
+            "KALT"
+          ]
+        },
+        "tempo": {
+          "type": "number",
+          "default": 2
+        },
         "active": {
           "type": "boolean",
           "default": false
@@ -131,7 +159,39 @@
     "cast": {
       "type": "array",
       "items": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "voice": {
+            "type": "string"
+          },
+          "charakter": {
+            "type": "string",
+            "enum": [
+              "HEISS",
+              "DENKERISCH",
+              "FAKTISCH",
+              "KALT"
+            ]
+          },
+          "tempo": {
+            "type": "number"
+          }
+        }
       }
     },
     "intensity": {
