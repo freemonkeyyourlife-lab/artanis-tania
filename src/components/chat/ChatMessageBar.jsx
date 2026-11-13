@@ -37,10 +37,10 @@ function useTextModels() {
 }
 
 export default function ChatMessageBar({ text, senderName }) {
-  const [heat, setHeat] = useState(1);
-  const [voice, setVoice] = useState("honey");
+  const [heat, setHeat] = useState(() => { try { const v = Number(localStorage.getItem("chatbar_heat")); return Number.isFinite(v) ? v : 1; } catch { return 1; } });
+  const [voice, setVoice] = useState(() => { try { return localStorage.getItem("chatbar_voice") || "honey"; } catch { return "honey"; } });
   const textModels = useTextModels();
-  const [textModelId, setTextModelId] = useState("");
+  const [textModelId, setTextModelId] = useState(() => { try { return localStorage.getItem("chatbar_textmodel") || ""; } catch { return ""; } });
   const [busy, setBusy] = useState("");
   const [playing, setPlaying] = useState(false);
   const [regen, setRegen] = useState("");
@@ -118,7 +118,7 @@ export default function ChatMessageBar({ text, senderName }) {
             max={3}
             step={1}
             value={heat}
-            onChange={(e) => setHeat(Number(e.target.value))}
+            onChange={(e) => { const v = Number(e.target.value); setHeat(v); try { localStorage.setItem("chatbar_heat", String(v)); } catch {} }}
             className="w-16 accent-primary"
             title="Wie heiß"
           />
@@ -127,7 +127,7 @@ export default function ChatMessageBar({ text, senderName }) {
 
         <select
           value={voice}
-          onChange={(e) => setVoice(e.target.value)}
+          onChange={(e) => { const v = e.target.value; setVoice(v); try { localStorage.setItem("chatbar_voice", v); } catch {} }}
           className="px-2 py-1 rounded-full bg-elevated border border-border text-[11px] font-bold text-foreground"
           title="Stimme zum Vorlesen"
         >
@@ -138,7 +138,7 @@ export default function ChatMessageBar({ text, senderName }) {
 
         <select
           value={textModelId}
-          onChange={(e) => setTextModelId(e.target.value)}
+          onChange={(e) => { const v = e.target.value; setTextModelId(v); try { localStorage.setItem("chatbar_textmodel", v); } catch {} }}
           className="px-2 py-1 rounded-full bg-elevated border border-border text-[11px] font-bold text-foreground max-w-[9rem] truncate"
           title="Text-Modell zum Neu-Erzeugen"
         >

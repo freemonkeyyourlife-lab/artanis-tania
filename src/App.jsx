@@ -107,6 +107,7 @@ import GuideConsole from '@/components/god/GuideConsole';
 import FloatingZones from '@/components/floating/FloatingZones';
 import DesignEditorButton from '@/components/design/DesignEditorButton';
 import BegleitungLauncher from '@/components/begleitung/BegleitungLauncher';
+import RunningSessionLink from '@/components/therapy/RunningSessionLink';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -142,6 +143,7 @@ const AuthenticatedApp = () => {
       <FloatingZones />
       <DesignEditorButton />
       <BegleitungLauncher />
+      <RunningSessionLink />
       <FloatingCall />
       <LiveEdgeChat />
       <NarratorCompanion />
