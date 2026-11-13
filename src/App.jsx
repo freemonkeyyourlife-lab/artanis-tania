@@ -43,6 +43,7 @@ import AiVideoCall from '@/pages/AiVideoCall';
 import Leitstand from '@/pages/Leitstand';
 import Therapy from '@/pages/Therapy';
 import TherapyArchiv from '@/pages/TherapyArchiv';
+import SitzungsVorlagen from '@/pages/SitzungsVorlagen';
 import PayLinks from '@/pages/PayLinks';
 import Pay from '@/pages/Pay';
 import TherapySession from '@/pages/TherapySession';
@@ -185,6 +186,7 @@ const AuthenticatedApp = () => {
         <Route path="/owner" element={<OwnerConsole />} />
         <Route path="/therapy" element={<Therapy />} />
         <Route path="/therapy-archiv" element={<TherapyArchiv />} />
+        <Route path="/sitzungs-vorlagen" element={<SitzungsVorlagen />} />
         <Route path="/therapy/:id" element={<TherapySession />} />
         <Route path="/paylinks" element={<PayLinks />} />
         <Route path="/creator/:id" element={<CreatorDetail />} />

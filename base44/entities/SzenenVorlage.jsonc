@@ -6,6 +6,15 @@
       "type": "string",
       "description": "Name des Szenen-Pakets, z. B. \u201eAlltags-Check\u201c oder \u201eWinter-Suiten\u201c."
     },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "BILD",
+        "SITZUNG"
+      ],
+      "default": "BILD",
+      "description": "Wof\u00fcr die Vorlage gedacht ist: BILD f\u00fcrs Bild-Studio (Posen/Szenen), SITZUNG f\u00fcr ein komplettes Therapie-Setup (Rollen, Stimmen, Modus)."
+    },
     "mode": {
       "type": "string",
       "enum": [
@@ -25,6 +34,48 @@
     "extra": {
       "type": "string",
       "description": "Freie Szene, die im Szenen-Modus dazu geh\u00f6rt."
+    },
+    "setup": {
+      "type": "object",
+      "description": "Komplettes Sitzungs-Setup f\u00fcr purpose=SITZUNG: Rollen, Stimmen, Modus, Intensit\u00e4t, Besetzung.",
+      "properties": {
+        "roleSetup": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "intensity": {
+          "type": "string"
+        },
+        "therapistName": {
+          "type": "string"
+        },
+        "therapistAge": {
+          "type": "number"
+        },
+        "therapistType": {
+          "type": "string"
+        },
+        "therapistStyle": {
+          "type": "string"
+        },
+        "therapistRole": {
+          "type": "string"
+        },
+        "therapistVoice": {
+          "type": "string"
+        },
+        "cast": {
+          "type": "array"
+        },
+        "actor": {
+          "type": "object"
+        },
+        "topic": {
+          "type": "string"
+        }
+      }
     },
     "note": {
       "type": "string"

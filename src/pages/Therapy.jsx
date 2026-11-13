@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, X, Archive as ArchiveIcon } from "lucide-react";
+import { Plus, X, Archive as ArchiveIcon, Bookmark } from "lucide-react";
 import SessionForm from "@/components/therapy/SessionForm";
 import SessionCard from "@/components/therapy/SessionCard";
 import SessionsOverview from "@/components/therapy/SessionsOverview";
@@ -67,6 +67,12 @@ export default function Therapy() {
           className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-elevated border border-border text-foreground text-sm font-semibold hover:border-primary/50 transition-colors"
         >
           <ArchiveIcon className="w-4 h-4" /> Archiv
+        </Link>
+        <Link
+          to="/sitzungs-vorlagen"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-elevated border border-border text-foreground text-sm font-semibold hover:border-primary/50 transition-colors"
+        >
+          <Bookmark className="w-4 h-4" /> Vorlagen
         </Link>
       </div>
 

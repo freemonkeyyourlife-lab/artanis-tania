@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Send, ArrowLeft, Loader2, Eye, EyeOff, Download, Radio, Settings2 } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Eye, EyeOff, Download, Radio, Settings2, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import TherapyConfigMask from "@/components/therapy/TherapyConfigMask";
 import TherapyThread from "@/components/therapy/TherapyThread";
@@ -72,6 +73,7 @@ export default function TherapySession() {
   const lastAudioRef = useRef(null);
   const navigate = useNavigate();
   const call = useCallSession();
+  const { toast } = useToast();
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -283,6 +285,38 @@ export default function TherapySession() {
     setSession(updated);
   };
 
+  // Das aktuelle Setup sichern — Rollen, Stimmen, Modus, Besetzung — als Vorlage
+  // für künftige Sitzungen. Steht danach in der Bibliothek zum Laden bereit.
+  const saveAsTemplate = async () => {
+    if (!session) return;
+    const name = window.prompt("Name für diese Vorlage:", session.topic || "Sitzungs-Setup");
+    if (!name || !name.trim()) return;
+    try {
+      await base44.entities.SzenenVorlage.create({
+        name: name.trim(),
+        purpose: "SITZUNG",
+        note: session.topic || "",
+        setup: {
+          roleSetup: session.roleSetup,
+          mode: session.mode,
+          intensity: session.intensity,
+          therapistName: session.therapistName,
+          therapistAge: session.therapistAge,
+          therapistType: session.therapistType,
+          therapistStyle: session.therapistStyle,
+          therapistRole: session.therapistRole,
+          therapistVoice: session.therapistVoice,
+          cast: session.cast || [],
+          actor: session.actor || {},
+          topic: session.topic,
+        },
+      });
+      toast({ title: "Vorlage gespeichert", description: `„${name.trim()}" steht in der Bibliothek.` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Speichern fehlgeschlagen", description: e?.message });
+    }
+  };
+
   // Die Konfigurations-Maske übernehmen: Besetzung, Thema und ihre
   // Reaktionsweise — gilt ab der nächsten Antwort.
   const saveConfig = async (patch) => {
@@ -426,6 +460,14 @@ export default function TherapySession() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated text-muted-foreground text-[11px] font-semibold hover:text-foreground transition-colors"
           >
             <Download className="w-3.5 h-3.5" /> Herunterladen
+          </button>
+
+          <button
+            onClick={saveAsTemplate}
+            title="Dieses Setup als Vorlage sichern — Rollen, Stimmen, Modus"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated text-muted-foreground text-[11px] font-semibold hover:text-foreground transition-colors"
+          >
+            <Bookmark className="w-3.5 h-3.5" /> Als Vorlage
           </button>
 
           {isOwner && session.status !== "DONE" && (
