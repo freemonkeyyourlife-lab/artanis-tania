@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils";
 
 // Interaktive Diagramm-Ansicht für einen Baukasten: die Bausteine als Knoten,
 // ihre Verzweigungen als Linien. Knoten lassen sich frei ziehen (Position wird
-// gespeichert), Verbindungen per Klick ziehen und per Klick auf die Linie
-// wieder löschen.
+// gespeichert). Verbindungen legt man per Drag-and-Drop: am rechten Punkt eines
+// Bausteins ziehen und auf einen anderen fallen lassen. Eine Linie anklicken,
+// um sie zu löschen.
 
 const NODE_W = 224;
 const NODE_H = 100;
@@ -38,9 +39,11 @@ export default function DiagramView({ kit, blocks, onChange }) {
   const [positions, setPositions] = useState(initial);
   const posRef = useRef(positions);
   posRef.current = positions;
-  const [connectMode, setConnectMode] = useState(false);
-  const [src, setSrc] = useState(null);
+  const [dragFrom, setDragFrom] = useState(null);
+  const [dragPos, setDragPos] = useState(null);
+  const [hoverTarget, setHoverTarget] = useState(null);
   const [busy, setBusy] = useState(false);
+  const canvasRef = useRef(null);
 
   const edges = useMemo(() => {
     const out = [];
@@ -58,9 +61,31 @@ export default function DiagramView({ kit, blocks, onChange }) {
     const p = positions[id] || { x: 0, y: 0 };
     return { x: p.x + NODE_W / 2, y: p.y + NODE_H / 2 };
   };
+  const portPoint = (id) => {
+    const p = positions[id] || { x: 0, y: 0 };
+    return { x: p.x + NODE_W, y: p.y + NODE_H / 2 };
+  };
 
+  const relPos = (clientX, clientY) => {
+    const r = canvasRef.current?.getBoundingClientRect();
+    if (!r) return { x: 0, y: 0 };
+    return { x: clientX - r.left, y: clientY - r.top };
+  };
+
+  const hitTest = (pos) => {
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      const n = nodes[i];
+      const p = positions[n.id] || { x: 0, y: 0 };
+      if (pos.x >= p.x && pos.x <= p.x + NODE_W && pos.y >= p.y && pos.y <= p.y + NODE_H) {
+        return n.id;
+      }
+    }
+    return null;
+  };
+
+  // Baustein verschieben.
   const startDrag = (e, id) => {
-    if (connectMode) return;
+    if (dragFrom) return;
     e.preventDefault();
     const startX = e.clientX;
     const startY = e.clientY;
@@ -87,13 +112,37 @@ export default function DiagramView({ kit, blocks, onChange }) {
     window.addEventListener("pointerup", up);
   };
 
+  // Verbindung per Drag-and-Drop: am Punkt ziehen, auf einen anderen fallen lassen.
+  const startConnect = (e, id) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDragFrom(id);
+    setDragPos(relPos(e.clientX, e.clientY));
+    const move = (ev) => {
+      const pos = relPos(ev.clientX, ev.clientY);
+      setDragPos(pos);
+      setHoverTarget(hitTest(pos));
+    };
+    const up = async (ev) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      const pos = relPos(ev.clientX, ev.clientY);
+      const target = hitTest(pos);
+      setDragFrom(null);
+      setDragPos(null);
+      setHoverTarget(null);
+      if (target && target !== id) {
+        await addLink(id, target);
+      }
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
   const addLink = async (from, to) => {
     const b = nodes.find((n) => n.id === from);
     const links = [...(b?.links || [])];
-    if (links.some((l) => l.to === to)) {
-      setConnectMode(false);
-      return;
-    }
+    if (links.some((l) => l.to === to)) return;
     let label = "";
     try {
       label = window.prompt('Beschriftung der Verbindung (z. B. „Ja", „Nein") — oder leer lassen:', "") || "";
@@ -105,22 +154,7 @@ export default function DiagramView({ kit, blocks, onChange }) {
       onChange?.();
     } catch {} finally {
       setBusy(false);
-      setConnectMode(false);
     }
-  };
-
-  const onNodeClick = (id) => {
-    if (!connectMode) return;
-    if (!src) {
-      setSrc(id);
-      return;
-    }
-    if (src === id) {
-      setSrc(null);
-      return;
-    }
-    void addLink(src, id);
-    setSrc(null);
   };
 
   const removeLink = async (from, to) => {
@@ -146,27 +180,17 @@ export default function DiagramView({ kit, blocks, onChange }) {
   return (
     <div className="glass rounded-2xl border border-border p-3">
       <div className="flex items-center gap-2 flex-wrap mb-3">
-        <button
-          type="button"
-          onClick={() => {
-            setConnectMode((v) => !v);
-            setSrc(null);
-          }}
-          className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors",
-            connectMode ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <Link2 className="w-3.5 h-3.5" /> {connectMode ? "Verbinden … Ziel wählen" : "Verbinden"}
-        </button>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/40 text-xs font-bold text-primary">
+          <Link2 className="w-3.5 h-3.5" /> Ziehen zum Verbinden
+        </span>
         <span className="text-[11px] text-muted-foreground">
-          Klick „Verbinden", dann nacheinander zwei Bausteine. Klick eine Linie zum Löschen. Ziehen verschiebt.
+          Zieh vom rechten Punkt eines Bausteins auf einen anderen, um sie zu verbinden. Linie anklicken zum Löschen. Baustein ziehen zum Verschieben.
         </span>
         {busy && <span className="text-[11px] text-muted-foreground">speichert …</span>}
       </div>
 
       <div className="relative overflow-auto rounded-xl border border-border bg-background" style={{ maxHeight: 620 }}>
-        <div className="relative" style={{ width: CANVAS_W, height: CANVAS_H }}>
+        <div ref={canvasRef} className="relative" style={{ width: CANVAS_W, height: CANVAS_H }}>
           <svg className="absolute inset-0" width={CANVAS_W} height={CANVAS_H} style={{ pointerEvents: "none" }}>
             {edges.map((e, i) => {
               const a = center(e.from);
@@ -201,21 +225,35 @@ export default function DiagramView({ kit, blocks, onChange }) {
                 </g>
               );
             })}
+            {dragFrom && dragPos && (() => {
+              const a = portPoint(dragFrom);
+              return (
+                <line
+                  x1={a.x}
+                  y1={a.y}
+                  x2={dragPos.x}
+                  y2={dragPos.y}
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  strokeDasharray="6 5"
+                  opacity={0.9}
+                />
+              );
+            })()}
           </svg>
 
           {nodes.map((n) => {
             const p = positions[n.id] || { x: 0, y: 0 };
-            const isSrc = src === n.id;
+            const isTarget = hoverTarget === n.id && dragFrom && dragFrom !== n.id;
+            const linkCount = (n.links || []).length;
             return (
               <div
                 key={n.id}
                 onPointerDown={(e) => startDrag(e, n.id)}
-                onClick={() => onNodeClick(n.id)}
                 className={cn(
-                  "absolute rounded-2xl border-2 p-3 select-none",
+                  "absolute rounded-2xl border-2 p-3 select-none cursor-grab",
                   kindColor[n.blockKind] || "bg-elevated border-border",
-                  connectMode ? "cursor-pointer" : "cursor-grab",
-                  isSrc && "ring-4 ring-primary"
+                  isTarget && "ring-4 ring-primary"
                 )}
                 style={{ left: p.x, top: p.y, width: NODE_W, minHeight: NODE_H }}
               >
@@ -225,6 +263,20 @@ export default function DiagramView({ kit, blocks, onChange }) {
                 <p className="text-[13px] font-bold text-foreground leading-tight overflow-hidden">
                   {n.title}
                 </p>
+                {linkCount > 0 && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {linkCount} Verbindung{linkCount > 1 ? "en" : ""}
+                  </p>
+                )}
+                {/* Verbindungs-Punkt: zieh ihn auf einen anderen Baustein */}
+                <button
+                  type="button"
+                  onPointerDown={(e) => startConnect(e, n.id)}
+                  className="absolute -right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-primary border-2 border-background cursor-crosshair hover:scale-110 transition-transform flex items-center justify-center"
+                  title="Ziehen, um zu verbinden"
+                >
+                  <Link2 className="w-2.5 h-2.5 text-primary-foreground" />
+                </button>
               </div>
             );
           })}
