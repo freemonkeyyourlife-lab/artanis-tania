@@ -25,6 +25,7 @@ import MoodQuickMenu from "@/components/chat/MoodQuickMenu";
 import { moodFor, setMoodFor, moodPrompt, moodVoice } from "@/lib/moodStyle";
 import { grundFor, setGrundFor, grundsettingPrompt } from "@/lib/grundsetting";
 import GrundsettingBar from "@/components/chat/GrundsettingBar";
+import ChatCharacterSidebar from "@/components/chat/ChatCharacterSidebar";
 import { takePendingMood, setSceneNote, sceneNotePrompt, setVoiceOverride, voiceOverrideFor } from "@/lib/moodMode";
 import { speechPrompt, styleFor, setStyleFor, SPEECH_STYLES } from "@/lib/speechStyle";
 import { DEFAULT_ROLE, roleFor, setRoleFor, aiCast, speakAsFromRole, rolePrompt } from "@/lib/chatRole";
@@ -2068,8 +2069,12 @@ export default function Messages() {
           ) : (
             <div className="flex-1 flex items-center justify-center"><p className="text-muted-foreground">Wähle links einen Chat aus</p></div>
           )}
-        </div>
-      </div>
-    </div>
+          </div>
+
+          {activeChat && viewMode === "ai" && (
+          <ChatCharacterSidebar creator={creators.find((c) => c.id === activeChat)} />
+          )}
+          </div>
+          </div>
   );
 }
