@@ -46,7 +46,11 @@ export default function TherapyThread({ messages }) {
               <p
                 className={cn(
                   "text-[11px] font-semibold tracking-wider uppercase mb-1",
-                  mine ? "text-right text-muted-foreground" : "text-primary"
+                  mine
+                    ? "text-right text-muted-foreground"
+                    : msg.senderType === "AI"
+                    ? "text-indigo-300"
+                    : "text-emerald-300"
                 )}
               >
                 {label(msg)}
@@ -57,9 +61,9 @@ export default function TherapyThread({ messages }) {
                   "px-4 py-3 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap",
                   mine
                     ? "bg-primary text-primary-foreground"
-                    : guest
-                    ? "bg-background border border-dashed border-border text-muted-foreground italic"
-                    : "bg-elevated text-foreground"
+                    : msg.senderType === "AI"
+                    ? "bg-indigo-500/20 text-foreground border border-indigo-400/40"
+                    : "bg-emerald-500/15 text-foreground border border-emerald-400/40"
                 )}
               >
                 {msg.senderType === "AI" ? <ChatText text={msg.text} /> : msg.text}
