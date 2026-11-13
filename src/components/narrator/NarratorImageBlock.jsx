@@ -174,6 +174,22 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
     await keep(patch, "Bild entfernt");
   };
 
+  // Tauscht ein Sammlungs-Bild gegen ein eigenes aus — das alte weg, das neue
+  // an derselben Stelle. War es das Gesicht, wird es auch als Gesicht ersetzt.
+  const replaceGalleryImage = async (oldUrl, file) => {
+    try {
+      const res = await base44.integrations.Core.UploadPublicFile({ file });
+      const newUrl = res.file_url;
+      const next = gallery.map((u) => (u === oldUrl ? newUrl : u));
+      setGallery(next);
+      const patch = { gallery: next };
+      if (face === oldUrl) { setFace(newUrl); patch.avatar = newUrl; }
+      await keep(patch, "Bild ausgetauscht");
+    } catch (err) {
+      toast({ title: "Austausch fehlgeschlagen", variant: "destructive" });
+    }
+  };
+
   const clearFace = async () => {
     setFace("");
     await keep({ avatar: "" }, "Gesichtsbild entfernt");
@@ -308,6 +324,7 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
           onFace={saveFace}
           onReorder={saveGalleryOrder}
           onRemove={removeGalleryImage}
+          onReplace={replaceGalleryImage}
           onClearFace={clearFace}
         />
       )}
