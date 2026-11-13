@@ -4,16 +4,20 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Name des Szenen-Pakets, z. B. \u201eAlltags-Check\u201c oder \u201eWinter-Suiten\u201c."
+      "description": "Name der Vorlage, z. B. \u201eAlltags-Check\u201c, \u201eSturm-Session\u201c oder \u201eKuschel-Kombi\u201c."
     },
     "purpose": {
       "type": "string",
       "enum": [
         "BILD",
-        "SITZUNG"
+        "SITZUNG",
+        "MEDIEN",
+        "CHAT",
+        "VORSTELLUNG",
+        "KOMBI"
       ],
       "default": "BILD",
-      "description": "Wof\u00fcr die Vorlage gedacht ist: BILD f\u00fcrs Bild-Studio (Posen/Szenen), SITZUNG f\u00fcr ein komplettes Therapie-Setup (Rollen, Stimmen, Modus)."
+      "description": "Was die Vorlage b\u00fcndelt: BILD (Posen/Szenen), SITZUNG (Therapie-Setup), MEDIEN (Video/Audio/Bild-Links), CHAT (Verweis auf Chats), VORSTELLUNG (freier Text), KOMBI (alles zusammen)."
     },
     "mode": {
       "type": "string",
@@ -37,7 +41,7 @@
     },
     "setup": {
       "type": "object",
-      "description": "Komplettes Sitzungs-Setup f\u00fcr purpose=SITZUNG: Rollen, Stimmen, Modus, Intensit\u00e4t, Besetzung.",
+      "description": "Komplettes Sitzungs-Setup f\u00fcr purpose=SITZUNG/KOMBI: Rollen, Stimmen, Modus, Intensit\u00e4t, Besetzung.",
       "properties": {
         "roleSetup": {
           "type": "string"
@@ -76,6 +80,50 @@
           "type": "string"
         }
       }
+    },
+    "media": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "VIDEO",
+              "AUDIO",
+              "BILD"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Verlinktes vorhandenes Material \u2014 Videos, Audios, Bilder \u2014 f\u00fcr MEDIEN- und KOMBI-Vorlagen."
+    },
+    "chats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Verweise auf bestehende Chats f\u00fcr CHAT- und KOMBI-Vorlagen."
+    },
+    "vorstellung": {
+      "type": "string",
+      "description": "Freie Vorstellung als Text \u2014 f\u00fcr VORSTELLUNG- und KOMBI-Vorlagen."
     },
     "note": {
       "type": "string"
