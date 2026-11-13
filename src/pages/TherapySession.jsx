@@ -16,6 +16,7 @@ import TherapySideChat from "@/components/therapy/TherapySideChat";
 import TherapyVisualize from "@/components/therapy/TherapyVisualize";
 import RollenCharakter from "@/components/therapy/RollenCharakter";
 import HoerspielPlayer from "@/components/therapy/HoerspielPlayer";
+import TherapyBildButton from "@/components/therapy/TherapyBildButton";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import TherapyReadButton from "@/components/therapy/TherapyReadButton";
@@ -619,6 +620,7 @@ export default function TherapySession() {
               placeholder="Sag es so, wie du es denkst — keine Ausflüchte."
               className="flex-1 px-4 py-2.5 rounded-full bg-background border border-border text-[15px] text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
             />
+            <TherapyBildButton session={session} initialText={lastAi?.text} disabled={sending} />
             <VoiceInput
               onResult={(t) => (handsFree ? send(t) : setInput((prev) => (prev ? prev + " " + t : t)))}
               onAudio={(url) => { lastAudioRef.current = url; }}
