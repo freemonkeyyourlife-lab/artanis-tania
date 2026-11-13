@@ -125,8 +125,15 @@ export default function TherapySession() {
       base44.entities.TherapySession.update(session.id, { liveToken: token }).catch(() => {});
       setSession((s) => ({ ...s, liveToken: token }));
     }
+    const url = `/call/${token}?r=1`;
+    // In der Vorschau (iframe) blockiert der Browser Kamera und Mikrofon —
+    // der Call muss in einem eigenen Tab laufen, sonst startet nichts.
+    if (window.self !== window.top) {
+      window.open(url, "_blank");
+      return;
+    }
     call.start({ token, roomNumber: 1, name: publicName(me, "Therapeutin") });
-    navigate(`/call/${token}?r=1`);
+    navigate(url);
   };
 
   const buildHistory = (list) => list
