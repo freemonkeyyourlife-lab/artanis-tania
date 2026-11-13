@@ -64,6 +64,8 @@ export default function TherapySession() {
   const [runCount, setRunCount] = useState(0);
   const [regie, setRegie] = useState(false);
   const [direction, setDirection] = useState("");
+  const [selectedSugs, setSelectedSugs] = useState([]);
+  const toggleSug = (s) => setSelectedSugs((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   const bottomRef = useRef(null);
   const openedRef = useRef(false);
   const messagesRef = useRef([]);
@@ -489,17 +491,41 @@ export default function TherapySession() {
         )}
 
         {canWrite && isLast && lastAi?.suggestions?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {lastAi.suggestions.map((s, i) => (
-              <button
-                key={i}
-                onClick={() => send(s)}
-                disabled={sending}
-                className="px-3.5 py-2 rounded-full bg-background border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-50"
-              >
-                {s}
-              </button>
-            ))}
+          <div className="mt-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary mb-1">Tania schlägt dir vor</p>
+            <p className="text-[11px] text-muted-foreground mb-2">Das sind Vorschläge für dich. Klick eine oder mehrere — sie werden zu einer Nachricht verbunden.</p>
+            <div className="flex flex-wrap gap-2">
+              {lastAi.suggestions.map((s, i) => {
+                const on = selectedSugs.includes(s);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => toggleSug(s)}
+                    disabled={sending}
+                    className={cn(
+                      "px-3.5 py-2 rounded-full border text-xs transition-colors disabled:opacity-50",
+                      on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                    )}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedSugs.length > 0 && (
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  onClick={() => { send(selectedSugs.join(" — ")); setSelectedSugs([]); }}
+                  disabled={sending}
+                  className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50"
+                >
+                  {selectedSugs.length} kombiniert senden
+                </button>
+                <button onClick={() => setSelectedSugs([])} disabled={sending} className="text-[11px] text-muted-foreground hover:text-foreground">
+                  Auswahl leeren
+                </button>
+              </div>
+            )}
           </div>
         )}
         <div ref={bottomRef} />
@@ -526,6 +552,7 @@ export default function TherapySession() {
             </div>
           ) : (
           <>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Du sagst · schnell</p>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {quickLines.map((line) => (
               <button
