@@ -1,0 +1,62 @@
+{
+  "name": "SzenenVorlage",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name des Szenen-Pakets, z. B. \u201eAlltags-Check\u201c oder \u201eWinter-Suiten\u201c."
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "scenes",
+        "poseSet"
+      ],
+      "default": "scenes"
+    },
+    "auswahl": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Ausgew\u00e4hlte Posen- und Szenen-Schl\u00fcssel, die beim Laden vorausgef\u00fcllt werden."
+    },
+    "extra": {
+      "type": "string",
+      "description": "Freie Szene, die im Szenen-Modus dazu geh\u00f6rt."
+    },
+    "note": {
+      "type": "string"
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

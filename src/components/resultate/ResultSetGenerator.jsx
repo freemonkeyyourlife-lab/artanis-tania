@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Wand2, Layers, Check, X, Cpu } from "lucide-react";
 import { generateCharImage } from "@/lib/generateCharImage";
+import SzenenVorlagen from "@/components/resultate/SzenenVorlagen";
 
 // Set-Generator für die Resultate-Seite: statt nur ein Bild erzeugt er auf
 // einen Knopf ein ganzes Set — verschiedene Outfits, Posen und Stimmungen —
@@ -22,10 +23,10 @@ const POSES = [
 // Pose-Set-Modus: ein Klick auf eine Pose erzeugt vier Varianten davon —
 // verschiedene Winkel, Licht und Nähe — als komplettes Set auf einmal.
 const VARIANTS = [
-  { key: "vorn", mod: "von vorn, auf Augenhöhe, weiches Licht" },
-  { key: "seite", mod: "von der Seite, Gegenlicht, Konturen" },
-  { key: "nah", mod: "Nahaufnahme, Gesicht betont, intime Nähe" },
-  { key: "weit", mod: "weit eingestellt, Raum rundherum, helles Umgebungslicht" },
+  { key: "vorn", label: "von vorn", mod: "von vorn, auf Augenhöhe, weiches Licht" },
+  { key: "seite", label: "von der Seite", mod: "von der Seite, Gegenlicht, Konturen" },
+  { key: "nah", label: "Nahaufnahme", mod: "Nahaufnahme, Gesicht betont, intime Nähe" },
+  { key: "weit", label: "weit", mod: "weit eingestellt, Raum rundherum, helles Umgebungslicht" },
 ];
 
 // Detaillierte Szenen — Outfit + Pose + Stimmung, für feinere Prüfungen.
@@ -71,13 +72,14 @@ export default function ResultSetGenerator({ row, onUpdated }) {
 
   const run = async () => {
     const scenes = [...POSES, ...SCENES].filter((s) => sel.includes(s.key));
-    const tasks = [...scenes];
-    if (extra.trim()) tasks.push({ key: "extra", label: "eigene Szene", prompt: extra.trim() });
+    const tasks = scenes.map((s) => ({ key: s.key, tag: s.label, prompt: s.prompt }));
+    if (extra.trim()) tasks.push({ key: "extra", tag: "eigene Szene", prompt: extra.trim() });
     if (!tasks.length) {
       toast({ variant: "destructive", title: "Nichts ausgewählt", description: "Wähle mindestens eine Szene." });
       return;
     }
     const trained = row.set?.trainStatus === "FERTIG" && !!row.set?.trainJobId;
+    const who = row.set?.personName || row.char?.name || "";
     setBusy(true);
     setDone(0);
     setTotal(tasks.length);
@@ -86,7 +88,7 @@ export default function ResultSetGenerator({ row, onUpdated }) {
     for (const t of tasks) {
       try {
         const url = await generateCharImage(row.set, ctx, t.prompt);
-        if (url) collected.push(url);
+        if (url) collected.push({ url, tag: t.tag });
         else failed++;
       } catch {
         failed++;
@@ -95,12 +97,15 @@ export default function ResultSetGenerator({ row, onUpdated }) {
     }
     if (collected.length) {
       try {
-        const next = [...(row.set.generatedImages || []), ...collected];
-        await base44.entities.TrainingSet.update(row.set.id, { generatedImages: next });
-        onUpdated?.({ ...row, set: { ...row.set, generatedImages: next } });
+        const newImgs = collected.map((c) => c.url);
+        const newMeta = collected.map((c) => ({ url: c.url, who, what: c.tag }));
+        const next = [...(row.set.generatedImages || []), ...newImgs];
+        const nextMeta = [...(row.set.generatedMeta || []), ...newMeta];
+        await base44.entities.TrainingSet.update(row.set.id, { generatedImages: next, generatedMeta: nextMeta });
+        onUpdated?.({ ...row, set: { ...row.set, generatedImages: next, generatedMeta: nextMeta } });
         toast({
           title: trained ? "LoRA-Set erzeugt" : "Set erzeugt",
-          description: `${collected.length} Bild(er) hinzugefügt${failed ? `, ${failed} fehlgeschlagen` : ""}${trained ? " (mit LoRA)" : ""}.`,
+          description: `${collected.length} Bild(er) hinzugefügt${failed ? `, ${failed} fehlgeschlagen` : ""}${trained ? " (mit LoRA)" : ""}. Tags: ${who}.`,
         });
       } catch (e) {
         toast({ variant: "destructive", title: "Speichern fehlgeschlagen", description: e?.message });
@@ -114,7 +119,8 @@ export default function ResultSetGenerator({ row, onUpdated }) {
 
   // Pose-Set: vier Varianten EINER Pose auf einmal — Winkel, Licht, Nähe.
   const runPoseSet = async (pose) => {
-    const variants = VARIANTS.map((v) => ({ key: `${pose.key}_${v.key}`, prompt: `${pose.prompt}, ${v.mod}` }));
+    const variants = VARIANTS.map((v) => ({ key: `${pose.key}_${v.key}`, tag: `${pose.label} – ${v.label}`, prompt: `${pose.prompt}, ${v.mod}` }));
+    const who = row.set?.personName || row.char?.name || "";
     setBusy(true);
     setDone(0);
     setTotal(variants.length);
@@ -123,17 +129,20 @@ export default function ResultSetGenerator({ row, onUpdated }) {
     for (const t of variants) {
       try {
         const url = await generateCharImage(row.set, ctx, t.prompt);
-        if (url) collected.push(url);
+        if (url) collected.push({ url, tag: t.tag });
         else failed++;
       } catch { failed++; }
       setDone((d) => d + 1);
     }
     if (collected.length) {
       try {
-        const next = [...(row.set.generatedImages || []), ...collected];
-        await base44.entities.TrainingSet.update(row.set.id, { generatedImages: next });
-        onUpdated?.({ ...row, set: { ...row.set, generatedImages: next } });
-        toast({ title: "Pose-Set erzeugt", description: `${collected.length} Varianten von „${pose.label}" dazu${failed ? `, ${failed} fehl` : ""}.` });
+        const newImgs = collected.map((c) => c.url);
+        const newMeta = collected.map((c) => ({ url: c.url, who, what: c.tag }));
+        const next = [...(row.set.generatedImages || []), ...newImgs];
+        const nextMeta = [...(row.set.generatedMeta || []), ...newMeta];
+        await base44.entities.TrainingSet.update(row.set.id, { generatedImages: next, generatedMeta: nextMeta });
+        onUpdated?.({ ...row, set: { ...row.set, generatedImages: next, generatedMeta: nextMeta } });
+        toast({ title: "Pose-Set erzeugt", description: `${collected.length} Varianten von „${pose.label}" dazu${failed ? `, ${failed} fehl` : ""}. Tags: ${who}.` });
       } catch (e) {
         toast({ variant: "destructive", title: "Speichern fehlgeschlagen", description: e?.message });
       }
@@ -219,6 +228,11 @@ export default function ResultSetGenerator({ row, onUpdated }) {
                   </div>
                 )}
               </div>
+
+              <SzenenVorlagen
+                state={{ mode, sel, extra }}
+                onApply={(v) => { setMode(v.mode); setSel(v.sel); setExtra(v.extra); }}
+              />
             </>
           ) : (
             <>
