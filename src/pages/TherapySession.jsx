@@ -17,6 +17,7 @@ import TherapyVisualize from "@/components/therapy/TherapyVisualize";
 import RollenCharakter from "@/components/therapy/RollenCharakter";
 import HoerspielPlayer from "@/components/therapy/HoerspielPlayer";
 import TherapyBildButton from "@/components/therapy/TherapyBildButton";
+import TherapyAutoBild from "@/components/therapy/TherapyAutoBild";
 import { parseReply } from "@/lib/chatMedia";
 import VoiceInput from "@/components/VoiceInput";
 import TherapyReadButton from "@/components/therapy/TherapyReadButton";
@@ -289,6 +290,10 @@ export default function TherapySession() {
     setSession(updated);
   };
 
+  // Wenn Auto-Bild ein Bild erzeugt hat, landet es sofort am Text-Block.
+  const onMessageImage = (msgId, url) =>
+    setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, images: [url] } : m)));
+
   // Das aktuelle Setup sichern — Rollen, Stimmen, Modus, Besetzung — als Vorlage
   // für künftige Sitzungen. Steht danach in der Bibliothek zum Laden bereit.
   const saveAsTemplate = async () => {
@@ -423,6 +428,7 @@ export default function TherapySession() {
             className="px-2.5 py-1.5 rounded-full bg-elevated"
           />
           <HoerspielPlayer session={session} messages={therapyMessages} />
+          <TherapyAutoBild session={session} messages={therapyMessages} onMessageImage={onMessageImage} />
           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
             {session.visibility === "PRIVATE" ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
             {session.visibility === "PRIVATE" ? "vertraulich" : "offen für Mitleser"}
