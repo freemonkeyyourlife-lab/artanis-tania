@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { Image as ImageIcon, Video as VideoIcon, Loader2 } from "lucide-react";
+import { Image as ImageIcon, Video as VideoIcon, Images, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { therapistName } from "@/lib/therapyPrompts";
 import { sceneImagePrompt, sceneVideoPrompt } from "@/lib/therapyVisual";
+import BildergeschichteGenerator from "@/components/therapy/BildergeschichteGenerator";
 
 // Macht aus der letzten Szene ein Bild oder einen kurzen Clip. Das Ergebnis
 // hängt als AI-Nachricht im Verlauf — wie ein gezeichnetes Standbild der Szene.
 export default function TherapyVisualize({ session, sceneText, disabled }) {
   const [busy, setBusy] = useState(null); // "image" | "video" | null
   const [error, setError] = useState("");
+  const [geschichte, setGeschichte] = useState(false);
 
   const make = async (kind) => {
     if (!sceneText || disabled || busy) return;
@@ -62,7 +64,20 @@ export default function TherapyVisualize({ session, sceneText, disabled }) {
         {busy === "video" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <VideoIcon className="w-3.5 h-3.5" />}
         Video der Szene
       </button>
+      <button
+        onClick={() => setGeschichte(true)}
+        disabled={!sceneText || !!busy}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-elevated text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+      >
+        <Images className="w-3.5 h-3.5" /> Bildergeschichte
+      </button>
       {error && <span className="text-[11px] text-destructive">{error}</span>}
+      <BildergeschichteGenerator
+        session={session}
+        sceneText={sceneText}
+        open={geschichte}
+        onClose={() => setGeschichte(false)}
+      />
     </div>
   );
 }
