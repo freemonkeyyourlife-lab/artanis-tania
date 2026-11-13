@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { X, Sparkles, Users, Wrench } from "lucide-react";
+import { cn } from "@/lib/utils";
+import SchubladenCharakter from "@/components/studio/SchubladenCharakter";
+import SchubladenVorlage from "@/components/studio/SchubladenVorlage";
 
-// Aufklappbare Studio-Schublade: Schnellzugriff auf die drei Studios direkt
-// aus der Seitenleiste — ohne die Seite zu verlassen. Die Neuanlage von
-// Charakter und Vorlage kommt gleich hier rein dazu.
+// Aufklappbare Studio-Schublade: Schnellzugriff auf die Studios direkt aus der
+// Seitenleiste — ohne die Seite zu verlassen. Figur oder Vorlage direkt hier
+// anlegen, mit Speicherort-Wahl.
 
 const LINKS = [
   { to: "/studio", label: "Studio", desc: "Charaktere, Storys, Modelle — alles zentral an einem Ort.", icon: Sparkles },
@@ -12,7 +15,8 @@ const LINKS = [
   { to: "/werkstatt", label: "Werkstatt", desc: "Bausteine und Vorlagen zusammenbauen.", icon: Wrench },
 ];
 
-export default function StudioSchublade({ onClose, children }) {
+export default function StudioSchublade({ onClose, initialTab = "figur" }) {
+  const [tab, setTab] = useState(initialTab);
   return (
     <div className="fixed inset-0 z-[90]">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
@@ -53,7 +57,29 @@ export default function StudioSchublade({ onClose, children }) {
             );
           })}
 
-          {children}
+          {/* Figur / Vorlage — direkt hier anlegen, mit Speicherort. */}
+          <div className="flex gap-1 p-1 rounded-full bg-elevated">
+            <button
+              onClick={() => setTab("figur")}
+              className={cn(
+                "flex-1 rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors",
+                tab === "figur" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Figur
+            </button>
+            <button
+              onClick={() => setTab("vorlage")}
+              className={cn(
+                "flex-1 rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors",
+                tab === "vorlage" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Vorlage
+            </button>
+          </div>
+
+          {tab === "figur" ? <SchubladenCharakter /> : <SchubladenVorlage />}
         </div>
       </div>
     </div>

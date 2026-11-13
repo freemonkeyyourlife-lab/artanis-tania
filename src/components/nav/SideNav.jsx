@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Sparkles, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PageSearch from "@/components/nav/PageSearch";
 import InviteShareButton from "@/components/InviteShareButton";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import HelpAssistant from "@/components/help/HelpAssistant";
 import NarratorPanel from "@/components/nav/NarratorPanel";
+import SidebarExpandMenu from "@/components/nav/SidebarExpandMenu";
 import StudioSchublade from "@/components/studio/StudioSchublade";
-import SchubladenCharakter from "@/components/studio/SchubladenCharakter";
 import BrandWordmark from "@/components/BrandWordmark";
 
 // Die ganze Leiste links, in dieser Reihenfolge:
@@ -19,6 +19,8 @@ import BrandWordmark from "@/components/BrandWordmark";
 export default function SideNav({ groups = [], isOwner = false, collapsed = false, onToggleCollapse }) {
   const { pathname } = useLocation();
   const [studioOpen, setStudioOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState("figur");
+  const openDrawer = (tab) => { setDrawerTab(tab); setStudioOpen(true); };
 
   const renderLink = (item) => {
     const active = pathname === item.path;
@@ -110,13 +112,29 @@ export default function SideNav({ groups = [], isOwner = false, collapsed = fals
 
           <div className="border-t border-border/40 px-3 py-3 space-y-2">
             {isOwner && (
-              <button
-                onClick={() => setStudioOpen(true)}
-                title="Studio-Schublade öffnen"
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-full glass-btn glass-btn-accent px-3 py-2 text-[12px] font-bold text-gloss"
-              >
-                <Sparkles className="w-3.5 h-3.5" /> Studio-Schublade
-              </button>
+              <div className="space-y-2">
+                <SidebarExpandMenu
+                  label="Studio"
+                  icon={Sparkles}
+                  defaultOpen
+                  items={[
+                    { to: "/studio", label: "Studio öffnen" },
+                    { to: "/charakter", label: "Figur-Studio" },
+                    { to: "/stimmen", label: "Stimmbank / Katalog" },
+                    { label: "Neue Figur (hier)", onClick: () => openDrawer("figur") },
+                  ]}
+                />
+                <SidebarExpandMenu
+                  label="Werkstatt"
+                  icon={Wrench}
+                  items={[
+                    { to: "/werkstatt", label: "Werkstatt" },
+                    { to: "/baukasten", label: "Baukasten" },
+                    { to: "/sitzungs-vorlagen", label: "Vorlagen-Bibliothek" },
+                    { label: "Neue Vorlage (hier)", onClick: () => openDrawer("vorlage") },
+                  ]}
+                />
+              </div>
             )}
             <div className="flex items-center gap-2 px-1">
               <PageSearch isOwner={isOwner} />
@@ -125,9 +143,7 @@ export default function SideNav({ groups = [], isOwner = false, collapsed = fals
             </div>
           </div>
           {studioOpen && (
-            <StudioSchublade onClose={() => setStudioOpen(false)}>
-              <SchubladenCharakter />
-            </StudioSchublade>
+            <StudioSchublade onClose={() => setStudioOpen(false)} initialTab={drawerTab} />
           )}
         </>
       )}
