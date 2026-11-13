@@ -7,7 +7,7 @@ import { labelCls, btnCls } from "@/lib/narratorUi";
 // Das Vorlagebild: ihr Gesicht bleibt gesetzt, dazu kommen eigene Vorlagen.
 // Aus einer Vorlage wird umgebaut — andere Pose, andere Perspektive, anderes
 // Licht — und sie bleibt trotzdem sie selbst.
-export default function NarratorRefStrip({ face, refs, onUpload, onRemove, uploading }) {
+export default function NarratorRefStrip({ face, refs, onUpload, onRemove, onClearFace, uploading }) {
   return (
     <div>
       <label className={labelCls}>
@@ -22,6 +22,15 @@ export default function NarratorRefStrip({ face, refs, onUpload, onRemove, uploa
             <span className="absolute bottom-0 left-0 right-0 text-center text-[10px] font-bold bg-black/60 text-white rounded-b-2xl py-0.5">
               Gesicht
             </span>
+            {onClearFace && (
+              <button
+                onClick={onClearFace}
+                title="Gesichtsbild entfernen"
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
         )}
 

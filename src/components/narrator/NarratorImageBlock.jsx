@@ -12,6 +12,7 @@ import ImageDirectionPanel from "@/components/studio/ImageDirectionPanel";
 import FinalPromptPreview from "@/components/studio/FinalPromptPreview";
 import NarratorModelPicker from "@/components/narrator/NarratorModelPicker";
 import NarratorRefStrip from "@/components/narrator/NarratorRefStrip";
+import NarratorGallery from "@/components/narrator/NarratorGallery";
 import NarratorImageResult from "@/components/narrator/NarratorImageResult";
 import VoiceTextArea from "@/components/voice/SpeakField";
 import PromptRefiner from "@/components/studio/PromptRefiner";
@@ -160,6 +161,24 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
     await keep({ referenceImages: next }, "Vorlage entfernt");
   };
 
+  const saveGalleryOrder = async (next) => {
+    setGallery(next);
+    await keep({ gallery: next }, "Reihenfolge gespeichert");
+  };
+
+  const removeGalleryImage = async (url) => {
+    const next = gallery.filter((u) => u !== url);
+    setGallery(next);
+    const patch = { gallery: next };
+    if (face === url) { setFace(""); patch.avatar = ""; }
+    await keep(patch, "Bild entfernt");
+  };
+
+  const clearFace = async () => {
+    setFace("");
+    await keep({ avatar: "" }, "Gesichtsbild entfernt");
+  };
+
   const saveLook = async () => {
     setSaving(true);
     try {
@@ -185,6 +204,7 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
             refs={refs}
             onUpload={uploadRefs}
             onRemove={removeRef}
+            onClearFace={clearFace}
             uploading={uploading}
           />
         </div>
@@ -282,24 +302,14 @@ export default function NarratorImageBlock({ narrator, onSaved }) {
       )}
 
       {gallery.length > 0 && (
-        <div className="mt-5">
-          <label className={labelCls}>Ihre Sammlung · {gallery.length}</label>
-          <div className="flex flex-wrap gap-2">
-            {gallery.map((url) => (
-              <button
-                key={url}
-                onClick={() => saveFace(url)}
-                title="Als ihr Bild nehmen"
-                className={cn(
-                  "rounded-xl overflow-hidden border-2 aspect-[3/4] w-20",
-                  face === url ? "border-primary" : "border-border"
-                )}
-              >
-                <Image src={url} fittingType="fill" className="w-full h-full" />
-              </button>
-            ))}
-          </div>
-        </div>
+        <NarratorGallery
+          gallery={gallery}
+          face={face}
+          onFace={saveFace}
+          onReorder={saveGalleryOrder}
+          onRemove={removeGalleryImage}
+          onClearFace={clearFace}
+        />
       )}
     </div>
   );
