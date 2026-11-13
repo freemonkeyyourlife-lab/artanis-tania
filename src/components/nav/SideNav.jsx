@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PageSearch from "@/components/nav/PageSearch";
 import InviteShareButton from "@/components/InviteShareButton";
 import InfoModeToggle from "@/components/InfoModeToggle";
 import HelpAssistant from "@/components/help/HelpAssistant";
 import NarratorPanel from "@/components/nav/NarratorPanel";
+import StudioSchublade from "@/components/studio/StudioSchublade";
 import BrandWordmark from "@/components/BrandWordmark";
 
 // Die ganze Leiste links, in dieser Reihenfolge:
@@ -16,6 +17,7 @@ import BrandWordmark from "@/components/BrandWordmark";
 // nimmt die Erzählerin ein — in groß.
 export default function SideNav({ groups = [], isOwner = false, collapsed = false, onToggleCollapse }) {
   const { pathname } = useLocation();
+  const [studioOpen, setStudioOpen] = useState(false);
 
   const renderLink = (item) => {
     const active = pathname === item.path;
@@ -105,13 +107,23 @@ export default function SideNav({ groups = [], isOwner = false, collapsed = fals
           {/* Die Erzählerin in groß — volle Breite, die restliche Höhe. */}
           <NarratorPanel />
 
-          <div className="border-t border-border/40 px-3 py-3">
+          <div className="border-t border-border/40 px-3 py-3 space-y-2">
+            {isOwner && (
+              <button
+                onClick={() => setStudioOpen(true)}
+                title="Studio-Schublade öffnen"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-full glass-btn glass-btn-accent px-3 py-2 text-[12px] font-bold text-gloss"
+              >
+                <Sparkles className="w-3.5 h-3.5" /> Studio-Schublade
+              </button>
+            )}
             <div className="flex items-center gap-2 px-1">
               <PageSearch isOwner={isOwner} />
               <InfoModeToggle />
               <HelpAssistant />
             </div>
           </div>
+          {studioOpen && <StudioSchublade onClose={() => setStudioOpen(false)} />}
         </>
       )}
     </aside>
