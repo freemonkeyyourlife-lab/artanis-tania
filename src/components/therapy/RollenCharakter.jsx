@@ -15,6 +15,14 @@ const TEMPI = [
   { id: 3, label: "schnell" },
 ];
 
+const VOICES = [
+  { value: "storm", label: "Tief" },
+  { value: "river", label: "Ruhig" },
+  { value: "honey", label: "Warm" },
+  { value: "sunny", label: "Hell" },
+  { value: "spark", label: "Schnell" },
+];
+
 const chip = (on) =>
   cn(
     "px-2.5 py-1 rounded-full border text-[11px] font-bold transition-colors",
@@ -42,7 +50,7 @@ export default function RollenCharakter({ session, onUpdated }) {
   const setCast = (id, fields) =>
     save({ cast: (session.cast || []).map((c) => (c.id === id ? { ...c, ...fields } : c)) });
 
-  const Row = ({ label, charakter, tempo, onChar, onTempo }) => (
+  const Row = ({ label, charakter, tempo, voice, onChar, onTempo, onVoice }) => (
     <div className="py-2 border-t border-border first:border-0">
       <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{label}</p>
       <div className="flex flex-wrap gap-1.5 mb-1.5">
@@ -52,10 +60,17 @@ export default function RollenCharakter({ session, onUpdated }) {
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 mb-1.5">
         {TEMPI.map((t) => (
           <button key={t.id} type="button" onClick={() => onTempo(t.id)} className={chip(tempo === t.id)}>
             {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {VOICES.map((v) => (
+          <button key={v.value} type="button" onClick={() => onVoice(v.value)} className={chip(voice === v.value)}>
+            {v.label}
           </button>
         ))}
       </div>
@@ -72,16 +87,20 @@ export default function RollenCharakter({ session, onUpdated }) {
         label={`Therapeutin · ${name}`}
         charakter={session.therapistCharakter}
         tempo={session.therapistTempo || 2}
+        voice={session.therapistVoice || "honey"}
         onChar={(v) => save({ therapistCharakter: session.therapistCharakter === v ? "" : v })}
         onTempo={(v) => save({ therapistTempo: v })}
+        onVoice={(v) => save({ therapistVoice: v })}
       />
       {actor && (
         <Row
           label={`Akteur · ${actor.name || "Er"}`}
           charakter={actor.charakter}
           tempo={actor.tempo || 2}
+          voice={actor.voice || "storm"}
           onChar={(v) => setActor({ charakter: actor.charakter === v ? "" : v })}
           onTempo={(v) => setActor({ tempo: v })}
+          onVoice={(v) => setActor({ voice: v })}
         />
       )}
       {present.map((m) => (
@@ -90,8 +109,10 @@ export default function RollenCharakter({ session, onUpdated }) {
           label={m.name}
           charakter={m.charakter}
           tempo={m.tempo || 2}
+          voice={m.voice || "river"}
           onChar={(v) => setCast(m.id, { charakter: m.charakter === v ? "" : v })}
           onTempo={(v) => setCast(m.id, { tempo: v })}
+          onVoice={(v) => setCast(m.id, { voice: v })}
         />
       ))}
     </div>

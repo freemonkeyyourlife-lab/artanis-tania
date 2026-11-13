@@ -57,6 +57,9 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navCollapsed, setNavCollapsed] = useState(() => {
+    try { return localStorage.getItem("artanis:nav-collapsed") === "1"; } catch { return false; }
+  });
   const [me, setMe] = useState(null);
   const [memberStatus, setMemberStatus] = useState(null);
   const [viewAs, setViewAsState] = useState(null);
@@ -81,6 +84,11 @@ export default function Layout() {
   useEffect(() => {
     loadLayout().then(setLayout).catch(() => setLayout(null));
   }, []);
+
+  // Einklapp-Zustand der Leiste bleibt über Neuladen erhalten.
+  useEffect(() => {
+    try { localStorage.setItem("artanis:nav-collapsed", navCollapsed ? "1" : "0"); } catch {}
+  }, [navCollapsed]);
 
   // Wird die Reihenfolge neu geordnet, holt die Kopfzeile sie sich sofort neu.
   useEffect(() => {
@@ -169,8 +177,8 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-background">
       <BackgroundSlideshow />
-      <SideNav groups={groups} isOwner={memberStatus === "OWNER"} />
-      <header className="fixed top-0 left-0 right-0 lg:left-64 z-50 glass-milky" style={{ height: "72px" }}>
+      <SideNav groups={groups} isOwner={memberStatus === "OWNER"} collapsed={navCollapsed} onToggleCollapse={() => setNavCollapsed((v) => !v)} />
+      <header className={cn("fixed top-0 left-0 right-0 z-50 glass-milky transition-all duration-300", navCollapsed ? "lg:left-14" : "lg:left-64")} style={{ height: "72px" }}>
         <div className="h-full max-w-[1600px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link to="/" className="lg:hidden">
@@ -288,7 +296,7 @@ export default function Layout() {
         )}
       </header>
 
-      <main className="relative z-10 pt-[72px] lg:pl-64">
+      <main className={cn("relative z-10 pt-[72px] transition-all duration-300", navCollapsed ? "lg:pl-14" : "lg:pl-64")}>
         <TierFrame>
           <Outlet />
         </TierFrame>
