@@ -19,6 +19,15 @@ const POSES = [
   { key: "pose_lach", label: "Lachend", prompt: "lacht fröhlich in lässigem Alltags-Outfit, helles Gegenlicht, natürliche Freude" },
 ];
 
+// Pose-Set-Modus: ein Klick auf eine Pose erzeugt vier Varianten davon —
+// verschiedene Winkel, Licht und Nähe — als komplettes Set auf einmal.
+const VARIANTS = [
+  { key: "vorn", mod: "von vorn, auf Augenhöhe, weiches Licht" },
+  { key: "seite", mod: "von der Seite, Gegenlicht, Konturen" },
+  { key: "nah", mod: "Nahaufnahme, Gesicht betont, intime Nähe" },
+  { key: "weit", mod: "weit eingestellt, Raum rundherum, helles Umgebungslicht" },
+];
+
 // Detaillierte Szenen — Outfit + Pose + Stimmung, für feinere Prüfungen.
 const SCENES = [
   { key: "alltag_sitz", label: "sitzend, Alltag", prompt: "sitzt entspannt auf einem Sofa, lässiges Alltags-Outfit, Jeans und Shirt, warmes Wohnzimmerlicht" },
@@ -41,6 +50,7 @@ const DEFAULT_SEL = POSES.map((p) => p.key);
 export default function ResultSetGenerator({ row, onUpdated }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState("scenes");
   const [sel, setSel] = useState(DEFAULT_SEL);
   const [extra, setExtra] = useState("");
   const [busy, setBusy] = useState(false);
@@ -102,6 +112,37 @@ export default function ResultSetGenerator({ row, onUpdated }) {
     setExtra("");
   };
 
+  // Pose-Set: vier Varianten EINER Pose auf einmal — Winkel, Licht, Nähe.
+  const runPoseSet = async (pose) => {
+    const variants = VARIANTS.map((v) => ({ key: `${pose.key}_${v.key}`, prompt: `${pose.prompt}, ${v.mod}` }));
+    setBusy(true);
+    setDone(0);
+    setTotal(variants.length);
+    let collected = [];
+    let failed = 0;
+    for (const t of variants) {
+      try {
+        const url = await generateCharImage(row.set, ctx, t.prompt);
+        if (url) collected.push(url);
+        else failed++;
+      } catch { failed++; }
+      setDone((d) => d + 1);
+    }
+    if (collected.length) {
+      try {
+        const next = [...(row.set.generatedImages || []), ...collected];
+        await base44.entities.TrainingSet.update(row.set.id, { generatedImages: next });
+        onUpdated?.({ ...row, set: { ...row.set, generatedImages: next } });
+        toast({ title: "Pose-Set erzeugt", description: `${collected.length} Varianten von „${pose.label}" dazu${failed ? `, ${failed} fehl` : ""}.` });
+      } catch (e) {
+        toast({ variant: "destructive", title: "Speichern fehlgeschlagen", description: e?.message });
+      }
+    } else {
+      toast({ variant: "destructive", title: "Nichts erzeugt", description: "Keines der Bilder konnte erzeugt werden." });
+    }
+    setBusy(false);
+  };
+
   return (
     <div className="mt-3 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-3">
       <button
@@ -125,77 +166,84 @@ export default function ResultSetGenerator({ row, onUpdated }) {
 
       {open && (
         <div className="mt-3">
-          <p className="text-xs text-muted-foreground">
-            Vorausgewählt sind Posen (Sitzend, Laufend, Autofahrend …) — so siehst du
-            sofort, ob der Charakter in jeder Haltung hält. Wer feinere Outfits oder
-            Stimmungen will, klickt die Szenen dazu. Pro Bild werden 1–2 echte Fotos
-            als Referenz mitgegeben, damit keine zweite Person erfunden wird.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {POSES.map((s) => {
-              const on = sel.includes(s.key);
-              return (
-                <button
-                  key={s.key}
-                  onClick={() => toggle(s.key)}
-                  disabled={busy}
-                  className={
-                    "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50 " +
-                    (on ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")
-                  }
-                >
-                  {on ? <Check className="h-3 w-3" /> : <X className="h-3 w-3 opacity-40" />}
-                  {s.label}
-                </button>
-              );
-            })}
+          {/* Modus: viele Szenen auf einmal, oder eine Pose als komplettes Set. */}
+          <div className="mb-2 inline-flex rounded-full bg-elevated p-0.5 text-[11px]">
+            <button onClick={() => setMode("scenes")} className={"rounded-full px-3 py-1 font-semibold transition " + (mode === "scenes" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Szenen wählen</button>
+            <button onClick={() => setMode("poseSet")} className={"rounded-full px-3 py-1 font-semibold transition " + (mode === "poseSet" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>Pose-Set</button>
           </div>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {SCENES.map((s) => {
-              const on = sel.includes(s.key);
-              return (
-                <button
-                  key={s.key}
-                  onClick={() => toggle(s.key)}
-                  disabled={busy}
-                  className={
-                    "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50 " +
-                    (on ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")
-                  }
-                >
-                  {on ? <Check className="h-3 w-3" /> : <X className="h-3 w-3 opacity-40" />}
-                  {s.label}
-                </button>
-              );
-            })}
-          </div>
-          <input
-            value={extra}
-            onChange={(e) => setExtra(e.target.value)}
-            placeholder="Eigene Szene dazu (optional)"
-            disabled={busy}
-            className="mt-2 w-full rounded-full bg-elevated px-3 py-2 text-sm text-foreground disabled:opacity-50"
-          />
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              onClick={run}
-              disabled={busy || !sel.length}
-              className="glass-btn glass-btn-accent inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm disabled:opacity-50"
-            >
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-              {busy ? `Erzeuge ${done}/${total}` : `${sel.length + (extra.trim() ? 1 : 0)} Szenen erzeugen`}
-            </button>
-            {busy && (
-              <div className="flex-1">
-                <div className="h-1.5 overflow-hidden rounded-full bg-elevated">
-                  <div
-                    className="h-full bg-primary transition-all"
-                    style={{ width: `${total ? (done / total) * 100 : 0}%` }}
-                  />
-                </div>
+
+          {mode === "scenes" ? (
+            <>
+              <p className="text-xs text-muted-foreground">
+                Vorausgewählt sind Posen (Sitzend, Laufend, Autofahrend …) — so siehst du
+                sofort, ob der Charakter in jeder Haltung hält. Wer feinere Outfits oder
+                Stimmungen will, klickt die Szenen dazu. Pro Bild werden 1–2 echte Fotos
+                als Referenz mitgegeben, damit keine zweite Person erfunden wird.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {POSES.map((s) => {
+                  const on = sel.includes(s.key);
+                  return (
+                    <button key={s.key} onClick={() => toggle(s.key)} disabled={busy}
+                      className={"inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50 " + (on ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>
+                      {on ? <Check className="h-3 w-3" /> : <X className="h-3 w-3 opacity-40" />}
+                      {s.label}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </div>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {SCENES.map((s) => {
+                  const on = sel.includes(s.key);
+                  return (
+                    <button key={s.key} onClick={() => toggle(s.key)} disabled={busy}
+                      className={"inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs disabled:opacity-50 " + (on ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground")}>
+                      {on ? <Check className="h-3 w-3" /> : <X className="h-3 w-3 opacity-40" />}
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <input value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="Eigene Szene dazu (optional)" disabled={busy}
+                className="mt-2 w-full rounded-full bg-elevated px-3 py-2 text-sm text-foreground disabled:opacity-50" />
+              <div className="mt-3 flex items-center gap-2">
+                <button onClick={run} disabled={busy || !sel.length} className="glass-btn glass-btn-accent inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm disabled:opacity-50">
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                  {busy ? `Erzeuge ${done}/${total}` : `${sel.length + (extra.trim() ? 1 : 0)} Szenen erzeugen`}
+                </button>
+                {busy && (
+                  <div className="flex-1">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-elevated">
+                      <div className="h-full bg-primary transition-all" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">
+                Ein Klick auf eine Pose erzeugt sofort vier Varianten davon — verschiedene
+                Winkel, Licht und Nähe — als komplettes Set, statt jedes einzeln.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {POSES.map((p) => (
+                  <button key={p.key} onClick={() => runPoseSet(p)} disabled={busy} title={`Vier Varianten von „${p.label}" auf einmal`}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1.5 text-xs text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50">
+                    <Layers className="h-3 w-3" /> {p.label}-Set
+                  </button>
+                ))}
+              </div>
+              {busy && (
+                <div className="mt-3">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-elevated">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">{done}/{total} Varianten …</p>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>

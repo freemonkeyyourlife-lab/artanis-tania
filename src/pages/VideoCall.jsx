@@ -16,6 +16,7 @@ import { normalizeCallCode, callInviteUrl } from "@/lib/callLink";
 import { readPreferredCamera, savePreferredCamera, phoneCameraUrl, markSourceAsked, sourceAlreadyAsked } from "@/lib/videoSource";
 import VideoSourceDialog from "@/components/call/VideoSourceDialog";
 import CallRoleToggle from "@/components/call/CallRoleToggle";
+import CallGuestRole from "@/components/call/CallGuestRole";
 import VoiceEditorDialog from "@/components/voice/VoiceEditorDialog";
 import { getRooms, addRoom } from "@/lib/callRooms";
 import { publicName } from "@/lib/displayName";
@@ -291,6 +292,7 @@ export default function VideoCall() {
           </button>
           <VoiceEditorDialog />
           <CallRoleToggle />
+          <CallGuestRole token={token} isHost={isHost} onAnnounce={(label) => sendChat(`📝 Gast-Rolle: ${label} — das Szenario passt sich für ihn an.`)} />
           {isOwner && (
             <button
               onClick={() => toggleWindow("share")}
