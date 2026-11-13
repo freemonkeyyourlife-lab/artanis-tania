@@ -95,6 +95,17 @@ export default function TherapyConfigMask({ session, creators = [], onSave, onCa
             {informed.length > 0 && <>Nur erwähnt: {informed.map((c) => c.name).join(", ")}.</>}
           </p>
         )}
+        {present.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-border space-y-2">
+            <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Stimmen der Anwesenden</p>
+            {present.map((m) => (
+              <div key={m.id} className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-foreground w-24 truncate">{m.name}</span>
+                <Pills options={VOICES} value={m.voice || "river"} onChange={(v) => setCast((cs) => cs.map((c) => c.id === m.id ? { ...c, voice: v } : c))} />
+              </div>
+            ))}
+          </div>
+        )}
       </Block>
 
       <Block

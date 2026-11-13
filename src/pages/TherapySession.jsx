@@ -66,6 +66,7 @@ export default function TherapySession() {
   const bottomRef = useRef(null);
   const openedRef = useRef(false);
   const messagesRef = useRef([]);
+  const lastAudioRef = useRef(null);
   const navigate = useNavigate();
   const call = useCallSession();
 
@@ -192,7 +193,9 @@ export default function TherapySession() {
           ? (guestName || "Freundin")
           : (session.anonymous ? "Anonym" : (me?.full_name || me?.email || "Du")),
         text,
+        audio: lastAudioRef.current || undefined,
       });
+      lastAudioRef.current = null;
       setMessages((prev) => (prev.some((m) => m.id === mine.id) ? prev : [...prev, mine]));
       setInput("");
 
@@ -540,6 +543,7 @@ export default function TherapySession() {
             />
             <VoiceInput
               onResult={(t) => (handsFree ? send(t) : setInput((prev) => (prev ? prev + " " + t : t)))}
+              onAudio={(url) => { lastAudioRef.current = url; }}
               disabled={sending}
               title={handsFree ? "Sprechen — geht direkt raus" : "Sprechen statt tippen"}
             />

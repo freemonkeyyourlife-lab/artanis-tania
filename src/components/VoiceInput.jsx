@@ -4,7 +4,7 @@ import { Mic, Square, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Speak instead of typing: records, transcribes and hands the text back.
-export default function VoiceInput({ onResult, className, disabled, title = "Sprechen statt tippen" }) {
+export default function VoiceInput({ onResult, onAudio, className, disabled, title = "Sprechen statt tippen" }) {
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const recorderRef = useRef(null);
@@ -28,6 +28,7 @@ export default function VoiceInput({ onResult, className, disabled, title = "Spr
           const blob = new Blob(chunksRef.current, { type: "audio/webm" });
           const file = new File([blob], "voice.webm", { type: "audio/webm" });
           const up = await base44.integrations.Core.UploadPublicFile({ file });
+          if (onAudio) onAudio(up.file_url);
           const res = await base44.integrations.Core.TranscribeAudio({ audio_url: up.file_url });
           const text = typeof res === "string" ? res : (res.transcript || res.text || res.output || "");
           if (text && text.trim()) onResult(text.trim());

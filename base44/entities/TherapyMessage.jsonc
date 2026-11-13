@@ -40,6 +40,10 @@
       },
       "default": []
     },
+    "audio": {
+      "type": "string",
+      "description": "Echte Stimme des Senders \u2014 beim Einsprechen mitgeschnitten, statt nur Text."
+    },
     "channel": {
       "type": "string",
       "enum": [

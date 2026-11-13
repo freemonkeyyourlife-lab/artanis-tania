@@ -4,7 +4,7 @@ import ChatText from "@/components/chat/ChatText";
 import { Image } from "@/components/ui/image";
 
 function MediaBlock({ msg }) {
-  if (!(msg.images?.length || msg.videos?.length)) return null;
+  if (!(msg.images?.length || msg.videos?.length || msg.audio)) return null;
   return (
     <div className="flex flex-col gap-2 mb-2">
       {msg.images?.map((src, i) => (
@@ -13,6 +13,9 @@ function MediaBlock({ msg }) {
       {msg.videos?.map((src, i) => (
         <video key={`vid-${i}`} src={src} controls playsInline className="w-full rounded-2xl" />
       ))}
+      {msg.audio && (
+        <audio src={msg.audio} controls className="w-full" />
+      )}
     </div>
   );
 }

@@ -13,10 +13,16 @@ export default function TherapyReadButton({ session, text, sceneKey = "therapy",
   useEffect(() => onSceneChange(setPlayingKey), []);
 
   const voiceFor = (name) => {
+    const key = String(name || "").toLowerCase();
+    if (key === "__narrator__") return { baseVoice: session?.narratorVoice || "river" };
     const actor = session?.actor;
-    if (actor?.active && actor.name && String(name || "").toLowerCase() === actor.name.toLowerCase()) {
+    if (actor?.active && actor.name && key === actor.name.toLowerCase()) {
       return { baseVoice: actor.voice || "storm" };
     }
+    const member = (session?.cast || []).find((c) => c.name && c.name.toLowerCase() === key);
+    if (member && member.voice) return { baseVoice: member.voice };
+    const tName = (therapistName(session) || "").toLowerCase();
+    if (tName && key === tName) return { baseVoice: session?.therapistVoice || "honey" };
     return { baseVoice: session?.therapistVoice || "honey" };
   };
 
