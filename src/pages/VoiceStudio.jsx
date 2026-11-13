@@ -1,6 +1,7 @@
 import React from "react";
 import { Mic } from "lucide-react";
 import VoiceByCharacter from "@/components/studio/VoiceByCharacter";
+import StimmenExtraktor from "@/components/voice/StimmenExtraktor";
 
 // Eine Seite nur für Stimmen: jeder Charakter mit seinen Reglern für Tonlage,
 // Intensität, Ausklang und Tempo — anhören, speichern, ohne Umweg.
@@ -16,6 +17,7 @@ export default function VoiceStudio() {
           einzeln, ohne das Studio zu öffnen.
         </p>
       </div>
+      <StimmenExtraktor />
       <VoiceByCharacter />
     </div>
   );
