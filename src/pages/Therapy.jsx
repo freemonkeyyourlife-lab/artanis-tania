@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, X } from "lucide-react";
 import SessionForm from "@/components/therapy/SessionForm";
 import SessionCard from "@/components/therapy/SessionCard";
+import SessionsOverview from "@/components/therapy/SessionsOverview";
 
 export default function Therapy() {
   const navigate = useNavigate();
@@ -74,11 +75,7 @@ export default function Therapy() {
       {mine.length > 0 && (
         <section className="mt-10">
           <h2 className="font-display text-xl text-foreground mb-3">Deine Sitzungen</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mine.map((s) => (
-              <SessionCard key={s.id} session={s} own />
-            ))}
-          </div>
+          <SessionsOverview sessions={mine} />
         </section>
       )}
 
