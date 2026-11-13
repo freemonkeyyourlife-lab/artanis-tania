@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Archive as ArchiveIcon } from "lucide-react";
 import SessionForm from "@/components/therapy/SessionForm";
 import SessionCard from "@/components/therapy/SessionCard";
 import SessionsOverview from "@/components/therapy/SessionsOverview";
@@ -53,14 +53,24 @@ export default function Therapy() {
         </p>
       </div>
 
-      {!showForm ? (
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
+      <div className="flex items-center gap-2 flex-wrap">
+        {!showForm ? (
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
+          >
+            <Plus className="w-4 h-4" /> Neue Sitzung
+          </button>
+        ) : null}
+        <Link
+          to="/therapy-archiv"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-elevated border border-border text-foreground text-sm font-semibold hover:border-primary/50 transition-colors"
         >
-          <Plus className="w-4 h-4" /> Neue Sitzung
-        </button>
-      ) : (
+          <ArchiveIcon className="w-4 h-4" /> Archiv
+        </Link>
+      </div>
+
+      {showForm && (
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-medium text-foreground">Neue Sitzung anlegen</p>
