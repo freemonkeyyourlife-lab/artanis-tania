@@ -4,6 +4,11 @@ import { cn } from "@/lib/utils";
 import { inputCls, labelCls } from "@/lib/narratorUi";
 import { modelStrength, STANDARD_STRENGTH } from "@/lib/modelStrengths";
 import ModelStrengthNote from "@/components/studio/StrengthChips";
+import { sortModels } from "@/lib/modelSort";
+import { styleOption, explicitOption, charakterOption } from "@/lib/modelTags";
+
+const badge = (tone) =>
+  cn("px-1.5 py-0.5 rounded-full border text-[9px] font-bold", tone || "bg-elevated text-muted-foreground border-border");
 
 // Alles, was im Studio an Bildmodellen freigeschaltet ist — Favoriten oben.
 // Mehrere dürfen gleichzeitig ran, dann laufen sie parallel.
@@ -12,8 +17,9 @@ export default function NarratorModelPicker({ models, loading, selected, onToggl
 
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return models;
-    return models.filter((m) => `${m.name || ""} ${m.modelId || ""}`.toLowerCase().includes(term));
+    const sorted = sortModels(models);
+    if (!term) return sorted;
+    return sorted.filter((m) => `${m.name || ""} ${m.description || ""} ${m.note || ""} ${m.modelId || ""}`.toLowerCase().includes(term));
   }, [models, q]);
 
   return (
@@ -75,12 +81,30 @@ export default function NarratorModelPicker({ models, loading, selected, onToggl
               >
                 {on && <Check className="w-3 h-3" />}
               </span>
-              <span className="min-w-0">
+              <span className="min-w-0 flex-1">
                 <span className="block truncate">
                   {m.favorite ? "★ " : ""}
                   {m.name}
                 </span>
                 <ModelStrengthNote chips={modelStrength(m).chips} hint={modelStrength(m).hint} />
+                {(m.description || m.note) && (
+                  <span className="block text-[11px] text-muted-foreground line-clamp-2 mt-0.5 font-normal leading-snug">
+                    {m.description || m.note}
+                  </span>
+                )}
+                {(m.style || m.explicit || m.charakter) && (
+                  <span className="flex flex-wrap gap-1 mt-1">
+                    {styleOption("BILD", m.style) && (
+                      <span className={badge(styleOption("BILD", m.style).tone)}>{styleOption("BILD", m.style).label}</span>
+                    )}
+                    {explicitOption(m.explicit) && (
+                      <span className={badge(explicitOption(m.explicit).tone)}>{explicitOption(m.explicit).label}</span>
+                    )}
+                    {charakterOption(m.charakter) && (
+                      <span className={badge(charakterOption(m.charakter).tone)}>{charakterOption(m.charakter).label}</span>
+                    )}
+                  </span>
+                )}
               </span>
             </button>
           );

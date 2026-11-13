@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Play, Square, Flame, Image as ImageIcon, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
+import ModelPicker from "@/components/chat/ModelPicker";
 
 // Wiederverwendbare Leiste unter jeder Chat-Nachricht: Wärme-Regler, Stimme,
 // Modell-Auswahl und drei Aktionen — vorlesen, heißer neu erzeugen, Bild dazu.
@@ -136,17 +137,14 @@ export default function ChatMessageBar({ text, senderName }) {
           ))}
         </select>
 
-        <select
+        <ModelPicker
+          models={textModels}
           value={textModelId}
-          onChange={(e) => { const v = e.target.value; setTextModelId(v); try { localStorage.setItem("chatbar_textmodel", v); } catch {} }}
-          className="px-2 py-1 rounded-full bg-elevated border border-border text-[11px] font-bold text-foreground max-w-[9rem] truncate"
-          title="Text-Modell zum Neu-Erzeugen"
-        >
-          <option value="">Modell · Standard</option>
-          {textModels.map((m) => (
-            <option key={m.id} value={m.modelId || m.id}>{m.name}</option>
-          ))}
-        </select>
+          onChange={(v) => { setTextModelId(v); try { localStorage.setItem("chatbar_textmodel", v); } catch {} }}
+          placeholder="Modell · Standard"
+          kind="TEXT"
+          emptyLabel="Modell · Standard"
+        />
 
         <button
           onClick={playing ? stop : vorlesen}
