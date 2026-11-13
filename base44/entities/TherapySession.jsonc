@@ -99,6 +99,10 @@
       ],
       "default": "honey"
     },
+    "therapistVoiceId": {
+      "type": "string",
+      "description": "Eigene (geklonte) Stimme der Therapeutin \u2014 ElevenLabs externalVoiceId. Wenn gesetzt, geht sie vor der Grundstimme."
+    },
     "therapistCharakter": {
       "type": "string",
       "enum": [
@@ -136,6 +140,10 @@
             "spark"
           ],
           "default": "storm"
+        },
+        "voiceId": {
+          "type": "string",
+          "description": "Eigene (geklonte) Stimme des Akteurs \u2014 ElevenLabs externalVoiceId."
         },
         "charakter": {
           "type": "string",
@@ -178,6 +186,10 @@
           },
           "voice": {
             "type": "string"
+          },
+          "voiceId": {
+            "type": "string",
+            "description": "Eigene (geklonte) Stimme dieses Gastes \u2014 ElevenLabs externalVoiceId."
           },
           "charakter": {
             "type": "string",

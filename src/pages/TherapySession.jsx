@@ -60,7 +60,9 @@ export default function TherapySession() {
   const [creators, setCreators] = useState([]);
   const [configOpen, setConfigOpen] = useState(false);
   const [configSaving, setConfigSaving] = useState(false);
-  const [handsFree, setHandsFree] = useState(false);
+  const [handsFree, setHandsFree] = useState(() => {
+    try { return localStorage.getItem("therapy_handsfree") === "1"; } catch { return false; }
+  });
   const [running, setRunning] = useState(false);
   const [runCount, setRunCount] = useState(0);
   const [regie, setRegie] = useState(false);
@@ -402,7 +404,7 @@ export default function TherapySession() {
       <div className="rounded-2xl border border-border bg-card p-4 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => setHandsFree((v) => !v)}
+            onClick={() => setHandsFree((v) => { const n = !v; try { localStorage.setItem("therapy_handsfree", n ? "1" : "0"); } catch {} return n; })}
             title={`${name} liest ihre Sätze laut vor und deine Stimme wird direkt gesendet`}
             className={cn(
               "px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-colors",

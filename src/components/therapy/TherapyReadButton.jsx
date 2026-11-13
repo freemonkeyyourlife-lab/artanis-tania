@@ -17,12 +17,20 @@ export default function TherapyReadButton({ session, text, sceneKey = "therapy",
     if (key === "__narrator__") return { baseVoice: session?.narratorVoice || "river" };
     const actor = session?.actor;
     if (actor?.active && actor.name && key === actor.name.toLowerCase()) {
+      if (actor.voiceId) return { provider: "ELEVENLABS", externalVoiceId: actor.voiceId };
       return { baseVoice: actor.voice || "storm" };
     }
     const member = (session?.cast || []).find((c) => c.name && c.name.toLowerCase() === key);
-    if (member && member.voice) return { baseVoice: member.voice };
+    if (member) {
+      if (member.voiceId) return { provider: "ELEVENLABS", externalVoiceId: member.voiceId };
+      if (member.voice) return { baseVoice: member.voice };
+    }
     const tName = (therapistName(session) || "").toLowerCase();
-    if (tName && key === tName) return { baseVoice: session?.therapistVoice || "honey" };
+    if (tName && key === tName) {
+      if (session?.therapistVoiceId) return { provider: "ELEVENLABS", externalVoiceId: session.therapistVoiceId };
+      return { baseVoice: session?.therapistVoice || "honey" };
+    }
+    if (session?.therapistVoiceId) return { provider: "ELEVENLABS", externalVoiceId: session.therapistVoiceId };
     return { baseVoice: session?.therapistVoice || "honey" };
   };
 

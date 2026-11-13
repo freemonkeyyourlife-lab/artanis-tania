@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 
@@ -36,6 +36,13 @@ export default function RollenCharakter({ session, onUpdated }) {
   const name = (session?.therapistName || "Tania").trim();
   const actor = session?.actor?.active ? session.actor : null;
   const present = (session?.cast || []).filter((c) => c.mode === "PRESENT");
+  const [voices, setVoices] = useState([]);
+  useEffect(() => {
+    base44.entities.Voice.filter({ active: true }, "name", 200)
+      .then((list) => setVoices((list || []).filter((v) => v.provider === "ELEVENLABS" && v.externalVoiceId)))
+      .catch(() => {});
+  }, []);
+  const customVoices = voices;
 
   const save = async (patch) => {
     try {
@@ -50,7 +57,7 @@ export default function RollenCharakter({ session, onUpdated }) {
   const setCast = (id, fields) =>
     save({ cast: (session.cast || []).map((c) => (c.id === id ? { ...c, ...fields } : c)) });
 
-  const Row = ({ label, charakter, tempo, voice, onChar, onTempo, onVoice }) => (
+  const Row = ({ label, charakter, tempo, voice, voiceId, onChar, onTempo, onVoice, onCustomVoice }) => (
     <div className="py-2 border-t border-border first:border-0">
       <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{label}</p>
       <div className="flex flex-wrap gap-1.5 mb-1.5">
@@ -67,13 +74,28 @@ export default function RollenCharakter({ session, onUpdated }) {
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 mb-1.5">
         {VOICES.map((v) => (
-          <button key={v.value} type="button" onClick={() => onVoice(v.value)} className={chip(voice === v.value)}>
+          <button key={v.value} type="button" onClick={() => onVoice(v.value)} className={chip(!voiceId && voice === v.value)}>
             {v.label}
           </button>
         ))}
       </div>
+      {customVoices.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] text-muted-foreground">Eigene Stimme:</span>
+          <select
+            value={voiceId || ""}
+            onChange={(e) => onCustomVoice(e.target.value)}
+            className="px-3 py-1.5 rounded-full bg-background border border-border text-[11px] text-foreground focus:outline-none focus:border-primary/50"
+          >
+            <option value="">keine — Grundstimme oben</option>
+            {customVoices.map((v) => (
+              <option key={v.id} value={v.externalVoiceId}>{v.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 
@@ -88,9 +110,11 @@ export default function RollenCharakter({ session, onUpdated }) {
         charakter={session.therapistCharakter}
         tempo={session.therapistTempo || 2}
         voice={session.therapistVoice || "honey"}
+        voiceId={session.therapistVoiceId}
         onChar={(v) => save({ therapistCharakter: session.therapistCharakter === v ? "" : v })}
         onTempo={(v) => save({ therapistTempo: v })}
-        onVoice={(v) => save({ therapistVoice: v })}
+        onVoice={(v) => save({ therapistVoice: v, therapistVoiceId: "" })}
+        onCustomVoice={(v) => save({ therapistVoiceId: v })}
       />
       {actor && (
         <Row
@@ -98,9 +122,11 @@ export default function RollenCharakter({ session, onUpdated }) {
           charakter={actor.charakter}
           tempo={actor.tempo || 2}
           voice={actor.voice || "storm"}
+          voiceId={actor.voiceId}
           onChar={(v) => setActor({ charakter: actor.charakter === v ? "" : v })}
           onTempo={(v) => setActor({ tempo: v })}
-          onVoice={(v) => setActor({ voice: v })}
+          onVoice={(v) => setActor({ voice: v, voiceId: "" })}
+          onCustomVoice={(v) => setActor({ voiceId: v })}
         />
       )}
       {present.map((m) => (
@@ -110,9 +136,11 @@ export default function RollenCharakter({ session, onUpdated }) {
           charakter={m.charakter}
           tempo={m.tempo || 2}
           voice={m.voice || "river"}
+          voiceId={m.voiceId}
           onChar={(v) => setCast(m.id, { charakter: m.charakter === v ? "" : v })}
           onTempo={(v) => setCast(m.id, { tempo: v })}
-          onVoice={(v) => setCast(m.id, { voice: v })}
+          onVoice={(v) => setCast(m.id, { voice: v, voiceId: "" })}
+          onCustomVoice={(v) => setCast(m.id, { voiceId: v })}
         />
       ))}
     </div>
