@@ -26,6 +26,15 @@ export default function HoerspielPlayer({ session, messages }) {
   });
   const [index, setIndex] = useState(-1);
   const [playing, setPlaying] = useState(false);
+  const [skipMine, setSkipMine] = useState(() => {
+    try { return localStorage.getItem("therapy_skipmine") === "1"; } catch { return false; }
+  });
+  const toggleSkipMine = () =>
+    setSkipMine((v) => {
+      const n = !v;
+      try { localStorage.setItem("therapy_skipmine", n ? "1" : "0"); } catch {}
+      return n;
+    });
   const tokenRef = useRef(0);
   const audioRef = useRef(null);
   const lastRef = useRef(null);
@@ -66,12 +75,13 @@ export default function HoerspielPlayer({ session, messages }) {
     });
 
   const playable = (m) => m.senderType !== "SYSTEM" && (m.text || m.audio);
+  const isSkipped = (m) => skipMine && m.senderType === "USER";
 
   const run = async (start, mine) => {
     for (let i = start; i < messages.length; i++) {
       if (mine !== tokenRef.current) return;
       setIndex(i);
-      if (!playable(messages[i])) continue;
+      if (!playable(messages[i]) || isSkipped(messages[i])) continue;
       await playOne(messages[i]);
       if (mine !== tokenRef.current) return;
     }
@@ -106,6 +116,11 @@ export default function HoerspielPlayer({ session, messages }) {
     setPlaying(false);
   };
 
+  const stop = () => {
+    pause();
+    setIndex(-1);
+  };
+
   const toggle = () => {
     if (playing) pause();
     else playFrom(index >= 0 ? index : 0);
@@ -138,7 +153,7 @@ export default function HoerspielPlayer({ session, messages }) {
     const last = messages[messages.length - 1];
     if (!last || last.id === lastRef.current) return;
     lastRef.current = last.id;
-    if (!playable(last)) return;
+    if (!playable(last) || isSkipped(last)) return;
     const i = messages.length - 1;
     playSingle(i);
   }, [auto, messages]);
@@ -165,12 +180,13 @@ export default function HoerspielPlayer({ session, messages }) {
             {index >= 0 ? index + 1 : 0}/{messages.length}
           </span>
         )}
-        {playing && (
-          <button type="button" onClick={pause} className={ctrl} title="Stopp">
-            <Square className="w-3 h-3" />
-          </button>
-        )}
+        <button type="button" onClick={stop} disabled={!messages.length} className={ctrl} title="Stopp">
+          <Square className="w-3 h-3" />
+        </button>
       </div>
+      <button type="button" onClick={toggleSkipMine} className={pill(skipMine)} title="Deine eigene Stimme überspringen — bis du sie wieder loslässt">
+        {skipMine ? "Meine Stimme überspringen ✓" : "Meine Stimme überspringen"}
+      </button>
     </div>
   );
 }

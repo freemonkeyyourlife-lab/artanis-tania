@@ -16,6 +16,7 @@ import TherapySideChat from "@/components/therapy/TherapySideChat";
 import TherapyVisualize from "@/components/therapy/TherapyVisualize";
 import RollenCharakter from "@/components/therapy/RollenCharakter";
 import HoerspielPlayer from "@/components/therapy/HoerspielPlayer";
+import VorlagenKonsole from "@/components/therapy/VorlagenKonsole";
 import TherapyBildButton from "@/components/therapy/TherapyBildButton";
 import TherapyAutoBild from "@/components/therapy/TherapyAutoBild";
 import { parseReply } from "@/lib/chatMedia";
@@ -676,9 +677,14 @@ export default function TherapySession() {
       )}
       </div>
 
-      {(isOwner || isGuest) && (
-        <TherapySideChat session={session} messages={sideMessages} me={me} guestName={guestName} isGuest={isGuest} />
-      )}
+      <div className="space-y-3">
+        {isOwner && (
+          <VorlagenKonsole session={session} onApplied={setSession} />
+        )}
+        {(isOwner || isGuest) && (
+          <TherapySideChat session={session} messages={sideMessages} me={me} guestName={guestName} isGuest={isGuest} />
+        )}
+      </div>
       </div>
     </div>
   );
