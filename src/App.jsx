@@ -104,6 +104,7 @@ import GodNotesBar from '@/components/god/GodNotesBar';
 import GuideConsole from '@/components/god/GuideConsole';
 import FloatingZones from '@/components/floating/FloatingZones';
 import DesignEditorButton from '@/components/design/DesignEditorButton';
+import BegleitungLauncher from '@/components/begleitung/BegleitungLauncher';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -138,6 +139,7 @@ const AuthenticatedApp = () => {
       <TutorialPlayer />
       <FloatingZones />
       <DesignEditorButton />
+      <BegleitungLauncher />
       <FloatingCall />
       <LiveEdgeChat />
       <NarratorCompanion />
