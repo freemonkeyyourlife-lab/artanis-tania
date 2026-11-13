@@ -25,6 +25,11 @@
       "type": "boolean",
       "default": false
     },
+    "shared": {
+      "type": "boolean",
+      "default": false,
+      "description": "F\u00fcr alle sichtbar (true) oder nur f\u00fcr die Besitzerin (false)."
+    },
     "appearance": {
       "type": "string"
     },

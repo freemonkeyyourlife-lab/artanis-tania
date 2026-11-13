@@ -8,6 +8,7 @@ import InfoModeToggle from "@/components/InfoModeToggle";
 import HelpAssistant from "@/components/help/HelpAssistant";
 import NarratorPanel from "@/components/nav/NarratorPanel";
 import StudioSchublade from "@/components/studio/StudioSchublade";
+import SchubladenCharakter from "@/components/studio/SchubladenCharakter";
 import BrandWordmark from "@/components/BrandWordmark";
 
 // Die ganze Leiste links, in dieser Reihenfolge:
@@ -123,7 +124,11 @@ export default function SideNav({ groups = [], isOwner = false, collapsed = fals
               <HelpAssistant />
             </div>
           </div>
-          {studioOpen && <StudioSchublade onClose={() => setStudioOpen(false)} />}
+          {studioOpen && (
+            <StudioSchublade onClose={() => setStudioOpen(false)}>
+              <SchubladenCharakter />
+            </StudioSchublade>
+          )}
         </>
       )}
     </aside>
